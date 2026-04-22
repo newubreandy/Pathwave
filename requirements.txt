@@ -2,3 +2,5 @@ flask
 flask-cors
 bcrypt
 pyjwt
+firebase-admin
+cryptography
