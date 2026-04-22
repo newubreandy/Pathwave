@@ -11,6 +11,10 @@ venv/
 # Database (로컬 개발 DB는 올리지 않음)
 *.db
 
+# Firebase 서비스 계정 키 (절대 GitHub에 올리면 안됨!)
+firebase-credentials.json
+*-firebase-adminsdk-*.json
+
 # OS
 .DS_Store
 Thumbs.db
