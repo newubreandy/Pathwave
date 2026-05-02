@@ -79,6 +79,60 @@ def decode_access_token(token: str, expected_sub_type: str = 'user') -> dict:
     return payload
 
 
+def require_facility_actor(roles: list[str] | None = None):
+    """시설 측(owner/admin/staff) 라우트 보호 데코레이터.
+
+    ``sub_type='facility'`` 토큰은 actor_role='owner'로 정규화하고,
+    ``sub_type='staff'`` 토큰은 토큰의 ``role``과 ``owner_account_id``를 그대로 사용한다.
+
+    실패 시 401/403, 성공 시 ``flask.g.auth``에 다음 키를 보장:
+      - actor_role         'owner' | 'admin' | 'staff'
+      - owner_account_id   데이터 범위 결정용 (=facility_accounts.id)
+      - user_id, email, sub_type 등 원본 클레임도 그대로
+    """
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            auth_hdr = request.headers.get('Authorization', '')
+            if not auth_hdr.startswith('Bearer '):
+                return jsonify({'success': False,
+                                'message': '인증 토큰이 없습니다.'}), 401
+            token = auth_hdr.split(' ', 1)[1]
+            try:
+                payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+            except jwt.ExpiredSignatureError:
+                return jsonify({'success': False, 'message': '토큰이 만료되었습니다.'}), 401
+            except jwt.InvalidTokenError:
+                return jsonify({'success': False, 'message': '유효하지 않은 토큰입니다.'}), 401
+            if payload.get('kind', 'access') != 'access':
+                return jsonify({'success': False, 'message': 'access 토큰이 아닙니다.'}), 401
+
+            sub_type = payload.get('sub_type', 'user')
+            if sub_type == 'facility':
+                actor_role       = 'owner'
+                owner_account_id = payload['user_id']
+            elif sub_type == 'staff':
+                actor_role       = payload.get('role')
+                owner_account_id = payload.get('owner_account_id')
+                if actor_role not in {'admin', 'staff'} or not owner_account_id:
+                    return jsonify({'success': False,
+                                    'message': '토큰 클레임이 누락되었습니다.'}), 401
+            else:
+                return jsonify({'success': False,
+                                'message': '시설 측 토큰이 아닙니다.'}), 401
+
+            if roles and actor_role not in roles:
+                return jsonify({'success': False,
+                                'message': f'권한이 없습니다. 필요: {sorted(roles)}'}), 403
+
+            payload['actor_role']       = actor_role
+            payload['owner_account_id'] = owner_account_id
+            g.auth = payload
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
 def require_auth(sub_type: str = 'user'):
     """라우트 보호 데코레이터.
 

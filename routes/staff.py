@@ -20,7 +20,7 @@ from flask import Blueprint, request, jsonify, g
 
 from models.database import get_db
 from routes.auth import (
-    require_auth, send_email,
+    require_auth, require_facility_actor, send_email,
     password_complexity_error, issue_token_pair,
 )
 
@@ -74,10 +74,10 @@ def _send_invite_email(to_email: str, token: str, role: str) -> bool:
 # ── Create ────────────────────────────────────────────────────────────────────
 
 @staff_bp.route('/invite', methods=['POST'])
-@require_auth(sub_type='facility')
+@require_facility_actor(roles=['owner'])
 def create_invite():
     """이메일 + 역할로 새 직원 초대 발송."""
-    account_id = g.auth['user_id']
+    account_id = g.auth['owner_account_id']
     data       = request.get_json(silent=True) or {}
     email      = (data.get('email') or '').strip().lower()
     role       = (data.get('role')  or '').strip().lower()
@@ -124,10 +124,10 @@ def create_invite():
 # ── List ──────────────────────────────────────────────────────────────────────
 
 @staff_bp.route('', methods=['GET'])
-@require_auth(sub_type='facility')
+@require_facility_actor(roles=['owner'])
 def list_my_invites():
     """내가 보낸 초대 목록 (최신순)."""
-    account_id = g.auth['user_id']
+    account_id = g.auth['owner_account_id']
     db = get_db()
     rows = db.execute(
         """SELECT * FROM staff_invitations
@@ -143,10 +143,10 @@ def list_my_invites():
 # ── Resend ────────────────────────────────────────────────────────────────────
 
 @staff_bp.route('/<int:iid>/resend', methods=['POST'])
-@require_auth(sub_type='facility')
+@require_facility_actor(roles=['owner'])
 def resend_invite(iid):
     """만료/취소된 초대를 새 토큰·만료일로 갱신해 다시 발송."""
-    account_id = g.auth['user_id']
+    account_id = g.auth['owner_account_id']
     db = get_db()
     row = db.execute(
         """SELECT * FROM staff_invitations
@@ -186,10 +186,10 @@ def resend_invite(iid):
 # ── Revoke ────────────────────────────────────────────────────────────────────
 
 @staff_bp.route('/<int:iid>', methods=['DELETE'])
-@require_auth(sub_type='facility')
+@require_facility_actor(roles=['owner'])
 def revoke_invite(iid):
     """초대 취소 (status='revoked')."""
-    account_id = g.auth['user_id']
+    account_id = g.auth['owner_account_id']
     db = get_db()
     row = db.execute(
         """SELECT status FROM staff_invitations
