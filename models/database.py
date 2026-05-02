@@ -109,6 +109,26 @@ def init_db():
             created_at  TEXT    DEFAULT (datetime('now'))
         );
 
+        -- 직원 초대 (SRS FR-STAFF-001/002)
+        -- 사장님(facility_account)이 이메일로 admin/staff 초대 발송.
+        -- status: pending(초대중) / accepted(수락) / expired(만료) / revoked(취소)
+        CREATE TABLE IF NOT EXISTS staff_invitations (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            facility_account_id INTEGER NOT NULL,           -- 초대한 사장님
+            email               TEXT    NOT NULL,           -- 초대받는 사람 이메일
+            role                TEXT    NOT NULL,           -- 'admin' | 'staff'
+            invite_token        TEXT    NOT NULL UNIQUE,
+            expires_at          TEXT    NOT NULL,
+            status              TEXT    DEFAULT 'pending',
+            accepted_at         TEXT,
+            created_at          TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (facility_account_id) REFERENCES facility_accounts(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_staff_invitations_owner
+            ON staff_invitations(facility_account_id);
+        CREATE INDEX IF NOT EXISTS idx_staff_invitations_email
+            ON staff_invitations(email);
+
         -- 매장 다중 이미지 (SRS FR-STORE-001)
         -- facilities.image_url은 대표 이미지의 URL을 미러링한다 (핸드셰이크 호환).
         CREATE TABLE IF NOT EXISTS facility_images (

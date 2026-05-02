@@ -7,6 +7,7 @@ from routes.auth     import auth_bp
 from routes.beacon   import beacon_bp
 from routes.facility import facility_bp
 from routes.store    import store_bp
+from routes.staff    import staff_bp
 
 # ── Firebase Admin SDK 초기화 (선택적) ───────────────────────────────────────
 # Firebase 프로젝트 설정 후 serviceAccountKey.json 경로를 환경변수로 지정:
@@ -36,6 +37,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(beacon_bp)
 app.register_blueprint(facility_bp)
 app.register_blueprint(store_bp)
+app.register_blueprint(staff_bp)
 
 # ── Static files ──────────────────────────────────────────────────────────────
 @app.route('/', defaults={'path': ''})
