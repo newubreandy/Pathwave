@@ -1,8 +1,12 @@
 """시설(매장) CRUD API. SRS FR-STORE-001.
 
 facility_accounts(사장님 계정) 1 : N facilities(매장) 관계.
-모든 라우트는 시설 토큰(``sub_type='facility'``)을 요구하며,
-본인 ``owner_id`` 매장만 조회/수정/삭제할 수 있다.
+모든 라우트는 시설 측 토큰(``sub_type='facility'`` 또는 ``'staff'``)을 요구하며,
+``owner_account_id`` 범위로 격리된다. role 기반 분기:
+
+- owner: 전체 (생성/수정/삭제, 이미지 CRUD)
+- admin: 운영 (수정, 이미지 CRUD) — 매장 생성/삭제는 불가
+- staff: 읽기만 (목록/상세/이미지 목록/비콘 목록)
 
 엔드포인트
 ---------
@@ -15,7 +19,7 @@ facility_accounts(사장님 계정) 1 : N facilities(매장) 관계.
 from flask import Blueprint, request, jsonify, g
 
 from models.database import get_db
-from routes.auth import require_auth
+from routes.auth import require_facility_actor
 
 store_bp = Blueprint('store', __name__, url_prefix='/api/facilities')
 
@@ -50,10 +54,10 @@ def _normalize_text(value, *, allow_empty=False) -> str | None:
 # ── Create ────────────────────────────────────────────────────────────────────
 
 @store_bp.route('', methods=['POST'])
-@require_auth(sub_type='facility')
+@require_facility_actor(roles=['owner'])
 def create_facility():
     """매장 등록."""
-    account_id = g.auth['user_id']
+    account_id = g.auth['owner_account_id']
     data = request.get_json(silent=True) or {}
     name = (data.get('name') or '').strip()
     if not name:
@@ -85,10 +89,10 @@ def create_facility():
 # ── Read ──────────────────────────────────────────────────────────────────────
 
 @store_bp.route('', methods=['GET'])
-@require_auth(sub_type='facility')
+@require_facility_actor()
 def list_my_facilities():
     """내 매장 목록 (활성만)."""
-    account_id = g.auth['user_id']
+    account_id = g.auth['owner_account_id']
     db = get_db()
     rows = db.execute(
         """SELECT * FROM facilities
@@ -102,10 +106,10 @@ def list_my_facilities():
 
 
 @store_bp.route('/<int:fid>', methods=['GET'])
-@require_auth(sub_type='facility')
+@require_facility_actor()
 def get_facility(fid):
     """매장 상세 (소유)."""
-    account_id = g.auth['user_id']
+    account_id = g.auth['owner_account_id']
     db = get_db()
     row = db.execute(
         """SELECT * FROM facilities
@@ -122,10 +126,10 @@ def get_facility(fid):
 # ── Update ────────────────────────────────────────────────────────────────────
 
 @store_bp.route('/<int:fid>', methods=['PATCH'])
-@require_auth(sub_type='facility')
+@require_facility_actor(roles=['owner', 'admin'])
 def update_facility(fid):
     """매장 정보 부분 수정 (소유). 보낸 필드만 갱신."""
-    account_id = g.auth['user_id']
+    account_id = g.auth['owner_account_id']
     data = request.get_json(silent=True) or {}
 
     db = get_db()
@@ -174,7 +178,7 @@ def update_facility(fid):
 # ── Delete (soft) ─────────────────────────────────────────────────────────────
 
 @store_bp.route('/<int:fid>', methods=['DELETE'])
-@require_auth(sub_type='facility')
+@require_facility_actor(roles=['owner'])
 def delete_facility(fid):
     """매장 비활성화 (soft delete; 데이터 보존, 조회에서 제외).
 
@@ -182,7 +186,7 @@ def delete_facility(fid):
       * beacons.status='inactive'
       * wifi_profiles.active=0
     """
-    account_id = g.auth['user_id']
+    account_id = g.auth['owner_account_id']
     db = get_db()
     cur = db.execute(
         """UPDATE facilities SET active=0
@@ -236,10 +240,10 @@ def _row_to_image(row) -> dict:
 # ── 매장 이미지 CRUD ──────────────────────────────────────────────────────────
 
 @store_bp.route('/<int:fid>/images', methods=['POST'])
-@require_auth(sub_type='facility')
+@require_facility_actor(roles=['owner', 'admin'])
 def add_image(fid):
     """매장 이미지 추가. 첫 이미지면 자동으로 대표 지정."""
-    account_id = g.auth['user_id']
+    account_id = g.auth['owner_account_id']
     data       = request.get_json(silent=True) or {}
     image_url  = (data.get('image_url') or '').strip()
     if not image_url:
@@ -287,10 +291,10 @@ def add_image(fid):
 
 
 @store_bp.route('/<int:fid>/images', methods=['GET'])
-@require_auth(sub_type='facility')
+@require_facility_actor()
 def list_images(fid):
     """매장 이미지 목록 (sort_order ASC, id ASC)."""
-    account_id = g.auth['user_id']
+    account_id = g.auth['owner_account_id']
     db = get_db()
     if not _owned_facility(db, fid, account_id):
         db.close()
@@ -308,10 +312,10 @@ def list_images(fid):
 
 
 @store_bp.route('/<int:fid>/images/<int:iid>', methods=['PATCH'])
-@require_auth(sub_type='facility')
+@require_facility_actor(roles=['owner', 'admin'])
 def update_image(fid, iid):
     """이미지 메타 수정 (is_primary / sort_order / image_url)."""
-    account_id = g.auth['user_id']
+    account_id = g.auth['owner_account_id']
     data       = request.get_json(silent=True) or {}
 
     db = get_db()
@@ -364,10 +368,10 @@ def update_image(fid, iid):
 
 
 @store_bp.route('/<int:fid>/images/<int:iid>', methods=['DELETE'])
-@require_auth(sub_type='facility')
+@require_facility_actor(roles=['owner', 'admin'])
 def delete_image(fid, iid):
     """이미지 삭제. 대표를 지우면 남은 첫 이미지로 대표 승계."""
-    account_id = g.auth['user_id']
+    account_id = g.auth['owner_account_id']
     db = get_db()
     if not _owned_facility(db, fid, account_id):
         db.close()
@@ -403,10 +407,10 @@ def delete_image(fid, iid):
 # ── 매장별 비콘 목록 ──────────────────────────────────────────────────────────
 
 @store_bp.route('/<int:fid>/beacons', methods=['GET'])
-@require_auth(sub_type='facility')
+@require_facility_actor()
 def list_facility_beacons(fid):
     """특정 매장의 비콘 목록 (소유 매장만)."""
-    account_id = g.auth['user_id']
+    account_id = g.auth['owner_account_id']
     db = get_db()
     owned = db.execute(
         "SELECT 1 FROM facilities WHERE id=? AND owner_id=? AND active=1",

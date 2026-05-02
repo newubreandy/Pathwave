@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, g
 from models.database import get_db
 from models.crypto import encrypt_secret, decrypt_secret
-from routes.auth import require_auth
+from routes.auth import require_facility_actor
 
 beacon_bp = Blueprint('beacon', __name__, url_prefix='/api/beacon')
 
@@ -93,13 +93,13 @@ def handshake():
 
 
 @beacon_bp.route('/wifi', methods=['POST'])
-@require_auth(sub_type='facility')
+@require_facility_actor(roles=['owner', 'admin'])
 def register_wifi():
     """시설 WiFi 프로필 등록/교체 (시설 사장님 전용). SRS FR-WIFI-001.
 
     비밀번호는 AES-256-GCM으로 암호화해 저장한다.
     """
-    account_id  = g.auth['user_id']
+    account_id  = g.auth['owner_account_id']
     data        = request.get_json(silent=True) or {}
     facility_id = data.get('facility_id')
     ssid        = (data.get('ssid')     or '').strip()
@@ -126,10 +126,10 @@ def register_wifi():
 
 
 @beacon_bp.route('/status', methods=['GET'])
-@require_auth(sub_type='facility')
+@require_facility_actor(roles=['owner', 'admin'])
 def beacon_status():
     """비콘 상태 목록 (시설 사장님 전용 — 본인 소유 비콘만)."""
-    account_id = g.auth['user_id']
+    account_id = g.auth['owner_account_id']
     db = get_db()
     beacons = db.execute("""
         SELECT b.id, b.serial_no, b.uuid, b.status, b.battery_pct,
@@ -148,10 +148,10 @@ def beacon_status():
 
 
 @beacon_bp.route('/register', methods=['POST'])
-@require_auth(sub_type='facility')
+@require_facility_actor(roles=['owner', 'admin'])
 def register_beacon():
     """비콘 등록 (시설 사장님 전용 — 본인 소유 시설만)."""
-    account_id = g.auth['user_id']
+    account_id = g.auth['owner_account_id']
     data        = request.get_json(silent=True) or {}
     serial_no   = (data.get('serial_no')   or '').strip()
     uuid        = (data.get('uuid')        or '').strip()
