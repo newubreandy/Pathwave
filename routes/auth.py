@@ -6,10 +6,11 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
+from functools import wraps
 
 import bcrypt
 import jwt
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 
 from models.database import get_db
 
@@ -72,6 +73,35 @@ def decode_access_token(token: str, expected_sub_type: str = 'user') -> dict:
     if payload.get('sub_type', 'user') != expected_sub_type:
         raise ValueError('이 엔드포인트에 사용할 수 없는 토큰입니다.')
     return payload
+
+
+def require_auth(sub_type: str = 'user'):
+    """라우트 보호 데코레이터.
+
+    사용:
+        @require_auth(sub_type='facility')
+        def my_route():
+            account_id = g.auth['user_id']  # facility_accounts.id
+            ...
+
+    실패 시 401을 반환하고, 성공 시 ``flask.g.auth`` 에 토큰 페이로드를 주입한다.
+    """
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            auth = request.headers.get('Authorization', '')
+            if not auth.startswith('Bearer '):
+                return jsonify({'success': False,
+                                'message': '인증 토큰이 없습니다.'}), 401
+            try:
+                payload = decode_access_token(
+                    auth.split(' ', 1)[1], expected_sub_type=sub_type)
+            except ValueError as e:
+                return jsonify({'success': False, 'message': str(e)}), 401
+            g.auth = payload
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
 
 
 _PW_COMPLEX_RE = re.compile(
