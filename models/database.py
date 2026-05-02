@@ -108,6 +108,20 @@ def init_db():
             expires_at  TEXT,
             created_at  TEXT    DEFAULT (datetime('now'))
         );
+
+        -- 매장 다중 이미지 (SRS FR-STORE-001)
+        -- facilities.image_url은 대표 이미지의 URL을 미러링한다 (핸드셰이크 호환).
+        CREATE TABLE IF NOT EXISTS facility_images (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            facility_id INTEGER NOT NULL,
+            image_url   TEXT    NOT NULL,
+            is_primary  INTEGER DEFAULT 0,
+            sort_order  INTEGER DEFAULT 0,
+            created_at  TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (facility_id) REFERENCES facilities(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_facility_images_facility
+            ON facility_images(facility_id);
     """)
     db.commit()
     db.close()
