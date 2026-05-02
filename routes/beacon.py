@@ -1,9 +1,18 @@
 from datetime import datetime
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from models.database import get_db
 from models.crypto import encrypt_secret, decrypt_secret
+from routes.auth import require_auth
 
 beacon_bp = Blueprint('beacon', __name__, url_prefix='/api/beacon')
+
+
+def _ensure_facility_owned(db, facility_id: int, account_id: int) -> bool:
+    """``facility_id``가 ``account_id`` 소유인지 확인."""
+    row = db.execute(
+        "SELECT owner_id FROM facilities WHERE id=?", (facility_id,)
+    ).fetchone()
+    return bool(row and row['owner_id'] == account_id)
 
 
 @beacon_bp.route('/handshake', methods=['POST'])
@@ -84,11 +93,13 @@ def handshake():
 
 
 @beacon_bp.route('/wifi', methods=['POST'])
+@require_auth(sub_type='facility')
 def register_wifi():
-    """시설 WiFi 프로필 등록/교체 (Admin용). SRS FR-WIFI-001.
+    """시설 WiFi 프로필 등록/교체 (시설 사장님 전용). SRS FR-WIFI-001.
 
     비밀번호는 AES-256-GCM으로 암호화해 저장한다.
     """
+    account_id  = g.auth['user_id']
     data        = request.get_json(silent=True) or {}
     facility_id = data.get('facility_id')
     ssid        = (data.get('ssid')     or '').strip()
@@ -97,8 +108,12 @@ def register_wifi():
     if not facility_id or not ssid or not password:
         return jsonify({'success': False, 'message': 'facility_id, ssid, password는 필수입니다.'}), 400
 
-    enc = encrypt_secret(password)
     db = get_db()
+    if not _ensure_facility_owned(db, facility_id, account_id):
+        db.close()
+        return jsonify({'success': False, 'message': '해당 시설에 권한이 없습니다.'}), 403
+
+    enc = encrypt_secret(password)
     db.execute('UPDATE wifi_profiles SET active=0 WHERE facility_id=?', (facility_id,))
     db.execute(
         """INSERT INTO wifi_profiles (facility_id, ssid, password, active)
@@ -111,16 +126,19 @@ def register_wifi():
 
 
 @beacon_bp.route('/status', methods=['GET'])
+@require_auth(sub_type='facility')
 def beacon_status():
-    """비콘 상태 목록 (Admin용)"""
+    """비콘 상태 목록 (시설 사장님 전용 — 본인 소유 비콘만)."""
+    account_id = g.auth['user_id']
     db = get_db()
     beacons = db.execute("""
         SELECT b.id, b.serial_no, b.uuid, b.status, b.battery_pct,
                f.name as facility_name
         FROM beacons b
-        LEFT JOIN facilities f ON b.facility_id = f.id
+        JOIN facilities f ON b.facility_id = f.id
+        WHERE f.owner_id = ?
         ORDER BY b.id DESC
-    """).fetchall()
+    """, (account_id,)).fetchall()
     db.close()
 
     return jsonify({
@@ -130,8 +148,10 @@ def beacon_status():
 
 
 @beacon_bp.route('/register', methods=['POST'])
+@require_auth(sub_type='facility')
 def register_beacon():
-    """비콘 등록 (Admin용)"""
+    """비콘 등록 (시설 사장님 전용 — 본인 소유 시설만)."""
+    account_id = g.auth['user_id']
     data        = request.get_json(silent=True) or {}
     serial_no   = (data.get('serial_no')   or '').strip()
     uuid        = (data.get('uuid')        or '').strip()
@@ -142,6 +162,9 @@ def register_beacon():
         return jsonify({'success': False, 'message': 'serial_no와 uuid는 필수입니다.'}), 400
 
     db = get_db()
+    if facility_id and not _ensure_facility_owned(db, facility_id, account_id):
+        db.close()
+        return jsonify({'success': False, 'message': '해당 시설에 권한이 없습니다.'}), 403
     try:
         db.execute(
             """INSERT INTO beacons (serial_no, uuid, facility_id, firmware_ver, status)
