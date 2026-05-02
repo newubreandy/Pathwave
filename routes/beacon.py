@@ -8,9 +8,9 @@ beacon_bp = Blueprint('beacon', __name__, url_prefix='/api/beacon')
 
 
 def _ensure_facility_owned(db, facility_id: int, account_id: int) -> bool:
-    """``facility_id``가 ``account_id`` 소유인지 확인."""
+    """``facility_id``가 ``account_id``의 **활성** 소유 매장인지 확인."""
     row = db.execute(
-        "SELECT owner_id FROM facilities WHERE id=?", (facility_id,)
+        "SELECT owner_id FROM facilities WHERE id=? AND active=1", (facility_id,)
     ).fetchone()
     return bool(row and row['owner_id'] == account_id)
 
@@ -133,10 +133,10 @@ def beacon_status():
     db = get_db()
     beacons = db.execute("""
         SELECT b.id, b.serial_no, b.uuid, b.status, b.battery_pct,
-               f.name as facility_name
+               f.name as facility_name, f.id as facility_id
         FROM beacons b
         JOIN facilities f ON b.facility_id = f.id
-        WHERE f.owner_id = ?
+        WHERE f.owner_id = ? AND f.active = 1
         ORDER BY b.id DESC
     """, (account_id,)).fetchall()
     db.close()
