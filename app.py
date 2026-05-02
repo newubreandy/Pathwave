@@ -3,8 +3,9 @@ from flask import Flask, send_from_directory
 from flask_cors import CORS
 
 from models.database import init_db
-from routes.auth   import auth_bp
-from routes.beacon import beacon_bp
+from routes.auth     import auth_bp
+from routes.beacon   import beacon_bp
+from routes.facility import facility_bp
 
 # ── Firebase Admin SDK 초기화 (선택적) ───────────────────────────────────────
 # Firebase 프로젝트 설정 후 serviceAccountKey.json 경로를 환경변수로 지정:
@@ -32,6 +33,7 @@ init_db()
 # Blueprint 등록
 app.register_blueprint(auth_bp)
 app.register_blueprint(beacon_bp)
+app.register_blueprint(facility_bp)
 
 # ── Static files ──────────────────────────────────────────────────────────────
 @app.route('/', defaults={'path': ''})
@@ -43,4 +45,6 @@ def serve(path):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=8080)
+    debug = os.environ.get('FLASK_DEBUG', '0') == '1'
+    port  = int(os.environ.get('PORT', '8080'))
+    app.run(debug=debug, host='0.0.0.0', port=port)

@@ -6,6 +6,7 @@ __pycache__/
 dist/
 build/
 venv/
+.venv/
 .env
 
 # Database (로컬 개발 DB는 올리지 않음)

@@ -1,5 +1,6 @@
 import os
 import random
+import re
 import string
 import smtplib
 from email.mime.text import MIMEText
@@ -21,6 +22,9 @@ SMTP_USER  = os.environ.get('SMTP_USER', '')
 SMTP_PASS  = os.environ.get('SMTP_PASS', '')
 EMAIL_FROM = os.environ.get('EMAIL_FROM', SMTP_USER)
 
+ACCESS_TTL_MIN  = int(os.environ.get('ACCESS_TTL_MIN', '15'))   # SRS: 15분
+REFRESH_TTL_DAY = int(os.environ.get('REFRESH_TTL_DAY', '7'))   # SRS: 7일
+
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -28,12 +32,69 @@ def generate_code(length=6):
     return ''.join(random.choices(string.digits, k=length))
 
 
-def make_jwt(user_id: int, email: str) -> str:
+def make_jwt(user_id: int, email: str, kind: str = 'access',
+             sub_type: str = 'user') -> str:
+    """``kind`` = ``access`` (15m) | ``refresh`` (7d). SRS FR-AUTH-002.
+
+    ``sub_type`` = ``user`` (앱 사용자) | ``facility`` (시설 계정).
+    동일 숫자 ID가 두 테이블 모두에 존재할 수 있으므로 토큰에 표시한다.
+    """
+    ttl = (timedelta(minutes=ACCESS_TTL_MIN)
+           if kind == 'access' else timedelta(days=REFRESH_TTL_DAY))
     return jwt.encode(
-        {'user_id': user_id, 'email': email,
-         'exp': datetime.utcnow() + timedelta(days=7)},
+        {'user_id': user_id, 'email': email, 'kind': kind,
+         'sub_type': sub_type,
+         'exp': datetime.utcnow() + ttl},
         SECRET_KEY, algorithm='HS256'
     )
+
+
+def issue_token_pair(user_id: int, email: str, sub_type: str = 'user') -> dict:
+    return {
+        'token':         make_jwt(user_id, email, 'access',  sub_type),  # legacy alias
+        'access_token':  make_jwt(user_id, email, 'access',  sub_type),
+        'refresh_token': make_jwt(user_id, email, 'refresh', sub_type),
+        'expires_in':    ACCESS_TTL_MIN * 60,
+    }
+
+
+def decode_access_token(token: str, expected_sub_type: str = 'user') -> dict:
+    """access 토큰 검증 + sub_type 일치 확인. 실패 시 ``ValueError`` (메시지) 발생."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        raise ValueError('토큰이 만료되었습니다.')
+    except jwt.InvalidTokenError:
+        raise ValueError('유효하지 않은 토큰입니다.')
+    if payload.get('kind', 'access') != 'access':
+        raise ValueError('access 토큰이 아닙니다.')
+    # sub_type 누락 = 레거시 user 토큰. 신규 발급분부터는 명시.
+    if payload.get('sub_type', 'user') != expected_sub_type:
+        raise ValueError('이 엔드포인트에 사용할 수 없는 토큰입니다.')
+    return payload
+
+
+_PW_COMPLEX_RE = re.compile(
+    r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$'
+)
+
+
+def password_complexity_error(password: str) -> str | None:
+    """SRS FR-AUTH-001: 영문+숫자+특수문자 8자 이상."""
+    if not password or len(password) < 8:
+        return '비밀번호는 최소 8자 이상이어야 합니다.'
+    if not _PW_COMPLEX_RE.match(password):
+        return '비밀번호는 영문, 숫자, 특수문자를 모두 포함해야 합니다.'
+    return None
+
+
+def firebase_ready() -> bool:
+    """firebase_admin이 import 가능하고 default app이 초기화돼 있는지."""
+    try:
+        import firebase_admin
+        return bool(firebase_admin._apps)
+    except Exception:
+        return False
 
 
 def send_email(to_email: str, code: str) -> bool:
@@ -146,8 +207,9 @@ def register():
 
     if not email or not code or not password:
         return jsonify({'success': False, 'message': '모든 필드를 입력해 주세요.'}), 400
-    if len(password) < 8:
-        return jsonify({'success': False, 'message': '비밀번호는 최소 8자 이상이어야 합니다.'}), 400
+    pw_err = password_complexity_error(password)
+    if pw_err:
+        return jsonify({'success': False, 'message': pw_err}), 400
 
     db  = get_db()
     row = db.execute(
@@ -166,18 +228,18 @@ def register():
         return jsonify({'success': False, 'message': '이미 가입된 이메일입니다.'}), 409
 
     hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-    db.execute('INSERT INTO users (email, password, provider) VALUES (?,?,?)', (email, hashed, 'email'))
+    cur = db.execute('INSERT INTO users (email, password, provider) VALUES (?,?,?)',
+                     (email, hashed, 'email'))
+    user_id = cur.lastrowid
     db.execute('UPDATE email_codes SET used=1 WHERE email=? AND code=?', (email, code))
     db.commit()
-
-    user_id = db.execute("SELECT id FROM users WHERE email=?", (email,)).fetchone()['id']
     db.close()
 
     return jsonify({
         'success': True,
         'message': '회원가입이 완료되었습니다!',
-        'token': make_jwt(user_id, email),
-        'user': {'id': user_id, 'email': email}
+        **issue_token_pair(user_id, email),
+        'user': {'id': user_id, 'email': email},
     })
 
 
@@ -208,8 +270,8 @@ def login():
     return jsonify({
         'success': True,
         'message': '로그인 성공!',
-        'token': make_jwt(row['id'], email),
-        'user': {'id': row['id'], 'email': email}
+        **issue_token_pair(row['id'], email),
+        'user': {'id': row['id'], 'email': email},
     })
 
 
@@ -219,12 +281,10 @@ def social_login():
     Flutter 앱에서 Firebase Auth로 로그인 후 ID Token을 전송.
     서버는 Firebase Admin SDK로 토큰 검증 후 자체 JWT 발급.
     """
-    # Firebase Admin SDK가 초기화된 경우에만 동작
-    try:
-        import firebase_admin
-        from firebase_admin import auth as firebase_auth
-    except ImportError:
-        return jsonify({'success': False, 'message': 'Firebase SDK가 설정되지 않았습니다.'}), 503
+    if not firebase_ready():
+        return jsonify({'success': False,
+                        'message': 'Firebase SDK가 설정되지 않았습니다. 서버 관리자에게 문의해 주세요.'}), 503
+    from firebase_admin import auth as firebase_auth
 
     data       = request.get_json(silent=True) or {}
     id_token   = (data.get('id_token') or '').strip()
@@ -282,25 +342,53 @@ def social_login():
     return jsonify({
         'success': True,
         'message': '로그인 성공!',
-        'token': make_jwt(user_id, user_email),
-        'user': {'id': user_id, 'email': user_email}
+        **issue_token_pair(user_id, user_email),
+        'user': {'id': user_id, 'email': user_email},
     })
 
 
 @auth_bp.route('/me', methods=['GET'])
 def me():
-    """토큰으로 현재 유저 정보 조회"""
+    """토큰으로 현재 유저 정보 조회 (앱 사용자)."""
     auth = request.headers.get('Authorization', '')
     if not auth.startswith('Bearer '):
         return jsonify({'success': False, 'message': '인증 토큰이 없습니다.'}), 401
-    token = auth.split(' ', 1)[1]
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-        return jsonify({'success': True, 'user': {'id': payload['user_id'], 'email': payload['email']}})
+        payload = decode_access_token(auth.split(' ', 1)[1], expected_sub_type='user')
+    except ValueError as e:
+        return jsonify({'success': False, 'message': str(e)}), 401
+    return jsonify({'success': True, 'user': {'id': payload['user_id'], 'email': payload['email']}})
+
+
+@auth_bp.route('/refresh', methods=['POST'])
+def refresh():
+    """Refresh 토큰으로 새 access 토큰 발급. SRS FR-AUTH-002."""
+    data = request.get_json(silent=True) or {}
+    rt   = (data.get('refresh_token') or '').strip()
+    if not rt:
+        return jsonify({'success': False, 'message': 'refresh_token이 필요합니다.'}), 400
+    try:
+        payload = jwt.decode(rt, SECRET_KEY, algorithms=['HS256'])
     except jwt.ExpiredSignatureError:
-        return jsonify({'success': False, 'message': '토큰이 만료되었습니다.'}), 401
+        return jsonify({'success': False, 'message': '리프레시 토큰이 만료되었습니다.'}), 401
     except jwt.InvalidTokenError:
-        return jsonify({'success': False, 'message': '유효하지 않은 토큰입니다.'}), 401
+        return jsonify({'success': False, 'message': '유효하지 않은 리프레시 토큰입니다.'}), 401
+    if payload.get('kind') != 'refresh':
+        return jsonify({'success': False, 'message': '리프레시 토큰이 아닙니다.'}), 401
+
+    db  = get_db()
+    row = db.execute(
+        "SELECT id, email FROM users WHERE id=? AND deleted_at IS NULL",
+        (payload['user_id'],)
+    ).fetchone()
+    db.close()
+    if not row:
+        return jsonify({'success': False, 'message': '유저를 찾을 수 없습니다.'}), 401
+
+    return jsonify({
+        'success': True,
+        **issue_token_pair(row['id'], row['email']),
+    })
 
 
 @auth_bp.route('/forgot-password', methods=['POST'])
@@ -317,14 +405,10 @@ def forgot_password():
         "SELECT id, provider FROM users WHERE email=? AND deleted_at IS NULL", (email,)
     ).fetchone()
 
-    if not row:
-        # 보안상 존재 여부를 숨김
+    # 보안: 존재 여부와 가입 방식 모두 숨긴다 (SRS 4.2 보안 — 계정 열거 방지)
+    if not row or row['provider'] != 'email':
         db.close()
         return jsonify({'success': True, 'message': '인증 코드를 발송했습니다. 이메일을 확인해 주세요.'})
-
-    if row['provider'] != 'email':
-        db.close()
-        return jsonify({'success': False, 'message': f'{row["provider"]} 소셜 로그인 계정입니다.'}), 400
 
     code       = generate_code()
     expires_at = (datetime.utcnow() + timedelta(minutes=5)).isoformat()
@@ -350,8 +434,9 @@ def reset_password():
 
     if not email or not code or not password:
         return jsonify({'success': False, 'message': '모든 필드를 입력해 주세요.'}), 400
-    if len(password) < 8:
-        return jsonify({'success': False, 'message': '비밀번호는 최소 8자 이상이어야 합니다.'}), 400
+    pw_err = password_complexity_error(password)
+    if pw_err:
+        return jsonify({'success': False, 'message': pw_err}), 400
 
     db  = get_db()
     row = db.execute(
