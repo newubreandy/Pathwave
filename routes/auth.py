@@ -32,24 +32,46 @@ def generate_code(length=6):
     return ''.join(random.choices(string.digits, k=length))
 
 
-def make_jwt(user_id: int, email: str, kind: str = 'access') -> str:
-    """``kind`` = ``access`` (15m) | ``refresh`` (7d). SRS FR-AUTH-002."""
+def make_jwt(user_id: int, email: str, kind: str = 'access',
+             sub_type: str = 'user') -> str:
+    """``kind`` = ``access`` (15m) | ``refresh`` (7d). SRS FR-AUTH-002.
+
+    ``sub_type`` = ``user`` (앱 사용자) | ``facility`` (시설 계정).
+    동일 숫자 ID가 두 테이블 모두에 존재할 수 있으므로 토큰에 표시한다.
+    """
     ttl = (timedelta(minutes=ACCESS_TTL_MIN)
            if kind == 'access' else timedelta(days=REFRESH_TTL_DAY))
     return jwt.encode(
         {'user_id': user_id, 'email': email, 'kind': kind,
+         'sub_type': sub_type,
          'exp': datetime.utcnow() + ttl},
         SECRET_KEY, algorithm='HS256'
     )
 
 
-def issue_token_pair(user_id: int, email: str) -> dict:
+def issue_token_pair(user_id: int, email: str, sub_type: str = 'user') -> dict:
     return {
-        'token':         make_jwt(user_id, email, 'access'),  # legacy alias
-        'access_token':  make_jwt(user_id, email, 'access'),
-        'refresh_token': make_jwt(user_id, email, 'refresh'),
+        'token':         make_jwt(user_id, email, 'access',  sub_type),  # legacy alias
+        'access_token':  make_jwt(user_id, email, 'access',  sub_type),
+        'refresh_token': make_jwt(user_id, email, 'refresh', sub_type),
         'expires_in':    ACCESS_TTL_MIN * 60,
     }
+
+
+def decode_access_token(token: str, expected_sub_type: str = 'user') -> dict:
+    """access 토큰 검증 + sub_type 일치 확인. 실패 시 ``ValueError`` (메시지) 발생."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        raise ValueError('토큰이 만료되었습니다.')
+    except jwt.InvalidTokenError:
+        raise ValueError('유효하지 않은 토큰입니다.')
+    if payload.get('kind', 'access') != 'access':
+        raise ValueError('access 토큰이 아닙니다.')
+    # sub_type 누락 = 레거시 user 토큰. 신규 발급분부터는 명시.
+    if payload.get('sub_type', 'user') != expected_sub_type:
+        raise ValueError('이 엔드포인트에 사용할 수 없는 토큰입니다.')
+    return payload
 
 
 _PW_COMPLEX_RE = re.compile(
@@ -327,21 +349,15 @@ def social_login():
 
 @auth_bp.route('/me', methods=['GET'])
 def me():
-    """토큰으로 현재 유저 정보 조회"""
+    """토큰으로 현재 유저 정보 조회 (앱 사용자)."""
     auth = request.headers.get('Authorization', '')
     if not auth.startswith('Bearer '):
         return jsonify({'success': False, 'message': '인증 토큰이 없습니다.'}), 401
-    token = auth.split(' ', 1)[1]
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-        # access 토큰만 허용 (kind 필드 없는 레거시 토큰도 허용 → 전환기간)
-        if payload.get('kind', 'access') != 'access':
-            return jsonify({'success': False, 'message': '유효하지 않은 토큰입니다.'}), 401
-        return jsonify({'success': True, 'user': {'id': payload['user_id'], 'email': payload['email']}})
-    except jwt.ExpiredSignatureError:
-        return jsonify({'success': False, 'message': '토큰이 만료되었습니다.'}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({'success': False, 'message': '유효하지 않은 토큰입니다.'}), 401
+        payload = decode_access_token(auth.split(' ', 1)[1], expected_sub_type='user')
+    except ValueError as e:
+        return jsonify({'success': False, 'message': str(e)}), 401
+    return jsonify({'success': True, 'user': {'id': payload['user_id'], 'email': payload['email']}})
 
 
 @auth_bp.route('/refresh', methods=['POST'])
