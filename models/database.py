@@ -37,16 +37,18 @@ def init_db():
 
         -- 시설/비콘 DB
         CREATE TABLE IF NOT EXISTS facilities (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            name        TEXT    NOT NULL,
-            address     TEXT,
-            latitude    REAL,
-            longitude   REAL,
-            description TEXT,
-            image_url   TEXT,
-            owner_id    INTEGER,                       -- facility_accounts.id
-            active      INTEGER DEFAULT 1,
-            created_at  TEXT    DEFAULT (datetime('now'))
+            id             INTEGER PRIMARY KEY AUTOINCREMENT,
+            name           TEXT    NOT NULL,
+            address        TEXT,
+            phone          TEXT,                          -- SRS FR-STORE-001
+            business_hours TEXT,                          -- SRS FR-STORE-001 (opaque, 프론트가 포맷 결정)
+            latitude       REAL,
+            longitude      REAL,
+            description    TEXT,
+            image_url      TEXT,
+            owner_id       INTEGER,                       -- facility_accounts.id
+            active         INTEGER DEFAULT 1,
+            created_at     TEXT    DEFAULT (datetime('now'))
         );
 
         CREATE TABLE IF NOT EXISTS facility_accounts (
@@ -162,5 +164,21 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_facility_images_facility
             ON facility_images(facility_id);
     """)
+
+    # ── 마이그레이션: 기존 DB에 없는 컬럼은 ADD COLUMN ────────────────────────
+    _add_column_if_missing(db, 'facilities', 'phone',          'phone TEXT')
+    _add_column_if_missing(db, 'facilities', 'business_hours', 'business_hours TEXT')
+
     db.commit()
     db.close()
+
+
+def _add_column_if_missing(db, table: str, column: str, ddl: str) -> None:
+    """``column``이 ``table``에 이미 있으면 no-op, 없으면 ALTER ADD COLUMN.
+
+    SQLite는 ``ALTER TABLE ... ADD COLUMN``이 idempotent하지 않으므로
+    ``PRAGMA table_info``로 먼저 확인한다.
+    """
+    existing = {r['name'] for r in db.execute(f'PRAGMA table_info({table})').fetchall()}
+    if column not in existing:
+        db.execute(f'ALTER TABLE {table} ADD COLUMN {ddl}')
