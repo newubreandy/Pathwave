@@ -109,6 +109,25 @@ def init_db():
             created_at  TEXT    DEFAULT (datetime('now'))
         );
 
+        -- 직원/관리자 계정 (SRS FR-STAFF-002)
+        -- 사장님(facility_accounts) 1:N 직원(staff_accounts).
+        -- role: 'admin'(운영) | 'staff'(제한)
+        CREATE TABLE IF NOT EXISTS staff_accounts (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            facility_account_id INTEGER NOT NULL,           -- 부모 (owner)
+            email               TEXT    UNIQUE NOT NULL,
+            password            TEXT    NOT NULL,
+            role                TEXT    NOT NULL,
+            name                TEXT,
+            phone               TEXT,
+            invitation_id       INTEGER,                    -- 추적용
+            created_at          TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (facility_account_id) REFERENCES facility_accounts(id),
+            FOREIGN KEY (invitation_id)       REFERENCES staff_invitations(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_staff_accounts_owner
+            ON staff_accounts(facility_account_id);
+
         -- 직원 초대 (SRS FR-STAFF-001/002)
         -- 사장님(facility_account)이 이메일로 admin/staff 초대 발송.
         -- status: pending(초대중) / accepted(수락) / expired(만료) / revoked(취소)

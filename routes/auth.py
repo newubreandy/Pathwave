@@ -34,27 +34,31 @@ def generate_code(length=6):
 
 
 def make_jwt(user_id: int, email: str, kind: str = 'access',
-             sub_type: str = 'user') -> str:
+             sub_type: str = 'user', extra_claims: dict | None = None) -> str:
     """``kind`` = ``access`` (15m) | ``refresh`` (7d). SRS FR-AUTH-002.
 
-    ``sub_type`` = ``user`` (앱 사용자) | ``facility`` (시설 계정).
-    동일 숫자 ID가 두 테이블 모두에 존재할 수 있으므로 토큰에 표시한다.
+    ``sub_type`` = ``user`` | ``facility`` | ``staff``.
+    동일 숫자 ID가 여러 테이블에 존재할 수 있으므로 토큰에 표시한다.
+    ``extra_claims``로 role / owner_account_id 등 추가 클레임을 실어 보낼 수 있다.
     """
     ttl = (timedelta(minutes=ACCESS_TTL_MIN)
            if kind == 'access' else timedelta(days=REFRESH_TTL_DAY))
-    return jwt.encode(
-        {'user_id': user_id, 'email': email, 'kind': kind,
-         'sub_type': sub_type,
-         'exp': datetime.utcnow() + ttl},
-        SECRET_KEY, algorithm='HS256'
-    )
+    payload = {
+        'user_id': user_id, 'email': email, 'kind': kind,
+        'sub_type': sub_type,
+        'exp': datetime.utcnow() + ttl,
+    }
+    if extra_claims:
+        payload.update(extra_claims)
+    return jwt.encode(payload, SECRET_KEY, algorithm='HS256')
 
 
-def issue_token_pair(user_id: int, email: str, sub_type: str = 'user') -> dict:
+def issue_token_pair(user_id: int, email: str, sub_type: str = 'user',
+                     extra_claims: dict | None = None) -> dict:
     return {
-        'token':         make_jwt(user_id, email, 'access',  sub_type),  # legacy alias
-        'access_token':  make_jwt(user_id, email, 'access',  sub_type),
-        'refresh_token': make_jwt(user_id, email, 'refresh', sub_type),
+        'token':         make_jwt(user_id, email, 'access',  sub_type, extra_claims),
+        'access_token':  make_jwt(user_id, email, 'access',  sub_type, extra_claims),
+        'refresh_token': make_jwt(user_id, email, 'refresh', sub_type, extra_claims),
         'expires_in':    ACCESS_TTL_MIN * 60,
     }
 

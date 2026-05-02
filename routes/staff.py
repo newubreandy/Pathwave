@@ -15,10 +15,14 @@ import os
 import secrets
 from datetime import datetime, timedelta
 
+import bcrypt
 from flask import Blueprint, request, jsonify, g
 
 from models.database import get_db
-from routes.auth import require_auth, send_email
+from routes.auth import (
+    require_auth, send_email,
+    password_complexity_error, issue_token_pair,
+)
 
 staff_bp = Blueprint('staff', __name__, url_prefix='/api/staff')
 
@@ -203,3 +207,145 @@ def revoke_invite(iid):
     db.commit()
     db.close()
     return jsonify({'success': True, 'message': '초대가 취소되었습니다.'})
+
+
+# ── Accept (invitee) ─────────────────────────────────────────────────────────
+
+def _staff_token_claims(role: str, owner_account_id: int) -> dict:
+    return {'role': role, 'owner_account_id': owner_account_id}
+
+
+def _row_to_staff_account(row) -> dict:
+    return {
+        'id':                  row['id'],
+        'email':               row['email'],
+        'role':                row['role'],
+        'name':                row['name'],
+        'phone':               row['phone'],
+        'facility_account_id': row['facility_account_id'],
+    }
+
+
+@staff_bp.route('/accept', methods=['POST'])
+def accept_invite():
+    """초대 토큰 + 비밀번호로 staff_accounts 생성 + 토큰 발급.
+
+    - invite_token: pending 상태이고 만료되지 않아야 함
+    - password: 영문+숫자+특수 8자+
+    - 동일 이메일이 staff_accounts에 이미 있으면 거부
+    """
+    data     = request.get_json(silent=True) or {}
+    token    = (data.get('invite_token') or '').strip()
+    password = data.get('password') or ''
+    name     = (data.get('name')  or '').strip() or None
+    phone    = (data.get('phone') or '').strip() or None
+
+    if not token or not password:
+        return jsonify({'success': False,
+                        'message': 'invite_token, password는 필수입니다.'}), 400
+    pw_err = password_complexity_error(password)
+    if pw_err:
+        return jsonify({'success': False, 'message': pw_err}), 400
+
+    db = get_db()
+    invite = db.execute(
+        "SELECT * FROM staff_invitations WHERE invite_token=?",
+        (token,)
+    ).fetchone()
+    if not invite:
+        db.close()
+        return jsonify({'success': False, 'message': '초대를 찾을 수 없습니다.'}), 404
+    if invite['status'] == 'accepted':
+        db.close()
+        return jsonify({'success': False, 'message': '이미 수락된 초대입니다.'}), 409
+    if invite['status'] == 'revoked':
+        db.close()
+        return jsonify({'success': False, 'message': '취소된 초대입니다.'}), 410
+    if datetime.utcnow() > datetime.fromisoformat(invite['expires_at']):
+        db.close()
+        return jsonify({'success': False, 'message': '만료된 초대입니다.'}), 410
+
+    if db.execute(
+        "SELECT 1 FROM staff_accounts WHERE email=?", (invite['email'],)
+    ).fetchone():
+        db.close()
+        return jsonify({'success': False,
+                        'message': '이미 가입된 이메일입니다.'}), 409
+
+    hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    cur = db.execute(
+        """INSERT INTO staff_accounts
+           (facility_account_id, email, password, role, name, phone, invitation_id)
+           VALUES (?,?,?,?,?,?,?)""",
+        (invite['facility_account_id'], invite['email'], hashed,
+         invite['role'], name, phone, invite['id']),
+    )
+    staff_id = cur.lastrowid
+    db.execute(
+        "UPDATE staff_invitations SET status='accepted', accepted_at=datetime('now') WHERE id=?",
+        (invite['id'],)
+    )
+    row = db.execute("SELECT * FROM staff_accounts WHERE id=?", (staff_id,)).fetchone()
+    db.commit()
+    db.close()
+
+    claims = _staff_token_claims(row['role'], row['facility_account_id'])
+    return jsonify({
+        'success': True,
+        'message': '직원 가입이 완료되었습니다.',
+        **issue_token_pair(staff_id, row['email'], sub_type='staff', extra_claims=claims),
+        'staff_account': _row_to_staff_account(row),
+    }), 201
+
+
+# ── Login / Me ────────────────────────────────────────────────────────────────
+
+@staff_bp.route('/login', methods=['POST'])
+def staff_login():
+    """직원/관리자 로그인. 토큰에 role + owner_account_id 포함."""
+    data     = request.get_json(silent=True) or {}
+    email    = (data.get('email') or '').strip().lower()
+    password = data.get('password') or ''
+    if not email or not password:
+        return jsonify({'success': False,
+                        'message': '이메일과 비밀번호를 입력해 주세요.'}), 400
+
+    db = get_db()
+    row = db.execute(
+        "SELECT * FROM staff_accounts WHERE email=?", (email,)
+    ).fetchone()
+    db.close()
+    if not row or not bcrypt.checkpw(password.encode(), row['password'].encode()):
+        return jsonify({'success': False,
+                        'message': '이메일 또는 비밀번호가 올바르지 않습니다.'}), 401
+
+    claims = _staff_token_claims(row['role'], row['facility_account_id'])
+    return jsonify({
+        'success': True,
+        'message': '로그인 성공!',
+        **issue_token_pair(row['id'], email, sub_type='staff', extra_claims=claims),
+        'staff_account': _row_to_staff_account(row),
+    })
+
+
+@staff_bp.route('/me', methods=['GET'])
+@require_auth(sub_type='staff')
+def staff_me():
+    """본인 정보 + 소속 사장님(매장 그룹) 정보 간략 반환."""
+    db = get_db()
+    row = db.execute(
+        "SELECT * FROM staff_accounts WHERE id=?", (g.auth['user_id'],)
+    ).fetchone()
+    if not row:
+        db.close()
+        return jsonify({'success': False, 'message': '계정을 찾을 수 없습니다.'}), 404
+    owner = db.execute(
+        "SELECT id, company_name FROM facility_accounts WHERE id=?",
+        (row['facility_account_id'],)
+    ).fetchone()
+    db.close()
+    return jsonify({
+        'success': True,
+        'staff_account': _row_to_staff_account(row),
+        'owner': dict(owner) if owner else None,
+    })
