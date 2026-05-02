@@ -28,9 +28,16 @@ _UPDATABLE_FIELDS = {
     'latitude', 'longitude', 'description', 'image_url',
 }
 
+# SRS FR-I18N-001: ko/en/ja/zh + 추가 가능
+_ALLOWED_LANGUAGES = {'ko', 'en', 'ja', 'zh', 'zh-CN', 'zh-TW', 'zh-HK', 'fr'}
+_TRANSLATABLE_FIELDS = ('name', 'address', 'description')
 
-def _row_to_facility(row) -> dict:
-    return {
+
+def _row_to_facility(row, *, translation: dict | None = None) -> dict:
+    """매장 row → JSON. ``translation``이 주어지면 번역된 필드로 덮어씌움.
+
+    번역 필드 중 NULL이면 원본 유지 (partial translation graceful)."""
+    data = {
         'id':             row['id'],
         'name':           row['name'],
         'address':        row['address'],
@@ -43,6 +50,31 @@ def _row_to_facility(row) -> dict:
         'active':         bool(row['active']),
         'created_at':     row['created_at'],
     }
+    if translation:
+        for k in _TRANSLATABLE_FIELDS:
+            v = translation.get(k)
+            if v:
+                data[k] = v
+        data['language'] = translation.get('language')
+    return data
+
+
+def _fetch_translation(db, facility_id: int, lang: str | None) -> dict | None:
+    """``(facility_id, lang)`` 캐시 조회. 없으면 None."""
+    if not lang:
+        return None
+    row = db.execute(
+        """SELECT language, name, address, description FROM facility_translations
+           WHERE facility_id=? AND language=?""",
+        (facility_id, lang)
+    ).fetchone()
+    return dict(row) if row else None
+
+
+def _requested_lang() -> str | None:
+    """``?lang=xx`` 쿼리 파라미터를 추출. 화이트리스트 외에는 None."""
+    lang = (request.args.get('lang') or '').strip()
+    return lang if lang in _ALLOWED_LANGUAGES else None
 
 
 def _normalize_text(value, *, allow_empty=False) -> str | None:
@@ -96,8 +128,9 @@ def create_facility():
 @store_bp.route('', methods=['GET'])
 @require_facility_actor()
 def list_my_facilities():
-    """내 매장 목록 (활성만)."""
+    """내 매장 목록 (활성만). ``?lang=xx``으로 번역된 필드 머지."""
     account_id = g.auth['owner_account_id']
+    lang = _requested_lang()
     db = get_db()
     rows = db.execute(
         """SELECT * FROM facilities
@@ -105,27 +138,32 @@ def list_my_facilities():
            ORDER BY id DESC""",
         (account_id,)
     ).fetchall()
+    out = [_row_to_facility(r, translation=_fetch_translation(db, r['id'], lang))
+           for r in rows]
     db.close()
-    return jsonify({'success': True,
-                    'facilities': [_row_to_facility(r) for r in rows]})
+    return jsonify({'success': True, 'facilities': out})
 
 
 @store_bp.route('/<int:fid>', methods=['GET'])
 @require_facility_actor()
 def get_facility(fid):
-    """매장 상세 (소유)."""
+    """매장 상세 (소유). ``?lang=xx``으로 번역된 필드 머지."""
     account_id = g.auth['owner_account_id']
+    lang = _requested_lang()
     db = get_db()
     row = db.execute(
         """SELECT * FROM facilities
            WHERE id=? AND owner_id=? AND active=1""",
         (fid, account_id)
     ).fetchone()
-    db.close()
     if not row:
+        db.close()
         return jsonify({'success': False,
                         'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
-    return jsonify({'success': True, 'facility': _row_to_facility(row)})
+    translation = _fetch_translation(db, fid, lang)
+    db.close()
+    return jsonify({'success': True,
+                    'facility': _row_to_facility(row, translation=translation)})
 
 
 # ── Update ────────────────────────────────────────────────────────────────────
@@ -439,3 +477,103 @@ def list_facility_beacons(fid):
         'facility_id': fid,
         'beacons': [dict(r) for r in rows],
     })
+
+
+# ── 매장 다국어 캐시 (SRS FR-I18N-002) ────────────────────────────────────────
+
+def _row_to_translation(row) -> dict:
+    return {
+        'language':    row['language'],
+        'name':        row['name'],
+        'address':     row['address'],
+        'description': row['description'],
+        'created_at':  row['created_at'],
+        'updated_at':  row['updated_at'],
+    }
+
+
+@store_bp.route('/<int:fid>/translations', methods=['GET'])
+@require_facility_actor()
+def list_translations(fid):
+    """매장의 모든 캐시된 번역 목록 (소유 매장)."""
+    account_id = g.auth['owner_account_id']
+    db = get_db()
+    if not _owned_facility(db, fid, account_id):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+    rows = db.execute(
+        """SELECT * FROM facility_translations
+           WHERE facility_id=? ORDER BY language ASC""",
+        (fid,)
+    ).fetchall()
+    db.close()
+    return jsonify({'success': True,
+                    'facility_id': fid,
+                    'translations': [_row_to_translation(r) for r in rows]})
+
+
+@store_bp.route('/<int:fid>/translations/<lang>', methods=['PUT'])
+@require_facility_actor(roles=['owner', 'admin'])
+def upsert_translation(fid, lang):
+    """``(facility_id, language)`` 캐시 upsert. 모든 필드 선택."""
+    if lang not in _ALLOWED_LANGUAGES:
+        return jsonify({'success': False,
+                        'message': f'지원하지 않는 언어입니다. 허용: {sorted(_ALLOWED_LANGUAGES)}'}), 400
+    account_id = g.auth['owner_account_id']
+    data = request.get_json(silent=True) or {}
+    name        = _normalize_text(data.get('name'))
+    address     = _normalize_text(data.get('address'))
+    description = _normalize_text(data.get('description'))
+
+    if not any([name, address, description]):
+        return jsonify({'success': False,
+                        'message': 'name, address, description 중 적어도 하나는 필수입니다.'}), 400
+
+    db = get_db()
+    if not _owned_facility(db, fid, account_id):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+    db.execute(
+        """INSERT INTO facility_translations
+             (facility_id, language, name, address, description, updated_at)
+           VALUES (?, ?, ?, ?, ?, datetime('now'))
+           ON CONFLICT (facility_id, language) DO UPDATE SET
+             name        = excluded.name,
+             address     = excluded.address,
+             description = excluded.description,
+             updated_at  = datetime('now')""",
+        (fid, lang, name, address, description),
+    )
+    row = db.execute(
+        "SELECT * FROM facility_translations WHERE facility_id=? AND language=?",
+        (fid, lang)
+    ).fetchone()
+    db.commit()
+    db.close()
+    return jsonify({'success': True,
+                    'message': '번역이 저장되었습니다.',
+                    'translation': _row_to_translation(row)})
+
+
+@store_bp.route('/<int:fid>/translations/<lang>', methods=['DELETE'])
+@require_facility_actor(roles=['owner', 'admin'])
+def delete_translation(fid, lang):
+    """캐시된 번역 제거."""
+    account_id = g.auth['owner_account_id']
+    db = get_db()
+    if not _owned_facility(db, fid, account_id):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+    cur = db.execute(
+        "DELETE FROM facility_translations WHERE facility_id=? AND language=?",
+        (fid, lang)
+    )
+    db.commit()
+    affected = cur.rowcount
+    db.close()
+    if affected == 0:
+        return jsonify({'success': False, 'message': '해당 언어 번역이 없습니다.'}), 404
+    return jsonify({'success': True, 'message': '번역이 삭제되었습니다.'})
