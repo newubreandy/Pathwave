@@ -24,21 +24,24 @@ from routes.auth import require_facility_actor
 store_bp = Blueprint('store', __name__, url_prefix='/api/facilities')
 
 _UPDATABLE_FIELDS = {
-    'name', 'address', 'latitude', 'longitude', 'description', 'image_url',
+    'name', 'address', 'phone', 'business_hours',
+    'latitude', 'longitude', 'description', 'image_url',
 }
 
 
 def _row_to_facility(row) -> dict:
     return {
-        'id':          row['id'],
-        'name':        row['name'],
-        'address':     row['address'],
-        'latitude':    row['latitude'],
-        'longitude':   row['longitude'],
-        'description': row['description'],
-        'image_url':   row['image_url'],
-        'active':      bool(row['active']),
-        'created_at':  row['created_at'],
+        'id':             row['id'],
+        'name':           row['name'],
+        'address':        row['address'],
+        'phone':          row['phone'],
+        'business_hours': row['business_hours'],
+        'latitude':       row['latitude'],
+        'longitude':      row['longitude'],
+        'description':    row['description'],
+        'image_url':      row['image_url'],
+        'active':         bool(row['active']),
+        'created_at':     row['created_at'],
     }
 
 
@@ -66,11 +69,13 @@ def create_facility():
     db = get_db()
     cur = db.execute(
         """INSERT INTO facilities
-           (name, address, latitude, longitude, description, image_url,
-            owner_id, active)
-           VALUES (?,?,?,?,?,?,?,1)""",
+           (name, address, phone, business_hours, latitude, longitude,
+            description, image_url, owner_id, active)
+           VALUES (?,?,?,?,?,?,?,?,?,1)""",
         (name,
          _normalize_text(data.get('address')),
+         _normalize_text(data.get('phone')),
+         _normalize_text(data.get('business_hours')),
          data.get('latitude'),
          data.get('longitude'),
          _normalize_text(data.get('description')),
@@ -154,7 +159,8 @@ def update_facility(fid):
                 return jsonify({'success': False,
                                 'message': '매장명은 비울 수 없습니다.'}), 400
             vals.append(v)
-        elif key in ('address', 'description', 'image_url'):
+        elif key in ('address', 'phone', 'business_hours',
+                     'description', 'image_url'):
             vals.append(_normalize_text(raw))
         else:  # latitude, longitude
             vals.append(raw)
