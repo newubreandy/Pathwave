@@ -203,6 +203,203 @@ def delete_facility(fid):
     return jsonify({'success': True, 'message': '매장이 비활성화되었습니다.'})
 
 
+# ── 매장 이미지 헬퍼 ──────────────────────────────────────────────────────────
+
+def _owned_facility(db, fid: int, account_id: int) -> bool:
+    return bool(db.execute(
+        "SELECT 1 FROM facilities WHERE id=? AND owner_id=? AND active=1",
+        (fid, account_id)
+    ).fetchone())
+
+
+def _sync_primary_to_facility(db, fid: int) -> None:
+    """현재 대표 이미지의 URL을 ``facilities.image_url``에 미러링한다.
+    대표가 없으면 NULL로 비운다."""
+    row = db.execute(
+        "SELECT image_url FROM facility_images WHERE facility_id=? AND is_primary=1 LIMIT 1",
+        (fid,)
+    ).fetchone()
+    db.execute("UPDATE facilities SET image_url=? WHERE id=?",
+               (row['image_url'] if row else None, fid))
+
+
+def _row_to_image(row) -> dict:
+    return {
+        'id':         row['id'],
+        'image_url':  row['image_url'],
+        'is_primary': bool(row['is_primary']),
+        'sort_order': row['sort_order'],
+        'created_at': row['created_at'],
+    }
+
+
+# ── 매장 이미지 CRUD ──────────────────────────────────────────────────────────
+
+@store_bp.route('/<int:fid>/images', methods=['POST'])
+@require_auth(sub_type='facility')
+def add_image(fid):
+    """매장 이미지 추가. 첫 이미지면 자동으로 대표 지정."""
+    account_id = g.auth['user_id']
+    data       = request.get_json(silent=True) or {}
+    image_url  = (data.get('image_url') or '').strip()
+    if not image_url:
+        return jsonify({'success': False, 'message': 'image_url은 필수입니다.'}), 400
+
+    db = get_db()
+    if not _owned_facility(db, fid, account_id):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+
+    has_any = db.execute(
+        "SELECT 1 FROM facility_images WHERE facility_id=? LIMIT 1", (fid,)
+    ).fetchone() is not None
+    auto_primary = not has_any
+    requested_primary = bool(data.get('is_primary'))
+    is_primary = 1 if (auto_primary or requested_primary) else 0
+
+    sort_order = data.get('sort_order')
+    if sort_order is None:
+        max_row = db.execute(
+            "SELECT COALESCE(MAX(sort_order), -1) AS m FROM facility_images WHERE facility_id=?",
+            (fid,)
+        ).fetchone()
+        sort_order = max_row['m'] + 1
+
+    if is_primary:
+        db.execute("UPDATE facility_images SET is_primary=0 WHERE facility_id=?", (fid,))
+
+    cur = db.execute(
+        """INSERT INTO facility_images (facility_id, image_url, is_primary, sort_order)
+           VALUES (?,?,?,?)""",
+        (fid, image_url, is_primary, sort_order),
+    )
+    iid = cur.lastrowid
+    if is_primary:
+        _sync_primary_to_facility(db, fid)
+
+    row = db.execute("SELECT * FROM facility_images WHERE id=?", (iid,)).fetchone()
+    db.commit()
+    db.close()
+    return jsonify({'success': True,
+                    'message': '이미지가 추가되었습니다.',
+                    'image': _row_to_image(row)}), 201
+
+
+@store_bp.route('/<int:fid>/images', methods=['GET'])
+@require_auth(sub_type='facility')
+def list_images(fid):
+    """매장 이미지 목록 (sort_order ASC, id ASC)."""
+    account_id = g.auth['user_id']
+    db = get_db()
+    if not _owned_facility(db, fid, account_id):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+    rows = db.execute(
+        """SELECT * FROM facility_images WHERE facility_id=?
+           ORDER BY sort_order ASC, id ASC""",
+        (fid,)
+    ).fetchall()
+    db.close()
+    return jsonify({'success': True,
+                    'facility_id': fid,
+                    'images': [_row_to_image(r) for r in rows]})
+
+
+@store_bp.route('/<int:fid>/images/<int:iid>', methods=['PATCH'])
+@require_auth(sub_type='facility')
+def update_image(fid, iid):
+    """이미지 메타 수정 (is_primary / sort_order / image_url)."""
+    account_id = g.auth['user_id']
+    data       = request.get_json(silent=True) or {}
+
+    db = get_db()
+    if not _owned_facility(db, fid, account_id):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+
+    img = db.execute(
+        "SELECT * FROM facility_images WHERE id=? AND facility_id=?",
+        (iid, fid)
+    ).fetchone()
+    if not img:
+        db.close()
+        return jsonify({'success': False, 'message': '이미지를 찾을 수 없습니다.'}), 404
+
+    sets, vals = [], []
+    if 'image_url' in data:
+        v = (data.get('image_url') or '').strip()
+        if not v:
+            db.close()
+            return jsonify({'success': False,
+                            'message': 'image_url은 비울 수 없습니다.'}), 400
+        sets.append('image_url=?'); vals.append(v)
+    if 'sort_order' in data:
+        sets.append('sort_order=?'); vals.append(data.get('sort_order'))
+
+    set_primary = bool(data.get('is_primary')) if 'is_primary' in data else None
+    if set_primary is True:
+        # 다른 모든 이미지 대표 해제 후 본인을 대표로
+        db.execute("UPDATE facility_images SET is_primary=0 WHERE facility_id=?", (fid,))
+        sets.append('is_primary=?'); vals.append(1)
+    elif set_primary is False and img['is_primary']:
+        # 본인을 대표 해제 (수동으로 해제)
+        sets.append('is_primary=?'); vals.append(0)
+
+    if not sets:
+        db.close()
+        return jsonify({'success': False, 'message': '수정할 필드가 없습니다.'}), 400
+
+    vals.append(iid)
+    db.execute(f"UPDATE facility_images SET {', '.join(sets)} WHERE id=?", vals)
+    _sync_primary_to_facility(db, fid)
+    row = db.execute("SELECT * FROM facility_images WHERE id=?", (iid,)).fetchone()
+    db.commit()
+    db.close()
+    return jsonify({'success': True,
+                    'message': '이미지가 수정되었습니다.',
+                    'image': _row_to_image(row)})
+
+
+@store_bp.route('/<int:fid>/images/<int:iid>', methods=['DELETE'])
+@require_auth(sub_type='facility')
+def delete_image(fid, iid):
+    """이미지 삭제. 대표를 지우면 남은 첫 이미지로 대표 승계."""
+    account_id = g.auth['user_id']
+    db = get_db()
+    if not _owned_facility(db, fid, account_id):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+
+    img = db.execute(
+        "SELECT is_primary FROM facility_images WHERE id=? AND facility_id=?",
+        (iid, fid)
+    ).fetchone()
+    if not img:
+        db.close()
+        return jsonify({'success': False, 'message': '이미지를 찾을 수 없습니다.'}), 404
+
+    db.execute("DELETE FROM facility_images WHERE id=?", (iid,))
+
+    if img['is_primary']:
+        successor = db.execute(
+            """SELECT id FROM facility_images WHERE facility_id=?
+               ORDER BY sort_order ASC, id ASC LIMIT 1""",
+            (fid,)
+        ).fetchone()
+        if successor:
+            db.execute("UPDATE facility_images SET is_primary=1 WHERE id=?",
+                       (successor['id'],))
+
+    _sync_primary_to_facility(db, fid)
+    db.commit()
+    db.close()
+    return jsonify({'success': True, 'message': '이미지가 삭제되었습니다.'})
+
+
 # ── 매장별 비콘 목록 ──────────────────────────────────────────────────────────
 
 @store_bp.route('/<int:fid>/beacons', methods=['GET'])
