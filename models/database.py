@@ -150,6 +150,23 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_staff_invitations_email
             ON staff_invitations(email);
 
+        -- 매장 다국어 캐시 (SRS FR-I18N-002)
+        -- 매장명/주소/설명을 언어별로 캐시. (facility_id, language) UNIQUE.
+        CREATE TABLE IF NOT EXISTS facility_translations (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            facility_id INTEGER NOT NULL,
+            language    TEXT    NOT NULL,                  -- 'ko' | 'en' | 'ja' | 'zh' | ...
+            name        TEXT,
+            address     TEXT,
+            description TEXT,
+            created_at  TEXT    DEFAULT (datetime('now')),
+            updated_at  TEXT    DEFAULT (datetime('now')),
+            UNIQUE (facility_id, language),
+            FOREIGN KEY (facility_id) REFERENCES facilities(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_facility_translations_facility
+            ON facility_translations(facility_id);
+
         -- 매장 다중 이미지 (SRS FR-STORE-001)
         -- facilities.image_url은 대표 이미지의 URL을 미러링한다 (핸드셰이크 호환).
         CREATE TABLE IF NOT EXISTS facility_images (
