@@ -176,7 +176,12 @@ def update_facility(fid):
 @store_bp.route('/<int:fid>', methods=['DELETE'])
 @require_auth(sub_type='facility')
 def delete_facility(fid):
-    """매장 비활성화 (soft delete; 데이터는 보존, 조회에서 제외)."""
+    """매장 비활성화 (soft delete; 데이터 보존, 조회에서 제외).
+
+    cascade — 매장이 비활성화되면 그 매장에 묶인 비콘/WiFi도 운영 중단:
+      * beacons.status='inactive'
+      * wifi_profiles.active=0
+    """
     account_id = g.auth['user_id']
     db = get_db()
     cur = db.execute(
@@ -184,10 +189,46 @@ def delete_facility(fid):
            WHERE id=? AND owner_id=? AND active=1""",
         (fid, account_id)
     )
-    db.commit()
     affected = cur.rowcount
-    db.close()
     if affected == 0:
+        db.close()
         return jsonify({'success': False,
                         'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+
+    # cascade
+    db.execute("UPDATE beacons       SET status='inactive' WHERE facility_id=?", (fid,))
+    db.execute("UPDATE wifi_profiles SET active=0          WHERE facility_id=?", (fid,))
+    db.commit()
+    db.close()
     return jsonify({'success': True, 'message': '매장이 비활성화되었습니다.'})
+
+
+# ── 매장별 비콘 목록 ──────────────────────────────────────────────────────────
+
+@store_bp.route('/<int:fid>/beacons', methods=['GET'])
+@require_auth(sub_type='facility')
+def list_facility_beacons(fid):
+    """특정 매장의 비콘 목록 (소유 매장만)."""
+    account_id = g.auth['user_id']
+    db = get_db()
+    owned = db.execute(
+        "SELECT 1 FROM facilities WHERE id=? AND owner_id=? AND active=1",
+        (fid, account_id)
+    ).fetchone()
+    if not owned:
+        db.close()
+        return jsonify({'success': False,
+                        'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+
+    rows = db.execute(
+        """SELECT id, serial_no, uuid, status, battery_pct, firmware_ver, created_at
+           FROM beacons WHERE facility_id=?
+           ORDER BY id DESC""",
+        (fid,)
+    ).fetchall()
+    db.close()
+    return jsonify({
+        'success': True,
+        'facility_id': fid,
+        'beacons': [dict(r) for r in rows],
+    })
