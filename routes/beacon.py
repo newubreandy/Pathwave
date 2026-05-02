@@ -1,6 +1,7 @@
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from models.database import get_db
+from models.crypto import encrypt_secret, decrypt_secret
 
 beacon_bp = Blueprint('beacon', __name__, url_prefix='/api/beacon')
 
@@ -77,9 +78,36 @@ def handshake():
         },
         'wifi': {
             'ssid':     wifi['ssid'],
-            'password': wifi['password'],  # TODO: AES 복호화 후 전송
+            'password': decrypt_secret(wifi['password']),  # AES-GCM 복호화
         }
     })
+
+
+@beacon_bp.route('/wifi', methods=['POST'])
+def register_wifi():
+    """시설 WiFi 프로필 등록/교체 (Admin용). SRS FR-WIFI-001.
+
+    비밀번호는 AES-256-GCM으로 암호화해 저장한다.
+    """
+    data        = request.get_json(silent=True) or {}
+    facility_id = data.get('facility_id')
+    ssid        = (data.get('ssid')     or '').strip()
+    password    = data.get('password')  or ''
+
+    if not facility_id or not ssid or not password:
+        return jsonify({'success': False, 'message': 'facility_id, ssid, password는 필수입니다.'}), 400
+
+    enc = encrypt_secret(password)
+    db = get_db()
+    db.execute('UPDATE wifi_profiles SET active=0 WHERE facility_id=?', (facility_id,))
+    db.execute(
+        """INSERT INTO wifi_profiles (facility_id, ssid, password, active)
+           VALUES (?,?,?,1)""",
+        (facility_id, ssid, enc),
+    )
+    db.commit()
+    db.close()
+    return jsonify({'success': True, 'message': 'WiFi 프로필이 등록되었습니다.'})
 
 
 @beacon_bp.route('/status', methods=['GET'])
