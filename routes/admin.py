@@ -124,3 +124,219 @@ def admin_refresh():
         **issue_token_pair(row['id'], row['email'], sub_type='super_admin',
                            extra_claims=extra),
     })
+
+
+# ════ 비콘 인벤토리 관리 (FSC-BP108B 등 하드웨어 입고/할당) ════════════════
+
+import re as _re
+
+_UUID_RE = _re.compile(r'^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$')
+_BEACON_STATUSES = {'inventory', 'active', 'inactive', 'lost'}
+
+
+def _row_to_beacon(row) -> dict:
+    return {
+        'id':           row['id'],
+        'serial_no':    row['serial_no'],
+        'uuid':         row['uuid'],
+        'facility_id':  row['facility_id'],
+        'facility_name': row['facility_name'] if 'facility_name' in row.keys() else None,
+        'status':       row['status'],
+        'battery_pct':  row['battery_pct'],
+        'firmware_ver': row['firmware_ver'],
+        'created_at':   row['created_at'],
+    }
+
+
+@admin_bp.route('/beacons/import', methods=['POST'])
+@require_super_admin()
+def import_beacons():
+    """비콘 bulk 입고. body: {beacons: [{serial_no, uuid, firmware_ver?}]}.
+
+    각 row는 ``status='inventory'``로 들어감. SN/UUID 중복은 422의 errors[]에
+    상세 보고하고 나머지는 정상 처리(부분 성공).
+    """
+    data = request.get_json(silent=True) or {}
+    items = data.get('beacons') or []
+    if not isinstance(items, list) or not items:
+        return jsonify({'success': False,
+                        'message': 'beacons 배열이 필요합니다.'}), 400
+    if len(items) > 1000:
+        return jsonify({'success': False,
+                        'message': '한 번에 최대 1000개까지.'}), 400
+
+    db = get_db()
+    imported, errors = [], []
+    for idx, item in enumerate(items):
+        sn   = (item.get('serial_no') or '').strip()
+        uuid = (item.get('uuid') or '').strip().upper()
+        fw   = (item.get('firmware_ver') or '').strip() or None
+        if not sn or not _UUID_RE.match(uuid):
+            errors.append({'index': idx, 'serial_no': sn, 'uuid': uuid,
+                           'error': 'invalid_format'})
+            continue
+        try:
+            cur = db.execute(
+                """INSERT INTO beacons (serial_no, uuid, firmware_ver, status)
+                   VALUES (?,?,?,'inventory')""",
+                (sn, uuid, fw)
+            )
+            imported.append({'id': cur.lastrowid, 'serial_no': sn, 'uuid': uuid})
+        except Exception as e:
+            errors.append({'index': idx, 'serial_no': sn, 'uuid': uuid,
+                           'error': str(e)})
+    db.commit()
+    db.close()
+    return jsonify({'success': True,
+                    'imported_count': len(imported),
+                    'imported': imported,
+                    'errors': errors}), 201
+
+
+@admin_bp.route('/beacons', methods=['GET'])
+@require_super_admin()
+def list_beacons():
+    """전체 비콘. 필터: ``?status``, ``?facility_id``, ``?q`` (serial 부분 일치)."""
+    status = (request.args.get('status') or '').strip()
+    facility_id = request.args.get('facility_id', type=int)
+    q = (request.args.get('q') or '').strip()
+
+    db = get_db()
+    sql = """SELECT b.*, f.name AS facility_name
+             FROM beacons b
+             LEFT JOIN facilities f ON b.facility_id = f.id"""
+    where, params = [], []
+    if status:
+        if status not in _BEACON_STATUSES:
+            db.close()
+            return jsonify({'success': False,
+                            'message': f"status는 {sorted(_BEACON_STATUSES)} 중 하나여야 합니다."}), 400
+        where.append("b.status=?"); params.append(status)
+    if facility_id:
+        where.append("b.facility_id=?"); params.append(facility_id)
+    if q:
+        where.append("b.serial_no LIKE ?"); params.append(f'%{q}%')
+    if where:
+        sql += " WHERE " + " AND ".join(where)
+    sql += " ORDER BY b.id DESC"
+    rows = db.execute(sql, params).fetchall()
+    db.close()
+    return jsonify({'success': True,
+                    'count': len(rows),
+                    'beacons': [_row_to_beacon(r) for r in rows]})
+
+
+@admin_bp.route('/beacons/<int:bid>', methods=['PATCH'])
+@require_super_admin()
+def update_beacon(bid):
+    """펌웨어/배터리/상태/UUID 갱신."""
+    data = request.get_json(silent=True) or {}
+    db = get_db()
+    row = db.execute("SELECT * FROM beacons WHERE id=?", (bid,)).fetchone()
+    if not row:
+        db.close()
+        return jsonify({'success': False, 'message': '비콘을 찾을 수 없습니다.'}), 404
+
+    sets, vals = [], []
+    if 'firmware_ver' in data:
+        sets.append('firmware_ver=?')
+        vals.append((data['firmware_ver'] or '').strip() or None)
+    if 'battery_pct' in data:
+        bp = data['battery_pct']
+        if not isinstance(bp, int) or not 0 <= bp <= 100:
+            db.close()
+            return jsonify({'success': False,
+                            'message': 'battery_pct는 0~100 정수여야 합니다.'}), 400
+        sets.append('battery_pct=?'); vals.append(bp)
+    if 'status' in data:
+        s = data['status']
+        if s not in _BEACON_STATUSES:
+            db.close()
+            return jsonify({'success': False,
+                            'message': f"status는 {sorted(_BEACON_STATUSES)} 중 하나여야 합니다."}), 400
+        sets.append('status=?'); vals.append(s)
+    if 'uuid' in data:
+        uu = (data['uuid'] or '').strip().upper()
+        if not _UUID_RE.match(uu):
+            db.close()
+            return jsonify({'success': False,
+                            'message': 'uuid 형식이 올바르지 않습니다.'}), 400
+        sets.append('uuid=?'); vals.append(uu)
+    if not sets:
+        db.close()
+        return jsonify({'success': False, 'message': '수정할 필드가 없습니다.'}), 400
+
+    vals.append(bid)
+    db.execute(f"UPDATE beacons SET {', '.join(sets)} WHERE id=?", vals)
+    new_row = db.execute(
+        """SELECT b.*, f.name AS facility_name
+           FROM beacons b LEFT JOIN facilities f ON b.facility_id=f.id
+           WHERE b.id=?""", (bid,)
+    ).fetchone()
+    db.commit()
+    db.close()
+    return jsonify({'success': True, 'beacon': _row_to_beacon(new_row)})
+
+
+@admin_bp.route('/beacons/<int:bid>/assign', methods=['POST'])
+@require_super_admin()
+def assign_beacon(bid):
+    """매장에 비콘 직접 할당. body: {facility_id}.
+
+    inventory 또는 inactive 상태에서 active로 전환 + facility_id 설정.
+    """
+    data = request.get_json(silent=True) or {}
+    facility_id = data.get('facility_id')
+    if not isinstance(facility_id, int) or facility_id < 1:
+        return jsonify({'success': False, 'message': 'facility_id가 필요합니다.'}), 400
+
+    db = get_db()
+    beacon = db.execute("SELECT * FROM beacons WHERE id=?", (bid,)).fetchone()
+    if not beacon:
+        db.close()
+        return jsonify({'success': False, 'message': '비콘을 찾을 수 없습니다.'}), 404
+    if beacon['status'] == 'active' and beacon['facility_id'] == facility_id:
+        db.close()
+        return jsonify({'success': False, 'message': '이미 해당 매장에 할당된 비콘입니다.'}), 409
+    if beacon['status'] == 'lost':
+        db.close()
+        return jsonify({'success': False,
+                        'message': "분실 상태 비콘은 먼저 PATCH로 status='inventory'로 복구해 주세요."}), 409
+    fac = db.execute(
+        "SELECT id FROM facilities WHERE id=? AND active=1", (facility_id,)
+    ).fetchone()
+    if not fac:
+        db.close()
+        return jsonify({'success': False, 'message': '매장을 찾을 수 없거나 비활성입니다.'}), 404
+
+    db.execute(
+        "UPDATE beacons SET facility_id=?, status='active' WHERE id=?",
+        (facility_id, bid)
+    )
+    db.commit()
+    new_row = db.execute(
+        """SELECT b.*, f.name AS facility_name
+           FROM beacons b LEFT JOIN facilities f ON b.facility_id=f.id
+           WHERE b.id=?""", (bid,)
+    ).fetchone()
+    db.close()
+    return jsonify({'success': True, 'beacon': _row_to_beacon(new_row)})
+
+
+@admin_bp.route('/beacons/<int:bid>/unassign', methods=['POST'])
+@require_super_admin()
+def unassign_beacon(bid):
+    """매장에서 회수 → inventory 복귀."""
+    db = get_db()
+    cur = db.execute(
+        """UPDATE beacons SET facility_id=NULL, status='inventory'
+           WHERE id=? AND facility_id IS NOT NULL""",
+        (bid,)
+    )
+    db.commit()
+    affected = cur.rowcount
+    db.close()
+    if affected == 0:
+        return jsonify({'success': False,
+                        'message': '비콘을 찾을 수 없거나 이미 인벤토리 상태입니다.'}), 404
+    return jsonify({'success': True})
