@@ -23,6 +23,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, g
 
 from models.database import get_db
+from models.push import push_to_users
 from routes.auth import require_facility_actor, require_auth
 
 notification_bp = Blueprint('notification', __name__)
@@ -170,26 +171,25 @@ def create_notification(fid):
     if is_due:
         # specific 케이스의 user_ids는 _dispatch가 다시 request.get_json을 보지 않도록 직접 처리
         if target_type == 'specific':
-            for uid in set(user_ids):
-                db.execute(
-                    "INSERT OR IGNORE INTO notification_recipients (notification_id, user_id) VALUES (?,?)",
-                    (nid, uid)
-                )
-            total = len(set(user_ids))
+            recipients_list = list(set(user_ids))
         else:
-            recipients = _resolve_recipients(db, fid, target_type, None)
-            for uid in recipients:
-                db.execute(
-                    "INSERT OR IGNORE INTO notification_recipients (notification_id, user_id) VALUES (?,?)",
-                    (nid, uid)
-                )
-            total = len(recipients)
+            recipients_list = _resolve_recipients(db, fid, target_type, None)
+        for uid in recipients_list:
+            db.execute(
+                "INSERT OR IGNORE INTO notification_recipients (notification_id, user_id) VALUES (?,?)",
+                (nid, uid)
+            )
+        total = len(recipients_list)
         db.execute(
             """UPDATE notifications
                  SET status='sent', sent_at=datetime('now'), recipient_count=?
                WHERE id=?""",
             (total, nid)
         )
+        # 푸시 발송 (best-effort)
+        push_to_users(db, recipients_list, title=title, body=body,
+                      data={'type': 'notification', 'notification_id': nid,
+                            'facility_id': fid})
     row = db.execute("SELECT * FROM notifications WHERE id=?", (nid,)).fetchone()
     db.commit()
     db.close()
@@ -302,6 +302,9 @@ def dispatch_notification(nid):
            WHERE id=?""",
         (len(recipients), nid)
     )
+    push_to_users(db, recipients, title=row['title'], body=row['body'],
+                  data={'type': 'notification', 'notification_id': nid,
+                        'facility_id': row['facility_id']})
     new_row = db.execute("SELECT * FROM notifications WHERE id=?", (nid,)).fetchone()
     db.commit()
     db.close()

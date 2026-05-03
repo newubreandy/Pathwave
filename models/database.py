@@ -186,6 +186,21 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_staff_invitations_email
             ON staff_invitations(email);
 
+        -- 푸시 토큰 (SRS FR-NOTI 푸시 발송 / FR-CHAT 새 메시지 알림)
+        -- 한 사용자가 여러 디바이스 가능. 같은 (token, platform)은 UNIQUE.
+        CREATE TABLE IF NOT EXISTS push_tokens (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id     INTEGER NOT NULL,
+            token       TEXT    NOT NULL,
+            platform    TEXT    NOT NULL,                  -- 'fcm' | 'apns'
+            language    TEXT,                              -- 푸시 언어 힌트
+            created_at  TEXT    DEFAULT (datetime('now')),
+            updated_at  TEXT    DEFAULT (datetime('now')),
+            UNIQUE (token, platform),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_push_tokens_user ON push_tokens(user_id);
+
         -- 채팅 (SRS FR-CHAT-001/002) — 1:1 사용자-매장
         -- chat_rooms: 매장×사용자 단일성 (UNIQUE)
         CREATE TABLE IF NOT EXISTS chat_rooms (

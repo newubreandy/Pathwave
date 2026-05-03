@@ -19,6 +19,7 @@ import jwt
 from flask import Blueprint, request, jsonify, g
 
 from models.database import get_db
+from models.push import push_to_users
 from routes.auth import require_auth, SECRET_KEY
 
 chat_bp = Blueprint('chat', __name__)
@@ -250,6 +251,15 @@ def send_message(rid):
     )
     new_row = db.execute("SELECT * FROM chat_messages WHERE id=?",
                          (cur.lastrowid,)).fetchone()
+
+    # 상대방에게 푸시 (facility 측 송신 → user에게, user 송신 → facility 직원에게는 추후)
+    if sender_type == 'facility':
+        push_to_users(
+            db, [room['user_id']],
+            title=f'새 메시지',
+            body=body[:120],
+            data={'type': 'chat_message', 'room_id': rid}
+        )
     db.commit()
     db.close()
     return jsonify({'success': True, 'message': _row_to_message(new_row)}), 201
