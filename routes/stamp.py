@@ -265,7 +265,7 @@ def grant_stamp(fid):
 
 
 @stamp_bp.route('/api/facilities/<int:fid>/stamps', methods=['GET'])
-@require_facility_actor(roles=['owner', 'admin'])
+@require_facility_actor()
 def list_stamps(fid):
     """매장의 스탬프 적립 이력 (필터: ?user_id=N)."""
     account_id = g.auth['owner_account_id']

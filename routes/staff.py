@@ -328,6 +328,59 @@ def staff_login():
     })
 
 
+@staff_bp.route('/me/today', methods=['GET'])
+@require_auth(sub_type='staff')
+def staff_today():
+    """오늘 (UTC 기준) 내가 한 활동 — 적립 스탬프, 사용 처리한 쿠폰, 채팅 응대."""
+    actor_id   = g.auth['user_id']
+    actor_role = g.auth.get('role')
+    db = get_db()
+    stamps = db.execute(
+        """SELECT s.id, s.facility_id, s.user_id, s.amount, s.note, s.created_at,
+                  f.name AS facility_name
+           FROM stamps s JOIN facilities f ON s.facility_id=f.id
+           WHERE s.granted_by_actor_role=? AND s.granted_by_actor_id=?
+             AND date(s.created_at)=date('now')
+           ORDER BY s.id DESC""",
+        (actor_role, actor_id)
+    ).fetchall()
+    coupons = db.execute(
+        """SELECT c.id, c.facility_id, c.user_id, c.title, c.used_at,
+                  f.name AS facility_name
+           FROM coupons c JOIN facilities f ON c.facility_id=f.id
+           WHERE c.used=1 AND c.used_by_actor_role=? AND c.used_by_actor_id=?
+             AND date(c.used_at)=date('now')
+           ORDER BY c.id DESC""",
+        (actor_role, actor_id)
+    ).fetchall()
+    chats = db.execute(
+        """SELECT m.id, m.room_id, m.body, m.created_at,
+                  r.facility_id, r.user_id, f.name AS facility_name
+           FROM chat_messages m
+           JOIN chat_rooms r ON m.room_id=r.id
+           JOIN facilities f ON r.facility_id=f.id
+           WHERE m.sender_type='facility' AND m.sender_actor_role=?
+             AND m.sender_actor_id=?
+             AND date(m.created_at)=date('now')
+           ORDER BY m.id DESC""",
+        (actor_role, actor_id)
+    ).fetchall()
+    db.close()
+    return jsonify({
+        'success': True,
+        'today': {
+            'stamps_granted':   [dict(r) for r in stamps],
+            'coupons_used':     [dict(r) for r in coupons],
+            'messages_sent':    [dict(r) for r in chats],
+        },
+        'totals': {
+            'stamps_count':  sum(r['amount'] for r in stamps),
+            'coupons_count': len(coupons),
+            'messages_count': len(chats),
+        }
+    })
+
+
 @staff_bp.route('/me', methods=['GET'])
 @require_auth(sub_type='staff')
 def staff_me():
