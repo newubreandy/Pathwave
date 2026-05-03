@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify, g
 from models.database import get_db
 from models.crypto import encrypt_secret, decrypt_secret
@@ -66,11 +66,16 @@ def handshake():
         db.close()
         return jsonify({'success': False, 'message': 'WiFi 프로필이 등록되지 않았습니다.'}), 404
 
-    # 접속 로그 기록
+    # 접속 로그 기록 + 자동 스탬프 적립 시도
+    granted_stamp = None
+    auto_stamp_skipped_reason = None
     if user_id:
         db.execute(
             "INSERT INTO user_wifi_logs (user_id, facility_id) VALUES (?,?)",
             (user_id, facility_id)
+        )
+        granted_stamp, auto_stamp_skipped_reason = _maybe_grant_auto_stamp(
+            db, facility_id, int(user_id)
         )
         db.commit()
 
@@ -88,8 +93,60 @@ def handshake():
         'wifi': {
             'ssid':     wifi['ssid'],
             'password': decrypt_secret(wifi['password']),  # AES-GCM 복호화
-        }
+        },
+        'granted_stamp': granted_stamp,
+        'auto_stamp_skipped_reason': auto_stamp_skipped_reason,
     })
+
+
+def _maybe_grant_auto_stamp(db, facility_id: int, user_id: int):
+    """``stamp_policies.auto_stamp_enabled``가 켜져 있고 쿨다운 안 지났으면
+    스탬프 1개 자동 적립. (granted_stamp, skipped_reason) 둘 중 하나만 채워짐.
+
+    skipped_reason 값:
+      - 'no_active_policy'        활성 정책 없음
+      - 'auto_stamp_disabled'     정책에서 자동 적립 OFF
+      - 'cooldown'                직전 적립 후 쿨다운 미경과
+    """
+    policy = db.execute(
+        "SELECT * FROM stamp_policies WHERE facility_id=? AND active=1",
+        (facility_id,)
+    ).fetchone()
+    if not policy:
+        return None, 'no_active_policy'
+    if not policy['auto_stamp_enabled']:
+        return None, 'auto_stamp_disabled'
+
+    cooldown_min = policy['auto_stamp_cooldown_minutes']
+    cooldown_threshold = (datetime.utcnow()
+                          - timedelta(minutes=cooldown_min)).strftime('%Y-%m-%d %H:%M:%S')
+    last = db.execute(
+        """SELECT created_at FROM stamps
+           WHERE facility_id=? AND user_id=? AND granted_by_actor_role='system'
+           ORDER BY id DESC LIMIT 1""",
+        (facility_id, user_id)
+    ).fetchone()
+    if last and last['created_at'] >= cooldown_threshold:
+        return None, 'cooldown'
+
+    expires_at = None
+    if policy['expires_days']:
+        expires_at = (datetime.utcnow()
+                      + timedelta(days=policy['expires_days'])).isoformat()
+    owner_id = db.execute(
+        "SELECT owner_id FROM facilities WHERE id=?", (facility_id,)
+    ).fetchone()['owner_id']
+
+    cur = db.execute(
+        """INSERT INTO stamps
+             (facility_id, user_id, amount, note,
+              granted_by_account_id, granted_by_actor_role, granted_by_actor_id,
+              expires_at)
+           VALUES (?,?,1,?,?,?,?,?)""",
+        (facility_id, user_id, 'BLE 자동 적립',
+         owner_id, 'system', None, expires_at)
+    )
+    return {'id': cur.lastrowid, 'amount': 1, 'expires_at': expires_at}, None
 
 
 @beacon_bp.route('/wifi', methods=['POST'])

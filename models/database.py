@@ -116,6 +116,8 @@ def init_db():
             reward_description TEXT    NOT NULL,           -- 예: '아메리카노 1잔 무료'
             expires_days       INTEGER,                    -- 적립일 기준 N일 (NULL=무기한)
             design_image_url   TEXT,                       -- 스탬프 카드 디자인 이미지
+            auto_stamp_enabled INTEGER DEFAULT 0,          -- BLE 자동 적립 ON/OFF
+            auto_stamp_cooldown_minutes INTEGER DEFAULT 60,-- 같은 사용자 재적립 쿨다운
             active             INTEGER DEFAULT 1,
             created_at         TEXT    DEFAULT (datetime('now')),
             updated_at         TEXT    DEFAULT (datetime('now')),
@@ -264,6 +266,11 @@ def init_db():
     _add_column_if_missing(db, 'coupons', 'used_by_actor_id',     'used_by_actor_id INTEGER')
     _add_column_if_missing(db, 'coupons', 'issued_by_actor_role', 'issued_by_actor_role TEXT')
     _add_column_if_missing(db, 'coupons', 'issued_by_actor_id',   'issued_by_actor_id INTEGER')
+    # stamp_policies: BLE 자동 적립 (FR-STAMP-001)
+    _add_column_if_missing(db, 'stamp_policies', 'auto_stamp_enabled',
+                           'auto_stamp_enabled INTEGER DEFAULT 0')
+    _add_column_if_missing(db, 'stamp_policies', 'auto_stamp_cooldown_minutes',
+                           'auto_stamp_cooldown_minutes INTEGER DEFAULT 60')
 
     db.commit()
     db.close()
