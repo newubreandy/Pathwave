@@ -139,8 +139,9 @@ def register():
     cur = db.execute(
         """INSERT INTO facility_accounts
            (business_no, company_name, email, password,
-            manager_name, manager_phone, manager_email, verified)
-           VALUES (?,?,?,?,?,?,?,1)""",
+            manager_name, manager_phone, manager_email,
+            verified, status)
+           VALUES (?,?,?,?,?,?,?,0,'pending')""",
         (business_no, company_name, email, hashed,
          manager_name, manager_phone, manager_email)
     )
@@ -148,16 +149,18 @@ def register():
     db.execute('UPDATE email_codes SET used=1 WHERE email=? AND code=?', (email, code))
     db.commit(); db.close()
 
+    # 가입 즉시 토큰 발급은 하지 않음 — 운영자 승인 후 로그인.
     return jsonify({
         'success': True,
-        'message': '시설 회원가입이 완료되었습니다!',
-        **issue_token_pair(facility_account_id, email, sub_type='facility'),
+        'pending_approval': True,
+        'message': '가입 신청이 접수되었습니다. 운영자 승인 후 로그인할 수 있어요.',
         'facility_account': {
             'id': facility_account_id,
             'company_name': company_name,
             'email': email,
+            'status': 'pending',
         },
-    })
+    }), 201
 
 
 # ── 로그인 ────────────────────────────────────────────────────────────────────
@@ -173,7 +176,7 @@ def login():
 
     db  = get_db()
     row = db.execute(
-        "SELECT id, password, company_name FROM facility_accounts WHERE email=?",
+        "SELECT id, password, company_name, status, suspended_reason FROM facility_accounts WHERE email=?",
         (email,)
     ).fetchone()
     db.close()
@@ -181,6 +184,20 @@ def login():
     if not row or not bcrypt.checkpw(password.encode(), row['password'].encode()):
         return jsonify({'success': False,
                         'message': '이메일 또는 비밀번호가 올바르지 않습니다.'}), 401
+
+    status = row['status'] or 'pending'
+    if status == 'pending':
+        return jsonify({'success': False,
+                        'pending_approval': True,
+                        'message': '운영자 승인 대기 중입니다. 영업일 1~3일 소요됩니다.'}), 403
+    if status == 'suspended':
+        reason = row['suspended_reason'] or '관리자에게 문의해 주세요.'
+        return jsonify({'success': False,
+                        'suspended': True,
+                        'message': f'계정이 정지되었습니다: {reason}'}), 403
+    if status != 'verified':
+        return jsonify({'success': False,
+                        'message': '계정 상태가 비정상입니다. 관리자에게 문의해 주세요.'}), 403
 
     return jsonify({
         'success': True,

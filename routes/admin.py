@@ -323,6 +323,153 @@ def assign_beacon(bid):
     return jsonify({'success': True, 'beacon': _row_to_beacon(new_row)})
 
 
+# ════ 사장 가입 승인 / 정지 ═══════════════════════════════════════════════
+
+def _row_to_facility_account(row) -> dict:
+    return {
+        'id':                   row['id'],
+        'business_no':          row['business_no'],
+        'company_name':         row['company_name'],
+        'email':                row['email'],
+        'phone':                row['phone'],
+        'manager_name':         row['manager_name'],
+        'manager_phone':        row['manager_phone'],
+        'manager_email':        row['manager_email'],
+        'status':               row['status'] or 'pending',
+        'business_doc_url':     row['business_doc_url'],
+        'approved_at':          row['approved_at'],
+        'approved_by_admin_id': row['approved_by_admin_id'],
+        'suspended_at':         row['suspended_at'],
+        'suspended_reason':     row['suspended_reason'],
+        'created_at':           row['created_at'],
+    }
+
+
+@admin_bp.route('/facility-accounts', methods=['GET'])
+@require_super_admin()
+def list_facility_accounts():
+    """사장 계정 목록. ?status=pending|verified|suspended|all (기본 all)."""
+    status = (request.args.get('status') or 'all').strip()
+    q = (request.args.get('q') or '').strip()
+    db = get_db()
+    sql = "SELECT * FROM facility_accounts"
+    where, params = [], []
+    if status != 'all':
+        where.append("(status=? OR (status IS NULL AND ?='pending'))")
+        params.extend([status, status])
+    if q:
+        where.append("(email LIKE ? OR company_name LIKE ? OR business_no LIKE ?)")
+        like = f'%{q}%'
+        params.extend([like, like, like])
+    if where:
+        sql += " WHERE " + " AND ".join(where)
+    sql += " ORDER BY id DESC"
+    rows = db.execute(sql, params).fetchall()
+    db.close()
+    return jsonify({'success': True,
+                    'count': len(rows),
+                    'accounts': [_row_to_facility_account(r) for r in rows]})
+
+
+@admin_bp.route('/facility-accounts/<int:aid>', methods=['GET'])
+@require_super_admin()
+def get_facility_account(aid):
+    db = get_db()
+    row = db.execute("SELECT * FROM facility_accounts WHERE id=?", (aid,)).fetchone()
+    db.close()
+    if not row:
+        return jsonify({'success': False, 'message': '계정을 찾을 수 없습니다.'}), 404
+    return jsonify({'success': True, 'account': _row_to_facility_account(row)})
+
+
+@admin_bp.route('/facility-accounts/<int:aid>/verify', methods=['POST'])
+@require_super_admin()
+def verify_facility_account(aid):
+    """가입 승인 — pending → verified."""
+    admin_id = g.auth['user_id']
+    db = get_db()
+    row = db.execute(
+        "SELECT id, status FROM facility_accounts WHERE id=?", (aid,)
+    ).fetchone()
+    if not row:
+        db.close()
+        return jsonify({'success': False, 'message': '계정을 찾을 수 없습니다.'}), 404
+    if row['status'] == 'verified':
+        db.close()
+        return jsonify({'success': False, 'message': '이미 승인된 계정입니다.'}), 409
+
+    db.execute(
+        """UPDATE facility_accounts
+             SET status='verified', verified=1,
+                 approved_at=datetime('now'),
+                 approved_by_admin_id=?,
+                 suspended_at=NULL, suspended_reason=NULL
+           WHERE id=?""",
+        (admin_id, aid)
+    )
+    new_row = db.execute("SELECT * FROM facility_accounts WHERE id=?", (aid,)).fetchone()
+    db.commit()
+    db.close()
+    return jsonify({'success': True,
+                    'message': '계정이 승인되었습니다.',
+                    'account': _row_to_facility_account(new_row)})
+
+
+@admin_bp.route('/facility-accounts/<int:aid>/suspend', methods=['POST'])
+@require_super_admin()
+def suspend_facility_account(aid):
+    """계정 정지 — verified|pending → suspended. body: {reason?}."""
+    data = request.get_json(silent=True) or {}
+    reason = (data.get('reason') or '').strip() or None
+    db = get_db()
+    row = db.execute("SELECT id, status FROM facility_accounts WHERE id=?", (aid,)).fetchone()
+    if not row:
+        db.close()
+        return jsonify({'success': False, 'message': '계정을 찾을 수 없습니다.'}), 404
+    if row['status'] == 'suspended':
+        db.close()
+        return jsonify({'success': False, 'message': '이미 정지된 계정입니다.'}), 409
+    db.execute(
+        """UPDATE facility_accounts
+             SET status='suspended', verified=0,
+                 suspended_at=datetime('now'),
+                 suspended_reason=?
+           WHERE id=?""",
+        (reason, aid)
+    )
+    new_row = db.execute("SELECT * FROM facility_accounts WHERE id=?", (aid,)).fetchone()
+    db.commit()
+    db.close()
+    return jsonify({'success': True,
+                    'message': '계정이 정지되었습니다.',
+                    'account': _row_to_facility_account(new_row)})
+
+
+@admin_bp.route('/facility-accounts/<int:aid>/reactivate', methods=['POST'])
+@require_super_admin()
+def reactivate_facility_account(aid):
+    """정지 해제 — suspended → verified."""
+    db = get_db()
+    row = db.execute("SELECT id, status FROM facility_accounts WHERE id=?", (aid,)).fetchone()
+    if not row:
+        db.close()
+        return jsonify({'success': False, 'message': '계정을 찾을 수 없습니다.'}), 404
+    if row['status'] != 'suspended':
+        db.close()
+        return jsonify({'success': False,
+                        'message': "정지 상태가 아닙니다."}), 409
+    db.execute(
+        """UPDATE facility_accounts
+             SET status='verified', verified=1,
+                 suspended_at=NULL, suspended_reason=NULL
+           WHERE id=?""", (aid,)
+    )
+    new_row = db.execute("SELECT * FROM facility_accounts WHERE id=?", (aid,)).fetchone()
+    db.commit()
+    db.close()
+    return jsonify({'success': True, 'account': _row_to_facility_account(new_row)})
+
+
 @admin_bp.route('/beacons/<int:bid>/unassign', methods=['POST'])
 @require_super_admin()
 def unassign_beacon(bid):

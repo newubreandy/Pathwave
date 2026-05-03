@@ -52,17 +52,23 @@ def init_db():
         );
 
         CREATE TABLE IF NOT EXISTS facility_accounts (
-            id              INTEGER PRIMARY KEY AUTOINCREMENT,
-            business_no     TEXT    UNIQUE NOT NULL,   -- 사업자등록번호
-            company_name    TEXT    NOT NULL,
-            email           TEXT    UNIQUE NOT NULL,
-            password        TEXT    NOT NULL,
-            phone           TEXT,
-            manager_name    TEXT,
-            manager_phone   TEXT,
-            manager_email   TEXT,
-            verified        INTEGER DEFAULT 0,
-            created_at      TEXT    DEFAULT (datetime('now'))
+            id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+            business_no           TEXT    UNIQUE NOT NULL,
+            company_name          TEXT    NOT NULL,
+            email                 TEXT    UNIQUE NOT NULL,
+            password              TEXT    NOT NULL,
+            phone                 TEXT,
+            manager_name          TEXT,
+            manager_phone         TEXT,
+            manager_email         TEXT,
+            verified              INTEGER DEFAULT 0,        -- 호환용 (status='verified'와 동기화)
+            status                TEXT    DEFAULT 'pending',-- pending|verified|suspended
+            business_doc_url      TEXT,                     -- 사업자등록증 이미지
+            approved_at           TEXT,
+            approved_by_admin_id  INTEGER,                  -- super_admin_accounts.id
+            suspended_at          TEXT,
+            suspended_reason      TEXT,
+            created_at            TEXT    DEFAULT (datetime('now'))
         );
 
         CREATE TABLE IF NOT EXISTS beacons (
@@ -396,6 +402,19 @@ def init_db():
                            "welcome_coupon_validity_days INTEGER")
     _add_column_if_missing(db, 'coupons', 'source',
                            "source TEXT")  # 'manual'|'welcome'|'stamp_reward'
+
+    # facility_accounts 가입 승인 흐름 (PR #26)
+    _add_column_if_missing(db, 'facility_accounts', 'status',
+                           "status TEXT DEFAULT 'pending'")
+    _add_column_if_missing(db, 'facility_accounts', 'business_doc_url', 'business_doc_url TEXT')
+    _add_column_if_missing(db, 'facility_accounts', 'approved_at', 'approved_at TEXT')
+    _add_column_if_missing(db, 'facility_accounts', 'approved_by_admin_id', 'approved_by_admin_id INTEGER')
+    _add_column_if_missing(db, 'facility_accounts', 'suspended_at', 'suspended_at TEXT')
+    _add_column_if_missing(db, 'facility_accounts', 'suspended_reason', 'suspended_reason TEXT')
+    # 기존 row 정합화: verified=1이면 status='verified'로 (한 번만 의미 있음, idempotent)
+    db.execute(
+        "UPDATE facility_accounts SET status='verified' WHERE verified=1 AND (status='pending' OR status IS NULL)"
+    )
 
     # ── Super Admin 부트스트랩 ──────────────────────────────────────────────
     # ENV BOOTSTRAP_SUPER_ADMIN_EMAIL/PASSWORD가 설정되고 super admin이 0명이면
