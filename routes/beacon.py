@@ -66,17 +66,33 @@ def handshake():
         db.close()
         return jsonify({'success': False, 'message': 'WiFi 프로필이 등록되지 않았습니다.'}), 404
 
-    # 접속 로그 기록 + 자동 스탬프 적립 시도
+    # 접속 로그 기록 + 자동 스탬프 적립 + 환영 쿠폰 + 보상 쿠폰
     granted_stamp = None
     auto_stamp_skipped_reason = None
+    granted_coupons = []
     if user_id:
+        # 첫 방문 여부 — 환영 쿠폰 결정용 (로그 기록 전 확인)
+        is_first_visit = db.execute(
+            "SELECT 1 FROM user_wifi_logs WHERE user_id=? AND facility_id=? LIMIT 1",
+            (user_id, facility_id)
+        ).fetchone() is None
+
         db.execute(
             "INSERT INTO user_wifi_logs (user_id, facility_id) VALUES (?,?)",
             (user_id, facility_id)
         )
+        if is_first_visit:
+            wc = _maybe_issue_welcome_coupon(db, facility_id, int(user_id))
+            if wc:
+                granted_coupons.append(wc)
+
         granted_stamp, auto_stamp_skipped_reason = _maybe_grant_auto_stamp(
             db, facility_id, int(user_id)
         )
+        if granted_stamp:
+            rc = _maybe_issue_reward_coupon(db, facility_id, int(user_id))
+            if rc:
+                granted_coupons.append(rc)
         db.commit()
 
     db.close()
@@ -96,7 +112,90 @@ def handshake():
         },
         'granted_stamp': granted_stamp,
         'auto_stamp_skipped_reason': auto_stamp_skipped_reason,
+        'granted_coupons': granted_coupons,
     })
+
+
+def _issue_coupon_internal(db, facility_id: int, user_id: int, *,
+                           title: str, benefit: str | None,
+                           validity_days: int | None, source: str) -> dict | None:
+    """내부 시스템 쿠폰 발급. 실패 시 None."""
+    if not title:
+        return None
+    expires_at = None
+    if validity_days:
+        expires_at = (datetime.utcnow() + timedelta(days=validity_days)).isoformat()
+    cur = db.execute(
+        """INSERT INTO coupons
+             (facility_id, user_id, title, benefit, expires_at,
+              issued_by_actor_role, issued_by_actor_id, source)
+           VALUES (?,?,?,?,?,?,?,?)""",
+        (facility_id, user_id, title, benefit, expires_at,
+         'system', None, source)
+    )
+    return {'id': cur.lastrowid, 'source': source, 'title': title,
+            'expires_at': expires_at}
+
+
+def _maybe_issue_welcome_coupon(db, facility_id: int, user_id: int) -> dict | None:
+    fac = db.execute(
+        """SELECT welcome_coupon_title, welcome_coupon_benefit,
+                  welcome_coupon_validity_days
+           FROM facilities WHERE id=?""", (facility_id,)
+    ).fetchone()
+    if not fac or not fac['welcome_coupon_title']:
+        return None
+    return _issue_coupon_internal(
+        db, facility_id, user_id,
+        title=fac['welcome_coupon_title'],
+        benefit=fac['welcome_coupon_benefit'],
+        validity_days=fac['welcome_coupon_validity_days'],
+        source='welcome'
+    )
+
+
+def _maybe_issue_reward_coupon(db, facility_id: int, user_id: int) -> dict | None:
+    """스탬프 임계치 도달 시 보상 쿠폰 1회 발급.
+
+    'stamp_reward' 소스의 활성(active) 쿠폰이 이미 있으면 추가 발급 안 함
+    (사용 또는 만료 후에야 다시 발급).
+    """
+    policy = db.execute(
+        """SELECT reward_threshold, reward_coupon_title, reward_coupon_benefit,
+                  reward_coupon_validity_days
+           FROM stamp_policies WHERE facility_id=? AND active=1""",
+        (facility_id,)
+    ).fetchone()
+    if not policy or not policy['reward_coupon_title']:
+        return None
+
+    total = db.execute(
+        """SELECT COALESCE(SUM(amount), 0) AS total FROM stamps
+           WHERE facility_id=? AND user_id=?
+             AND (expires_at IS NULL OR expires_at > datetime('now'))""",
+        (facility_id, user_id)
+    ).fetchone()['total']
+    if total < policy['reward_threshold']:
+        return None
+
+    # 이미 활성(미사용·미만료) 보상 쿠폰이 있으면 중복 발급 안 함
+    existing = db.execute(
+        """SELECT 1 FROM coupons
+           WHERE facility_id=? AND user_id=? AND source='stamp_reward'
+             AND used=0
+             AND (expires_at IS NULL OR expires_at > datetime('now'))""",
+        (facility_id, user_id)
+    ).fetchone()
+    if existing:
+        return None
+
+    return _issue_coupon_internal(
+        db, facility_id, user_id,
+        title=policy['reward_coupon_title'],
+        benefit=policy['reward_coupon_benefit'],
+        validity_days=policy['reward_coupon_validity_days'],
+        source='stamp_reward'
+    )
 
 
 def _maybe_grant_auto_stamp(db, facility_id: int, user_id: int):

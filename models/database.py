@@ -314,6 +314,21 @@ def init_db():
                            'auto_stamp_enabled INTEGER DEFAULT 0')
     _add_column_if_missing(db, 'stamp_policies', 'auto_stamp_cooldown_minutes',
                            'auto_stamp_cooldown_minutes INTEGER DEFAULT 60')
+    # 자동 쿠폰 발급 (FR-COUPON-001 자동 발급)
+    _add_column_if_missing(db, 'stamp_policies', 'reward_coupon_title',
+                           "reward_coupon_title TEXT")
+    _add_column_if_missing(db, 'stamp_policies', 'reward_coupon_benefit',
+                           "reward_coupon_benefit TEXT")
+    _add_column_if_missing(db, 'stamp_policies', 'reward_coupon_validity_days',
+                           "reward_coupon_validity_days INTEGER")
+    _add_column_if_missing(db, 'facilities', 'welcome_coupon_title',
+                           "welcome_coupon_title TEXT")
+    _add_column_if_missing(db, 'facilities', 'welcome_coupon_benefit',
+                           "welcome_coupon_benefit TEXT")
+    _add_column_if_missing(db, 'facilities', 'welcome_coupon_validity_days',
+                           "welcome_coupon_validity_days INTEGER")
+    _add_column_if_missing(db, 'coupons', 'source',
+                           "source TEXT")  # 'manual'|'welcome'|'stamp_reward'
 
     db.commit()
     db.close()
