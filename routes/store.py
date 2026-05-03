@@ -590,6 +590,59 @@ def list_facility_beacons(fid):
     })
 
 
+# ── 매장에 인벤토리 비콘 claim ────────────────────────────────────────────────
+
+@store_bp.route('/<int:fid>/claim-beacon', methods=['POST'])
+@require_facility_actor(roles=['owner', 'admin'])
+def claim_beacon(fid):
+    """사장님이 SN을 입력해 인벤토리 비콘을 자기 매장에 claim.
+
+    body: ``{serial_no}``. 비콘은 ``status='inventory'``여야 함. 성공 시
+    ``status='active'`` + facility_id 할당.
+    """
+    account_id = g.auth['owner_account_id']
+    data = request.get_json(silent=True) or {}
+    serial_no = (data.get('serial_no') or '').strip()
+    if not serial_no:
+        return jsonify({'success': False, 'message': 'serial_no가 필요합니다.'}), 400
+
+    db = get_db()
+    if not _owned_facility(db, fid, account_id):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+
+    beacon = db.execute(
+        "SELECT id, status, facility_id FROM beacons WHERE serial_no=?",
+        (serial_no,)
+    ).fetchone()
+    if not beacon:
+        db.close()
+        return jsonify({'success': False,
+                        'message': '해당 SN의 비콘을 찾을 수 없습니다. Super Admin에 문의해 주세요.'}), 404
+    if beacon['status'] != 'inventory':
+        db.close()
+        if beacon['facility_id']:
+            return jsonify({'success': False,
+                            'message': '이미 다른 매장에 할당된 비콘입니다.'}), 409
+        return jsonify({'success': False,
+                        'message': f"비콘 상태가 '{beacon['status']}'이어서 claim할 수 없습니다."}), 409
+
+    db.execute(
+        "UPDATE beacons SET facility_id=?, status='active' WHERE id=?",
+        (fid, beacon['id'])
+    )
+    new_row = db.execute(
+        """SELECT id, serial_no, uuid, status, battery_pct, firmware_ver, created_at
+           FROM beacons WHERE id=?""", (beacon['id'],)
+    ).fetchone()
+    db.commit()
+    db.close()
+    return jsonify({'success': True,
+                    'message': '비콘이 매장에 할당되었습니다.',
+                    'beacon': dict(new_row)})
+
+
 # ── 매장 다국어 캐시 (SRS FR-I18N-002) ────────────────────────────────────────
 
 def _row_to_translation(row) -> dict:

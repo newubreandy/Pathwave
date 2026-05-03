@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify, g
 from models.database import get_db
 from models.crypto import encrypt_secret, decrypt_secret
-from routes.auth import require_facility_actor
+from routes.auth import require_facility_actor, require_super_admin
 
 beacon_bp = Blueprint('beacon', __name__, url_prefix='/api/beacon')
 
@@ -304,34 +304,34 @@ def beacon_status():
 
 
 @beacon_bp.route('/register', methods=['POST'])
-@require_facility_actor(roles=['owner', 'admin'])
+@require_super_admin()
 def register_beacon():
-    """비콘 등록 (시설 사장님 전용 — 본인 소유 시설만)."""
-    account_id = g.auth['owner_account_id']
+    """비콘 단건 등록 (Super Admin 전용 — 인벤토리 채널 일원화).
+
+    bulk import는 ``POST /api/admin/beacons/import`` 사용. 사장님이 자기 매장에
+    비콘을 추가하려면 ``POST /api/facilities/<fid>/claim-beacon`` 사용.
+    """
     data        = request.get_json(silent=True) or {}
     serial_no   = (data.get('serial_no')   or '').strip()
     uuid        = (data.get('uuid')        or '').strip()
-    facility_id = data.get('facility_id')
     firmware    = (data.get('firmware_ver') or '').strip()
 
     if not serial_no or not uuid:
-        return jsonify({'success': False, 'message': 'serial_no와 uuid는 필수입니다.'}), 400
+        return jsonify({'success': False,
+                        'message': 'serial_no와 uuid는 필수입니다.'}), 400
 
     db = get_db()
-    if facility_id and not _ensure_facility_owned(db, facility_id, account_id):
-        db.close()
-        return jsonify({'success': False, 'message': '해당 시설에 권한이 없습니다.'}), 403
     try:
-        db.execute(
-            """INSERT INTO beacons (serial_no, uuid, facility_id, firmware_ver, status)
-               VALUES (?,?,?,?,?)""",
-            (serial_no, uuid, facility_id, firmware,
-             'active' if facility_id else 'inventory')
+        cur = db.execute(
+            """INSERT INTO beacons (serial_no, uuid, firmware_ver, status)
+               VALUES (?,?,?,'inventory')""",
+            (serial_no, uuid, firmware),
         )
         db.commit()
+        bid = cur.lastrowid
     except Exception as e:
         db.close()
         return jsonify({'success': False, 'message': f'등록 실패: {str(e)}'}), 409
     db.close()
-
-    return jsonify({'success': True, 'message': '비콘이 등록되었습니다.'})
+    return jsonify({'success': True, 'message': '비콘이 인벤토리에 등록되었습니다.',
+                    'beacon': {'id': bid, 'serial_no': serial_no, 'status': 'inventory'}}), 201
