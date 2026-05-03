@@ -14,6 +14,7 @@ from routes.notification import notification_bp
 from routes.chat     import chat_bp
 from routes.push     import push_bp
 from routes.report   import report_bp
+from routes.billing  import billing_bp
 
 # ── Firebase Admin SDK 초기화 (선택적) ───────────────────────────────────────
 # Firebase 프로젝트 설정 후 serviceAccountKey.json 경로를 환경변수로 지정:
@@ -50,6 +51,7 @@ app.register_blueprint(notification_bp)
 app.register_blueprint(chat_bp)
 app.register_blueprint(push_bp)
 app.register_blueprint(report_bp)
+app.register_blueprint(billing_bp)
 
 # ── Static files ──────────────────────────────────────────────────────────────
 @app.route('/', defaults={'path': ''})

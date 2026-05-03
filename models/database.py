@@ -186,6 +186,58 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_staff_invitations_email
             ON staff_invitations(email);
 
+        -- 결제 (SRS FR-PAY-001~005)
+        CREATE TABLE IF NOT EXISTS billing_keys (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            facility_account_id INTEGER NOT NULL,
+            pg_key              TEXT    NOT NULL,            -- PG 빌링키 (시뮬: 'sim-' + uuid)
+            card_brand          TEXT,                        -- 카드사
+            masked_card         TEXT,                        -- ****-****-****-6789
+            active              INTEGER DEFAULT 1,
+            created_at          TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (facility_account_id) REFERENCES facility_accounts(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_billing_keys_owner
+            ON billing_keys(facility_account_id);
+
+        -- 서비스 구독 (FR-PAY-002/003)
+        CREATE TABLE IF NOT EXISTS service_subscriptions (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            facility_account_id INTEGER NOT NULL,
+            service_type        TEXT    NOT NULL,            -- 'wifi'|'event'|'notification'
+            quantity            INTEGER NOT NULL,
+            period_months       INTEGER NOT NULL,            -- 1=월간, 12=연간
+            unit_price          INTEGER NOT NULL,            -- KRW
+            total_price         INTEGER NOT NULL,            -- 부가세 포함
+            started_at          TEXT    DEFAULT (datetime('now')),
+            ends_at             TEXT,
+            status              TEXT    DEFAULT 'active',    -- active|expired|canceled
+            created_at          TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (facility_account_id) REFERENCES facility_accounts(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_subscriptions_owner
+            ON service_subscriptions(facility_account_id);
+
+        -- 결제 내역 (FR-PAY-004)
+        CREATE TABLE IF NOT EXISTS payments (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            facility_account_id INTEGER NOT NULL,
+            subscription_id     INTEGER,
+            order_no            TEXT    NOT NULL UNIQUE,
+            amount              INTEGER NOT NULL,            -- 공급가
+            vat                 INTEGER NOT NULL,            -- 부가세 (10%)
+            total               INTEGER NOT NULL,            -- 합계
+            pg_tid              TEXT,                        -- PG 거래번호 (시뮬)
+            status              TEXT    DEFAULT 'pending',   -- pending|paid|failed
+            receipt_email       TEXT,
+            paid_at             TEXT,
+            created_at          TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (facility_account_id) REFERENCES facility_accounts(id),
+            FOREIGN KEY (subscription_id) REFERENCES service_subscriptions(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_payments_owner
+            ON payments(facility_account_id);
+
         -- 푸시 토큰 (SRS FR-NOTI 푸시 발송 / FR-CHAT 새 메시지 알림)
         -- 한 사용자가 여러 디바이스 가능. 같은 (token, platform)은 UNIQUE.
         CREATE TABLE IF NOT EXISTS push_tokens (
