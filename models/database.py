@@ -186,6 +186,21 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_staff_invitations_email
             ON staff_invitations(email);
 
+        -- Super Admin 계정 (PathWave 운영자 — 사장님과 별도)
+        -- role: 'super' (최고 권한, 다른 super admin 추가/삭제 가능) | 'admin' (운영)
+        CREATE TABLE IF NOT EXISTS super_admin_accounts (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            email         TEXT    UNIQUE NOT NULL,
+            password      TEXT    NOT NULL,
+            name          TEXT,
+            role          TEXT    NOT NULL DEFAULT 'admin',
+            active        INTEGER DEFAULT 1,
+            last_login_at TEXT,
+            created_at    TEXT    DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_super_admin_accounts_email
+            ON super_admin_accounts(email);
+
         -- 결제 (SRS FR-PAY-001~005)
         CREATE TABLE IF NOT EXISTS billing_keys (
             id                  INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -382,8 +397,34 @@ def init_db():
     _add_column_if_missing(db, 'coupons', 'source',
                            "source TEXT")  # 'manual'|'welcome'|'stamp_reward'
 
+    # ── Super Admin 부트스트랩 ──────────────────────────────────────────────
+    # ENV BOOTSTRAP_SUPER_ADMIN_EMAIL/PASSWORD가 설정되고 super admin이 0명이면
+    # 최초 1명을 자동 생성. 이후 ENV 변경/삭제해도 무시됨 (idempotent).
+    _bootstrap_super_admin(db)
+
     db.commit()
     db.close()
+
+
+def _bootstrap_super_admin(db) -> None:
+    """ENV로 첫 super admin 계정 자동 생성 (0명일 때만)."""
+    email    = os.environ.get('BOOTSTRAP_SUPER_ADMIN_EMAIL', '').strip().lower()
+    password = os.environ.get('BOOTSTRAP_SUPER_ADMIN_PASSWORD', '')
+    if not email or not password:
+        return
+    existing = db.execute(
+        "SELECT COUNT(*) AS n FROM super_admin_accounts"
+    ).fetchone()['n']
+    if existing > 0:
+        return
+    import bcrypt as _bcrypt
+    hashed = _bcrypt.hashpw(password.encode(), _bcrypt.gensalt()).decode()
+    db.execute(
+        """INSERT INTO super_admin_accounts (email, password, role, name)
+           VALUES (?,?,'super','Bootstrap Admin')""",
+        (email, hashed)
+    )
+    print(f'[super-admin] Bootstrapped initial super admin: {email}')
 
 
 def _add_column_if_missing(db, table: str, column: str, ddl: str) -> None:
