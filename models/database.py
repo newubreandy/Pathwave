@@ -124,15 +124,26 @@ def init_db():
         CREATE UNIQUE INDEX IF NOT EXISTS idx_stamp_policies_active
             ON stamp_policies(facility_id) WHERE active=1;
 
+        -- 쿠폰 (SRS FR-COUPON-001/002)
         CREATE TABLE IF NOT EXISTS coupons (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             facility_id INTEGER NOT NULL,
             user_id     INTEGER NOT NULL,
             title       TEXT    NOT NULL,
+            benefit     TEXT,                              -- 혜택 내용
             used        INTEGER DEFAULT 0,
+            used_at     TEXT,                              -- 사용 시각
+            used_by_actor_role TEXT,                       -- 'owner'|'admin'|'staff'
+            used_by_actor_id   INTEGER,
+            issued_by_actor_role TEXT,
+            issued_by_actor_id   INTEGER,
             expires_at  TEXT,
             created_at  TEXT    DEFAULT (datetime('now'))
         );
+        CREATE INDEX IF NOT EXISTS idx_coupons_facility_user
+            ON coupons(facility_id, user_id);
+        CREATE INDEX IF NOT EXISTS idx_coupons_user
+            ON coupons(user_id);
 
         -- 직원/관리자 계정 (SRS FR-STAFF-002)
         -- 사장님(facility_accounts) 1:N 직원(staff_accounts).
@@ -213,6 +224,13 @@ def init_db():
     _add_column_if_missing(db, 'stamps', 'granted_by_actor_role', 'granted_by_actor_role TEXT')
     _add_column_if_missing(db, 'stamps', 'granted_by_actor_id',   'granted_by_actor_id INTEGER')
     _add_column_if_missing(db, 'stamps', 'expires_at',            'expires_at TEXT')
+    # coupons에 발급/사용 메타 (FR-COUPON-001/002)
+    _add_column_if_missing(db, 'coupons', 'benefit',              'benefit TEXT')
+    _add_column_if_missing(db, 'coupons', 'used_at',              'used_at TEXT')
+    _add_column_if_missing(db, 'coupons', 'used_by_actor_role',   'used_by_actor_role TEXT')
+    _add_column_if_missing(db, 'coupons', 'used_by_actor_id',     'used_by_actor_id INTEGER')
+    _add_column_if_missing(db, 'coupons', 'issued_by_actor_role', 'issued_by_actor_role TEXT')
+    _add_column_if_missing(db, 'coupons', 'issued_by_actor_id',   'issued_by_actor_id INTEGER')
 
     db.commit()
     db.close()
