@@ -144,7 +144,7 @@ def issue_coupon(fid):
 # ── 매장 이력 ─────────────────────────────────────────────────────────────────
 
 @coupon_bp.route('/api/facilities/<int:fid>/coupons', methods=['GET'])
-@require_facility_actor(roles=['owner', 'admin'])
+@require_facility_actor()
 def list_facility_coupons(fid):
     """매장 쿠폰 이력. 필터: ``?user_id=N``, ``?status=active|used|expired``."""
     account_id = g.auth['owner_account_id']
@@ -227,6 +227,24 @@ def update_coupon(cid):
     return jsonify({'success': True,
                     'message': '쿠폰이 수정되었습니다.',
                     'coupon': _row_to_coupon(new_row)})
+
+
+@coupon_bp.route('/api/coupons/<int:cid>', methods=['GET'])
+@require_facility_actor()
+def get_coupon(cid):
+    """쿠폰 단건 조회 — 직원이 QR/번호로 검증할 때 사용 (status 확인용)."""
+    account_id = g.auth['owner_account_id']
+    db = get_db()
+    row = db.execute(
+        """SELECT c.* FROM coupons c
+           JOIN facilities f ON c.facility_id = f.id
+           WHERE c.id=? AND f.owner_id=?""",
+        (cid, account_id)
+    ).fetchone()
+    db.close()
+    if not row:
+        return jsonify({'success': False, 'message': '쿠폰을 찾을 수 없습니다.'}), 404
+    return jsonify({'success': True, 'coupon': _row_to_coupon(row)})
 
 
 @coupon_bp.route('/api/coupons/<int:cid>', methods=['DELETE'])
