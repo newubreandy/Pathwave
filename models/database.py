@@ -184,6 +184,39 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_staff_invitations_email
             ON staff_invitations(email);
 
+        -- 알림 발송 (SRS FR-NOTI-001/002)
+        -- status: pending(예약 대기) / sent(발송 완료) / failed / canceled
+        -- target_type: all_visited(매장 방문 이력 있는 모든 사용자) | specific
+        CREATE TABLE IF NOT EXISTS notifications (
+            id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+            facility_id        INTEGER NOT NULL,
+            title              TEXT    NOT NULL,
+            body               TEXT    NOT NULL,
+            target_type        TEXT    NOT NULL,
+            scheduled_at       TEXT,                       -- NULL=즉시
+            sent_at            TEXT,
+            status             TEXT    DEFAULT 'pending',
+            recipient_count    INTEGER DEFAULT 0,
+            issued_by_actor_role TEXT,
+            issued_by_actor_id   INTEGER,
+            created_at         TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (facility_id) REFERENCES facilities(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_notifications_facility
+            ON notifications(facility_id);
+
+        CREATE TABLE IF NOT EXISTS notification_recipients (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            notification_id INTEGER NOT NULL,
+            user_id         INTEGER NOT NULL,
+            read_at         TEXT,
+            created_at      TEXT    DEFAULT (datetime('now')),
+            UNIQUE (notification_id, user_id),
+            FOREIGN KEY (notification_id) REFERENCES notifications(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_notification_recipients_user
+            ON notification_recipients(user_id);
+
         -- 매장 다국어 캐시 (SRS FR-I18N-002)
         -- 매장명/주소/설명을 언어별로 캐시. (facility_id, language) UNIQUE.
         CREATE TABLE IF NOT EXISTS facility_translations (
