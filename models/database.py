@@ -186,6 +186,34 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_staff_invitations_email
             ON staff_invitations(email);
 
+        -- 채팅 (SRS FR-CHAT-001/002) — 1:1 사용자-매장
+        -- chat_rooms: 매장×사용자 단일성 (UNIQUE)
+        CREATE TABLE IF NOT EXISTS chat_rooms (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            facility_id     INTEGER NOT NULL,
+            user_id         INTEGER NOT NULL,
+            last_message_at TEXT,
+            created_at      TEXT    DEFAULT (datetime('now')),
+            UNIQUE (facility_id, user_id),
+            FOREIGN KEY (facility_id) REFERENCES facilities(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_chat_rooms_facility ON chat_rooms(facility_id);
+        CREATE INDEX IF NOT EXISTS idx_chat_rooms_user     ON chat_rooms(user_id);
+
+        CREATE TABLE IF NOT EXISTS chat_messages (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            room_id       INTEGER NOT NULL,
+            sender_type   TEXT    NOT NULL,                -- 'user' | 'facility'
+            sender_actor_role TEXT,                        -- 'owner'|'admin'|'staff' (facility 측만)
+            sender_actor_id   INTEGER,
+            body          TEXT    NOT NULL,
+            read_at       TEXT,
+            created_at    TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (room_id) REFERENCES chat_rooms(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_chat_messages_room ON chat_messages(room_id);
+
         -- 알림 발송 (SRS FR-NOTI-001/002)
         -- status: pending(예약 대기) / sent(발송 완료) / failed / canceled
         -- target_type: all_visited(매장 방문 이력 있는 모든 사용자) | specific
