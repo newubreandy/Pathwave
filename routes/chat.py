@@ -15,8 +15,10 @@
 - 채팅 응대는 staff도 OK (SRS staff 권한)
 """
 from datetime import datetime
+import json as _json
+import time
 import jwt
-from flask import Blueprint, request, jsonify, g
+from flask import Blueprint, Response, request, jsonify, g
 
 from models.database import get_db
 from models.push import push_to_users
@@ -287,3 +289,97 @@ def mark_room_read(rid):
     affected = cur.rowcount
     db.close()
     return jsonify({'success': True, 'read': affected})
+
+
+# ── SSE 실시간 스트림 ────────────────────────────────────────────────────────
+
+# 토큰을 URL 쿼리(?token=)로도 받음 — EventSource는 헤더 커스터마이징이 표준이 아니므로.
+def _resolve_actor_with_query() -> dict | None:
+    actor = _resolve_actor()
+    if actor:
+        return actor
+    qtoken = (request.args.get('token') or '').strip()
+    if not qtoken:
+        return None
+    payload = _decode_optional(qtoken)
+    if not payload or payload.get('kind', 'access') != 'access':
+        return None
+    sub = payload.get('sub_type', 'user')
+    if sub == 'user':
+        return {'kind': 'user', 'user_id': payload['user_id']}
+    if sub == 'facility':
+        return {'kind': 'facility',
+                'owner_account_id': payload['user_id'],
+                'actor_role': 'owner', 'actor_id': payload['user_id']}
+    if sub == 'staff':
+        return {'kind': 'facility',
+                'owner_account_id': payload.get('owner_account_id'),
+                'actor_role': payload.get('role'), 'actor_id': payload['user_id']}
+    return None
+
+
+@chat_bp.route('/api/chat/rooms/<int:rid>/stream', methods=['GET'])
+def stream_room(rid):
+    """SSE 스트림 — 새 메시지가 들어오면 ``message`` 이벤트로 푸시.
+
+    클라이언트:
+        const es = new EventSource(`/api/chat/rooms/${rid}/stream?token=${access}`);
+        es.addEventListener('message', e => { const m = JSON.parse(e.data); ... });
+
+    헤더 토큰도 가능하지만 EventSource가 헤더 커스터마이징 미지원이라
+    쿼리 파라미터(?token=...) 우선 지원.
+
+    구현: 폴링 기반 (DB 2초 간격 체크). 운영 부하 시 Redis pub/sub 으로 진화.
+    """
+    actor = _resolve_actor_with_query()
+    if not actor:
+        return jsonify({'success': False, 'message': '인증 토큰이 필요합니다.'}), 401
+    after_id = request.args.get('after_id', type=int) or 0
+
+    db = get_db()
+    room = db.execute("SELECT * FROM chat_rooms WHERE id=?", (rid,)).fetchone()
+    if not _can_access_room(db, room, actor):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '방을 찾을 수 없거나 권한이 없습니다.'}), 404
+    db.close()
+
+    poll_interval = 2.0           # 초
+    keepalive_interval = 15       # 초마다 ping
+    max_total_seconds = 60 * 5    # 5분 후 클라이언트 재연결 유도
+
+    def gen():
+        last_id = after_id
+        last_keepalive = time.time()
+        started = time.time()
+        # 즉시 연결 확인용 retry 권장값
+        yield 'retry: 5000\n\n'
+        while True:
+            # 새 메시지 가져오기
+            local_db = get_db()
+            rows = local_db.execute(
+                "SELECT * FROM chat_messages WHERE room_id=? AND id>? ORDER BY id ASC",
+                (rid, last_id)
+            ).fetchall()
+            local_db.close()
+            for r in rows:
+                m = _row_to_message(r)
+                yield f'event: message\ndata: {_json.dumps(m, ensure_ascii=False)}\n\n'
+                last_id = r['id']
+
+            now = time.time()
+            if now - last_keepalive >= keepalive_interval:
+                yield ': keepalive\n\n'
+                last_keepalive = now
+            if now - started >= max_total_seconds:
+                # 의도적 끊김 → 클라이언트 자동 재연결 (retry: 5000)
+                return
+            time.sleep(poll_interval)
+
+    headers = {
+        'Content-Type':         'text/event-stream',
+        'Cache-Control':        'no-cache',
+        'X-Accel-Buffering':    'no',
+        'Connection':           'keep-alive',
+    }
+    return Response(gen(), headers=headers)
