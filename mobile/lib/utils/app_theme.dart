@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // 일단 기본 폰트 사용
 
 class AppTheme {
   // ── 색상 팔레트 ─────────────────────────────────────────────────
-  static const Color primary       = Color(0xFF7C3AED); // 보라
-  static const Color primaryLight  = Color(0xFFA78BFA);
+  static const Color primary       = Color(0xFF10B981); // 에메랄드 그린
+  static const Color primaryLight  = Color(0xFF34D399);
   static const Color secondary     = Color(0xFF06B6D4); // 시안
-  static const Color background    = Color(0xFF0F0F1A); // 배경
-  static const Color surface       = Color(0xFF1E1E2E); // 카드
-  static const Color surfaceLight  = Color(0xFF2A2A3E);
+  static const Color background    = Color(0xFFFFFFFF); // 배경 (흰색)
+  static const Color surface       = Color(0xFFF8FAFC); // 입력창, 카드 배경
+  static const Color surfaceLight  = Color(0xFFF1F5F9);
   static const Color error         = Color(0xFFEF4444);
   static const Color success       = Color(0xFF10B981);
   static const Color warning       = Color(0xFFF59E0B);
-  static const Color textPrimary   = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFFA1A1AA);
-  static const Color textHint      = Color(0xFF71717A);
-  static const Color border        = Color(0xFF3F3F5C);
+  static const Color textPrimary   = Color(0xFF0F172A); // 진한 텍스트
+  static const Color textSecondary = Color(0xFF64748B); // 보조 텍스트
+  static const Color textHint      = Color(0xFF94A3B8); // 힌트 텍스트
+  static const Color border        = Color(0xFFE2E8F0); // 테두리
 
-  static ThemeData get darkTheme {
+  static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
-      colorScheme: const ColorScheme.dark(
+      brightness: Brightness.light,
+      colorScheme: const ColorScheme.light(
         primary:          primary,
         secondary:        secondary,
         surface:          surface,
@@ -102,7 +102,7 @@ class AppTheme {
       ),
 
       // 카드
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: surface,
         elevation: 0,
         shape: RoundedRectangleBorder(

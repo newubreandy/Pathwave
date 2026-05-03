@@ -7,7 +7,7 @@ import '../screens/splash_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
-import '../screens/home/home_screen.dart';
+import '../screens/main_tab_screen.dart';
 import '../screens/home/wifi_connect_screen.dart';
 import '../screens/facility/facility_screen.dart';
 import '../screens/mypage/mypage_screen.dart';
@@ -25,14 +25,14 @@ class AppRouter {
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/splash',
     redirect: (context, state) {
-      final auth = context.read<AuthService>();
-      final isLoggedIn = auth.isLoggedIn;
-      final isAuthRoute = state.matchedLocation.startsWith('/auth');
-      final isSplash = state.matchedLocation == '/splash';
-
-      if (isSplash) return null;
-      if (!isLoggedIn && !isAuthRoute) return '/auth/login';
-      if (isLoggedIn && isAuthRoute) return '/home';
+      // [DEV] 인증 가드 비활성화 — 최종 서비스 전 원복 필요
+      // final auth = context.read<AuthService>();
+      // final isLoggedIn = auth.isLoggedIn;
+      // final isAuthRoute = state.matchedLocation.startsWith('/auth');
+      // final isSplash = state.matchedLocation == '/splash';
+      // if (isSplash) return null;
+      // if (!isLoggedIn && !isAuthRoute) return '/auth/login';
+      // if (isLoggedIn && isAuthRoute) return '/home';
       return null;
     },
     routes: [
@@ -43,8 +43,9 @@ class AppRouter {
       GoRoute(path: '/auth/register', builder: (_, __) => const RegisterScreen()),
       GoRoute(path: '/auth/forgot',   builder: (_, __) => const ForgotPasswordScreen()),
 
-      // ── 메인 ────────────────────────────────────────────────────
-      GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
+      // ── 메인 (하단 탭 바 포함) ──────────────────────────────────
+      GoRoute(path: '/home', builder: (_, __) => const MainTabScreen()),
+
       GoRoute(
         path: '/wifi-connect',
         builder: (_, state) => WifiConnectScreen(
@@ -60,8 +61,8 @@ class AppRouter {
       ),
 
       // ── 마이페이지 ───────────────────────────────────────────────
-      GoRoute(path: '/mypage',       builder: (_, __) => const MyPageScreen()),
-      GoRoute(path: '/mypage/stamps', builder: (_, __) => const StampsScreen()),
+      GoRoute(path: '/mypage',         builder: (_, __) => const MyPageScreen()),
+      GoRoute(path: '/mypage/stamps',  builder: (_, __) => const StampsScreen()),
       GoRoute(path: '/mypage/coupons', builder: (_, __) => const CouponsScreen()),
 
       // ── 알림 ────────────────────────────────────────────────────

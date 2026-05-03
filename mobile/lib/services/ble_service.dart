@@ -7,7 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 /// BLE 비콘 감지 → 서버 핸드셰이크 → WiFi 프로필 반환
 class BleService extends ChangeNotifier {
-  static const _baseUrl = 'http://172.30.1.72:8080';
+  static const _baseUrl = 'http://10.0.2.2:8080';
 
   // 감지 상태
   bool _isScanning = false;
@@ -136,6 +136,15 @@ class BleService extends ChangeNotifier {
   // ── WiFi 알림 클리어 ──────────────────────────────────────────────
   void clearPendingWifi() {
     _pendingWifi = null;
+    notifyListeners();
+  }
+
+  // ── [테스트용] 가상 비콘 감지 ─────────────────────────────────────────
+  void simulateBeaconDetection() {
+    _pendingWifi = {
+      'facility': {'name': '메인 로비'},
+      'wifi':     {'ssid': 'PathWave_Guest_Main'},
+    };
     notifyListeners();
   }
 

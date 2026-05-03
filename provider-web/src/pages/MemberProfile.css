@@ -1,0 +1,138 @@
+/* ═══════════════════════════════════════════════════
+   Member Profile — PathWave Design System
+   공통 레이아웃: common-form-page + common-form-header 사용
+   모달: Settings.css의 settings-modal-* 공통 클래스 재사용
+   ═══════════════════════════════════════════════════ */
+
+.mp-sub-title {
+  text-align: center;
+  margin-bottom: var(--pw-space-6);
+}
+
+@media (max-width: 768px) {
+  .mp-sub-title {
+    display: none;
+  }
+}
+
+.mp-content {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* ── Section ── */
+.mp-section {
+  margin-bottom: var(--pw-space-8);
+}
+
+.mp-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--pw-space-3);
+  border-bottom: 2px solid var(--pw-text);
+  margin-bottom: 0;
+}
+
+.mp-section-title {
+  font-size: var(--pw-title-size);
+  font-weight: 800;
+  color: var(--pw-text);
+  margin: 0;
+}
+
+.mp-edit-btn {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: var(--pw-caption-size);
+  font-weight: 500;
+  color: var(--pw-text-secondary);
+  cursor: pointer;
+  padding: var(--pw-space-1) var(--pw-space-2);
+  transition: color var(--pw-duration-fast);
+}
+
+.mp-edit-btn:hover {
+  color: var(--pw-primary);
+}
+
+/* ── Table Rows ── */
+.mp-table {
+  border-bottom: 1px solid var(--pw-border-light);
+}
+
+.mp-table-gap {
+  margin-top: var(--pw-space-4);
+  border-top: 1px solid var(--pw-border-light);
+}
+
+.mp-row {
+  display: flex;
+  align-items: flex-start;
+  padding: var(--pw-space-4) 0;
+  border-bottom: 1px solid var(--pw-border-light);
+  min-height: 48px;
+}
+
+.mp-row:last-child {
+  border-bottom: none;
+}
+
+.mp-label {
+  flex-shrink: 0;
+  width: 140px;
+  font-size: var(--pw-caption-size);
+  font-weight: 400;
+  color: var(--pw-text-secondary);
+  padding-top: 2px;
+}
+
+.mp-value {
+  flex: 1;
+  font-size: var(--pw-label-size);
+  font-weight: 500;
+  color: var(--pw-text);
+  line-height: 1.5;
+}
+
+.mp-file-name {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-hint);
+}
+
+/* ── Submit Button ── */
+.mp-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: var(--pw-space-4);
+  background: var(--pw-gray-900);
+  border: 1px solid var(--pw-gray-900);
+  border-radius: var(--pw-radius-full);
+  font-size: var(--pw-label-size);
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  transition: all var(--pw-duration-fast);
+  min-height: 52px;
+  font-family: inherit;
+  margin-top: var(--pw-space-8);
+}
+
+.mp-submit-btn:hover {
+  background: var(--pw-gray-800);
+}
+
+.mp-submit-btn:active {
+  transform: scale(0.98);
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .mp-label {
+    width: 110px;
+    font-size: 0.75rem;
+  }
+}

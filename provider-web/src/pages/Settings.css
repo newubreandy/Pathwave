@@ -1,0 +1,505 @@
+/* ═══════════════════════════════════════════════════
+   Settings Page — PathWave Design System
+   ═══════════════════════════════════════════════════ */
+
+/* Header visibility: CSS-driven responsive */
+.settings-pc-header {
+  display: block;
+}
+.settings-mobile-header {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .settings-pc-header {
+    display: none;
+  }
+  .settings-mobile-header {
+    display: flex;
+  }
+}
+
+/* 설정 페이지 main-viewport: 하단 패딩 제거 */
+.main-viewport:has(.settings-footer) {
+  padding-bottom: 0 !important;
+}
+
+/* 설정 페이지 container 상단 패딩 제거 (다른 페이지와 동일하게 GNB 바로 아래 배치) */
+.container:has(> .settings-mobile-header) {
+  padding-top: 0;
+}
+
+.settings-page {
+  margin: 0 auto;
+  padding: 0 var(--pw-container-pad-m);
+  padding-bottom: 0;
+  animation: fadeIn var(--pw-duration-slow) var(--pw-ease-out);
+}
+
+/* ── Section Card ── */
+.settings-section {
+  background: var(--pw-surface);
+  border-radius: var(--pw-radius-md);
+  border: 1px solid var(--pw-border-light);
+  box-shadow: var(--pw-shadow-xs);
+  margin-bottom: var(--pw-space-4);
+  overflow: hidden;
+}
+
+.settings-section-title {
+  font-size: var(--pw-caption-size);
+  font-weight: 600;
+  color: var(--pw-text-hint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: var(--pw-space-4) var(--pw-space-5) var(--pw-space-2);
+}
+
+/* ── Row Item ── */
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--pw-space-4) var(--pw-space-5);
+  border-bottom: 1px solid var(--pw-border-light);
+  min-height: 56px;
+  transition: background var(--pw-duration-fast);
+}
+
+.settings-row:last-child {
+  border-bottom: none;
+}
+
+.settings-row.clickable {
+  cursor: pointer;
+}
+
+.settings-row.clickable:hover {
+  background: var(--pw-surface-hover);
+}
+
+.settings-row.clickable:active {
+  background: var(--pw-gray-100);
+}
+
+.settings-row-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-row-label {
+  font-size: var(--pw-label-size);
+  font-weight: 600;
+  color: var(--pw-text);
+}
+
+.settings-row-desc {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-hint);
+  line-height: 1.4;
+}
+
+.settings-row-arrow {
+  color: var(--pw-text-hint);
+  flex-shrink: 0;
+  margin-left: var(--pw-space-3);
+}
+
+/* ── Toggle Switch (공통 가이드: 66px, ON/OFF 텍스트 포함) ── */
+.toggle-switch {
+  position: relative;
+  display: block;
+  flex-shrink: 0;
+  width: 66px;
+  height: 32px;
+  cursor: pointer;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-track {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--pw-gray-400);
+  transition: background var(--pw-duration-normal) var(--pw-ease);
+  border-radius: 32px;
+}
+
+.toggle-switch input:checked + .toggle-track {
+  background-color: var(--pw-primary);
+}
+
+.toggle-thumb {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 3px;
+  top: 3px;
+  background-color: white;
+  transition: transform var(--pw-duration-normal) var(--pw-ease);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+}
+
+.toggle-switch input:checked ~ .toggle-thumb {
+  transform: translateX(34px);
+}
+
+.toggle-text {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  z-index: 1;
+  pointer-events: none;
+  user-select: none;
+  transition: all var(--pw-duration-normal);
+}
+
+/* OFF 상태: 텍스트 우측 */
+.toggle-text {
+  right: 10px;
+  left: auto;
+}
+
+/* ON 상태: 텍스트 좌측 */
+.toggle-switch input:checked ~ .toggle-text {
+  left: 10px;
+  right: auto;
+}
+
+/* ── Sub-items (indented under a parent toggle) ── */
+.settings-sub-items {
+  background: var(--pw-gray-50);
+  border-top: 1px solid var(--pw-border-light);
+}
+
+.settings-sub-items .settings-row {
+  padding-left: calc(var(--pw-space-5) + var(--pw-space-4));
+}
+
+.settings-sub-items .settings-row-label {
+  font-weight: 500;
+}
+
+/* ── Logout Button ── */
+.settings-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: var(--pw-space-4);
+  background: var(--pw-surface);
+  border: 1px solid var(--pw-border-light);
+  border-radius: var(--pw-radius-md);
+  box-shadow: var(--pw-shadow-xs);
+  font-size: var(--pw-label-size);
+  font-weight: 700;
+  color: var(--pw-text);
+  cursor: pointer;
+  transition: all var(--pw-duration-fast);
+  margin-bottom: var(--pw-space-4);
+  min-height: 52px;
+  font-family: inherit;
+}
+
+.settings-logout-btn:hover {
+  background: var(--pw-surface-hover);
+}
+
+.settings-logout-btn:active {
+  transform: scale(0.98);
+}
+
+/* ── Footer (Dark, Full Width) ── */
+.settings-footer {
+  background: var(--pw-gray-800, #2d2d2d);
+  color: rgba(255, 255, 255, 0.85);
+  text-align: center;
+  padding: var(--pw-space-8) var(--pw-space-6);
+  padding-bottom: var(--pw-space-6); /* 상단 대비 살짝 작게 */
+  margin-top: calc(var(--pw-space-8) * 2); /* 컨텐츠와 푸터 사이 넓은 여백 */
+  /* container와 max-width를 벗어나 풀 너비 */
+  width: 100vw;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  position: relative;
+  /* 아래 영역을 동일 색으로 채움 (Safari 바운스 대응, 스크롤 영향 없음) */
+  box-shadow: 0 500px 0 500px var(--pw-gray-800, #2d2d2d);
+}
+
+.settings-footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pw-space-4);
+  margin-bottom: var(--pw-space-6);
+}
+
+.settings-footer-link {
+  font-size: var(--pw-caption-size);
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.settings-footer-link:hover {
+  color: white;
+}
+
+.settings-footer-divider {
+  width: 1px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.settings-footer-notice {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.6;
+  margin-bottom: var(--pw-space-4);
+}
+
+.settings-footer-company {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.6;
+}
+
+/* ── Version Info ── */
+.settings-version {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-3);
+}
+
+.settings-version-text {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-hint);
+}
+
+.settings-update-link {
+  font-size: var(--pw-caption-size);
+  font-weight: 600;
+  color: var(--pw-primary);
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  padding: 0;
+}
+
+/* ── Settings Modal ── */
+/* 모달 열림 시 배경 스크롤 잠금 */
+body:has(.settings-modal-overlay),
+html:has(.settings-modal-overlay) {
+  overflow: hidden !important;
+  touch-action: none;
+}
+
+body:has(.settings-modal-overlay) .main-viewport {
+  overflow: hidden !important;
+  touch-action: none;
+}
+
+.settings-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pw-space-5);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+  overflow: hidden;
+  overscroll-behavior: contain;
+  touch-action: none;
+}
+
+.settings-modal {
+  background: white;
+  border-radius: var(--pw-radius-lg);
+  width: 100%;
+  max-width: 420px;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s var(--pw-ease-out);
+}
+
+.settings-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--pw-space-6) var(--pw-space-6) var(--pw-space-4);
+  border-bottom: 1px solid var(--pw-border-light);
+  flex-shrink: 0;
+}
+
+.settings-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--pw-space-4) var(--pw-space-6) var(--pw-space-6);
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+.settings-modal-title {
+  font-size: var(--pw-title-size);
+  font-weight: 700;
+  color: var(--pw-text);
+  margin: 0;
+}
+
+.settings-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--pw-text-hint);
+  padding: var(--pw-space-2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.settings-modal-close:hover {
+  background: var(--pw-surface-hover);
+  color: var(--pw-text);
+}
+
+.settings-modal-field {
+  margin-bottom: var(--pw-space-5);
+}
+
+.settings-modal-label {
+  display: block;
+  font-size: var(--pw-caption-size);
+  font-weight: 500;
+  color: var(--pw-text-hint);
+  margin-bottom: var(--pw-space-2);
+}
+
+.settings-modal-input {
+  width: 100%;
+  padding: var(--pw-space-3);
+  border: 1px solid var(--pw-border);
+  border-radius: var(--pw-radius-sm);
+  font-size: var(--pw-label-size);
+  font-family: inherit;
+  color: var(--pw-text);
+  outline: none;
+  transition: border-color var(--pw-duration-fast);
+  box-sizing: border-box;
+}
+
+.settings-modal-input:focus {
+  border-color: var(--pw-primary);
+}
+
+.settings-modal-input:disabled {
+  background: var(--pw-gray-50);
+  color: var(--pw-text-hint);
+}
+
+.settings-modal-error {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-error);
+  margin-top: var(--pw-space-1);
+}
+
+.settings-modal-actions {
+  display: flex;
+  gap: var(--pw-space-3);
+  margin-top: var(--pw-space-6);
+}
+
+.settings-modal-btn {
+  flex: 1;
+  padding: var(--pw-space-3) var(--pw-space-4);
+  border-radius: var(--pw-radius-sm);
+  font-size: var(--pw-label-size);
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  min-height: 44px;
+  transition: all var(--pw-duration-fast);
+}
+
+.settings-modal-btn.cancel {
+  background: white;
+  border: 1px solid var(--pw-border);
+  color: var(--pw-text);
+}
+
+.settings-modal-btn.cancel:hover {
+  background: var(--pw-surface-hover);
+}
+
+.settings-modal-btn.confirm {
+  background: var(--pw-gray-900);
+  border: 1px solid var(--pw-gray-900);
+  color: white;
+}
+
+.settings-modal-btn.confirm:hover {
+  background: var(--pw-gray-800);
+}
+
+.settings-modal-btn.danger {
+  background: var(--pw-error);
+  border: 1px solid var(--pw-error);
+  color: white;
+}
+
+.settings-modal-btn.danger:hover {
+  opacity: 0.9;
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .settings-page {
+    padding: 0 var(--pw-container-pad-m);
+    padding-bottom: 0;
+  }
+
+  .settings-section {
+    border-radius: var(--pw-radius-md);
+  }
+
+  .settings-modal {
+    max-width: 100%;
+  }
+}

@@ -6,7 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService extends ChangeNotifier {
-  static const _baseUrl = 'http://172.30.1.72:8080'; // 개발: 로컬 서버
+  static const _baseUrl = 'http://10.0.2.2:8080'; // 에뮬레이터에서 호스트 접속용 주소
   static const _storage = FlutterSecureStorage();
 
   String? _token;

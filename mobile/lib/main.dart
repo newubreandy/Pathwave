@@ -18,8 +18,8 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // Firebase 초기화
-  await Firebase.initializeApp();
+  // Firebase 초기화 (나중에 google-services.json 추가 후 해제)
+  // await Firebase.initializeApp();
 
   runApp(const PathWaveApp());
 }
@@ -37,7 +37,7 @@ class PathWaveApp extends StatelessWidget {
       child: MaterialApp.router(
         title: 'PathWave',
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.darkTheme,
+        theme: AppTheme.lightTheme,
         routerConfig: AppRouter.router,
 
         // 다국어 설정

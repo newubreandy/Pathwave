@@ -1,0 +1,474 @@
+/* ═══════════════════════════════════════════════════
+   PathWave Dashboard Layout
+   GNB + Navigation + Layout System
+   ═══════════════════════════════════════════════════ */
+
+/* ── GNB: Glassmorphism Header ── */
+.gnb {
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: all var(--pw-duration-normal) var(--pw-ease);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--pw-z-gnb);
+  border-bottom: 1px solid var(--pw-border-light);
+}
+
+.gnb.scrolled {
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: var(--pw-shadow-sm);
+}
+
+.gnb.menu-open {
+  background-color: white;
+  border-bottom: 1px solid var(--pw-border);
+}
+
+/* ── GNB Top Tier: Logo + Actions ── */
+.gnb-top {
+  height: var(--pw-gnb-height);
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.gnb-container {
+  width: 100%;
+  max-width: var(--pw-max-width);
+  margin: 0 auto;
+  padding: 0 var(--pw-container-pad);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-width: 0;
+}
+
+.gnb-logo {
+  font-size: var(--pw-headline-size);
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  color: var(--pw-text);
+  transition: opacity var(--pw-duration-fast);
+}
+
+.gnb-logo:hover {
+  opacity: 0.7;
+}
+
+/* ── GNB Bottom Tier: Navigation Tabs ── */
+.gnb-bottom {
+  height: var(--pw-gnb-nav-height);
+  width: 100%;
+  border-top: 1px solid var(--pw-border-light);
+}
+
+.gnb-bottom-container {
+  width: 100%;
+  max-width: var(--pw-max-width);
+  margin: 0 auto;
+  padding: 0 var(--pw-container-pad);
+  height: 100%;
+}
+
+.gnb-nav-horizontal {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  gap: var(--pw-space-8);
+  overflow-x: auto;
+  white-space: nowrap;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.gnb-nav-horizontal::-webkit-scrollbar {
+  display: none;
+}
+
+.gnb-link {
+  text-decoration: none;
+  color: var(--pw-text-secondary);
+  font-size: var(--pw-label-size);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: var(--pw-space-2) 0;
+  position: relative;
+  transition: color var(--pw-duration-normal) var(--pw-ease);
+  flex-shrink: 0;
+  min-height: var(--pw-touch-min);
+  display: flex;
+  align-items: center;
+}
+
+.gnb-link:hover {
+  color: var(--pw-text);
+}
+
+.gnb-link.active {
+  color: var(--pw-text);
+  font-weight: 600;
+}
+
+.gnb-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--pw-primary);
+  border-radius: 1px;
+}
+
+/* ── GNB Actions ── */
+.gnb-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-3);
+}
+
+.gnb-icon-btn {
+  padding: var(--pw-space-2);
+  border-radius: 50%;
+  transition: background var(--pw-duration-fast) var(--pw-ease);
+  min-width: 36px;
+  min-height: 36px;
+  justify-content: center;
+}
+
+.gnb-icon-btn:hover {
+  background: var(--pw-surface-hover);
+}
+
+.gnb-icon-btn,
+.gnb-text-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--pw-text);
+  display: flex;
+  align-items: center;
+  font-family: inherit;
+  font-size: var(--pw-label-size);
+}
+
+.menu-toggle-btn {
+  padding: var(--pw-space-2);
+  border: none;
+  border-radius: 50%;
+  transition: background var(--pw-duration-fast) var(--pw-ease);
+  min-width: var(--pw-touch-min);
+  min-height: var(--pw-touch-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-toggle-btn:hover {
+  background: var(--pw-surface-hover);
+}
+
+/* ── Layout Root: flex column to push footer to bottom ── */
+.modern-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ── Main Content Area ── */
+.main-viewport {
+  padding-top: var(--pw-gnb-total);
+  padding-bottom: var(--pw-space-4);
+  flex: 1;
+}
+
+.hide-gnb .main-viewport {
+  padding-top: 0 !important;
+}
+
+.hide-gnb .container {
+  padding-top: 0 !important;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--pw-max-width);
+  margin: 0 auto;
+  padding: var(--pw-space-6) var(--pw-container-pad) var(--pw-space-12);
+}
+
+/* ── Visibility Utilities ── */
+.mobile-only {
+  display: none;
+}
+
+.desktop-only {
+  display: flex;
+}
+
+/* ── Nav Scroll Indicators (hidden on desktop) ── */
+.nav-scroll-indicator {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════════
+   Mobile Styles (≤768px)
+   ═══════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: flex; }
+  .container { padding: var(--pw-space-4) var(--pw-container-pad-m) var(--pw-space-8); }
+  .container:has(> .common-form-page) { padding-top: 0; }
+  .gnb-container { padding: 0 var(--pw-container-pad-m); }
+  .gnb-bottom-container { padding: 0 var(--pw-container-pad-m); position: relative; }
+
+  /* 모바일 아이콘 버튼 간격 */
+  .gnb-actions {
+    gap: var(--pw-space-2);
+  }
+
+  /* 모바일 GNB에서 설정/직원관리 숨김 (아이콘으로 접근) */
+  .gnb-mobile-hidden {
+    display: none !important;
+  }
+
+  /* 모바일: < 타이틀 헤더(common-form-page)가 있는 페이지에서 GNB 하단 메뉴 숨김 */
+  .modern-layout:has(.common-form-page) .gnb-bottom {
+    display: none;
+  }
+  .modern-layout:has(.common-form-page) .main-viewport {
+    padding-top: var(--pw-gnb-height);
+  }
+  .modern-layout:has(.common-form-page) .common-form-header {
+    top: var(--pw-gnb-height);
+  }
+  
+  .gnb-nav-horizontal {
+    gap: var(--pw-space-6);
+  }
+  
+  /* ── Nav Scroll Indicators ── */
+  .nav-scroll-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 32px;
+    z-index: 10;
+    cursor: pointer;
+    color: var(--pw-text-secondary);
+    border: none;
+    padding: 0;
+    background: none;
+  }
+  .nav-scroll-indicator.left {
+    left: 0;
+    background: linear-gradient(to right, rgba(255,255,255,0.95) 50%, transparent);
+  }
+  .nav-scroll-indicator.right {
+    right: 0;
+    background: linear-gradient(to left, rgba(255,255,255,0.95) 50%, transparent);
+  }
+  
+  /* ── Mobile Full-Screen Menu Overlay ── */
+  .mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 999;
+    padding-top: var(--pw-gnb-total);
+    padding-bottom: 40px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    animation: fadeIn var(--pw-duration-normal) var(--pw-ease-out);
+  }
+  
+  .mobile-nav {
+    display: flex;
+    flex-direction: column;
+    padding: var(--pw-space-10) var(--pw-container-pad-m);
+    gap: var(--pw-space-8);
+  }
+  
+  .mobile-link {
+    font-size: var(--pw-display-size);
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--pw-text);
+    letter-spacing: -0.04em;
+    transition: color var(--pw-duration-fast);
+    min-height: var(--pw-touch-comfortable);
+    display: flex;
+    align-items: center;
+  }
+
+  .mobile-link:active {
+    color: var(--pw-primary);
+  }
+
+  .page-header-section {
+    margin-bottom: var(--pw-space-4) !important;
+  }
+} /* end @media (max-width: 768px) */
+
+/* ═══════════════════════════════════════════════════
+   Global Button Styles (Modern / Legacy)
+   ═══════════════════════════════════════════════════ */
+
+.btn-modern {
+  padding: var(--pw-space-3) var(--pw-space-6);
+  font-size: var(--pw-label-size);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border-radius: var(--pw-radius-full);
+  cursor: pointer;
+  transition: all var(--pw-duration-fast) var(--pw-ease);
+  font-family: inherit;
+  min-width: 160px;
+  min-height: var(--pw-touch-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-modern:active {
+  transform: scale(0.97);
+}
+
+.btn-modern-outline {
+  background: white;
+  border: 1px solid var(--pw-border);
+  color: var(--pw-text);
+}
+
+.btn-modern-outline:hover {
+  background: var(--pw-surface-hover);
+  border-color: var(--pw-gray-300);
+}
+
+.btn-modern-primary {
+  background: var(--pw-primary);
+  border: 1px solid var(--pw-primary);
+  color: white;
+}
+
+.btn-modern-primary:hover {
+  background: var(--pw-primary-hover);
+  border-color: var(--pw-primary-hover);
+}
+
+/* ═══════════════════════════════════════════════════
+   Auth Pages: Fullscreen (No GNB, all viewports)
+   Figma-style clean authentication pages
+   ═══════════════════════════════════════════════════ */
+
+.auth-page .gnb {
+  display: none !important;
+}
+
+.auth-page .main-viewport {
+  padding-top: 0 !important;
+}
+
+.auth-page .container {
+  max-width: 100%;
+  padding: 0;
+}
+
+/* ═══════════════════════════════════════════════════
+   Common Layout Footer
+   ═══════════════════════════════════════════════════ */
+
+.layout-footer {
+  background: var(--pw-gray-900, #111827);
+  color: rgba(255, 255, 255, 0.6);
+  padding: 40px 0 32px;
+  margin-top: auto;
+}
+
+.layout-footer-inner {
+  max-width: var(--pw-max-width);
+  margin: 0 auto;
+  padding: 0 var(--pw-container-pad);
+  text-align: center;
+}
+
+.layout-footer-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.layout-footer-link {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 2px;
+  font-family: inherit;
+  transition: color 0.2s;
+}
+
+.layout-footer-link:hover {
+  color: white;
+}
+
+.layout-footer-divider {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 12px;
+  user-select: none;
+}
+
+.layout-footer-notice {
+  font-size: 11px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 20px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.layout-footer-company {
+  font-size: 11px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.layout-footer-company p {
+  margin: 0;
+}
+
+/* 인증 페이지에서 푸터 숨김 */
+.auth-page .layout-footer {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .layout-footer {
+    padding: 32px 0 24px;
+    margin-top: 40px;
+  }
+  .layout-footer-inner {
+    padding: 0 var(--pw-container-pad-m);
+  }
+}

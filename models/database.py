@@ -83,6 +83,29 @@ def init_db():
             created_at  TEXT    DEFAULT (datetime('now'))
         );
 
+        -- 다중 이미지 관리
+        CREATE TABLE IF NOT EXISTS facility_images (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            facility_id INTEGER NOT NULL,
+            image_url   TEXT    NOT NULL,
+            is_main     INTEGER DEFAULT 0,
+            created_at  TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY(facility_id) REFERENCES facilities(id)
+        );
+
+        -- 다국어 번역 캐시 테이블
+        CREATE TABLE IF NOT EXISTS facility_translations (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            facility_id INTEGER NOT NULL,
+            lang_code   TEXT    NOT NULL,              -- en, ja, zh, ko 등
+            name        TEXT,
+            address     TEXT,
+            description TEXT,
+            created_at  TEXT    DEFAULT (datetime('now')),
+            UNIQUE(facility_id, lang_code),
+            FOREIGN KEY(facility_id) REFERENCES facilities(id)
+        );
+
         CREATE TABLE IF NOT EXISTS user_wifi_logs (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id     INTEGER NOT NULL,
