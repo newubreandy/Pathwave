@@ -16,9 +16,12 @@ facility_accounts(사장님 계정) 1 : N facilities(매장) 관계.
 - ``PATCH  /api/facilities/<id>``   매장 정보 부분 수정
 - ``DELETE /api/facilities/<id>``   매장 비활성화 (soft delete)
 """
+import os
+
 from flask import Blueprint, request, jsonify, g
 
 from models.database import get_db
+from models.translator import get_translator, TranslatorError
 from routes.auth import require_facility_actor
 
 store_bp = Blueprint('store', __name__, url_prefix='/api/facilities')
@@ -31,6 +34,73 @@ _UPDATABLE_FIELDS = {
 # SRS FR-I18N-001: ko/en/ja/zh + 추가 가능
 _ALLOWED_LANGUAGES = {'ko', 'en', 'ja', 'zh', 'zh-CN', 'zh-TW', 'zh-HK', 'fr'}
 _TRANSLATABLE_FIELDS = ('name', 'address', 'description')
+
+_AUTO_ON_CREATE = os.environ.get('TRANSLATION_AUTO_ON_CREATE', 'true').lower() in ('1', 'true', 'yes')
+_DEFAULT_SOURCE_LANG = os.environ.get('FACILITY_SOURCE_LANGUAGE', 'ko')
+
+
+def _auto_translate_facility(db, fid: int, source_text: dict,
+                              source_lang: str | None = None,
+                              target_languages: list[str] | None = None,
+                              force: bool = False) -> dict:
+    """``source_text``는 {name, address, description} 중 일부 또는 전부.
+
+    각 target 언어에 대해 캐시 미존재(또는 force) 시 번역해 upsert.
+    실패한 언어는 ``errors``에 기록. (best-effort, 호출자가 무시 가능)
+    """
+    src = source_lang or _DEFAULT_SOURCE_LANG
+    targets = target_languages or [
+        l for l in _ALLOWED_LANGUAGES
+        if l != src and not l.startswith(f'{src}-')
+    ]
+    translator = get_translator()
+    translated, skipped, errors = [], [], []
+
+    for lang in targets:
+        if lang not in _ALLOWED_LANGUAGES:
+            errors.append({'language': lang, 'error': 'unsupported_language'})
+            continue
+        if not force:
+            existing = db.execute(
+                "SELECT 1 FROM facility_translations WHERE facility_id=? AND language=?",
+                (fid, lang)
+            ).fetchone()
+            if existing:
+                skipped.append(lang)
+                continue
+        translated_fields = {}
+        for field in _TRANSLATABLE_FIELDS:
+            text = (source_text.get(field) or '').strip()
+            if not text:
+                continue
+            try:
+                translated_fields[field] = translator.translate(text, source=src, target=lang)
+            except TranslatorError as e:
+                errors.append({'language': lang, 'field': field, 'error': str(e)})
+                translated_fields = None
+                break
+        if translated_fields is None:
+            continue
+        if not translated_fields:
+            skipped.append(lang)
+            continue
+        db.execute(
+            """INSERT INTO facility_translations
+                 (facility_id, language, name, address, description, updated_at)
+               VALUES (?, ?, ?, ?, ?, datetime('now'))
+               ON CONFLICT (facility_id, language) DO UPDATE SET
+                 name        = excluded.name,
+                 address     = excluded.address,
+                 description = excluded.description,
+                 updated_at  = datetime('now')""",
+            (fid, lang,
+             translated_fields.get('name'),
+             translated_fields.get('address'),
+             translated_fields.get('description')),
+        )
+        translated.append(lang)
+    return {'translated': translated, 'skipped': skipped, 'errors': errors,
+            'provider': translator.name}
 
 
 def _row_to_facility(row, *, translation: dict | None = None) -> dict:
@@ -114,13 +184,22 @@ def create_facility():
          _normalize_text(data.get('image_url')),
          account_id),
     )
-    row = db.execute("SELECT * FROM facilities WHERE id=?",
-                     (cur.lastrowid,)).fetchone()
+    fid = cur.lastrowid
+    row = db.execute("SELECT * FROM facilities WHERE id=?", (fid,)).fetchone()
+
+    auto_result = None
+    if _AUTO_ON_CREATE:
+        auto_result = _auto_translate_facility(db, fid, {
+            'name':        row['name'],
+            'address':     row['address'],
+            'description': row['description'],
+        })
     db.commit()
     db.close()
     return jsonify({'success': True,
                     'message': '매장이 등록되었습니다.',
-                    'facility': _row_to_facility(row)}), 201
+                    'facility':         _row_to_facility(row),
+                    'auto_translation': auto_result}), 201
 
 
 # ── Read ──────────────────────────────────────────────────────────────────────
@@ -212,11 +291,26 @@ def update_facility(fid):
     vals.append(fid)
     db.execute(f"UPDATE facilities SET {', '.join(sets)} WHERE id=?", vals)
     row = db.execute("SELECT * FROM facilities WHERE id=?", (fid,)).fetchone()
+
+    # 변경된 번역 가능 필드만 자동 재번역 (수동 캐시는 보존, force=False)
+    auto_result = None
+    if _AUTO_ON_CREATE:
+        changed_translatable = {
+            k: row[k] for k in _TRANSLATABLE_FIELDS if k in data
+        }
+        if changed_translatable:
+            # 변경된 필드만 들고 들어가지만, 부분 번역 갱신은 복잡하므로
+            # 캐시가 없는 언어만 새로 채움 (변경된 매장의 신규 언어 커버).
+            auto_result = _auto_translate_facility(
+                db, fid,
+                {k: row[k] for k in _TRANSLATABLE_FIELDS},
+            )
     db.commit()
     db.close()
     return jsonify({'success': True,
                     'message': '매장 정보가 수정되었습니다.',
-                    'facility': _row_to_facility(row)})
+                    'facility':         _row_to_facility(row),
+                    'auto_translation': auto_result})
 
 
 # ── Delete (soft) ─────────────────────────────────────────────────────────────
@@ -577,3 +671,51 @@ def delete_translation(fid, lang):
     if affected == 0:
         return jsonify({'success': False, 'message': '해당 언어 번역이 없습니다.'}), 404
     return jsonify({'success': True, 'message': '번역이 삭제되었습니다.'})
+
+
+@store_bp.route('/<int:fid>/translations/auto', methods=['POST'])
+@require_facility_actor(roles=['owner', 'admin'])
+def trigger_auto_translate(fid):
+    """수동으로 자동 번역 트리거. 외부 provider 호출.
+
+    body (모두 옵션):
+    - source_language: 기본 ``ko`` (env FACILITY_SOURCE_LANGUAGE 가능)
+    - target_languages: 미지정 시 supported \\ source 전체
+    - force: true이면 기존 캐시 덮어쓰기 (수동 캐시 포함)
+    """
+    account_id = g.auth['owner_account_id']
+    data = request.get_json(silent=True) or {}
+    source_lang   = (data.get('source_language') or '').strip() or None
+    target_langs  = data.get('target_languages')
+    force         = bool(data.get('force'))
+
+    if source_lang and source_lang not in _ALLOWED_LANGUAGES:
+        return jsonify({'success': False,
+                        'message': f'지원하지 않는 source_language: {source_lang}'}), 400
+    if target_langs is not None:
+        if not isinstance(target_langs, list) or not target_langs:
+            return jsonify({'success': False,
+                            'message': 'target_languages는 비어 있지 않은 배열이어야 합니다.'}), 400
+        bad = [l for l in target_langs if l not in _ALLOWED_LANGUAGES]
+        if bad:
+            return jsonify({'success': False,
+                            'message': f'지원하지 않는 언어: {bad}'}), 400
+
+    db = get_db()
+    if not _owned_facility(db, fid, account_id):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+    row = db.execute(
+        "SELECT name, address, description FROM facilities WHERE id=?", (fid,)
+    ).fetchone()
+    result = _auto_translate_facility(
+        db, fid,
+        {'name': row['name'], 'address': row['address'], 'description': row['description']},
+        source_lang=source_lang,
+        target_languages=target_langs,
+        force=force,
+    )
+    db.commit()
+    db.close()
+    return jsonify({'success': True, 'auto_translation': result})
