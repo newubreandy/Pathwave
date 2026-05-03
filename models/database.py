@@ -92,14 +92,37 @@ def init_db():
             connected_at TEXT   DEFAULT (datetime('now'))
         );
 
+        -- 스탬프 적립 이력 (SRS FR-STAMP-002)
         CREATE TABLE IF NOT EXISTS stamps (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             facility_id INTEGER NOT NULL,
             user_id     INTEGER NOT NULL,
             amount      INTEGER DEFAULT 1,
             note        TEXT,
+            granted_by_account_id INTEGER,                 -- facility_accounts.id (소속 사장님)
+            granted_by_actor_role TEXT,                    -- 'owner' | 'admin' | 'staff'
+            granted_by_actor_id   INTEGER,                 -- staff_accounts.id 또는 facility_accounts.id
+            expires_at  TEXT,                              -- 정책 기반 만료일 (NULL = 무기한)
             created_at  TEXT    DEFAULT (datetime('now'))
         );
+        CREATE INDEX IF NOT EXISTS idx_stamps_facility_user
+            ON stamps(facility_id, user_id);
+
+        -- 스탬프 정책 (SRS FR-STAMP-001) — 매장당 1개 (active=1)
+        CREATE TABLE IF NOT EXISTS stamp_policies (
+            id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+            facility_id        INTEGER NOT NULL,
+            reward_threshold   INTEGER NOT NULL,           -- N개 모으면 보상
+            reward_description TEXT    NOT NULL,           -- 예: '아메리카노 1잔 무료'
+            expires_days       INTEGER,                    -- 적립일 기준 N일 (NULL=무기한)
+            design_image_url   TEXT,                       -- 스탬프 카드 디자인 이미지
+            active             INTEGER DEFAULT 1,
+            created_at         TEXT    DEFAULT (datetime('now')),
+            updated_at         TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (facility_id) REFERENCES facilities(id)
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_stamp_policies_active
+            ON stamp_policies(facility_id) WHERE active=1;
 
         CREATE TABLE IF NOT EXISTS coupons (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -185,6 +208,11 @@ def init_db():
     # ── 마이그레이션: 기존 DB에 없는 컬럼은 ADD COLUMN ────────────────────────
     _add_column_if_missing(db, 'facilities', 'phone',          'phone TEXT')
     _add_column_if_missing(db, 'facilities', 'business_hours', 'business_hours TEXT')
+    # stamps에 grantor/expiry 추적 컬럼 (FR-STAMP-002)
+    _add_column_if_missing(db, 'stamps', 'granted_by_account_id', 'granted_by_account_id INTEGER')
+    _add_column_if_missing(db, 'stamps', 'granted_by_actor_role', 'granted_by_actor_role TEXT')
+    _add_column_if_missing(db, 'stamps', 'granted_by_actor_id',   'granted_by_actor_id INTEGER')
+    _add_column_if_missing(db, 'stamps', 'expires_at',            'expires_at TEXT')
 
     db.commit()
     db.close()
