@@ -40,6 +40,9 @@ def _row_to_policy(row) -> dict:
         'design_image_url':   row['design_image_url'],
         'auto_stamp_enabled':           bool(row['auto_stamp_enabled']),
         'auto_stamp_cooldown_minutes':  row['auto_stamp_cooldown_minutes'],
+        'reward_coupon_title':          row['reward_coupon_title'],
+        'reward_coupon_benefit':        row['reward_coupon_benefit'],
+        'reward_coupon_validity_days':  row['reward_coupon_validity_days'],
         'active':             bool(row['active']),
         'created_at':         row['created_at'],
         'updated_at':         row['updated_at'],
@@ -99,6 +102,13 @@ def upsert_policy(fid):
     design_url = (data.get('design_image_url') or '').strip() or None
     auto_stamp_enabled = bool(data.get('auto_stamp_enabled'))
     cooldown = data.get('auto_stamp_cooldown_minutes', 60)
+    reward_coupon_title    = (data.get('reward_coupon_title')   or '').strip() or None
+    reward_coupon_benefit  = (data.get('reward_coupon_benefit') or '').strip() or None
+    reward_coupon_validity = data.get('reward_coupon_validity_days')
+    if reward_coupon_validity is not None:
+        if not isinstance(reward_coupon_validity, int) or reward_coupon_validity < 1:
+            return jsonify({'success': False,
+                            'message': 'reward_coupon_validity_days는 1 이상의 정수여야 합니다.'}), 400
 
     if not isinstance(threshold, int) or threshold < 1:
         return jsonify({'success': False,
@@ -130,10 +140,14 @@ def upsert_policy(fid):
                  reward_threshold=?, reward_description=?,
                  expires_days=?, design_image_url=?,
                  auto_stamp_enabled=?, auto_stamp_cooldown_minutes=?,
+                 reward_coupon_title=?, reward_coupon_benefit=?,
+                 reward_coupon_validity_days=?,
                  updated_at=datetime('now')
                WHERE id=?""",
             (threshold, description, expires_days, design_url,
-             1 if auto_stamp_enabled else 0, cooldown, existing['id'])
+             1 if auto_stamp_enabled else 0, cooldown,
+             reward_coupon_title, reward_coupon_benefit, reward_coupon_validity,
+             existing['id'])
         )
         pid = existing['id']
     else:
@@ -141,10 +155,13 @@ def upsert_policy(fid):
             """INSERT INTO stamp_policies
                  (facility_id, reward_threshold, reward_description,
                   expires_days, design_image_url,
-                  auto_stamp_enabled, auto_stamp_cooldown_minutes, active)
-               VALUES (?,?,?,?,?,?,?,1)""",
+                  auto_stamp_enabled, auto_stamp_cooldown_minutes,
+                  reward_coupon_title, reward_coupon_benefit,
+                  reward_coupon_validity_days, active)
+               VALUES (?,?,?,?,?,?,?,?,?,?,1)""",
             (fid, threshold, description, expires_days, design_url,
-             1 if auto_stamp_enabled else 0, cooldown)
+             1 if auto_stamp_enabled else 0, cooldown,
+             reward_coupon_title, reward_coupon_benefit, reward_coupon_validity)
         )
         pid = cur.lastrowid
     row = db.execute("SELECT * FROM stamp_policies WHERE id=?", (pid,)).fetchone()
@@ -235,11 +252,16 @@ def grant_stamp(fid):
          account_id, actor_role, actor_id, expires_at)
     )
     row = db.execute("SELECT * FROM stamps WHERE id=?", (cur.lastrowid,)).fetchone()
+
+    # 임계치 도달 시 보상 쿠폰 자동 발급 (best-effort)
+    from routes.beacon import _maybe_issue_reward_coupon
+    granted_reward = _maybe_issue_reward_coupon(db, fid, user_id)
     db.commit()
     db.close()
     return jsonify({'success': True,
                     'message': '스탬프가 적립되었습니다.',
-                    'stamp': _row_to_stamp(row)}), 201
+                    'stamp': _row_to_stamp(row),
+                    'granted_reward_coupon': granted_reward}), 201
 
 
 @stamp_bp.route('/api/facilities/<int:fid>/stamps', methods=['GET'])

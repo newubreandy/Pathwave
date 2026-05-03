@@ -43,12 +43,14 @@ def _coupon_status(row) -> str:
 
 
 def _row_to_coupon(row) -> dict:
+    keys = row.keys() if hasattr(row, 'keys') else []
     return {
         'id':          row['id'],
         'facility_id': row['facility_id'],
         'user_id':     row['user_id'],
         'title':       row['title'],
         'benefit':     row['benefit'],
+        'source':      row['source'] if 'source' in keys else None,
         'status':      _coupon_status(row),
         'used':        bool(row['used']),
         'used_at':     row['used_at'],

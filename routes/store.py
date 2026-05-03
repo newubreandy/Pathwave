@@ -29,6 +29,8 @@ store_bp = Blueprint('store', __name__, url_prefix='/api/facilities')
 _UPDATABLE_FIELDS = {
     'name', 'address', 'phone', 'business_hours',
     'latitude', 'longitude', 'description', 'image_url',
+    'welcome_coupon_title', 'welcome_coupon_benefit',
+    'welcome_coupon_validity_days',
 }
 
 # SRS FR-I18N-001: ko/en/ja/zh + 추가 가능
@@ -117,6 +119,9 @@ def _row_to_facility(row, *, translation: dict | None = None) -> dict:
         'longitude':      row['longitude'],
         'description':    row['description'],
         'image_url':      row['image_url'],
+        'welcome_coupon_title':         row['welcome_coupon_title'],
+        'welcome_coupon_benefit':       row['welcome_coupon_benefit'],
+        'welcome_coupon_validity_days': row['welcome_coupon_validity_days'],
         'active':         bool(row['active']),
         'created_at':     row['created_at'],
     }
@@ -172,8 +177,10 @@ def create_facility():
     cur = db.execute(
         """INSERT INTO facilities
            (name, address, phone, business_hours, latitude, longitude,
-            description, image_url, owner_id, active)
-           VALUES (?,?,?,?,?,?,?,?,?,1)""",
+            description, image_url,
+            welcome_coupon_title, welcome_coupon_benefit, welcome_coupon_validity_days,
+            owner_id, active)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)""",
         (name,
          _normalize_text(data.get('address')),
          _normalize_text(data.get('phone')),
@@ -182,6 +189,9 @@ def create_facility():
          data.get('longitude'),
          _normalize_text(data.get('description')),
          _normalize_text(data.get('image_url')),
+         _normalize_text(data.get('welcome_coupon_title')),
+         _normalize_text(data.get('welcome_coupon_benefit')),
+         data.get('welcome_coupon_validity_days'),
          account_id),
     )
     fid = cur.lastrowid
@@ -277,8 +287,15 @@ def update_facility(fid):
                                 'message': '매장명은 비울 수 없습니다.'}), 400
             vals.append(v)
         elif key in ('address', 'phone', 'business_hours',
-                     'description', 'image_url'):
+                     'description', 'image_url',
+                     'welcome_coupon_title', 'welcome_coupon_benefit'):
             vals.append(_normalize_text(raw))
+        elif key == 'welcome_coupon_validity_days':
+            if raw is not None and (not isinstance(raw, int) or raw < 1):
+                db.close()
+                return jsonify({'success': False,
+                                'message': 'welcome_coupon_validity_days는 1 이상의 정수여야 합니다.'}), 400
+            vals.append(raw)
         else:  # latitude, longitude
             vals.append(raw)
         sets.append(f'{key}=?')
