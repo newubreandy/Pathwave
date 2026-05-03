@@ -79,6 +79,44 @@ def decode_access_token(token: str, expected_sub_type: str = 'user') -> dict:
     return payload
 
 
+def require_super_admin(roles: list[str] | None = None):
+    """Super Admin (PathWave 운영자) 라우트 보호 데코레이터.
+
+    토큰 ``sub_type='super_admin'`` 강제. ``roles=['super']``로 제한 가능.
+    성공 시 ``g.auth``에 페이로드 + ``actor_role`` 세팅. 실패 시 401/403.
+    """
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            auth_hdr = request.headers.get('Authorization', '')
+            if not auth_hdr.startswith('Bearer '):
+                return jsonify({'success': False,
+                                'message': '인증 토큰이 없습니다.'}), 401
+            token = auth_hdr.split(' ', 1)[1]
+            try:
+                payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+            except jwt.ExpiredSignatureError:
+                return jsonify({'success': False, 'message': '토큰이 만료되었습니다.'}), 401
+            except jwt.InvalidTokenError:
+                return jsonify({'success': False, 'message': '유효하지 않은 토큰입니다.'}), 401
+            if payload.get('kind', 'access') != 'access':
+                return jsonify({'success': False, 'message': 'access 토큰이 아닙니다.'}), 401
+            if payload.get('sub_type') != 'super_admin':
+                return jsonify({'success': False,
+                                'message': 'Super Admin 토큰이 아닙니다.'}), 401
+
+            actor_role = payload.get('role') or 'admin'
+            if roles and actor_role not in roles:
+                return jsonify({'success': False,
+                                'message': f'권한이 없습니다. 필요: {sorted(roles)}'}), 403
+
+            payload['actor_role'] = actor_role
+            g.auth = payload
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
 def require_facility_actor(roles: list[str] | None = None):
     """시설 측(owner/admin/staff) 라우트 보호 데코레이터.
 
