@@ -470,6 +470,185 @@ def reactivate_facility_account(aid):
     return jsonify({'success': True, 'account': _row_to_facility_account(new_row)})
 
 
+# ════ 대시보드 통계 ═════════════════════════════════════════════════════════
+
+@admin_bp.route('/stats/overview', methods=['GET'])
+@require_super_admin()
+def stats_overview():
+    """전사 KPI 한 번에. 대시보드 카드용."""
+    db = get_db()
+    cards = {
+        'total_facility_accounts': db.execute(
+            "SELECT COUNT(*) AS n FROM facility_accounts").fetchone()['n'],
+        'pending_facility_accounts': db.execute(
+            "SELECT COUNT(*) AS n FROM facility_accounts WHERE status='pending'").fetchone()['n'],
+        'verified_facility_accounts': db.execute(
+            "SELECT COUNT(*) AS n FROM facility_accounts WHERE status='verified'").fetchone()['n'],
+        'suspended_facility_accounts': db.execute(
+            "SELECT COUNT(*) AS n FROM facility_accounts WHERE status='suspended'").fetchone()['n'],
+        'total_facilities': db.execute(
+            "SELECT COUNT(*) AS n FROM facilities WHERE active=1").fetchone()['n'],
+        'total_users': db.execute(
+            "SELECT COUNT(*) AS n FROM users WHERE deleted_at IS NULL").fetchone()['n'],
+        'total_beacons': db.execute(
+            "SELECT COUNT(*) AS n FROM beacons").fetchone()['n'],
+        'inventory_beacons': db.execute(
+            "SELECT COUNT(*) AS n FROM beacons WHERE status='inventory'").fetchone()['n'],
+        'active_beacons': db.execute(
+            "SELECT COUNT(*) AS n FROM beacons WHERE status='active'").fetchone()['n'],
+        'mtd_paid_total_krw': db.execute(
+            """SELECT COALESCE(SUM(total),0) AS n FROM payments
+               WHERE status='paid' AND created_at >= date('now','start of month')""").fetchone()['n'],
+        'mtd_payment_count': db.execute(
+            """SELECT COUNT(*) AS n FROM payments
+               WHERE status='paid' AND created_at >= date('now','start of month')""").fetchone()['n'],
+        'active_subscriptions': db.execute(
+            "SELECT COUNT(*) AS n FROM service_subscriptions WHERE status='active'").fetchone()['n'],
+    }
+    db.close()
+    return jsonify({'success': True, 'cards': cards})
+
+
+@admin_bp.route('/stats/payments', methods=['GET'])
+@require_super_admin()
+def stats_payments():
+    """일별 매출 시계열 (?range=7d|30d|3m|6m|1y, 기본 30d)."""
+    raw = (request.args.get('range') or '30d').strip().lower()
+    days_map = {'7d': 7, '30d': 30, '3m': 90, '6m': 180, '1y': 365}
+    days = days_map.get(raw, 30)
+    db = get_db()
+    rows = db.execute("""
+        SELECT strftime('%Y-%m-%d', created_at) AS day,
+               COUNT(*) AS count,
+               COALESCE(SUM(total), 0) AS total
+        FROM payments
+        WHERE status='paid' AND created_at >= datetime('now', ?)
+        GROUP BY day ORDER BY day
+    """, (f'-{days} days',)).fetchall()
+    db.close()
+    return jsonify({'success': True, 'range': raw, 'days': days,
+                    'series': [dict(r) for r in rows]})
+
+
+# ════ 전체 결제 / 구독 관리 ═════════════════════════════════════════════════
+
+def _row_to_payment(row) -> dict:
+    return {
+        'id':                row['id'],
+        'facility_account_id': row['facility_account_id'],
+        'subscription_id':   row['subscription_id'],
+        'order_no':          row['order_no'],
+        'amount':            row['amount'],
+        'vat':               row['vat'],
+        'total':             row['total'],
+        'pg_tid':            row['pg_tid'],
+        'status':            row['status'],
+        'receipt_email':     row['receipt_email'],
+        'paid_at':           row['paid_at'],
+        'created_at':        row['created_at'],
+    }
+
+
+@admin_bp.route('/payments', methods=['GET'])
+@require_super_admin()
+def admin_list_payments():
+    """전체 결제 내역. ?status, ?facility_account_id, ?date_from/to (YYYY-MM-DD)."""
+    status = (request.args.get('status') or '').strip()
+    fac_id = request.args.get('facility_account_id', type=int)
+    df = (request.args.get('date_from') or '').strip()
+    dt = (request.args.get('date_to') or '').strip()
+    db = get_db()
+    sql = "SELECT * FROM payments"
+    where, params = [], []
+    if status:
+        where.append("status=?"); params.append(status)
+    if fac_id:
+        where.append("facility_account_id=?"); params.append(fac_id)
+    if df:
+        where.append("date(created_at) >= ?"); params.append(df)
+    if dt:
+        where.append("date(created_at) <= ?"); params.append(dt)
+    if where:
+        sql += " WHERE " + " AND ".join(where)
+    sql += " ORDER BY id DESC LIMIT 1000"
+    rows = db.execute(sql, params).fetchall()
+    db.close()
+    return jsonify({'success': True,
+                    'count': len(rows),
+                    'payments': [_row_to_payment(r) for r in rows]})
+
+
+@admin_bp.route('/payments/<int:pid>/refund', methods=['POST'])
+@require_super_admin()
+def admin_refund_payment(pid):
+    """결제 환불 (현재 시뮬 — 실 PG 연동 시 webhook 호출).
+
+    body: ``{reason?}``. 결제 status='paid' → 'refunded'로 전이.
+    """
+    data = request.get_json(silent=True) or {}
+    reason = (data.get('reason') or '').strip() or None
+    db = get_db()
+    row = db.execute("SELECT * FROM payments WHERE id=?", (pid,)).fetchone()
+    if not row:
+        db.close()
+        return jsonify({'success': False, 'message': '결제를 찾을 수 없습니다.'}), 404
+    if row['status'] != 'paid':
+        db.close()
+        return jsonify({'success': False,
+                        'message': f"환불 가능한 상태가 아닙니다 (현재 '{row['status']}')."}), 409
+
+    # 시뮬 — 실 PG 연동 시 토스/이니시스 환불 API 호출
+    db.execute(
+        "UPDATE payments SET status='refunded' WHERE id=?", (pid,)
+    )
+    new_row = db.execute("SELECT * FROM payments WHERE id=?", (pid,)).fetchone()
+    db.commit()
+    db.close()
+    return jsonify({'success': True,
+                    'message': '환불 처리되었습니다 (시뮬).',
+                    'refund_reason': reason,
+                    'payment': _row_to_payment(new_row)})
+
+
+def _row_to_subscription(row) -> dict:
+    return {
+        'id':                  row['id'],
+        'facility_account_id': row['facility_account_id'],
+        'service_type':        row['service_type'],
+        'quantity':            row['quantity'],
+        'period_months':       row['period_months'],
+        'unit_price':          row['unit_price'],
+        'total_price':         row['total_price'],
+        'started_at':          row['started_at'],
+        'ends_at':             row['ends_at'],
+        'status':              row['status'],
+        'created_at':          row['created_at'],
+    }
+
+
+@admin_bp.route('/subscriptions', methods=['GET'])
+@require_super_admin()
+def admin_list_subscriptions():
+    """전체 구독. ?status, ?facility_account_id."""
+    status = (request.args.get('status') or '').strip()
+    fac_id = request.args.get('facility_account_id', type=int)
+    db = get_db()
+    sql = "SELECT * FROM service_subscriptions"
+    where, params = [], []
+    if status:
+        where.append("status=?"); params.append(status)
+    if fac_id:
+        where.append("facility_account_id=?"); params.append(fac_id)
+    if where:
+        sql += " WHERE " + " AND ".join(where)
+    sql += " ORDER BY id DESC LIMIT 1000"
+    rows = db.execute(sql, params).fetchall()
+    db.close()
+    return jsonify({'success': True,
+                    'count': len(rows),
+                    'subscriptions': [_row_to_subscription(r) for r in rows]})
+
+
 @admin_bp.route('/beacons/<int:bid>/unassign', methods=['POST'])
 @require_super_admin()
 def unassign_beacon(bid):
