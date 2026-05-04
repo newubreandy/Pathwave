@@ -81,16 +81,17 @@
 | **31** | **Provider Web — 매장/스탬프/쿠폰 도메인 API 연동** | provider-web/services |
 | **32** | **Provider Web — 직원/와이파이/푸시/채팅 API 연동** | provider-web/services |
 | **33** | **시스템 공지 (Super Admin → 사장/사용자) 백엔드** | announcement, admin |
+| **34** | **비콘 배터리 모니터링 백엔드** | beacon, admin |
 
-**누적 통계:** 33 PR · 16 blueprint · ~104 API endpoint · 26 DB 테이블 · 백엔드 ~6,500 LOC + provider-web 16페이지
+**누적 통계:** 34 PR · 16 blueprint · ~107 API endpoint · 27 DB 테이블 · 백엔드 ~6,700 LOC + provider-web 16페이지
 
 ### ⬜ 후보 (다음 작업)
 
 | # | 제목 | 메모 |
 |---|---|---|
-| 34 | **모바일 앱 Phase 3 마무리 (Flutter)** | 화면 + BLE + 푸시 + 소셜 |
-| 35 | **Super Admin Web UI + 비콘 배터리 모니터링** | 운영자 콘솔 |
-| 36 | **시스템 공지 — 푸시 발송 통합** | announcement + push provider |
+| 35 | **모바일 앱 Phase 3 마무리 (Flutter)** | 화면 + BLE + 푸시 + 소셜 |
+| 36 | **Super Admin Web UI** | 운영자 콘솔 (배터리 대시보드 포함) |
+| 37 | **시스템 공지 — 푸시 발송 통합** | announcement + push provider |
 
 ---
 
@@ -103,7 +104,7 @@
 | `staff_bp` | `/api/staff` | invite, accept, login, list (직원 관리) |
 | `store_bp` | `/api/facilities` | CRUD, images, hours, translate, claim-beacon |
 | `search_bp` | `/api/search` | facilities (검색 + 자동완성) |
-| `beacon_bp` | `/api/beacon` | handshake (사용자), register (super_admin only), nearby |
+| `beacon_bp` | `/api/beacon` | handshake (사용자), register (super_admin only), nearby, `<id>/battery` 보고 |
 | `stamp_bp` | `/api/stamps` | issue, list, redeem, auto (BLE 트리거) |
 | `coupon_bp` | `/api/coupons` | issue, list, redeem, auto (스탬프 보상) |
 | `notification_bp` | `/api/notifications` | list, mark-read, settings |

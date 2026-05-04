@@ -335,3 +335,48 @@ def register_beacon():
     db.close()
     return jsonify({'success': True, 'message': '비콘이 인벤토리에 등록되었습니다.',
                     'beacon': {'id': bid, 'serial_no': serial_no, 'status': 'inventory'}}), 201
+
+
+# ── 비콘 배터리 보고 (PR #34) ─────────────────────────────────────────────────
+@beacon_bp.route('/<int:bid>/battery', methods=['POST'])
+def report_battery(bid: int):
+    """비콘 자체 또는 사장/운영자가 배터리 상태를 보고.
+
+    body: {battery_pct: 0-100, voltage_mv?: int}
+    인증은 의도적으로 가볍게 처리 — 비콘 펌웨어가 직접 호출 가능해야 함.
+    실제 운영에서는 비콘 디바이스 시크릿(헤더 X-Beacon-Secret)을 추가하길 권장.
+    """
+    data = request.get_json(silent=True) or {}
+    pct  = data.get('battery_pct')
+    mv   = data.get('voltage_mv')
+
+    if pct is None:
+        return jsonify({'success': False, 'message': 'battery_pct가 필요합니다.'}), 400
+    try:
+        pct = int(pct)
+    except (TypeError, ValueError):
+        return jsonify({'success': False, 'message': 'battery_pct는 정수여야 합니다.'}), 400
+    if not 0 <= pct <= 100:
+        return jsonify({'success': False, 'message': 'battery_pct는 0~100 범위여야 합니다.'}), 400
+
+    db = get_db()
+    if not db.execute("SELECT id FROM beacons WHERE id=?", (bid,)).fetchone():
+        db.close()
+        return jsonify({'success': False, 'message': '비콘을 찾을 수 없습니다.'}), 404
+
+    db.execute(
+        """UPDATE beacons
+           SET battery_pct=?, battery_voltage_mv=?,
+               battery_updated_at=datetime('now'),
+               last_seen_at=datetime('now')
+           WHERE id=?""",
+        (pct, mv, bid)
+    )
+    db.execute(
+        """INSERT INTO beacon_battery_history (beacon_id, battery_pct, voltage_mv)
+           VALUES (?,?,?)""",
+        (bid, pct, mv)
+    )
+    db.commit(); db.close()
+    return jsonify({'success': True, 'message': '배터리 상태가 기록되었습니다.',
+                    'beacon': {'id': bid, 'battery_pct': pct}}), 200

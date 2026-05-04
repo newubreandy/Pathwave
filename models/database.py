@@ -479,6 +479,27 @@ def init_db():
     _add_column_if_missing(db, 'invitations', 'inviter_facility_account_id',
                            'inviter_facility_account_id INTEGER')
 
+    # beacons: 배터리 모니터링 메타 (PR #34)
+    _add_column_if_missing(db, 'beacons', 'battery_updated_at', 'battery_updated_at TEXT')
+    _add_column_if_missing(db, 'beacons', 'battery_voltage_mv', 'battery_voltage_mv INTEGER')
+    _add_column_if_missing(db, 'beacons', 'last_seen_at',       'last_seen_at TEXT')
+
+    # 비콘 배터리 시계열 (PR #34)
+    db.executescript("""
+        CREATE TABLE IF NOT EXISTS beacon_battery_history (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            beacon_id    INTEGER NOT NULL,
+            battery_pct  INTEGER,
+            voltage_mv   INTEGER,
+            reported_at  TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (beacon_id) REFERENCES beacons(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_beacon_battery_beacon
+            ON beacon_battery_history(beacon_id);
+        CREATE INDEX IF NOT EXISTS idx_beacon_battery_reported
+            ON beacon_battery_history(reported_at);
+    """)
+
     # ── Super Admin 부트스트랩 ──────────────────────────────────────────────
     # ENV BOOTSTRAP_SUPER_ADMIN_EMAIL/PASSWORD가 설정되고 super admin이 0명이면
     # 최초 1명을 자동 생성. 이후 ENV 변경/삭제해도 무시됨 (idempotent).
