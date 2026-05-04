@@ -1,60 +1,31 @@
 /**
- * WifiService
- * 2차 백엔드 모듈: 매장 와이파이 설정 저장 및 QR 코드 데이터 생성 비즈니스 로직
+ * WifiService — 매장 WiFi 프로파일 등록/조회 백엔드 연동.
+ *
+ * 백엔드: routes/beacon.py — /api/beacon/wifi
+ *   POST /api/beacon/wifi  — WiFi 프로파일 저장 (서버측 AES-256-GCM 암호화)
+ *
+ * 비밀번호는 HTTPS로 평문 전송하며, 서버가 저장 시 강암호화한다.
+ * 클라이언트는 절대 평문 비밀번호를 로컬에 저장하지 않는다.
  */
-class WifiService {
-  constructor() {
-    this.wifiData = {
-      ssid: '',
-      password: '',
-      security: 'WPA/WPA2'
-    };
-  }
+import apiClient from '../apiClient';
+
+const WifiService = {
+  /**
+   * 매장 WiFi 프로파일 등록 / 갱신.
+   * @param {Object} payload — { facility_id, ssid, password, security_type }
+   */
+  saveProfile(payload) {
+    return apiClient.post('/api/beacon/wifi', payload);
+  },
 
   /**
-   * 와이파이 설정 정보 조회
-   * @returns {Promise<Object>}
+   * (편의) WiFi QR 코드 페이로드 생성 — 표준 포맷.
+   * 클라이언트 사이드에서 QR 라이브러리에 직접 전달 가능.
    */
-  async getWifiSettings() {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const saved = localStorage.getItem('pathwave_wifi');
-        if (saved) {
-          this.wifiData = JSON.parse(saved);
-        }
-        resolve({ ...this.wifiData });
-      }, 300);
-    });
-  }
+  buildQrPayload({ ssid, password, securityType = 'WPA' }) {
+    const safe = (s) => (s || '').replace(/([\\;,:"])/g, '\\$1');
+    return `WIFI:T:${securityType};S:${safe(ssid)};P:${safe(password)};;`;
+  },
+};
 
-  /**
-   * 와이파이 설정 정보 저장
-   * @param {Object} data { ssid, password, security }
-   * @returns {Promise<boolean>}
-   */
-  async saveWifiSettings(data) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        this.wifiData = { ...this.wifiData, ...data };
-        localStorage.setItem('pathwave_wifi', JSON.stringify(this.wifiData));
-        resolve(true);
-      }, 300);
-    });
-  }
-
-  /**
-   * 와이파이 접속용 QR 코드 문자열 생성 (WIFI:T:WPA;S:mynetwork;P:mypass;;)
-   * @param {Object} data 
-   * @returns {string} QR 코드 데이터
-   */
-  generateQRString(data) {
-    if (!data.ssid) return '';
-    const type = data.security === 'NONE' ? 'nopass' : (data.security === 'WEP' ? 'WEP' : 'WPA');
-    const escape = (str) => str.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/:/g, '\\:');
-    
-    return `WIFI:T:${type};S:${escape(data.ssid)};P:${escape(data.password)};H:${data.hidden ? 'true' : 'false'};`;
-  }
-}
-
-const wifiServiceInstance = new WifiService();
-export default wifiServiceInstance;
+export default WifiService;
