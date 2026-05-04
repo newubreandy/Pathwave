@@ -365,6 +365,34 @@ def init_db():
         );
         CREATE INDEX IF NOT EXISTS idx_facility_images_facility
             ON facility_images(facility_id);
+
+        -- 회원 폐쇄형 가입을 위한 초대 코드 (PR #29 와이파이 초대)
+        -- 발급자(inviter)는 다음 셋 중 하나:
+        --   ① 일반 회원 (다른 지인을 추천)
+        --   ② 시설 사장 (매장 부트스트랩 가입 코드)
+        --   ③ 시설 직원 (매장 카운터에서 즉시 발급)
+        CREATE TABLE IF NOT EXISTS invitations (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            code                TEXT UNIQUE NOT NULL,           -- 공유 가능한 짧은 코드
+            inviter_user_id     INTEGER,                        -- 회원 추천 시
+            inviter_facility_id INTEGER,                        -- 매장 발급 시
+            inviter_staff_id    INTEGER,                        -- 직원 발급 시
+            invitee_email       TEXT,                           -- 받는 사람 이메일 (선택)
+            invitee_phone       TEXT,                           -- 받는 사람 전화 (선택)
+            channel             TEXT,                           -- 'kakao'|'sms'|'link'|'qr'
+            accepted_user_id    INTEGER,                        -- 가입 완료된 user
+            accepted_at         TEXT,
+            rewarded            INTEGER DEFAULT 0,              -- 보상 지급 여부
+            expires_at          TEXT,
+            created_at          TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (inviter_user_id)     REFERENCES users(id),
+            FOREIGN KEY (inviter_facility_id) REFERENCES facilities(id),
+            FOREIGN KEY (inviter_staff_id)    REFERENCES staff_accounts(id),
+            FOREIGN KEY (accepted_user_id)    REFERENCES users(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_invitations_code        ON invitations(code);
+        CREATE INDEX IF NOT EXISTS idx_invitations_inviter     ON invitations(inviter_user_id);
+        CREATE INDEX IF NOT EXISTS idx_invitations_facility    ON invitations(inviter_facility_id);
     """)
 
     # ── 마이그레이션: 기존 DB에 없는 컬럼은 ADD COLUMN ────────────────────────
@@ -415,6 +443,12 @@ def init_db():
     db.execute(
         "UPDATE facility_accounts SET status='verified' WHERE verified=1 AND (status='pending' OR status IS NULL)"
     )
+
+    # users 테이블: 가입 시 사용한 초대 코드 추적 (PR #29)
+    _add_column_if_missing(db, 'users', 'invited_via_code', 'invited_via_code TEXT')
+    # invitations: 사장 actor 추적 (매장 미등록 단계에서도 발급자 식별)
+    _add_column_if_missing(db, 'invitations', 'inviter_facility_account_id',
+                           'inviter_facility_account_id INTEGER')
 
     # ── Super Admin 부트스트랩 ──────────────────────────────────────────────
     # ENV BOOTSTRAP_SUPER_ADMIN_EMAIL/PASSWORD가 설정되고 super admin이 0명이면

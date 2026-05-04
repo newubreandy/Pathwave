@@ -75,16 +75,19 @@
 | **25** | **비콘 인벤토리 + claim-beacon** | admin, beacon, store |
 | **26** | **사장 가입 승인 흐름 (verified=0 → admin verify)** | admin, facility |
 | **27** | **대시보드 stats + 전체 결제/구독 관리** | admin |
+| **28** | **PROJECT_CONTEXT.md 신설** | docs |
+| **29** | **와이파이 초대 + 회원 폐쇄형 가입** | invitation, auth |
 
-**누적 통계:** 27 PR · 13 blueprint · ~94 API endpoint · 23 DB 테이블 · 5,765 LOC (백엔드)
+**누적 통계:** 29 PR · 14 blueprint · ~98 API endpoint · 24 DB 테이블 · 백엔드 ~6,200 LOC
 
 ### ⬜ 후보 (다음 작업)
 
 | # | 제목 | 메모 |
 |---|---|---|
-| 28 | **시스템 공지 (Super Admin → 사장/사용자)** | 백엔드 API + 푸시 연계 |
-| 29 | **Provider Web (React+Vite) UI 본격 빌드** | 사장님/직원 포털 |
-| 30 | **Super Admin Web UI** | 운영자 콘솔 |
+| 30 | **Provider Web (React+Vite) UI 본격 빌드** | 사장님/직원 포털 |
+| 31 | **시스템 공지 (Super Admin → 사장/사용자)** | 백엔드 API + 푸시 연계 |
+| 32 | **모바일 앱 Phase 3 마무리 (Flutter)** | 화면 + BLE + 푸시 + 소셜 |
+| 33 | **Super Admin Web UI + 비콘 배터리 모니터링** | 운영자 콘솔 |
 
 ---
 
@@ -106,12 +109,13 @@
 | `billing_bp` | `/api/billing` | charge (sim PG), invoices, subscription |
 | `report_bp` | `/api/reports` | sales, stamps, coupons (집계) |
 | `admin_bp` | `/api/admin` | login, beacons (import/list/assign), facility-accounts (verify/suspend), stats/overview, payments (refund), subscriptions |
+| `invitation_bp` | `/api/invitations` | POST 발급, GET 목록, GET `<code>` 검증 (회원 폐쇄형 가입) |
 
 ---
 
 ## 6. DB 테이블 23개 요약
 
-**계정/인증 (5)** — `users`, `facility_accounts`, `staff_accounts`, `super_admin_accounts`, `email_codes`
+**계정/인증 + 초대 (6)** — `users`, `facility_accounts`, `staff_accounts`, `super_admin_accounts`, `email_codes`, `invitations`
 **비콘/시설 (5)** — `beacons`, `facilities`, `facility_images`, `facility_hours`, `facility_translations`
 **스탬프/쿠폰 (4)** — `stamp_cards`, `stamps`, `coupons`, `coupon_redemptions`
 **알림/푸시/채팅 (5)** — `notifications`, `notification_settings`, `push_tokens`, `chat_rooms`, `chat_messages`
