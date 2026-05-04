@@ -666,3 +666,109 @@ def unassign_beacon(bid):
         return jsonify({'success': False,
                         'message': '비콘을 찾을 수 없거나 이미 인벤토리 상태입니다.'}), 404
     return jsonify({'success': True})
+
+
+# ── 비콘 배터리 모니터링 (PR #34) ────────────────────────────────────────────
+@admin_bp.route('/beacons/battery-status', methods=['GET'])
+@require_super_admin()
+def beacons_battery_status():
+    """전체 비콘 배터리 현황 요약 + 저전력 리스트.
+
+    query: ?low_threshold=N (기본 20)
+    """
+    try:
+        low = int(request.args.get('low_threshold', 20))
+    except ValueError:
+        low = 20
+    low = max(0, min(100, low))
+
+    db = get_db()
+    summary = db.execute(
+        """SELECT
+             COUNT(*)                                               AS total,
+             SUM(CASE WHEN status='active'   THEN 1 ELSE 0 END)     AS active_cnt,
+             SUM(CASE WHEN status='inventory' THEN 1 ELSE 0 END)    AS inventory_cnt,
+             SUM(CASE WHEN battery_pct IS NULL THEN 1 ELSE 0 END)   AS unknown_cnt,
+             SUM(CASE WHEN battery_pct <= ? THEN 1 ELSE 0 END)      AS low_cnt,
+             AVG(battery_pct)                                       AS avg_pct
+           FROM beacons""",
+        (low,)
+    ).fetchone()
+
+    low_rows = db.execute(
+        """SELECT b.id, b.serial_no, b.facility_id, b.status,
+                  b.battery_pct, b.battery_updated_at, b.last_seen_at,
+                  f.name AS facility_name
+             FROM beacons b
+        LEFT JOIN facilities f ON f.id=b.facility_id
+            WHERE b.battery_pct IS NOT NULL AND b.battery_pct <= ?
+         ORDER BY b.battery_pct ASC LIMIT 200""",
+        (low,)
+    ).fetchall()
+    db.close()
+
+    return jsonify({
+        'success': True,
+        'low_threshold': low,
+        'summary': {
+            'total':         summary['total'] or 0,
+            'active':        summary['active_cnt'] or 0,
+            'inventory':     summary['inventory_cnt'] or 0,
+            'unknown':       summary['unknown_cnt'] or 0,
+            'low_battery':   summary['low_cnt'] or 0,
+            'avg_pct':       round(summary['avg_pct'], 1) if summary['avg_pct'] is not None else None,
+        },
+        'low_battery_beacons': [
+            {
+                'id':                 r['id'],
+                'serial_no':          r['serial_no'],
+                'status':             r['status'],
+                'facility_id':        r['facility_id'],
+                'facility_name':      r['facility_name'],
+                'battery_pct':        r['battery_pct'],
+                'battery_updated_at': r['battery_updated_at'],
+                'last_seen_at':       r['last_seen_at'],
+            }
+            for r in low_rows
+        ],
+    })
+
+
+@admin_bp.route('/beacons/<int:bid>/battery-history', methods=['GET'])
+@require_super_admin()
+def beacon_battery_history(bid: int):
+    """특정 비콘의 배터리 시계열 (최근 N건). query: ?limit=100"""
+    try:
+        limit = int(request.args.get('limit', 100))
+    except ValueError:
+        limit = 100
+    limit = max(1, min(1000, limit))
+
+    db = get_db()
+    if not db.execute("SELECT id FROM beacons WHERE id=?", (bid,)).fetchone():
+        db.close()
+        return jsonify({'success': False, 'message': '비콘을 찾을 수 없습니다.'}), 404
+
+    rows = db.execute(
+        """SELECT id, battery_pct, voltage_mv, reported_at
+             FROM beacon_battery_history
+            WHERE beacon_id=?
+         ORDER BY id DESC LIMIT ?""",
+        (bid, limit)
+    ).fetchall()
+    db.close()
+
+    return jsonify({
+        'success': True,
+        'beacon_id': bid,
+        'count': len(rows),
+        'history': [
+            {
+                'id':          r['id'],
+                'battery_pct': r['battery_pct'],
+                'voltage_mv':  r['voltage_mv'],
+                'reported_at': r['reported_at'],
+            }
+            for r in rows
+        ],
+    })
