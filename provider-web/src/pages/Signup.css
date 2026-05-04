@@ -1,0 +1,113 @@
+/* ═══════════════════════════════════════════════════
+   Signup Page — Fullscreen Auth (Figma style)
+   ═══════════════════════════════════════════════════ */
+
+.signup-container {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pw-white);
+  padding: var(--pw-space-10) var(--pw-container-pad-m);
+  animation: fadeIn var(--pw-duration-slow) var(--pw-ease-out);
+}
+
+.signup-box {
+  background: var(--pw-white);
+  padding: 0;
+  width: 100%;
+  max-width: 520px;
+}
+
+.signup-header {
+  text-align: center;
+  margin-bottom: var(--pw-space-12);
+}
+
+.signup-header h2 {
+  font-size: var(--pw-display-size);
+  font-weight: var(--pw-display-weight);
+  color: var(--pw-text);
+  margin-bottom: var(--pw-space-2);
+  letter-spacing: var(--pw-display-tracking);
+}
+
+.signup-header p {
+  color: var(--pw-text-hint);
+  font-size: var(--pw-label-size);
+}
+
+.form-section {
+  margin-bottom: var(--pw-space-8);
+}
+
+.form-section h3 {
+  font-size: var(--pw-label-size);
+  font-weight: 600;
+  color: var(--pw-text-secondary);
+  margin-bottom: var(--pw-space-4);
+  padding-bottom: var(--pw-space-2);
+  border-bottom: 1px solid var(--pw-border-light);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--pw-space-4);
+}
+
+@media (max-width: 480px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Override form-group in signup context */
+.signup-container .form-group {
+  margin-bottom: var(--pw-space-5);
+  border-bottom: none;
+  padding-bottom: 0;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.signup-container .form-group label {
+  display: block;
+  font-size: var(--pw-caption-size);
+  font-weight: 600;
+  color: var(--pw-text-hint);
+  margin-bottom: var(--pw-space-2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  flex: none;
+  padding-top: 0;
+}
+
+.signup-btn {
+  width: 100%;
+  margin-top: var(--pw-space-4);
+  padding: var(--pw-space-4);
+  font-size: var(--pw-body-size);
+  min-height: var(--pw-touch-comfortable);
+}
+
+.signup-footer {
+  margin-top: var(--pw-space-8);
+  text-align: center;
+  font-size: var(--pw-label-size);
+  color: var(--pw-text-secondary);
+}
+
+.signup-footer a {
+  color: var(--pw-text);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--pw-duration-fast);
+}
+
+.signup-footer a:hover {
+  color: var(--pw-primary);
+}

@@ -77,17 +77,18 @@
 | **27** | **대시보드 stats + 전체 결제/구독 관리** | admin |
 | **28** | **PROJECT_CONTEXT.md 신설** | docs |
 | **29** | **와이파이 초대 + 회원 폐쇄형 가입** | invitation, auth |
+| **30** | **Provider Web 베이스라인 (16페이지) + 인증 API 연동** | provider-web |
 
-**누적 통계:** 29 PR · 14 blueprint · ~98 API endpoint · 24 DB 테이블 · 백엔드 ~6,200 LOC
+**누적 통계:** 30 PR · 15 blueprint · ~98 API endpoint · 24 DB 테이블 · 백엔드 ~6,200 LOC + provider-web 16페이지
 
 ### ⬜ 후보 (다음 작업)
 
 | # | 제목 | 메모 |
 |---|---|---|
-| 30 | **Provider Web (React+Vite) UI 본격 빌드** | 사장님/직원 포털 |
-| 31 | **시스템 공지 (Super Admin → 사장/사용자)** | 백엔드 API + 푸시 연계 |
-| 32 | **모바일 앱 Phase 3 마무리 (Flutter)** | 화면 + BLE + 푸시 + 소셜 |
-| 33 | **Super Admin Web UI + 비콘 배터리 모니터링** | 운영자 콘솔 |
+| 31 | **Provider Web — 16페이지 전 화면 API 연동** | 매장/스탬프/쿠폰/직원/결제 |
+| 32 | **시스템 공지 (Super Admin → 사장/사용자)** | 백엔드 API + 푸시 연계 |
+| 33 | **모바일 앱 Phase 3 마무리 (Flutter)** | 화면 + BLE + 푸시 + 소셜 |
+| 34 | **Super Admin Web UI + 비콘 배터리 모니터링** | 운영자 콘솔 |
 
 ---
 

@@ -1,0 +1,273 @@
+/* ═══════════════════════════════════════════════════
+   Stamps Page — PathWave Design System
+   Card list with hover animations
+   ═══════════════════════════════════════════════════ */
+
+.stamps-page {
+  max-width: var(--pw-max-width);
+  margin: 0 auto;
+  animation: fadeIn var(--pw-duration-slow) var(--pw-ease-out);
+}
+
+.stamps-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--pw-space-8);
+}
+
+.stamps-header h1 {
+  font-size: var(--pw-display-size);
+  font-weight: var(--pw-display-weight);
+  color: var(--pw-text);
+  margin: 0;
+}
+
+.add-stamp-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-2);
+  background-color: var(--pw-primary);
+  color: white;
+  border: none;
+  border-radius: var(--pw-radius-full);
+  padding: var(--pw-space-3) var(--pw-space-5);
+  font-weight: 600;
+  font-size: var(--pw-label-size);
+  cursor: pointer;
+  transition: all var(--pw-duration-fast) var(--pw-ease);
+  min-height: var(--pw-touch-min);
+}
+
+.add-stamp-btn:hover {
+  background-color: var(--pw-primary-hover);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.add-stamp-btn:active {
+  transform: scale(0.97);
+}
+
+/* ── Card List ── */
+.stamp-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-3);
+}
+
+.stamp-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: var(--pw-space-6);
+  padding-right: var(--pw-space-12);
+  background-color: var(--pw-surface);
+  border-radius: var(--pw-radius-md);
+  box-shadow: var(--pw-shadow-card);
+  cursor: pointer;
+  transition: transform var(--pw-duration-normal) var(--pw-ease),
+              box-shadow var(--pw-duration-normal) var(--pw-ease);
+  border: 1px solid var(--pw-border-light);
+  text-decoration: none;
+  color: inherit;
+}
+
+.stamp-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--pw-shadow-lg);
+}
+
+.stamp-card:active {
+  transform: translateY(0);
+  box-shadow: var(--pw-shadow-sm);
+}
+
+/* ── Icon Circle ── */
+.stamp-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: var(--pw-touch-comfortable);
+  height: var(--pw-touch-comfortable);
+  border-radius: 50%;
+  margin-right: var(--pw-space-6);
+  flex-shrink: 0;
+  transition: transform var(--pw-duration-normal) var(--pw-ease);
+}
+
+.stamp-card:hover .stamp-icon {
+  transform: scale(1.05);
+}
+
+.stamp-icon.active {
+  background-color: var(--pw-primary);
+  color: white;
+}
+
+.stamp-icon.ended {
+  background-color: var(--pw-gray-200);
+  color: var(--pw-gray-500);
+}
+
+/* ── Info ── */
+.stamp-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.stamp-name {
+  font-size: var(--pw-title-size);
+  font-weight: 700;
+  color: var(--pw-text);
+  margin: 0 0 var(--pw-space-2) 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Status Badge ── */
+.stamp-status {
+  font-size: var(--pw-caption-size);
+  font-weight: 600;
+  padding: var(--pw-space-1) var(--pw-space-3);
+  border-radius: var(--pw-radius-full);
+  display: inline-block;
+  margin-bottom: var(--pw-space-2);
+}
+
+.stamp-status.active {
+  background-color: var(--pw-primary-light);
+  color: var(--pw-primary-hover);
+}
+
+.stamp-status.ended {
+  background-color: var(--pw-gray-100);
+  color: var(--pw-gray-500);
+}
+
+/* ── Details & Arrow ── */
+.stamp-details {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-secondary);
+  margin-top: var(--pw-space-1);
+}
+
+.stamp-dates {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-1);
+  font-size: var(--pw-label-size);
+  color: var(--pw-text-secondary);
+}
+
+.stamp-arrow {
+  color: var(--pw-text-hint);
+  margin-left: var(--pw-space-4);
+  transition: transform var(--pw-duration-fast);
+}
+
+.stamp-card:hover .stamp-arrow {
+  transform: translateX(4px);
+}
+
+/* ── Empty State ── */
+.empty-state {
+  text-align: center;
+  padding: var(--pw-space-16) var(--pw-space-8);
+  background-color: var(--pw-surface);
+  border-radius: var(--pw-radius-md);
+  border: 1px dashed var(--pw-gray-300);
+  color: var(--pw-text-secondary);
+}
+
+.empty-state p {
+  margin-bottom: var(--pw-space-6);
+  font-size: var(--pw-body-size);
+}
+
+/* ── Page Header (stamps/coupons shared) ── */
+.stamps-page .page-header-section {
+  margin-bottom: var(--pw-space-6);
+}
+
+/* ── Context Menu ── */
+.stamp-menu-btn {
+  position: absolute;
+  right: var(--pw-space-2);
+  top: var(--pw-space-2);
+  background: none;
+  border: none;
+  padding: var(--pw-space-2);
+  cursor: pointer;
+  z-index: 2;
+  color: var(--pw-gray-400);
+  min-width: var(--pw-touch-min);
+  min-height: var(--pw-touch-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background var(--pw-duration-fast);
+}
+
+.stamp-menu-btn:hover {
+  background: var(--pw-surface-hover);
+  color: var(--pw-text);
+}
+
+.stamp-context-menu {
+  position: absolute;
+  right: var(--pw-space-6);
+  top: var(--pw-space-10);
+  background: var(--pw-white);
+  border: 1px solid var(--pw-border-light);
+  border-radius: var(--pw-radius-md);
+  box-shadow: var(--pw-shadow-lg);
+  z-index: 10;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.context-menu-item {
+  padding: var(--pw-space-3) var(--pw-space-4);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--pw-border-light);
+  text-align: left;
+  cursor: pointer;
+  font-size: var(--pw-label-size);
+  color: var(--pw-text);
+  transition: background var(--pw-duration-fast);
+  min-height: var(--pw-touch-min);
+}
+
+.context-menu-item:last-child {
+  border-bottom: none;
+}
+
+.context-menu-item:hover {
+  background: var(--pw-surface-hover);
+}
+
+.context-menu-item.danger {
+  color: var(--pw-error);
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .stamp-card {
+    padding: var(--pw-space-4);
+  }
+  
+  .stamp-icon {
+    width: 40px;
+    height: 40px;
+    margin-right: var(--pw-space-4);
+  }
+  
+  .stamp-name {
+    font-size: var(--pw-body-size);
+  }
+}
