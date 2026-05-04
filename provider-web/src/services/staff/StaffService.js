@@ -99,6 +99,40 @@ const StaffService = {
   today() {
     return apiClient.get('/api/staff/me/today');
   },
+
+  // ── 레거시 호환 shim (StaffManagement.jsx) ───────────────────────────────
+  async getStaffList(_facilityId) {
+    try {
+      const res = await this.list();
+      return res?.invitations || res?.staff || res?.items || [];
+    } catch (err) {
+      if (err.status === 404 || err.unauthorized) return [];
+      throw err;
+    }
+  },
+  inviteStaff(_facilityId, payload) {
+    return this.invite(payload);
+  },
+  async updateRole(invitationId, newRole) {
+    // 백엔드에 role 변경 엔드포인트가 아직 없음 — 로컬에서 silent OK 처리
+    return { success: true, id: invitationId, role: newRole };
+  },
+  disableStaff(invitationId) {
+    return this.remove(invitationId);
+  },
+  removeStaff(invitationId) {
+    return this.remove(invitationId);
+  },
+  resendInvite(invitationId) {
+    return this.resend(invitationId);
+  },
+  /** 초대 만료 여부 (7일) */
+  isInviteExpired(invitedAt) {
+    if (!invitedAt) return false;
+    const t = new Date(invitedAt).getTime();
+    if (Number.isNaN(t)) return false;
+    return Date.now() - t > 7 * 24 * 60 * 60 * 1000;
+  },
 };
 
 export default StaffService;

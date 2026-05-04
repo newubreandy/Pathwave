@@ -48,6 +48,24 @@ const StampService = {
   history(stampId) {
     return apiClient.get(`/api/stamps/${stampId}/history`);
   },
+
+  // ── 레거시 호환 shim (페이지 코드 변경 최소화) ────────────────────────────
+  /** Stamps.jsx 호환: 백엔드 list() → stamp 배열 추출 */
+  async getStamps() {
+    try {
+      const res = await this.list();
+      return res?.stamps || res?.items || [];
+    } catch (err) {
+      if (err.status === 404 || err.unauthorized) return [];
+      throw err;
+    }
+  },
+  toggleStampStatus(stampId) {
+    return this.update(stampId, { toggle_status: true });
+  },
+  deleteStamp(stampId) {
+    return this.remove(stampId);
+  },
 };
 
 export default StampService;
