@@ -7,11 +7,11 @@ import ConfirmModal from '../components/common/ConfirmModal';
 import './WifiSettings.css';
 
 const MOCK_PROFILES = [
-  { id: 1, name: '로비정문1', message: 'Message', ssid: 'kt5G_1234789', password: 'Ezddd1@3356', date: '2022.03.15', image: null },
-  { id: 2, name: '수영장', message: 'Message', ssid: 'kt5G_pool01', password: 'Ezddd1@3356', date: '2022.03.10', image: null },
-  { id: 3, name: '1층카페', message: 'Message', ssid: 'kt5G_cafe01', password: 'Ezddd1@3356', date: '2022.02.28', image: null },
-  { id: 4, name: '2층뷔페', message: 'Message', ssid: 'kt5G_buffet', password: 'Ezddd1@3356', date: '2022.02.20', image: null },
-  { id: 5, name: '5001호', message: 'Message', ssid: 'kt5G_5001', password: 'Ezddd1@3356', date: '2022.01.15', image: null },
+  { id: 1, name: '로비정문1', ssid: 'kt5G_1234789', password: 'Ezddd1@3356', date: '2022.03.15', image: null },
+  { id: 2, name: '수영장',     ssid: 'kt5G_pool01',  password: 'Ezddd1@3356', date: '2022.03.10', image: null },
+  { id: 3, name: '1층카페',    ssid: 'kt5G_cafe01',  password: 'Ezddd1@3356', date: '2022.02.28', image: null },
+  { id: 4, name: '2층뷔페',    ssid: 'kt5G_buffet',  password: 'Ezddd1@3356', date: '2022.02.20', image: null },
+  { id: 5, name: '5001호',     ssid: 'kt5G_5001',    password: 'Ezddd1@3356', date: '2022.01.15', image: null },
 ];
 
 const WifiSettings = () => {
@@ -63,7 +63,6 @@ const WifiSettings = () => {
       const newProfile = {
         id: Date.now(),
         name: formData.name,
-        message: 'Message',
         ssid: formData.ssid,
         password: formData.password,
         date: new Date().toISOString().slice(0, 10).replace(/-/g, '.'),
@@ -249,12 +248,12 @@ const WifiSettings = () => {
                   <span className="wifi-item-label">Name</span>
                   <span className="wifi-item-name">{p.name}</span>
                 </div>
-                <div className="wifi-item-row">
-                  <span className="wifi-item-label">Message</span>
-                  <span className="wifi-item-sub">{p.message}</span>
-                  <span className="wifi-item-label" style={{ marginLeft: 'auto' }}>PW</span>
-                  <span className="wifi-item-sub">{p.password}</span>
-                </div>
+                {p.date && (
+                  <div className="wifi-item-row">
+                    <span className="wifi-item-label">최근 업데이트</span>
+                    <span className="wifi-item-sub">{p.date}</span>
+                  </div>
+                )}
                 <ChevronRight size={18} className="wifi-item-arrow" />
               </div>
 
