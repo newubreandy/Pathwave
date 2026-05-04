@@ -13,6 +13,52 @@
  */
 import apiClient from '../apiClient';
 
+// ── UI에서 사용하는 상수 (StaffManagement.jsx 등이 named import) ────────────
+export const ROLES = {
+  OWNER:   'OWNER',
+  MANAGER: 'MANAGER',
+  STAFF:   'STAFF',
+};
+
+export const ROLE_LABELS = {
+  [ROLES.OWNER]:   '대표',
+  [ROLES.MANAGER]: '관리자',
+  [ROLES.STAFF]:   '직원',
+};
+
+export const STATUS = {
+  ACTIVE:   'ACTIVE',
+  INVITED:  'INVITED',
+  DISABLED: 'DISABLED',
+};
+
+export const STATUS_LABELS = {
+  [STATUS.ACTIVE]:   '활성',
+  [STATUS.INVITED]:  '초대됨',
+  [STATUS.DISABLED]: '비활성',
+};
+
+// 권한 매트릭스: 화면 영역별 read/write/hidden
+export const PERMISSIONS = {
+  [ROLES.OWNER]: {
+    store: 'write', chat: 'write', stamps: 'write', coupons: 'write',
+    wifi: 'write', notifications: 'write', report: 'write', staff: 'write',
+  },
+  [ROLES.MANAGER]: {
+    store: 'write', chat: 'write', stamps: 'write', coupons: 'write',
+    wifi: 'read', notifications: 'read', report: 'read', staff: 'hidden',
+  },
+  [ROLES.STAFF]: {
+    store: 'write', chat: 'write', stamps: 'write', coupons: 'write',
+    wifi: 'read', notifications: 'read', report: 'read', staff: 'hidden',
+  },
+};
+
+const _EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export function validateEmail(email) {
+  return _EMAIL_RE.test(String(email || '').trim());
+}
+
 const StaffService = {
   /** 직원 초대 (이메일 발송) */
   invite(payload) {
