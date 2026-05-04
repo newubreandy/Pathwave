@@ -325,11 +325,17 @@ def verify_code():
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
-    """Step 3: 비밀번호 설정 → 최종 회원가입"""
-    data     = request.get_json(silent=True) or {}
-    email    = (data.get('email')    or '').strip().lower()
-    code     = (data.get('code')     or '').strip()
-    password = (data.get('password') or '')
+    """Step 3: 비밀번호 설정 → 최종 회원가입.
+
+    회원 폐쇄형(``INVITATION_REQUIRED=1``) 환경에서는 ``invitation_code`` 필수.
+    """
+    from routes.invitation import is_invitation_required, validate_code, consume_invitation
+
+    data            = request.get_json(silent=True) or {}
+    email           = (data.get('email')           or '').strip().lower()
+    code            = (data.get('code')            or '').strip()
+    password        = (data.get('password')        or '')
+    invitation_code = (data.get('invitation_code') or '').strip() or None
 
     if not email or not code or not password:
         return jsonify({'success': False, 'message': '모든 필드를 입력해 주세요.'}), 400
@@ -353,11 +359,26 @@ def register():
         db.close()
         return jsonify({'success': False, 'message': '이미 가입된 이메일입니다.'}), 409
 
+    # 폐쇄형 가입: 초대 코드 검증
+    if is_invitation_required():
+        if not invitation_code:
+            db.close()
+            return jsonify({'success': False,
+                            'message': '회원 가입은 초대 코드가 있어야 진행됩니다.'}), 403
+        invite_row, err = validate_code(db, invitation_code)
+        if err:
+            db.close()
+            return jsonify({'success': False, 'message': err}), 400
+
     hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-    cur = db.execute('INSERT INTO users (email, password, provider) VALUES (?,?,?)',
-                     (email, hashed, 'email'))
+    cur = db.execute(
+        'INSERT INTO users (email, password, provider, invited_via_code) VALUES (?,?,?,?)',
+        (email, hashed, 'email', invitation_code)
+    )
     user_id = cur.lastrowid
     db.execute('UPDATE email_codes SET used=1 WHERE email=? AND code=?', (email, code))
+    if invitation_code:
+        consume_invitation(db, invitation_code, user_id)
     db.commit()
     db.close()
 
@@ -412,9 +433,12 @@ def social_login():
                         'message': 'Firebase SDK가 설정되지 않았습니다. 서버 관리자에게 문의해 주세요.'}), 503
     from firebase_admin import auth as firebase_auth
 
-    data       = request.get_json(silent=True) or {}
-    id_token   = (data.get('id_token') or '').strip()
-    provider   = (data.get('provider') or 'social').strip()  # google / apple / kakao / naver
+    from routes.invitation import is_invitation_required, validate_code, consume_invitation
+
+    data            = request.get_json(silent=True) or {}
+    id_token        = (data.get('id_token') or '').strip()
+    provider        = (data.get('provider') or 'social').strip()  # google / apple / kakao / naver
+    invitation_code = (data.get('invitation_code') or '').strip() or None
 
     if not id_token:
         return jsonify({'success': False, 'message': 'ID Token이 필요합니다.'}), 400
@@ -455,13 +479,26 @@ def social_login():
             user_id    = email_row['id']
             user_email = email
         else:
-            # 신규 사용자 → 자동 회원가입
+            # 신규 사용자 → 자동 회원가입 (폐쇄형이면 초대 코드 검증)
+            if is_invitation_required():
+                if not invitation_code:
+                    db.close()
+                    return jsonify({'success': False,
+                                    'message': '회원 가입은 초대 코드가 있어야 진행됩니다.'}), 403
+                _, err = validate_code(db, invitation_code)
+                if err:
+                    db.close()
+                    return jsonify({'success': False, 'message': err}), 400
             db.execute(
-                "INSERT INTO users (email, provider, social_id) VALUES (?,?,?)",
-                (email, provider, firebase_uid)
+                "INSERT INTO users (email, provider, social_id, invited_via_code) VALUES (?,?,?,?)",
+                (email, provider, firebase_uid, invitation_code)
             )
+            user_id = db.execute(
+                "SELECT id FROM users WHERE email=?", (email,)
+            ).fetchone()['id']
+            if invitation_code:
+                consume_invitation(db, invitation_code, user_id)
             db.commit()
-            user_id    = db.execute("SELECT id FROM users WHERE email=?", (email,)).fetchone()['id']
             user_email = email
 
     db.close()
