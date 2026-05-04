@@ -78,17 +78,18 @@
 | **28** | **PROJECT_CONTEXT.md 신설** | docs |
 | **29** | **와이파이 초대 + 회원 폐쇄형 가입** | invitation, auth |
 | **30** | **Provider Web 베이스라인 (16페이지) + 인증 API 연동** | provider-web |
+| **31** | **Provider Web — 매장/스탬프/쿠폰 도메인 API 연동** | provider-web/services |
 
-**누적 통계:** 30 PR · 15 blueprint · ~98 API endpoint · 24 DB 테이블 · 백엔드 ~6,200 LOC + provider-web 16페이지
+**누적 통계:** 31 PR · 15 blueprint · ~98 API endpoint · 24 DB 테이블 · 백엔드 ~6,200 LOC + provider-web 16페이지 (3 도메인 실 API 연결)
 
 ### ⬜ 후보 (다음 작업)
 
 | # | 제목 | 메모 |
 |---|---|---|
-| 31 | **Provider Web — 16페이지 전 화면 API 연동** | 매장/스탬프/쿠폰/직원/결제 |
-| 32 | **시스템 공지 (Super Admin → 사장/사용자)** | 백엔드 API + 푸시 연계 |
-| 33 | **모바일 앱 Phase 3 마무리 (Flutter)** | 화면 + BLE + 푸시 + 소셜 |
-| 34 | **Super Admin Web UI + 비콘 배터리 모니터링** | 운영자 콘솔 |
+| 32 | **Provider Web — 직원/와이파이/푸시/채팅 API 연동** | 나머지 도메인 |
+| 33 | **시스템 공지 (Super Admin → 사장/사용자)** | 백엔드 API + 푸시 연계 |
+| 34 | **모바일 앱 Phase 3 마무리 (Flutter)** | 화면 + BLE + 푸시 + 소셜 |
+| 35 | **Super Admin Web UI + 비콘 배터리 모니터링** | 운영자 콘솔 |
 
 ---
 

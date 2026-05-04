@@ -1,89 +1,53 @@
 /**
- * CouponService
- * 2차 백엔드 모듈: 쿠폰 이벤트 생성, 조회, 발급 비즈니스 로직
+ * CouponService — 쿠폰 발급/사용 백엔드 연동.
+ *
+ * 백엔드: routes/coupon.py — /api/coupons/*
+ *   GET    /api/coupons                — 시설별 쿠폰 목록
+ *   POST   /api/coupons                — 쿠폰 정책 생성/발급
+ *   PATCH  /api/coupons/<id>           — 쿠폰 정책 수정
+ *   DELETE /api/coupons/<id>           — 쿠폰 정책 삭제
+ *   POST   /api/coupons/redeem         — 쿠폰 사용 처리 (직원이 매장 카운터에서)
+ *   GET    /api/coupons/<id>/redemptions — 사용 이력
  */
-class CouponService {
-  constructor() {
-    this.coupons = [
-      {
-        id: 1,
-        title: '신규 고객 환영 10% 할인',
-        status: 'active',
-        discountType: 'percentage', // percentage, fixed
-        discountValue: 10,
-        validUntil: '2026-12-31'
-      }
-    ];
-  }
+import apiClient from '../apiClient';
+
+const CouponService = {
+  /** 매장별 쿠폰 목록 */
+  list(facilityId) {
+    const q = facilityId ? `?facility_id=${encodeURIComponent(facilityId)}` : '';
+    return apiClient.get(`/api/coupons${q}`);
+  },
 
   /**
-   * 전체 쿠폰 목록 조회
-   * @returns {Promise<Array>}
+   * 쿠폰 정책/발급 생성.
+   * @param {Object} payload — { facility_id, title, benefit, valid_from, valid_until, conditions, ... }
    */
-  async getCoupons() {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve([...this.coupons]);
-      }, 300);
-    });
-  }
+  create(payload) {
+    return apiClient.post('/api/coupons', payload);
+  },
+
+  /** 쿠폰 정책 수정 */
+  update(couponId, payload) {
+    return apiClient.patch(`/api/coupons/${couponId}`, payload);
+  },
+
+  /** 쿠폰 정책 삭제 */
+  remove(couponId) {
+    return apiClient.delete(`/api/coupons/${couponId}`);
+  },
 
   /**
-   * 쿠폰 상세 조회
-   * @param {number|string} id 
-   * @returns {Promise<Object>}
+   * 쿠폰 사용 처리 (직원이 카운터에서 코드 입력 또는 스캔).
+   * @param {Object} payload — { code }  또는  { coupon_id, user_id }
    */
-  async getCouponById(id) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const coupon = this.coupons.find(c => c.id.toString() === id.toString());
-        if (coupon) {
-          resolve({ ...coupon });
-        } else {
-          reject(new Error('Coupon not found'));
-        }
-      }, 300);
-    });
-  }
+  redeem(payload) {
+    return apiClient.post('/api/coupons/redeem', payload);
+  },
 
-  /**
-   * 신규 쿠폰 생성
-   * @param {Object} data 
-   * @returns {Promise<Object>}
-   */
-  async createCoupon(data) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const newCoupon = {
-          id: Date.now(),
-          status: 'active',
-          ...data
-        };
-        this.coupons.unshift(newCoupon);
-        resolve({ ...newCoupon });
-      }, 500);
-    });
-  }
+  /** 사용 이력 */
+  redemptions(couponId) {
+    return apiClient.get(`/api/coupons/${couponId}/redemptions`);
+  },
+};
 
-  /**
-   * 쿠폰 만료 처리
-   * @param {number|string} id 
-   * @returns {Promise<boolean>}
-   */
-  async expireCoupon(id) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const index = this.coupons.findIndex(c => c.id.toString() === id.toString());
-        if (index !== -1) {
-          this.coupons[index].status = 'expired';
-          resolve(true);
-        } else {
-          reject(new Error('Coupon not found'));
-        }
-      }, 300);
-    });
-  }
-}
-
-const couponServiceInstance = new CouponService();
-export default couponServiceInstance;
+export default CouponService;
