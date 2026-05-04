@@ -1,0 +1,162 @@
+/* ═══════════════════════════════════════════════════
+   PathWave Design Tokens
+   Hybrid: Figma Minimal + PathWave Lifestyle
+   Compliant: Apple HIG + Material Design 3
+   ═══════════════════════════════════════════════════ */
+
+:root {
+  /* ── Color: Primary (PathWave Mint Green) ── */
+  --pw-primary:        #10B981;
+  --pw-primary-hover:  #059669;
+  --pw-primary-active: #047857;
+  --pw-primary-light:  #D1FAE5;
+  --pw-primary-subtle: #ECFDF5;
+
+  /* ── Color: Secondary (Cyan for accents) ── */
+  --pw-secondary:       #06B6D4;
+  --pw-secondary-light: #CFFAFE;
+
+  /* ── Color: Neutral (Figma-style deep blacks + soft grays) ── */
+  --pw-gray-950: #030712;
+  --pw-gray-900: #111827;
+  --pw-gray-800: #1F2937;
+  --pw-gray-700: #374151;
+  --pw-gray-600: #4B5563;
+  --pw-gray-500: #6B7280;
+  --pw-gray-400: #9CA3AF;
+  --pw-gray-300: #D1D5DB;
+  --pw-gray-200: #E5E7EB;
+  --pw-gray-100: #F3F4F6;
+  --pw-gray-50:  #F9FAFB;
+  --pw-white:    #FFFFFF;
+
+  /* ── Color: Semantic ── */
+  --pw-error:        #EF4444;
+  --pw-error-light:  #FEE2E2;
+  --pw-warning:      #F59E0B;
+  --pw-warning-light:#FEF3C7;
+  --pw-success:      #10B981;
+  --pw-success-light:#D1FAE5;
+  --pw-info:         #3B82F6;
+  --pw-info-light:   #DBEAFE;
+
+  /* ── Color: Surface & Background ── */
+  --pw-bg:           var(--pw-gray-50);
+  --pw-surface:      var(--pw-white);
+  --pw-surface-hover:var(--pw-gray-100);
+  --pw-border:       var(--pw-gray-200);
+  --pw-border-light: rgba(0, 0, 0, 0.06);
+  --pw-divider:      var(--pw-gray-200);
+
+  /* ── Color: Text ── */
+  --pw-text:         var(--pw-gray-900);
+  --pw-text-secondary: var(--pw-gray-500);
+  --pw-text-hint:    var(--pw-gray-400);
+  --pw-text-disabled:var(--pw-gray-300);
+  --pw-text-inverse: var(--pw-white);
+
+  /* ── Typography: Font Family ── */
+  --pw-font: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* ── Typography: Scale (Apple HIG / Material Type Scale aligned) ──
+       Display  → 대형 타이틀 (피그마 스타일)
+       Headline → 페이지 타이틀
+       Title    → 섹션/카드 타이틀
+       Body     → 본문 (≥16px — HIG 최소 본문 크기)
+       Label    → 폼 레이블, 메타데이터
+       Caption  → 보조 텍스트, 힌트
+  ── */
+  --pw-display-size:    1.75rem;   /* 28px */
+  --pw-display-weight:  800;
+  --pw-display-leading: 1.2;
+  --pw-display-tracking:-0.03em;
+
+  --pw-headline-size:   1.375rem;  /* 22px */
+  --pw-headline-weight: 700;
+  --pw-headline-leading:1.3;
+
+  --pw-title-size:      1.125rem;  /* 18px */
+  --pw-title-weight:    600;
+  --pw-title-leading:   1.4;
+
+  --pw-body-size:       1rem;      /* 16px — HIG minimum */
+  --pw-body-weight:     400;
+  --pw-body-leading:    1.6;
+
+  --pw-label-size:      0.875rem;  /* 14px */
+  --pw-label-weight:    500;
+  --pw-label-leading:   1.4;
+
+  --pw-caption-size:    0.75rem;   /* 12px */
+  --pw-caption-weight:  400;
+  --pw-caption-leading: 1.4;
+
+  /* ── Spacing: 8pt Grid (Material Design base unit) ── */
+  --pw-space-0:   0;
+  --pw-space-1:   0.25rem;  /* 4px */
+  --pw-space-2:   0.5rem;   /* 8px */
+  --pw-space-3:   0.75rem;  /* 12px */
+  --pw-space-4:   1rem;     /* 16px */
+  --pw-space-5:   1.25rem;  /* 20px */
+  --pw-space-6:   1.5rem;   /* 24px */
+  --pw-space-8:   2rem;     /* 32px */
+  --pw-space-10:  2.5rem;   /* 40px — Figma style generous margin */
+  --pw-space-12:  3rem;     /* 48px */
+  --pw-space-16:  4rem;     /* 64px */
+  --pw-space-20:  5rem;     /* 80px */
+
+  /* ── Touch Targets (HIG ≥44pt, Material ≥48dp) ── */
+  --pw-touch-min:         44px;
+  --pw-touch-comfortable: 48px;
+
+  /* ── Border Radius ── */
+  --pw-radius-xs:   4px;
+  --pw-radius-sm:   8px;
+  --pw-radius-md:   12px;
+  --pw-radius-lg:   16px;
+  --pw-radius-xl:   20px;
+  --pw-radius-full: 999px;
+
+  /* ── Shadows (Layered for depth) ── */
+  --pw-shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.04);
+  --pw-shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --pw-shadow-md:  0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --pw-shadow-lg:  0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
+  --pw-shadow-xl:  0 20px 40px -10px rgba(0, 0, 0, 0.1);
+  --pw-shadow-card:0 2px 8px rgba(0, 0, 0, 0.06);
+
+  /* ── Motion / Transitions ── */
+  --pw-ease:       cubic-bezier(0.4, 0, 0.2, 1);  /* Material standard */
+  --pw-ease-out:   cubic-bezier(0.0, 0, 0.2, 1);  /* Decelerate */
+  --pw-ease-in:    cubic-bezier(0.4, 0, 1, 1);    /* Accelerate */
+  --pw-ease-spring:cubic-bezier(0.34, 1.56, 0.64, 1); /* Bounce */
+
+  --pw-duration-fast:   150ms;
+  --pw-duration-normal: 250ms;
+  --pw-duration-slow:   400ms;
+
+  /* ── Z-Index Scale ── */
+  --pw-z-base:     0;
+  --pw-z-dropdown: 100;
+  --pw-z-sticky:   200;
+  --pw-z-overlay:  500;
+  --pw-z-modal:    900;
+  --pw-z-gnb:      1000;
+  --pw-z-toast:    1100;
+
+  /* ── Layout ── */
+  --pw-max-width:       1200px;
+  --pw-container-pad:   2.5rem;
+  --pw-container-pad-m: 1.5rem;  /* Mobile */
+  --pw-gnb-height:      64px;
+  --pw-gnb-nav-height:  48px;
+  --pw-gnb-total:       112px;   /* 64 + 48 */
+}
+
+/* ── Mobile Typography Adjustments ── */
+@media (max-width: 480px) {
+  :root {
+    --pw-display-size:  1.5rem;   /* 24px on small screens */
+    --pw-headline-size: 1.25rem;  /* 20px */
+  }
+}

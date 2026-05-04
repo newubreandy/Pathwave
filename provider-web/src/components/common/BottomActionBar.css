@@ -1,0 +1,21 @@
+/* ═══════════════════════════════════════════════════
+   BottomActionBar — PathWave Design System
+   페이지 콘텐츠 하단에 인라인으로 배치
+   ═══════════════════════════════════════════════════ */
+
+.bottom-action-bar-wrapper {
+  margin-top: var(--pw-space-8);
+  padding-bottom: var(--pw-space-4);
+}
+
+.bottom-action-bar {
+  background: transparent;
+  padding: 0;
+}
+
+.bottom-action-bar-inner {
+  max-width: var(--pw-max-width);
+  margin: 0 auto;
+  display: flex;
+  gap: var(--pw-space-3);
+}

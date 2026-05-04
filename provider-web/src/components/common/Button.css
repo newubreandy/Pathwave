@@ -1,0 +1,139 @@
+/* ═══════════════════════════════════════════════════
+   Button Component — PathWave Design System
+   HIG: min 44px touch target | Material: 48dp comfortable
+   ═══════════════════════════════════════════════════ */
+
+.common-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-weight: 600;
+  border-radius: var(--pw-radius-full);
+  cursor: pointer;
+  transition: all var(--pw-duration-fast) var(--pw-ease);
+  letter-spacing: 0.03em;
+  border: 1px solid transparent;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.common-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Press feedback (Material ripple-like) */
+.common-btn:not(:disabled):active {
+  transform: scale(0.97);
+  transition-duration: 80ms;
+}
+
+/* ── Sizes (all ≥44px touch target) ── */
+.btn-small {
+  padding: var(--pw-space-2) var(--pw-space-4);
+  font-size: var(--pw-label-size);
+  min-height: 36px;
+  /* Touch target padding ensures ≥44px hit area */
+}
+
+.btn-medium {
+  padding: var(--pw-space-3) var(--pw-space-6);
+  font-size: var(--pw-label-size);
+  min-height: var(--pw-touch-min);
+}
+
+.btn-large {
+  padding: var(--pw-space-4) var(--pw-space-8);
+  font-size: var(--pw-body-size);
+  min-height: var(--pw-touch-comfortable);
+}
+
+.btn-full-width {
+  width: 100%;
+}
+
+/* ── Variants ── */
+
+/* Primary: PathWave Green */
+.btn-primary {
+  background: var(--pw-primary);
+  color: white;
+}
+
+.btn-primary:not(:disabled):hover {
+  background: var(--pw-primary-hover);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* Outline */
+.btn-outline {
+  background-color: transparent;
+  border-color: var(--pw-gray-300);
+  color: var(--pw-text);
+}
+
+.btn-outline:not(:disabled):hover {
+  background-color: var(--pw-surface-hover);
+  border-color: var(--pw-gray-400);
+}
+
+/* Danger */
+.btn-danger {
+  background-color: var(--pw-error);
+  color: white;
+}
+
+.btn-danger:not(:disabled):hover {
+  background-color: #DC2626;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Text (Ghost) */
+.btn-text {
+  background-color: transparent;
+  color: var(--pw-text-secondary);
+}
+
+.btn-text:not(:disabled):hover {
+  background-color: var(--pw-surface-hover);
+  color: var(--pw-text);
+}
+
+/* ── Icon ── */
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: var(--pw-space-2);
+}
+
+/* ── Loading Spinner ── */
+.btn-spinner {
+  display: inline-block;
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: currentColor;
+  animation: btn-spin 0.7s linear infinite;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Mobile: ensure comfortable touch targets ── */
+@media (max-width: 768px) {
+  .btn-small {
+    min-height: var(--pw-touch-min);
+    padding: var(--pw-space-3) var(--pw-space-4);
+  }
+  
+  .btn-medium {
+    padding: var(--pw-space-4) var(--pw-space-6);
+    font-size: var(--pw-body-size);
+  }
+}

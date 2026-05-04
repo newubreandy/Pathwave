@@ -1,0 +1,110 @@
+/* ═══════════════════════════════════════════════════
+   Login Page — Fullscreen Auth (Figma + PathWave hybrid)
+   ═══════════════════════════════════════════════════ */
+
+.modern-auth-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: var(--pw-space-10) var(--pw-container-pad-m);
+  background: var(--pw-white);
+  animation: fadeIn var(--pw-duration-slow) var(--pw-ease-out);
+}
+
+/* Logo area */
+.auth-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--pw-space-16);
+}
+
+.auth-logo-text {
+  font-size: 2.5rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  color: var(--pw-text);
+}
+
+.auth-logo-sub {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-hint);
+  letter-spacing: 0.15em;
+  margin-top: var(--pw-space-2);
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Heading */
+.auth-heading {
+  margin-bottom: var(--pw-space-12);
+}
+
+.auth-heading .page-title {
+  font-size: var(--pw-display-size);
+  margin-bottom: var(--pw-space-2);
+}
+
+.auth-heading .sub-title {
+  font-size: var(--pw-label-size);
+}
+
+/* Input groups — Figma underline style with generous spacing */
+.input-group-modern {
+  margin-bottom: var(--pw-space-10);
+}
+
+.input-group-modern label {
+  display: block;
+  font-size: var(--pw-caption-size);
+  font-weight: 600;
+  color: var(--pw-text-hint);
+  letter-spacing: 0.1em;
+  margin-bottom: var(--pw-space-2);
+  text-transform: uppercase;
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* Actions at bottom */
+.auth-actions {
+  margin-top: var(--pw-space-12);
+}
+
+.auth-links {
+  margin-top: var(--pw-space-8);
+  display: flex;
+  justify-content: center;
+  gap: var(--pw-space-4);
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-hint);
+}
+
+.link-text {
+  text-decoration: none;
+  color: var(--pw-text);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  transition: color var(--pw-duration-fast);
+  min-height: var(--pw-touch-min);
+  display: inline-flex;
+  align-items: center;
+}
+
+.link-text:hover {
+  color: var(--pw-primary);
+}
+
+.divider {
+  color: var(--pw-gray-200);
+  display: flex;
+  align-items: center;
+}

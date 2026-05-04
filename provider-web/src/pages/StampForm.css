@@ -1,0 +1,318 @@
+/* ═══════════════════════════════════════════════════
+   StampForm Page — PathWave Design System
+   Form inputs with Figma-style underline
+   ═══════════════════════════════════════════════════ */
+
+/* ── Form Input: Underline Style ── */
+.form-input {
+  width: 100%;
+  padding: var(--pw-space-3) 0;
+  border: 1px solid transparent;
+  background-color: transparent;
+  border-bottom: 1px solid var(--pw-border);
+  font-size: var(--pw-title-size);
+  font-weight: 600;
+  color: var(--pw-text);
+  outline: none;
+  transition: border-color var(--pw-duration-normal) var(--pw-ease);
+  min-height: var(--pw-touch-min);
+}
+
+.form-input:focus {
+  border-bottom-color: var(--pw-primary);
+  border-bottom-width: 2px;
+  margin-bottom: -1px;
+}
+
+.form-input::placeholder {
+  color: var(--pw-text-hint);
+  font-weight: 400;
+}
+
+.form-input:disabled {
+  border-bottom-color: transparent;
+  color: var(--pw-text);
+  -webkit-text-fill-color: var(--pw-text);
+  opacity: 1;
+}
+
+.form-hint {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-hint);
+  margin-top: var(--pw-space-2);
+  line-height: var(--pw-caption-leading);
+}
+
+/* ── Radio Toggle ── */
+.radio-group {
+  display: flex;
+  gap: var(--pw-space-8);
+  margin-top: var(--pw-space-4);
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-2);
+  cursor: pointer;
+  font-size: var(--pw-label-size);
+  color: var(--pw-text-secondary);
+  font-weight: 500;
+  min-height: var(--pw-touch-min);
+}
+
+.radio-custom {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--pw-gray-300);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all var(--pw-duration-fast) var(--pw-ease);
+}
+
+.radio-input {
+  display: none;
+}
+
+.radio-input:checked + .radio-custom {
+  border-color: var(--pw-primary);
+}
+
+.radio-input:checked + .radio-custom::after {
+  content: '';
+  width: 11px;
+  height: 11px;
+  background-color: var(--pw-primary);
+  border-radius: 50%;
+}
+
+/* ── Payment Stepper ── */
+.stepper-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pw-space-6);
+  margin-bottom: var(--pw-space-4);
+}
+
+.stepper-btn {
+  background: none;
+  border: none;
+  color: var(--pw-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pw-space-2);
+  min-width: var(--pw-touch-min);
+  min-height: var(--pw-touch-min);
+  border-radius: 50%;
+  transition: background var(--pw-duration-fast);
+}
+
+.stepper-btn:hover {
+  background: var(--pw-surface-hover);
+}
+
+.stepper-btn:active {
+  background: var(--pw-gray-200);
+}
+
+.stepper-value {
+  font-size: var(--pw-headline-size);
+  font-weight: 700;
+  color: var(--pw-text);
+  width: 150px;
+  text-align: center;
+}
+
+/* ── Benefit Conditions ── */
+.benefit-item {
+  position: relative;
+  margin-bottom: var(--pw-space-8);
+}
+
+/* ── Stamp Modal ── */
+.stamp-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: var(--pw-z-modal);
+  padding: var(--pw-space-4);
+  animation: modalOverlayIn var(--pw-duration-normal) var(--pw-ease-out);
+}
+
+@keyframes modalOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.stamp-custom-modal {
+  background-color: var(--pw-surface);
+  border-radius: var(--pw-radius-lg);
+  width: 100%;
+  max-width: 360px;
+  overflow: hidden;
+  box-shadow: var(--pw-shadow-xl);
+  animation: scaleIn var(--pw-duration-normal) var(--pw-ease-spring);
+}
+
+.stamp-modal-content {
+  padding: var(--pw-space-8) var(--pw-space-6);
+  text-align: center;
+}
+
+.stamp-modal-title {
+  font-size: var(--pw-title-size);
+  font-weight: 700;
+  color: var(--pw-text);
+  margin: 0 0 var(--pw-space-4) 0;
+}
+
+.stamp-modal-desc {
+  font-size: var(--pw-label-size);
+  color: var(--pw-text-secondary);
+  margin: 0;
+  line-height: var(--pw-body-leading);
+  white-space: pre-line;
+}
+
+.stamp-modal-actions {
+  display: flex;
+  border-top: 1px solid var(--pw-border);
+}
+
+.stamp-modal-btn {
+  flex: 1;
+  padding: var(--pw-space-4);
+  background: none;
+  border: none;
+  font-size: var(--pw-body-size);
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--pw-primary);
+  min-height: var(--pw-touch-comfortable);
+  transition: background var(--pw-duration-fast);
+}
+
+.stamp-modal-btn.cancel {
+  color: var(--pw-text-secondary);
+  border-right: 1px solid var(--pw-border);
+}
+
+.stamp-modal-btn:hover {
+  background-color: var(--pw-surface-hover);
+}
+
+/* ── Small Buttons ── */
+.btn-black-small {
+  background: var(--pw-gray-800);
+  color: white;
+  border: none;
+  border-radius: var(--pw-radius-full);
+  padding: var(--pw-space-2) var(--pw-space-3);
+  font-size: var(--pw-label-size);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 36px;
+  transition: background var(--pw-duration-fast);
+}
+
+.btn-black-small:hover {
+  background: var(--pw-gray-900);
+}
+
+.btn-outline-small {
+  background: white;
+  color: var(--pw-text);
+  border: 1px solid var(--pw-border);
+  border-radius: var(--pw-radius-full);
+  padding: var(--pw-space-2) var(--pw-space-3);
+  font-size: var(--pw-label-size);
+  font-weight: 500;
+  cursor: pointer;
+  min-height: 36px;
+  transition: all var(--pw-duration-fast);
+}
+
+.btn-outline-small.active {
+  background: var(--pw-gray-100);
+  border-color: var(--pw-text);
+}
+
+/* ── Counter Controls ── */
+.coupon-counter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--pw-space-4);
+  flex-wrap: wrap;
+  gap: var(--pw-space-4);
+}
+
+.counter-control {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-4);
+}
+
+.counter-btn {
+  background: white;
+  border: 1px solid var(--pw-border);
+  border-radius: var(--pw-radius-xs);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--pw-text);
+  min-width: var(--pw-touch-min);
+  min-height: var(--pw-touch-min);
+  transition: background var(--pw-duration-fast);
+}
+
+.counter-btn:hover {
+  background: var(--pw-surface-hover);
+}
+
+.counter-value {
+  font-size: var(--pw-title-size);
+  font-weight: 500;
+  min-width: 40px;
+  text-align: left;
+}
+
+.counter-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-2);
+}
+
+.benefit-delete-absolute {
+  position: absolute;
+  right: 0;
+  top: var(--pw-space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-1);
+  color: var(--pw-text-secondary);
+  z-index: 10;
+}
+
+@media (max-width: 768px) {
+  .benefit-delete-absolute {
+    top: 0;
+  }
+}
