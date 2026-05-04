@@ -7,9 +7,11 @@ export { default as AuthService } from './auth/AuthService';
 export { default as StoreService } from './store/StoreService';
 export { default as StampService } from './stamp/StampService';
 export { default as CouponService } from './coupon/CouponService';
-export { default as LocationService } from './map/LocationService';
-export { default as PushService } from './push/PushService';
+export { default as StaffService } from './staff/StaffService';
 export { default as WifiService } from './wifi/WifiService';
+export { default as PushService } from './push/PushService';
+export { default as ChatService } from './chat/ChatService';
+export { default as LocationService } from './map/LocationService';
 
 // TranslationService는 클래스가 아닌 개별 함수 묶음이므로 전체를 객체로 묶어 export
 import * as TranslationService from './translation/TranslationService';
