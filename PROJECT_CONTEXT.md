@@ -80,16 +80,17 @@
 | **30** | **Provider Web 베이스라인 (16페이지) + 인증 API 연동** | provider-web |
 | **31** | **Provider Web — 매장/스탬프/쿠폰 도메인 API 연동** | provider-web/services |
 | **32** | **Provider Web — 직원/와이파이/푸시/채팅 API 연동** | provider-web/services |
+| **33** | **시스템 공지 (Super Admin → 사장/사용자) 백엔드** | announcement, admin |
 
-**누적 통계:** 32 PR · 15 blueprint · ~98 API endpoint · 24 DB 테이블 · 백엔드 ~6,200 LOC + provider-web 16페이지 (7 도메인 실 API 연결)
+**누적 통계:** 33 PR · 16 blueprint · ~104 API endpoint · 26 DB 테이블 · 백엔드 ~6,500 LOC + provider-web 16페이지
 
 ### ⬜ 후보 (다음 작업)
 
 | # | 제목 | 메모 |
 |---|---|---|
-| 33 | **시스템 공지 (Super Admin → 사장/사용자)** | 백엔드 API + 푸시 연계 |
 | 34 | **모바일 앱 Phase 3 마무리 (Flutter)** | 화면 + BLE + 푸시 + 소셜 |
 | 35 | **Super Admin Web UI + 비콘 배터리 모니터링** | 운영자 콘솔 |
+| 36 | **시스템 공지 — 푸시 발송 통합** | announcement + push provider |
 
 ---
 
@@ -112,6 +113,7 @@
 | `report_bp` | `/api/reports` | sales, stamps, coupons (집계) |
 | `admin_bp` | `/api/admin` | login, beacons (import/list/assign), facility-accounts (verify/suspend), stats/overview, payments (refund), subscriptions |
 | `invitation_bp` | `/api/invitations` | POST 발급, GET 목록, GET `<code>` 검증 (회원 폐쇄형 가입) |
+| `announcement_bp` | `/api/admin/announcements`, `/api/announcements` | 운영자 공지 CRUD + 사용자 측 audience 필터 + 읽음 처리 |
 
 ---
 

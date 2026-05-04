@@ -393,6 +393,35 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_invitations_code        ON invitations(code);
         CREATE INDEX IF NOT EXISTS idx_invitations_inviter     ON invitations(inviter_user_id);
         CREATE INDEX IF NOT EXISTS idx_invitations_facility    ON invitations(inviter_facility_id);
+
+        -- 시스템 공지 (PR #33) — 운영자가 사용자/사장/직원에게 일괄 공지
+        CREATE TABLE IF NOT EXISTS announcements (
+            id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+            title                TEXT    NOT NULL,
+            body                 TEXT    NOT NULL,
+            audience             TEXT    NOT NULL,  -- 'all'|'users'|'facilities'|'staff'
+            created_by_admin_id  INTEGER,
+            push_sent            INTEGER DEFAULT 0,
+            pinned               INTEGER DEFAULT 0,
+            starts_at            TEXT,
+            ends_at              TEXT,
+            created_at           TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_announcements_audience ON announcements(audience);
+        CREATE INDEX IF NOT EXISTS idx_announcements_starts   ON announcements(starts_at);
+
+        -- 공지 읽음 처리
+        CREATE TABLE IF NOT EXISTS announcement_reads (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            announcement_id INTEGER NOT NULL,
+            reader_kind     TEXT    NOT NULL,         -- 'user'|'facility'|'staff'
+            reader_id       INTEGER NOT NULL,
+            read_at         TEXT    DEFAULT (datetime('now')),
+            UNIQUE(announcement_id, reader_kind, reader_id),
+            FOREIGN KEY (announcement_id) REFERENCES announcements(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_announcement_reads_reader
+            ON announcement_reads(reader_kind, reader_id);
     """)
 
     # ── 마이그레이션: 기존 DB에 없는 컬럼은 ADD COLUMN ────────────────────────
