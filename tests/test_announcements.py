@@ -70,7 +70,16 @@ _ok(f'send-code → 200', sc == 200)
 db = _patched_get_db()
 ec = db.execute("SELECT code FROM email_codes WHERE email='u1@test.com' ORDER BY id DESC LIMIT 1").fetchone()['code']
 db.close()
-sc, body = _post('/api/auth/register', {'email': 'u1@test.com', 'code': ec, 'password': 'User123!'})
+sc, body = _post('/api/auth/register', {
+    'email': 'u1@test.com', 'code': ec, 'password': 'User123!',
+    'birth_year': 1990,   # PR #47 — 성인 가입
+    'consents': [
+        {'kind': 'age14',    'version': 'v', 'accepted': True},
+        {'kind': 'terms',    'version': 'v', 'accepted': True},
+        {'kind': 'privacy',  'version': 'v', 'accepted': True},
+        {'kind': 'location', 'version': 'v', 'accepted': True},
+    ],
+})
 _ok(f'register → 200', sc == 200 and body.get('success'), body)
 user_token = body['access_token']
 
@@ -85,6 +94,10 @@ _post('/api/facility/register', {
     'email': 'o1@test.com', 'code': ec, 'password': 'Owner123!',
     'company_name': 'TestStore', 'business_no': '111-22-33333',
     'manager_name': '홍사장', 'manager_phone': '010', 'manager_email': 'm@t.com',
+    'consents': [   # PR #45 — 사장은 terms/privacy 필수
+        {'kind': 'terms',   'version': 'v', 'accepted': True},
+        {'kind': 'privacy', 'version': 'v', 'accepted': True},
+    ],
 })
 db = _patched_get_db()
 db.execute("UPDATE facility_accounts SET verified=1, status='verified' WHERE email='o1@test.com'")

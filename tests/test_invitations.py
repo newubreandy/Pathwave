@@ -88,6 +88,10 @@ sc, body = _post('/api/facility/register', {
     'manager_name': '홍사장',
     'manager_phone': '010-0000-0000',
     'manager_email': 'manager@test.com',
+    'consents': [
+        {'kind': 'terms',   'version': 'v', 'accepted': True},
+        {'kind': 'privacy', 'version': 'v', 'accepted': True},
+    ],
 })
 _ok(f'/api/facility/register → 201 (pending)', sc == 201, body)
 
@@ -120,10 +124,19 @@ ec = db.execute(
 ).fetchone()['code']
 db.close()
 
+_USER_CONSENTS = [
+    {'kind': 'age14',    'version': 'v', 'accepted': True},
+    {'kind': 'terms',    'version': 'v', 'accepted': True},
+    {'kind': 'privacy',  'version': 'v', 'accepted': True},
+    {'kind': 'location', 'version': 'v', 'accepted': True},
+]
+
 sc, body = _post('/api/auth/register', {
     'email': 'newuser@test.com',
     'code': ec,
     'password': 'Newuser1!',
+    'birth_year': 1990,
+    'consents': _USER_CONSENTS,
 })
 _ok(f'코드 없이 register → 403', sc == 403, body)
 
@@ -142,6 +155,8 @@ sc, body = _post('/api/auth/register', {
     'code': ec,
     'password': 'Newuser1!',
     'invitation_code': shop_invite,
+    'birth_year': 1990,
+    'consents': _USER_CONSENTS,
 })
 _ok(f'register with code → 200', sc == 200 and body.get('success'), body)
 new_user_token = body['access_token']
@@ -162,6 +177,8 @@ sc, body = _post('/api/auth/register', {
     'code': ec2,
     'password': 'Another1!',
     'invitation_code': shop_invite,
+    'birth_year': 1990,
+    'consents': _USER_CONSENTS,
 })
 _ok(f'재사용 → 400', sc == 400, body)
 
