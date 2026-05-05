@@ -1,21 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Building2, UserCheck, Radio, CreditCard, AlertTriangle,
+  Building2, UserCheck, Radio, RadioReceiver, CreditCard, Users, Wifi,
 } from 'lucide-react';
 import { adminApi } from '../services/admin.js';
 import './Dashboard.css';
 
+// 백엔드 응답: GET /api/admin/stats/overview → { success, cards: {...} }
 const STAT_CARDS = [
-  { key: 'facility_accounts_total', label: '전체 사장 계정',  icon: Building2,  color: '#2ea043' },
-  { key: 'facility_accounts_pending', label: '승인 대기',     icon: UserCheck,  color: '#d29922' },
-  { key: 'beacons_total',           label: '비콘 입고',         icon: Radio,      color: '#1f6feb' },
-  { key: 'beacons_assigned',        label: '비콘 할당',         icon: Radio,      color: '#a371f7' },
-  { key: 'payments_total_amount',   label: '결제 누적 (KRW)',   icon: CreditCard, color: '#2ea043', formatter: (v) => v?.toLocaleString?.() ?? v },
-  { key: 'payments_failed_count',   label: '결제 실패',         icon: AlertTriangle, color: '#da3633' },
+  { key: 'total_facility_accounts',   label: '전체 사장 계정',  icon: Building2, color: '#2ea043' },
+  { key: 'pending_facility_accounts', label: '승인 대기',       icon: UserCheck, color: '#d29922' },
+  { key: 'total_facilities',          label: '활성 매장',       icon: Wifi,      color: '#a371f7' },
+  { key: 'total_users',               label: '앱 사용자',       icon: Users,     color: '#1f6feb' },
+  { key: 'total_beacons',             label: '비콘 입고',       icon: Radio,     color: '#1f6feb' },
+  { key: 'active_beacons',            label: '비콘 활성',       icon: RadioReceiver, color: '#a371f7' },
+  { key: 'mtd_paid_total_krw',        label: '이번 달 결제 (KRW)', icon: CreditCard, color: '#2ea043',
+    formatter: (v) => (v ?? 0).toLocaleString() },
+  { key: 'mtd_payment_count',         label: '이번 달 결제 건수', icon: CreditCard, color: '#1f6feb' },
 ];
 
 export default function Dashboard() {
-  const [stats, setStats] = useState(null);
+  const [cards, setCards] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -25,7 +29,7 @@ export default function Dashboard() {
     adminApi.statsOverview()
       .then((data) => {
         if (!alive) return;
-        setStats(data.stats || data);
+        setCards(data.cards || {});
       })
       .catch((err) => {
         if (!alive) return;
@@ -60,7 +64,7 @@ export default function Dashboard() {
                 {loading
                   ? <span className="skeleton" />
                   : (() => {
-                      const v = stats?.[key];
+                      const v = cards?.[key];
                       if (v === undefined || v === null) return '—';
                       return formatter ? formatter(v) : v;
                     })()}
@@ -71,13 +75,12 @@ export default function Dashboard() {
       </div>
 
       <div className="card next-steps">
-        <h3 style={{ marginTop: 0 }}>다음 PR 후보</h3>
+        <h3 style={{ marginTop: 0 }}>구현 현황</h3>
         <ul>
-          <li>비콘 인벤토리 — 입고/목록/할당 (PR #37)</li>
-          <li>사장 가입 승인 — pending 목록 + verify (PR #37)</li>
-          <li>배터리 모니터링 대시보드 (PR #38)</li>
-          <li>시스템 공지 작성/관리 + 푸시 통합 (PR #38)</li>
-          <li>결제·구독 관리 + 환불 (PR #39)</li>
+          <li><strong>✅ PR #36</strong> — 베이스라인 (Login + Dashboard)</li>
+          <li><strong>✅ PR #37</strong> — Beacons 인벤토리 + Approvals 실 구현</li>
+          <li>⬜ PR #38 — 배터리 모니터링 + 시스템 공지 + 푸시 통합</li>
+          <li>⬜ PR #39 — 결제·구독 관리 + 환불</li>
         </ul>
       </div>
     </div>
