@@ -48,8 +48,9 @@ class ChatService {
     return (data['messages'] as List?)?.cast<Map<String, dynamic>>() ?? [];
   }
 
+  /// 메시지 전송. 백엔드 스키마: `{body: <text>}`.
   Future<Map<String, dynamic>> send(int roomId, String text) async {
-    final data = await _api.post('/api/chat/rooms/$roomId/messages', {'text': text});
+    final data = await _api.post('/api/chat/rooms/$roomId/messages', {'body': text});
     return (data['message'] as Map?)?.cast<String, dynamic>() ?? {};
   }
 
