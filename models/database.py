@@ -498,6 +498,24 @@ def init_db():
             ON beacon_battery_history(beacon_id);
         CREATE INDEX IF NOT EXISTS idx_beacon_battery_reported
             ON beacon_battery_history(reported_at);
+
+        -- 회원가입 동의 기록 (PR #45) — 한국 정보통신망법 / 개인정보보호법 대응.
+        -- 한 계정이 여러 동의 항목 + 향후 약관 개정 시 버전 갱신 가능.
+        CREATE TABLE IF NOT EXISTS consents (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            sub_type    TEXT NOT NULL,    -- 'user' | 'facility' | 'staff'
+            account_id  INTEGER NOT NULL, -- users.id / facility_accounts.id / staff_accounts.id
+            kind        TEXT NOT NULL,    -- 'terms' | 'privacy' | 'age14' | 'location' | 'camera' | 'storage' | 'push' | 'marketing' | 'third_party'
+            version     TEXT NOT NULL,    -- 정책 버전 (e.g. '2026-05-05', '1.0')
+            accepted    INTEGER NOT NULL, -- 1 = 동의, 0 = 거부 (선택 항목)
+            accepted_at TEXT DEFAULT (datetime('now')),
+            ip          TEXT,
+            user_agent  TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_consents_account
+            ON consents(sub_type, account_id);
+        CREATE INDEX IF NOT EXISTS idx_consents_kind
+            ON consents(kind, version);
     """)
 
     # ── Super Admin 부트스트랩 ──────────────────────────────────────────────

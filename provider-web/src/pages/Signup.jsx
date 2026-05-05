@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthService from '../services/auth/AuthService';
+import ConsentSection from '../components/ConsentSection';
 import './Signup.css';
 
 const Signup = () => {
@@ -17,6 +18,7 @@ const Signup = () => {
     managerEmail: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [consents, setConsents] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,13 +32,18 @@ const Signup = () => {
       return;
     }
     setIsLoading(true);
-    
+
     try {
-      await AuthService.register(formData);
+      // 동의 항목을 백엔드 형식으로 변환
+      const consentsPayload = Object.entries(consents).map(([kind, accepted]) => ({
+        kind, accepted: !!accepted, version: 'unspecified',
+      }));
+      await AuthService.register({ ...formData, consents: consentsPayload });
       alert('회원가입이 완료되었습니다. 대시보드로 이동합니다.');
       navigate('/dashboard');
     } catch (error) {
-      alert('회원가입에 실패했습니다.');
+      const msg = error?.message || '회원가입에 실패했습니다.';
+      alert(msg);
     } finally {
       setIsLoading(false);
     }
@@ -134,6 +141,12 @@ const Signup = () => {
             </div>
           </div>
           
+          <ConsentSection
+            subType="facility"
+            value={consents}
+            onChange={setConsents}
+          />
+
           <button type="submit" className="btn-primary signup-btn" disabled={isLoading}>
             {isLoading ? '가입 신청 중...' : '가입 신청하기'}
           </button>

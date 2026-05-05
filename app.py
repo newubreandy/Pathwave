@@ -20,6 +20,7 @@ from routes.search   import search_bp
 from routes.admin    import admin_bp
 from routes.invitation import invitation_bp
 from routes.announcement import announcement_bp
+from routes.policy   import policy_bp
 
 
 # ── 운영 환경 보안 ENV 검증 ────────────────────────────────────────────────
@@ -132,6 +133,7 @@ app.register_blueprint(search_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(invitation_bp)
 app.register_blueprint(announcement_bp)
+app.register_blueprint(policy_bp)
 
 # ── Static files ──────────────────────────────────────────────────────────────
 @app.route('/', defaults={'path': ''})

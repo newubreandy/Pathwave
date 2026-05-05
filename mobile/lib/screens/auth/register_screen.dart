@@ -4,8 +4,9 @@ import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
 import '../../utils/app_theme.dart';
+import 'consent_screen.dart';
 
-/// 3단계 회원가입: ① 이메일 → ② 인증코드 → ③ 비밀번호 + 가입 완료.
+/// 4단계 회원가입: ① 이메일 → ② 인증코드 → ③ 비밀번호 → ④ 약관 동의 → 가입 완료.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
   @override
@@ -13,7 +14,7 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  int _step = 0;   // 0=이메일, 1=코드, 2=비밀번호
+  int _step = 0;   // 0=이메일, 1=코드, 2=비밀번호, 3=동의
   final _emailCtrl = TextEditingController();
   final _codeCtrl = TextEditingController();
   final _pwCtrl = TextEditingController();
@@ -71,15 +72,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  Future<void> _completeRegister() async {
+  void _proceedToConsent() {
     if (_pwCtrl.text.length < 8) {
       setState(() => _error = '비밀번호는 8자 이상이어야 합니다.');
       return;
     }
+    setState(() { _step = 3; _error = null; _info = '필수 약관에 동의 후 가입을 완료합니다.'; });
+  }
+
+  Future<void> _completeRegister(List<Map<String, dynamic>> consents) async {
     setState(() { _busy = true; _error = null; });
     try {
       final res = await context.read<AuthService>().register(
         _emailCtrl.text.trim(), _codeCtrl.text.trim(), _pwCtrl.text,
+        consents: consents,
       );
       if (!mounted) return;
       if (res['success'] == true) {
@@ -116,12 +122,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 단계 인디케이터
+            // 단계 인디케이터 — 4단계
             Row(
-              children: List.generate(3, (i) => Expanded(
+              children: List.generate(4, (i) => Expanded(
                 child: Container(
                   height: 4,
-                  margin: EdgeInsets.only(right: i < 2 ? 6 : 0),
+                  margin: EdgeInsets.only(right: i < 3 ? 6 : 0),
                   decoration: BoxDecoration(
                     color: i <= _step ? AppTheme.primary : AppTheme.border,
                     borderRadius: BorderRadius.circular(2),
@@ -129,17 +135,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               )),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
 
             if (_step == 0) ..._stepEmail(),
             if (_step == 1) ..._stepCode(),
             if (_step == 2) ..._stepPassword(),
+            if (_step == 3)
+              Expanded(
+                child: ConsentScreen(
+                  subType: 'user',
+                  busy: _busy,
+                  onCompleted: _completeRegister,
+                ),
+              ),
 
             if (_error != null) ...[
               const SizedBox(height: 12),
               Text(_error!, style: const TextStyle(color: AppTheme.error)),
             ],
-            if (_info != null) ...[
+            if (_info != null && _step < 3) ...[
               const SizedBox(height: 12),
               Text(_info!, style: const TextStyle(color: AppTheme.success)),
             ],
@@ -211,8 +225,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     ),
     const SizedBox(height: 20),
     ElevatedButton(
-      onPressed: _busy ? null : _completeRegister,
-      child: _busy ? _spinner() : const Text('가입 완료'),
+      onPressed: _busy ? null : _proceedToConsent,
+      child: _busy ? _spinner() : const Text('다음 — 약관 동의'),
     ),
   ];
 

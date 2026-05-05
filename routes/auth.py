@@ -12,6 +12,7 @@ import bcrypt
 import jwt
 from flask import Blueprint, request, jsonify, g
 
+from models.consent import record_consents, validate_consents
 from models.database import get_db
 from models.email_provider import get_email_provider
 from models.rate_limit import limiter
@@ -333,12 +334,18 @@ def register():
     code            = (data.get('code')            or '').strip()
     password        = (data.get('password')        or '')
     invitation_code = (data.get('invitation_code') or '').strip() or None
+    consents_in     = data.get('consents') or []
 
     if not email or not code or not password:
         return jsonify({'success': False, 'message': '모든 필드를 입력해 주세요.'}), 400
     pw_err = password_complexity_error(password)
     if pw_err:
         return jsonify({'success': False, 'message': pw_err}), 400
+
+    # 동의 항목 검증 (PR #45)
+    ok, msg = validate_consents('user', consents_in)
+    if not ok:
+        return jsonify({'success': False, 'message': msg}), 400
 
     db  = get_db()
     row = db.execute(
@@ -376,6 +383,14 @@ def register():
     db.execute('UPDATE email_codes SET used=1 WHERE email=? AND code=?', (email, code))
     if invitation_code:
         consume_invitation(db, invitation_code, user_id)
+
+    # 동의 항목 저장 (감사 로그용)
+    record_consents(
+        db, 'user', user_id, consents_in,
+        ip=request.headers.get('X-Forwarded-For') or request.remote_addr,
+        user_agent=request.headers.get('User-Agent'),
+    )
+
     db.commit()
     db.close()
 

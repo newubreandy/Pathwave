@@ -92,17 +92,20 @@
 | **42** | **📱 Mobile API services — 6개 도메인 dart 모듈 + SSE 스트림 + Push 토큰 등록** | mobile/lib/services/{store,stamp,coupon,notification,chat,push}_service.dart |
 | **43** | **🎫 Mobile — Stamps + Coupons + Notifications 실 구현** | screens/mypage/{stamps,coupons}.dart, screens/notifications/notifications.dart, widgets/empty_state.dart |
 | **44** | **🔎 Mobile — 시설 검색 (위치 기반) + 시설 상세** | screens/search/search_screen.dart, screens/facility/facility_screen.dart |
+| **45** | **🔐 회원가입 동의 시스템 — 9개 항목 + DB + 정책 본문 (트리거소프트)** | consents 테이블, models/consent.py, routes/policy.py, static/policies/*.ko.md (9), mobile/screens/auth/consent_screen.dart, provider-web/components/ConsentSection |
 
-**누적 통계:** 44 PR · 16 blueprint · ~107 API endpoint · 27 DB 테이블 · 백엔드 ~6,950 LOC + provider-web 16페이지 + admin-web 8페이지 + mobile 15화면 (stamps/coupons/noti/search/facility 실구현)
+**누적 통계:** 45 PR · 17 blueprint · ~110 API endpoint · 28 DB 테이블 · 백엔드 ~7,000 LOC + provider-web + admin-web + mobile 15화면
 
 ### ⬜ 후보 (다음 작업)
 
 | # | 제목 | 메모 |
 |---|---|---|
-| 45 | **Mobile — 채팅 목록 + 상세 (SSE)** | ChatService.streamMessages |
-| 46 | **Mobile — WiFi 자동 가입 native plugin** | Android SuggestNetwork + iOS NEHotspotConfiguration |
-| 47 | **APNs Push Provider (iOS native)** | models/push.py |
-| 48 | **PostgreSQL 이전** | 10K 동시접속 SRS 요건 |
+| 46 | **약관/정책 변경 관리 + 웹에디터 (MDXEditor) + 이메일 공지 + 이전 버전 보기** | DB policies 테이블 / admin-web 약관 메뉴 / 자동 재동의 |
+| 47 | **연령 분류 + 부모 초대 + 미성년자 시설 제한** | users.birth_year + facilities.adult_only + 부모 초대 흐름 |
+| 48 | **Mobile — 채팅 목록 + 상세 (SSE)** | ChatService.streamMessages |
+| 49 | **Mobile — WiFi 자동 가입 native plugin** | Android SuggestNetwork + iOS NEHotspotConfiguration |
+| 50 | **APNs Push Provider (iOS native)** | models/push.py |
+| 51 | **PostgreSQL 이전** | 10K 동시접속 SRS 요건 |
 
 ---
 
@@ -231,4 +234,4 @@ cd admin-web && npm install && npm run dev   # http://localhost:5174
 
 ---
 
-**마지막 업데이트:** 2026-05-05 (PR #44 — Mobile 시설 검색 + 시설 상세 실 구현)
+**마지막 업데이트:** 2026-05-05 (PR #45 — 회원가입 동의 시스템 9개 항목 + 정책 본문)
