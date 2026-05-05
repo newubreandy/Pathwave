@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/ble_service.dart';
 import '../../utils/app_theme.dart';
+import '../search/search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -32,8 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final tabs = [
       const _HomeTab(),
-      _StubTab(title: '시설 검색', icon: Icons.search,
-        message: '주변 매장 검색은 후속 PR 에서 구현됩니다.'),
+      const SearchScreen(),
       const _MyPageTab(),
       const _NotificationsTab(),
     ];
@@ -349,37 +349,3 @@ class _NotificationsTab extends StatelessWidget {
 }
 
 
-class _StubTab extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final String message;
-  const _StubTab({required this.title, required this.icon, required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.displaySmall),
-          const SizedBox(height: 8),
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(icon, size: 56, color: AppTheme.textHint),
-                  const SizedBox(height: 12),
-                  Text(message,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: AppTheme.textSecondary)),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
