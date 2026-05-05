@@ -3,7 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
-import '../../utils/app_theme.dart';
+import '../../utils/neu_theme.dart';
+import '../../widgets/neu/neu_button.dart';
+import '../../widgets/neu/neu_card.dart';
+import '../../widgets/neu/neu_text_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -82,130 +85,138 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: NeuTheme.background,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 40),
-              Container(
-                width: 64, height: 64,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppTheme.primary, AppTheme.secondary],
+              Center(
+                child: Container(
+                  width: 88, height: 88,
+                  decoration: BoxDecoration(
+                    color: NeuTheme.surface,
+                    borderRadius: BorderRadius.circular(28),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft, end: Alignment.bottomRight,
+                      colors: [NeuTheme.surfaceLight, NeuTheme.surface],
+                    ),
+                    boxShadow: NeuTheme.outerShadow(distance: 8, blur: 18),
                   ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Center(
-                  child: Text('PW', style: TextStyle(
-                    fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white,
-                  )),
+                  child: const Center(
+                    child: Text('PW', style: TextStyle(
+                      fontSize: 28, fontWeight: FontWeight.w800,
+                      color: NeuTheme.primary,
+                    )),
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
-              Text('PathWave', style: Theme.of(context).textTheme.displaySmall),
+              const SizedBox(height: 20),
+              Center(
+                child: Text('PathWave',
+                  style: Theme.of(context).textTheme.displaySmall),
+              ),
               const SizedBox(height: 4),
-              Text('이메일로 로그인',
-                style: Theme.of(context).textTheme.bodyMedium
-                    ?.copyWith(color: AppTheme.textSecondary)),
-              const SizedBox(height: 32),
-
-              TextField(
-                controller: _emailCtrl,
-                keyboardType: TextInputType.emailAddress,
-                autofillHints: const [AutofillHints.email],
-                decoration: const InputDecoration(
-                  hintText: '이메일',
-                  prefixIcon: Icon(Icons.email_outlined),
-                ),
+              const Center(
+                child: Text('이메일로 로그인',
+                  style: TextStyle(color: NeuTheme.textSecondary)),
               ),
-              const SizedBox(height: 12),
-              TextField(
+              const SizedBox(height: 36),
+
+              NeuTextField(
+                controller: _emailCtrl,
+                hintText: '이메일',
+                prefixIcon: Icons.email_outlined,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 14),
+              NeuTextField(
                 controller: _passwordCtrl,
+                hintText: '비밀번호',
+                prefixIcon: Icons.lock_outline,
                 obscureText: true,
-                autofillHints: const [AutofillHints.password],
-                decoration: const InputDecoration(
-                  hintText: '비밀번호',
-                  prefixIcon: Icon(Icons.lock_outline),
-                ),
-                onSubmitted: (_) => _login(),
+                textInputAction: TextInputAction.done,
               ),
 
               if (_error != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.error.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppTheme.error.withValues(alpha: 0.4)),
-                  ),
-                  child: Text(_error!, style: const TextStyle(color: AppTheme.error)),
+                const SizedBox(height: 14),
+                NeuCard(
+                  padding: const EdgeInsets.all(14),
+                  child: Text(_error!,
+                    style: const TextStyle(color: NeuTheme.error, fontSize: 13)),
                 ),
               ],
 
-              const SizedBox(height: 20),
-              ElevatedButton(
+              const SizedBox(height: 24),
+              NeuButton(
+                variant: NeuButtonVariant.primary,
                 onPressed: _busy ? null : _login,
-                child: _busy
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Text('로그인'),
+                child: Center(
+                  child: _busy
+                    ? const SizedBox(width: 22, height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Text('로그인',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                ),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   TextButton(
                     onPressed: _busy ? null : () => context.go('/auth/forgot'),
-                    child: const Text('비밀번호 찾기'),
+                    child: const Text('비밀번호 찾기',
+                      style: TextStyle(color: NeuTheme.textSecondary)),
                   ),
                   TextButton(
                     onPressed: _busy ? null : () => context.go('/auth/register'),
-                    child: const Text('회원가입'),
+                    child: const Text('회원가입',
+                      style: TextStyle(color: NeuTheme.primary, fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               const Row(
                 children: [
-                  Expanded(child: Divider(color: AppTheme.border)),
+                  Expanded(child: Divider(color: NeuTheme.border)),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('또는', style: TextStyle(color: AppTheme.textHint)),
+                    child: Text('또는',
+                      style: TextStyle(color: NeuTheme.textHint, fontSize: 12)),
                   ),
-                  Expanded(child: Divider(color: AppTheme.border)),
+                  Expanded(child: Divider(color: NeuTheme.border)),
                 ],
               ),
               const SizedBox(height: 16),
 
-              OutlinedButton.icon(
+              NeuButton(
                 onPressed: _busy ? null : _socialGoogle,
-                icon: const Icon(Icons.g_mobiledata, size: 28),
-                label: const Text('Google로 계속'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 52),
-                  side: const BorderSide(color: AppTheme.border),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.g_mobiledata, size: 28),
+                    SizedBox(width: 6),
+                    Text('Google로 계속'),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
+              const SizedBox(height: 10),
+              NeuButton(
                 onPressed: _busy ? null : _socialApple,
-                icon: const Icon(Icons.apple, size: 24),
-                label: const Text('Apple로 계속'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 52),
-                  side: const BorderSide(color: AppTheme.border),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.apple, size: 22),
+                    SizedBox(width: 6),
+                    Text('Apple로 계속'),
+                  ],
                 ),
               ),
+              const SizedBox(height: 24),
             ],
           ),
         ),

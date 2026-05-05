@@ -5,7 +5,10 @@ import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/ble_service.dart';
 import '../../services/permission_service.dart';
-import '../../utils/app_theme.dart';
+import '../../utils/neu_theme.dart';
+import '../../widgets/neu/neu_button.dart';
+import '../../widgets/neu/neu_card.dart';
+import '../../widgets/neu/neu_switch.dart';
 import '../search/search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -20,8 +23,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // 앱 진입 시 BLE 자동 스캔 시작 (백그라운드에서 비콘 감지)
-    // PR #58 — 권한 사전 안내 다이얼로그를 먼저 표시
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       final auth = context.read<AuthService>();
@@ -44,18 +45,85 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     return Scaffold(
+      backgroundColor: NeuTheme.background,
       body: SafeArea(child: tabs[_tab]),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        onDestinationSelected: (i) => setState(() => _tab = i),
-        backgroundColor: AppTheme.surface,
-        indicatorColor: AppTheme.primary.withValues(alpha: 0.2),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: '홈'),
-          NavigationDestination(icon: Icon(Icons.search), selectedIcon: Icon(Icons.search), label: '검색'),
-          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: '마이'),
-          NavigationDestination(icon: Icon(Icons.notifications_outlined), selectedIcon: Icon(Icons.notifications), label: '알림'),
-        ],
+      bottomNavigationBar: _NeuBottomNav(
+        index: _tab,
+        onTap: (i) => setState(() => _tab = i),
+      ),
+    );
+  }
+}
+
+// ── 하단 네비게이션 (neumorphic) ──────────────────────────────────────────
+class _NeuBottomNav extends StatelessWidget {
+  final int index;
+  final ValueChanged<int> onTap;
+  const _NeuBottomNav({required this.index, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      [Icons.home_outlined, Icons.home, '홈'],
+      [Icons.search, Icons.search, '검색'],
+      [Icons.person_outline, Icons.person, '마이'],
+      [Icons.notifications_outlined, Icons.notifications, '알림'],
+    ];
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: Container(
+          height: 70,
+          decoration: BoxDecoration(
+            color: NeuTheme.surface,
+            borderRadius: BorderRadius.circular(36),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft, end: Alignment.bottomRight,
+              colors: [NeuTheme.surfaceLight, NeuTheme.surface],
+            ),
+            boxShadow: NeuTheme.outerShadow(distance: 6, blur: 14),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(items.length, (i) {
+              final selected = index == i;
+              final ic = items[i];
+              return GestureDetector(
+                onTap: () => onTap(i),
+                behavior: HitTestBehavior.opaque,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: selected ? NeuTheme.surface : Colors.transparent,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: selected
+                      ? NeuTheme.pressedShadow(distance: 1.5, blur: 4)
+                      : null,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        selected ? ic[1] as IconData : ic[0] as IconData,
+                        color: selected ? NeuTheme.primary : NeuTheme.textSecondary,
+                        size: 24,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(ic[2] as String,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: selected ? NeuTheme.primary : NeuTheme.textSecondary,
+                          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                        )),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
       ),
     );
   }
@@ -70,51 +138,60 @@ class _HomeTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<BleService>(
       builder: (context, ble, _) {
-        return Padding(
+        return SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 8),
               Text('PathWave', style: Theme.of(context).textTheme.displaySmall),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               const Text('비콘이 감지되면 자동으로 WiFi에 연결됩니다.',
-                style: TextStyle(color: AppTheme.textSecondary)),
-              const SizedBox(height: 20),
+                style: TextStyle(color: NeuTheme.textSecondary, fontSize: 14)),
+              const SizedBox(height: 24),
 
               // BLE 스캔 상태 카드
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppTheme.border),
-                ),
+              NeuCard(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
                 child: Row(
                   children: [
-                    Icon(
-                      ble.isScanning ? Icons.bluetooth_searching : Icons.bluetooth_disabled,
-                      color: ble.isScanning ? AppTheme.success : AppTheme.textHint,
-                      size: 28,
+                    Container(
+                      width: 48, height: 48,
+                      decoration: BoxDecoration(
+                        color: NeuTheme.surface,
+                        shape: BoxShape.circle,
+                        boxShadow: NeuTheme.pressedShadow(distance: 1.5, blur: 4),
+                      ),
+                      child: Icon(
+                        ble.isScanning ? Icons.bluetooth_searching : Icons.bluetooth_disabled,
+                        color: ble.isScanning ? NeuTheme.accent : NeuTheme.textHint,
+                        size: 22,
+                      ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             ble.isScanning ? '비콘 감지 중' : '비콘 감지 대기',
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 15,
+                              color: NeuTheme.textPrimary,
+                            ),
                           ),
+                          const SizedBox(height: 2),
                           Text(
                             ble.isScanning
-                              ? '주변에 비콘이 있는지 확인합니다.'
-                              : '권한을 허용하면 자동으로 시작합니다.',
-                            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                              ? '주변 비콘을 확인합니다.'
+                              : '권한을 허용하면 자동 시작됩니다.',
+                            style: const TextStyle(
+                              color: NeuTheme.textSecondary, fontSize: 12),
                           ),
                         ],
                       ),
                     ),
-                    Switch(
+                    NeuSwitch(
                       value: ble.isScanning,
                       onChanged: (v) async {
                         if (v) {
@@ -135,7 +212,6 @@ class _HomeTab extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // WiFi 자동 연결 알림 (비콘 감지 시)
               if (ble.pendingWifi != null) ...[
                 _WifiBanner(
                   facility: ble.pendingWifi!['facility'],
@@ -150,19 +226,13 @@ class _HomeTab extends StatelessWidget {
                   onDismiss: ble.clearPendingWifi,
                 ),
               ] else
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppTheme.border),
-                  ),
+                NeuCard(
                   child: const Row(
                     children: [
-                      Icon(Icons.wifi_off, color: AppTheme.textHint),
+                      Icon(Icons.wifi_off, color: NeuTheme.textHint),
                       SizedBox(width: 12),
                       Expanded(child: Text('아직 감지된 비콘이 없습니다.',
-                        style: TextStyle(color: AppTheme.textSecondary))),
+                        style: TextStyle(color: NeuTheme.textSecondary))),
                     ],
                   ),
                 ),
@@ -189,37 +259,32 @@ class _WifiBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [
-          AppTheme.primary.withValues(alpha: 0.16),
-          AppTheme.secondary.withValues(alpha: 0.12),
-        ]),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
-      ),
+    return NeuCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.wifi, color: AppTheme.primary),
+              const Icon(Icons.wifi, color: NeuTheme.primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text('${facility?['name'] ?? '매장'} WiFi 발견',
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
               ),
-              IconButton(icon: const Icon(Icons.close, size: 18), onPressed: onDismiss),
+              IconButton(
+                icon: const Icon(Icons.close, size: 18),
+                color: NeuTheme.textSecondary,
+                onPressed: onDismiss),
             ],
           ),
           const SizedBox(height: 4),
           Text('SSID: ${wifi?['ssid'] ?? '—'}',
-            style: const TextStyle(color: AppTheme.textSecondary)),
-          const SizedBox(height: 12),
-          ElevatedButton(
+            style: const TextStyle(color: NeuTheme.textSecondary)),
+          const SizedBox(height: 14),
+          NeuButton(
+            variant: NeuButtonVariant.primary,
             onPressed: onTap,
-            child: const Text('자동 연결하기'),
+            child: const Center(child: Text('자동 연결하기')),
           ),
         ],
       ),
@@ -237,58 +302,78 @@ class _MyPageTab extends StatelessWidget {
     final auth = context.watch<AuthService>();
     final email = auth.user?['email']?.toString() ?? '—';
 
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('마이페이지', style: Theme.of(context).textTheme.displaySmall),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppTheme.border),
-            ),
+          const SizedBox(height: 18),
+
+          NeuCard(
             child: Row(
               children: [
-                const CircleAvatar(
-                  radius: 24,
-                  backgroundColor: AppTheme.primary,
-                  child: Icon(Icons.person, color: Colors.white),
+                Container(
+                  width: 56, height: 56,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF8B5CF6), NeuTheme.primary],
+                    ),
+                    boxShadow: NeuTheme.outerShadow(distance: 4, blur: 8),
+                  ),
+                  child: const Icon(Icons.person, color: Colors.white, size: 28),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(email, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      const Text('일반 회원', style: TextStyle(color: AppTheme.textSecondary)),
+                      Text(email,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 15)),
+                      const SizedBox(height: 2),
+                      const Text('일반 회원',
+                        style: TextStyle(color: NeuTheme.textSecondary, fontSize: 12)),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          _MenuTile(icon: Icons.local_activity_outlined, title: '내 스탬프', onTap: () => context.go('/mypage/stamps')),
-          _MenuTile(icon: Icons.confirmation_number_outlined, title: '내 쿠폰', onTap: () => context.go('/mypage/coupons')),
-          _MenuTile(icon: Icons.family_restroom,            title: '자녀 초대', onTap: () => context.go('/mypage/parent-invite')),
-          _MenuTile(icon: Icons.chat_bubble_outline,        title: '매장 채팅', onTap: () => context.go('/chat')),
-          _MenuTile(icon: Icons.settings_outlined,          title: '설정', onTap: () => context.go('/settings')),
-          const Spacer(),
-          OutlinedButton.icon(
+          const SizedBox(height: 18),
+
+          _NeuMenuTile(icon: Icons.local_activity_outlined, title: '내 스탬프',
+            onTap: () => context.go('/mypage/stamps')),
+          const SizedBox(height: 10),
+          _NeuMenuTile(icon: Icons.confirmation_number_outlined, title: '내 쿠폰',
+            onTap: () => context.go('/mypage/coupons')),
+          const SizedBox(height: 10),
+          _NeuMenuTile(icon: Icons.family_restroom, title: '자녀 초대',
+            onTap: () => context.go('/mypage/parent-invite')),
+          const SizedBox(height: 10),
+          _NeuMenuTile(icon: Icons.chat_bubble_outline, title: '매장 채팅',
+            onTap: () => context.go('/chat')),
+          const SizedBox(height: 10),
+          _NeuMenuTile(icon: Icons.settings_outlined, title: '설정',
+            onTap: () => context.go('/settings')),
+
+          const SizedBox(height: 24),
+          NeuButton(
             onPressed: () async {
               await context.read<AuthService>().logout();
               if (context.mounted) context.go('/auth/login');
             },
-            icon: const Icon(Icons.logout, color: AppTheme.error),
-            label: const Text('로그아웃', style: TextStyle(color: AppTheme.error)),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
-              side: const BorderSide(color: AppTheme.error),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: const Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.logout, color: NeuTheme.error, size: 18),
+                  SizedBox(width: 8),
+                  Text('로그아웃',
+                    style: TextStyle(color: NeuTheme.error, fontWeight: FontWeight.w600)),
+                ],
+              ),
             ),
           ),
         ],
@@ -298,30 +383,35 @@ class _MyPageTab extends StatelessWidget {
 }
 
 
-class _MenuTile extends StatelessWidget {
+class _NeuMenuTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final VoidCallback onTap;
-  const _MenuTile({required this.icon, required this.title, required this.onTap});
+  const _NeuMenuTile({
+    required this.icon, required this.title, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppTheme.surface,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(icon, size: 22, color: AppTheme.textSecondary),
-              const SizedBox(width: 12),
-              Expanded(child: Text(title)),
-              const Icon(Icons.chevron_right, size: 20, color: AppTheme.textHint),
-            ],
-          ),
+    return GestureDetector(
+      onTap: onTap,
+      child: NeuCard(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 38, height: 38,
+              decoration: BoxDecoration(
+                color: NeuTheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: NeuTheme.pressedShadow(distance: 1, blur: 3),
+              ),
+              child: Icon(icon, size: 20, color: NeuTheme.primary),
+            ),
+            const SizedBox(width: 14),
+            Expanded(child: Text(title,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14))),
+            const Icon(Icons.chevron_right, size: 20, color: NeuTheme.textHint),
+          ],
         ),
       ),
     );
@@ -329,7 +419,7 @@ class _MenuTile extends StatelessWidget {
 }
 
 
-// ── 알림 탭 (목록 진입 라우트로 이동) ───────────────────────────────────────
+// ── 알림 탭 ─────────────────────────────────────────────────────────────────
 class _NotificationsTab extends StatelessWidget {
   const _NotificationsTab();
 
@@ -343,13 +433,19 @@ class _NotificationsTab extends StatelessWidget {
           Text('알림', style: Theme.of(context).textTheme.displaySmall),
           const SizedBox(height: 8),
           const Text('스탬프 적립 / 쿠폰 발급 / 시스템 공지가 표시됩니다.',
-            style: TextStyle(color: AppTheme.textSecondary)),
-          const SizedBox(height: 16),
+            style: TextStyle(color: NeuTheme.textSecondary)),
+          const SizedBox(height: 24),
           Center(
-            child: TextButton.icon(
+            child: NeuButton(
               onPressed: () => context.go('/notifications'),
-              icon: const Icon(Icons.open_in_new),
-              label: const Text('전체 알림 보기'),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.open_in_new, size: 16),
+                  SizedBox(width: 8),
+                  Text('전체 알림 보기'),
+                ],
+              ),
             ),
           ),
         ],
@@ -357,5 +453,3 @@ class _NotificationsTab extends StatelessWidget {
     );
   }
 }
-
-
