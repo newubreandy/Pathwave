@@ -84,14 +84,14 @@
 | **34** | **비콘 배터리 모니터링 백엔드** | beacon, admin |
 | **35** | **🔒 보안 블로커 — SECRET_KEY/AES_KEY ENV 강제 + CORS 화이트리스트 + rate-limit** | app, auth, facility, staff, admin, beacon |
 | **36** | **🛡️ Super Admin Web UI 베이스라인 (Vite + React 19) — Login + 대시보드 + 4 placeholder** | admin-web/ (신규 폴더) |
+| **37** | **🔌 Admin Web — Beacons 인벤토리 + Approvals + 통계 키 매칭 수정** | admin-web/pages/Beacons, Approvals + Modal |
 
-**누적 통계:** 36 PR · 16 blueprint · ~107 API endpoint · 27 DB 테이블 · 백엔드 ~6,800 LOC + provider-web 16페이지 + admin-web 5페이지
+**누적 통계:** 37 PR · 16 blueprint · ~107 API endpoint · 27 DB 테이블 · 백엔드 ~6,800 LOC + provider-web 16페이지 + admin-web 7페이지
 
 ### ⬜ 후보 (다음 작업)
 
 | # | 제목 | 메모 |
 |---|---|---|
-| 37 | **Admin Web — 비콘 인벤토리 + 사장 가입 승인 실 구현** | admin-web/pages/Beacons, Approvals |
 | 38 | **Admin Web — 배터리 모니터링 + 시스템 공지 + 푸시 통합** | admin-web/pages/Battery, Announcements |
 | 39 | **Admin Web — 결제·구독 관리 + 환불** | admin-web/pages/Payments |
 | 40 | **모바일 앱 Phase 3 마무리 (Flutter)** | 화면 + BLE + 푸시 + 소셜 |
@@ -216,4 +216,4 @@ cd admin-web && npm install && npm run dev   # http://localhost:5174
 
 ---
 
-**마지막 업데이트:** 2026-05-05 (PR #36 — Admin Web 베이스라인)
+**마지막 업데이트:** 2026-05-05 (PR #37 — Admin Web Beacons + Approvals 실 구현)
