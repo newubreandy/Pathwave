@@ -8,7 +8,7 @@ import 'api_client.dart';
 
 /// 1:1 채팅 + SSE 실시간 스트림.
 ///
-/// 백엔드: chat_bp (PR #16) + SSE (PR #21)
+/// 백엔드: chat_bp (PR #16) + SSE 스트림(PR #21) — `/api/chat/rooms/<id>/stream`
 class ChatService {
   ChatService._();
   static final ChatService instance = ChatService._();
@@ -24,8 +24,17 @@ class ChatService {
 
   /// 시설 ID 기반 채팅방 진입 (없으면 생성).
   Future<Map<String, dynamic>> openRoom(int facilityId) async {
-    final data = await _api.post('/api/chat/rooms', {'facility_id': facilityId});
+    final data = await _api.post('/api/facilities/$facilityId/chat/rooms');
     return (data['room'] as Map?)?.cast<String, dynamic>() ?? {};
+  }
+
+  Future<Map<String, dynamic>> roomDetail(int roomId) async {
+    final data = await _api.get('/api/chat/rooms/$roomId');
+    return (data['room'] as Map?)?.cast<String, dynamic>() ?? {};
+  }
+
+  Future<void> markRead(int roomId) async {
+    await _api.post('/api/chat/rooms/$roomId/read');
   }
 
   /// 메시지 페이지 로드 (?before_id=, ?limit=).
@@ -49,7 +58,7 @@ class ChatService {
   /// - 종료: stream subscription cancel
   Stream<Map<String, dynamic>> streamMessages(int roomId) async* {
     final token = await _storage.read(key: 'jwt_token');
-    final uri = Uri.parse('${ApiConfig.baseUrl}/api/chat/rooms/$roomId/sse');
+    final uri = Uri.parse('${ApiConfig.baseUrl}/api/chat/rooms/$roomId/stream');
     final req = http.Request('GET', uri);
     req.headers['Accept'] = 'text/event-stream';
     if (token != null) req.headers['Authorization'] = 'Bearer $token';
