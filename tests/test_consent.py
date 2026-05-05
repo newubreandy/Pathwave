@@ -90,12 +90,13 @@ s, j = _post('/api/auth/register', {
     'email': 'consent_user@test',
     'code':  verify_code,
     'password': 'StrongPw1!',
+    'birth_year': 1990,   # PR #47 — 성인 회원으로 가입
     'consents': [
         {'kind': 'age14',   'version': '2026-05-05', 'accepted': True},
         {'kind': 'terms',   'version': '2026-05-05', 'accepted': True},
         {'kind': 'privacy', 'version': '2026-05-05', 'accepted': True},
         {'kind': 'location','version': '2026-05-05', 'accepted': True},
-        {'kind': 'marketing','version': '2026-05-05', 'accepted': False},  # 선택, 거부 가능
+        {'kind': 'marketing','version': '2026-05-05', 'accepted': False},
     ],
 })
 _ok(f'200 + 토큰 (status={s})', s == 200, j)

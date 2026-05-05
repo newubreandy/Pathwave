@@ -31,6 +31,7 @@ _UPDATABLE_FIELDS = {
     'latitude', 'longitude', 'description', 'image_url',
     'welcome_coupon_title', 'welcome_coupon_benefit',
     'welcome_coupon_validity_days',
+    'adult_only',   # PR #47 — 미성년자 출입 제한 (숙박/유흥 등)
 }
 
 # SRS FR-I18N-001: ko/en/ja/zh + 추가 가능
@@ -122,6 +123,7 @@ def _row_to_facility(row, *, translation: dict | None = None) -> dict:
         'welcome_coupon_title':         row['welcome_coupon_title'],
         'welcome_coupon_benefit':       row['welcome_coupon_benefit'],
         'welcome_coupon_validity_days': row['welcome_coupon_validity_days'],
+        'adult_only':     bool(row['adult_only']) if 'adult_only' in row.keys() else False,
         'active':         bool(row['active']),
         'created_at':     row['created_at'],
     }
@@ -179,8 +181,8 @@ def create_facility():
            (name, address, phone, business_hours, latitude, longitude,
             description, image_url,
             welcome_coupon_title, welcome_coupon_benefit, welcome_coupon_validity_days,
-            owner_id, active)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)""",
+            owner_id, active, adult_only)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1,?)""",
         (name,
          _normalize_text(data.get('address')),
          _normalize_text(data.get('phone')),
@@ -192,7 +194,8 @@ def create_facility():
          _normalize_text(data.get('welcome_coupon_title')),
          _normalize_text(data.get('welcome_coupon_benefit')),
          data.get('welcome_coupon_validity_days'),
-         account_id),
+         account_id,
+         1 if data.get('adult_only') else 0),
     )
     fid = cur.lastrowid
     row = db.execute("SELECT * FROM facilities WHERE id=?", (fid,)).fetchone()
@@ -296,6 +299,8 @@ def update_facility(fid):
                 return jsonify({'success': False,
                                 'message': 'welcome_coupon_validity_days는 1 이상의 정수여야 합니다.'}), 400
             vals.append(raw)
+        elif key == 'adult_only':
+            vals.append(1 if raw else 0)
         else:  # latitude, longitude
             vals.append(raw)
         sets.append(f'{key}=?')

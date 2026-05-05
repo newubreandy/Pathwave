@@ -537,6 +537,22 @@ def init_db():
             ON policies(kind, lang, effective_at);
     """)
 
+    # ── PR #47 — 연령 분류 + 부모 초대 + 미성년자 시설 제한 컬럼 추가 ────────
+    # 미성년자(만 14~18) 는 부모 초대 코드로만 가입. 일부 시설(숙박/유흥)은
+    # adult_only=1 로 표시 → 핸드셰이크 / 검색에서 자동 제외.
+    _add_column_if_missing(db, 'users', 'birth_year',
+                           'birth_year INTEGER')
+    _add_column_if_missing(db, 'users', 'age_group',
+                           "age_group TEXT")  # 'minor_14_18' | 'adult_19_plus'
+    _add_column_if_missing(db, 'users', 'parent_invitation_id',
+                           'parent_invitation_id INTEGER')
+    _add_column_if_missing(db, 'facilities', 'adult_only',
+                           'adult_only INTEGER NOT NULL DEFAULT 0')
+    _add_column_if_missing(db, 'invitations', 'is_minor_invite',
+                           'is_minor_invite INTEGER NOT NULL DEFAULT 0')
+    _add_column_if_missing(db, 'invitations', 'inviter_liability_accepted_at',
+                           'inviter_liability_accepted_at TEXT')
+
     # ── Super Admin 부트스트랩 ──────────────────────────────────────────────
     # ENV BOOTSTRAP_SUPER_ADMIN_EMAIL/PASSWORD가 설정되고 super admin이 0명이면
     # 최초 1명을 자동 생성. 이후 ENV 변경/삭제해도 무시됨 (idempotent).

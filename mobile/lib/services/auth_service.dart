@@ -69,14 +69,21 @@ class AuthService extends ChangeNotifier {
   }
 
   // ── 회원가입 ────────────────────────────────────────────────────
-  /// consents: [{kind, version, accepted}, ...] — PR #45 동의 시스템
+  /// consents: [{kind, version, accepted}, ...] — PR #45
+  /// birthYear / invitationCode (미성년자) — PR #47
   Future<Map<String, dynamic>> register(
       String email, String code, String password,
-      {List<Map<String, dynamic>>? consents}) async {
+      {List<Map<String, dynamic>>? consents,
+       int? birthYear,
+       String? invitationCode}) async {
     final body = <String, dynamic>{
       'email': email, 'code': code, 'password': password,
     };
     if (consents != null) body['consents'] = consents;
+    if (birthYear != null) body['birth_year'] = birthYear;
+    if (invitationCode != null && invitationCode.isNotEmpty) {
+      body['invitation_code'] = invitationCode;
+    }
     final res = await http.post(
       Uri.parse('$_baseUrl/api/auth/register'),
       headers: {'Content-Type': 'application/json'},

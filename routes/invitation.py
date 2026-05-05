@@ -194,6 +194,66 @@ def list_invitations():
     return jsonify({'success': True, 'invitations': items, 'count': len(items)})
 
 
+@invitation_bp.route('/parent', methods=['POST'])
+def create_parent_invitation():
+    """부모(만 19세 이상)가 자녀(만 14~18세) 가입 초대 발급 (PR #47).
+
+    body:
+      - invitee_email (선택)
+      - liability_accepted: True 필수 — 부모가 자녀 이용에 대한 법적 책임 부담 동의
+    """
+    actor = _resolve_actor(request.headers.get('Authorization', ''))
+    if not actor or actor['kind'] != 'user':
+        return jsonify({'success': False, 'message': '회원 인증이 필요합니다.'}), 401
+
+    data = request.get_json(silent=True) or {}
+    if not data.get('liability_accepted'):
+        return jsonify({
+            'success': False,
+            'message': '자녀의 서비스 이용에 대한 법적 책임 동의가 필요합니다.',
+        }), 400
+
+    db = get_db()
+    me = db.execute(
+        "SELECT id, age_group FROM users WHERE id=? AND deleted_at IS NULL",
+        (actor['id'],)
+    ).fetchone()
+    if not me:
+        db.close()
+        return jsonify({'success': False, 'message': '계정을 찾을 수 없습니다.'}), 404
+    if me['age_group'] != 'adult_19_plus':
+        db.close()
+        return jsonify({
+            'success': False,
+            'message': '만 19세 이상 회원만 자녀를 초대할 수 있습니다.',
+        }), 403
+
+    invitee_email = (data.get('invitee_email') or '').strip().lower() or None
+    code = _generate_code()
+    expires_at = (datetime.utcnow() + timedelta(hours=DEFAULT_EXPIRES_HOURS * 7)).isoformat()
+    cur = db.execute(
+        """INSERT INTO invitations
+             (code, inviter_user_id, invitee_email, channel, expires_at,
+              is_minor_invite, inviter_liability_accepted_at)
+           VALUES (?,?,?,?,?,1,datetime('now'))""",
+        (code, actor['id'], invitee_email, 'link', expires_at)
+    )
+    iid = cur.lastrowid
+    db.commit(); db.close()
+
+    base_url = os.environ.get('SIGNUP_BASE_URL', 'https://pathwave.io/signup')
+    return jsonify({
+        'success': True,
+        'invitation': {
+            'id': iid,
+            'code': code,
+            'is_minor_invite': True,
+            'expires_at': expires_at,
+            'share_url': f'{base_url}?invite={code}',
+        },
+    }), 201
+
+
 @invitation_bp.route('/<code>', methods=['GET'])
 def verify_code(code: str):
     """가입 페이지에서 코드 유효성 사전 검증 (인증 불필요).

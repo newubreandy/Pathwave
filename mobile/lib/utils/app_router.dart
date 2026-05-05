@@ -13,6 +13,7 @@ import '../screens/facility/facility_screen.dart';
 import '../screens/mypage/mypage_screen.dart';
 import '../screens/mypage/stamps_screen.dart';
 import '../screens/mypage/coupons_screen.dart';
+import '../screens/mypage/parent_invite_screen.dart';
 import '../screens/notifications/notifications_screen.dart';
 import '../screens/chat/chat_list_screen.dart';
 import '../screens/chat/chat_detail_screen.dart';
@@ -63,6 +64,8 @@ class AppRouter {
       GoRoute(path: '/mypage',       builder: (_, _) => const MyPageScreen()),
       GoRoute(path: '/mypage/stamps', builder: (_, _) => const StampsScreen()),
       GoRoute(path: '/mypage/coupons', builder: (_, _) => const CouponsScreen()),
+      GoRoute(path: '/mypage/parent-invite',
+              builder: (_, _) => const ParentInviteScreen()),
 
       // ── 알림 ────────────────────────────────────────────────────
       GoRoute(path: '/notifications', builder: (_, _) => const NotificationsScreen()),
