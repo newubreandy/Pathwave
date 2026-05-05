@@ -27,6 +27,11 @@ class ApiClient {
   static const _storage = FlutterSecureStorage();
   static const _kToken = 'jwt_token';
 
+  /// PR #60 — 401 발생 시 호출되는 글로벌 콜백.
+  /// AuthService 가 등록하면 메모리 토큰/유저를 비우고 notifyListeners() —
+  /// 그러면 go_router redirect 가 자동으로 /auth/login 으로 보냄.
+  static void Function()? onUnauthorized;
+
   Future<String?> _token() => _storage.read(key: _kToken);
 
   Future<Map<String, String>> _headers({Map<String, String>? extra}) async {
@@ -54,6 +59,7 @@ class ApiClient {
     }
     if (r.statusCode == 401) {
       await _storage.delete(key: _kToken);
+      onUnauthorized?.call();
       throw ApiException(401, body['message']?.toString() ?? '인증이 만료되었습니다.');
     }
     if (r.statusCode == 429) {

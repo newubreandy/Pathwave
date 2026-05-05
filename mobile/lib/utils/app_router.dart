@@ -23,9 +23,12 @@ import '../screens/settings/settings_screen.dart';
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
-  static final router = GoRouter(
+  /// PR #60 — AuthService 변경 시 redirect 재평가하도록 listenable 주입.
+  /// main.dart 가 AuthService 인스턴스를 넘겨 호출.
+  static GoRouter create(Listenable authListenable) => GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/splash',
+    refreshListenable: authListenable,
     redirect: (context, state) {
       final auth = context.read<AuthService>();
       final isLoggedIn = auth.isLoggedIn;
@@ -87,3 +90,4 @@ class AppRouter {
     ],
   );
 }
+

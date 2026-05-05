@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../utils/api_config.dart';
+import 'api_client.dart';
 
 class AuthService extends ChangeNotifier {
   static String get _baseUrl => ApiConfig.baseUrl;
@@ -19,7 +20,17 @@ class AuthService extends ChangeNotifier {
   Map<String, dynamic>? get user => _user;
 
   AuthService() {
+    // PR #60 — ApiClient 가 401 을 받으면 메모리 상태 비우고 redirect 트리거
+    ApiClient.onUnauthorized = _handleUnauthorized;
     _loadToken();
+  }
+
+  void _handleUnauthorized() {
+    if (_token == null) return;
+    _token = null;
+    _user  = null;
+    // secure storage 는 ApiClient 가 이미 비웠음
+    notifyListeners();
   }
 
   // ── 초기화: 저장된 토큰 로드 ────────────────────────────────────
