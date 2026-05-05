@@ -219,7 +219,7 @@ class _HomeTab extends StatelessWidget {
                   onTap: () {
                     final f = ble.pendingWifi!['facility'] ?? {};
                     final w = ble.pendingWifi!['wifi'] ?? {};
-                    context.go('/wifi-connect?'
+                    context.push('/wifi-connect?'
                         'name=${Uri.encodeComponent(f['name']?.toString() ?? '')}'
                         '&ssid=${Uri.encodeComponent(w['ssid']?.toString() ?? '')}');
                   },
@@ -343,20 +343,21 @@ class _MyPageTab extends StatelessWidget {
           ),
           const SizedBox(height: 18),
 
+          // PR #68 hotfix — 내부 메뉴는 push 로 (뒤로가기 히스토리 유지)
           _NeuMenuTile(icon: Icons.local_activity_outlined, title: '내 스탬프',
-            onTap: () => context.go('/mypage/stamps')),
+            onTap: () => context.push('/mypage/stamps')),
           const SizedBox(height: 10),
           _NeuMenuTile(icon: Icons.confirmation_number_outlined, title: '내 쿠폰',
-            onTap: () => context.go('/mypage/coupons')),
+            onTap: () => context.push('/mypage/coupons')),
           const SizedBox(height: 10),
           _NeuMenuTile(icon: Icons.family_restroom, title: '자녀 초대',
-            onTap: () => context.go('/mypage/parent-invite')),
+            onTap: () => context.push('/mypage/parent-invite')),
           const SizedBox(height: 10),
           _NeuMenuTile(icon: Icons.chat_bubble_outline, title: '매장 채팅',
-            onTap: () => context.go('/chat')),
+            onTap: () => context.push('/chat')),
           const SizedBox(height: 10),
           _NeuMenuTile(icon: Icons.settings_outlined, title: '설정',
-            onTap: () => context.go('/settings')),
+            onTap: () => context.push('/settings')),
 
           const SizedBox(height: 24),
           NeuButton(
@@ -437,7 +438,7 @@ class _NotificationsTab extends StatelessWidget {
           const SizedBox(height: 24),
           Center(
             child: NeuButton(
-              onPressed: () => context.go('/notifications'),
+              onPressed: () => context.push('/notifications'),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
