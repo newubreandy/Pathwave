@@ -20,6 +20,7 @@ import '../screens/chat/chat_list_screen.dart';
 import '../screens/chat/chat_detail_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/settings/change_password_screen.dart';
+import '../widgets/dev_preview_bar.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -31,6 +32,9 @@ class AppRouter {
     initialLocation: '/splash',
     refreshListenable: authListenable,
     redirect: (context, state) {
+      // PR #65 — PREVIEW_MODE 일 때 인증 가드 우회
+      if (DevPreviewBar.enabled) return null;
+
       final auth = context.read<AuthService>();
       final isLoggedIn = auth.isLoggedIn;
       final isAuthRoute = state.matchedLocation.startsWith('/auth');

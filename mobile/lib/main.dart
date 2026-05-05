@@ -8,6 +8,7 @@ import 'services/auth_service.dart';
 import 'services/ble_service.dart';
 import 'utils/app_router.dart';
 import 'utils/app_theme.dart';
+import 'widgets/dev_preview_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,6 +48,7 @@ class _PathWaveAppState extends State<PathWaveApp> {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
         routerConfig: _router,
+        builder: (context, child) => DevPreviewBar(child: child!),
 
         // 다국어 설정
         localizationsDelegates: const [

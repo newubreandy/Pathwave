@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import DashboardLayout from './layouts/DashboardLayout.jsx';
 import RequireAuth from './layouts/RequireAuth.jsx';
+import DevPreviewBar from './components/DevPreviewBar.jsx';
 import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Beacons from './pages/Beacons.jsx';
@@ -21,6 +22,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <DevPreviewBar />
       <Routes>
         <Route path="/login" element={<Login />} />
 
