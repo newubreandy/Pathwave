@@ -1,0 +1,16 @@
+# PR #57 — Android Release signing
+# 이 파일을 `key.properties` 로 복사해 실제 값을 채워주세요. (key.properties 는 gitignored)
+#
+# CI/CD 환경에서는 ENV 로 주입해도 동일하게 동작합니다:
+#   PATHWAVE_KEYSTORE          → storeFile
+#   PATHWAVE_KEYSTORE_PASSWORD → storePassword
+#   PATHWAVE_KEY_ALIAS         → keyAlias
+#   PATHWAVE_KEY_PASSWORD      → keyPassword
+#
+# 키스토어 생성 (1회):
+#   keytool -genkey -v -keystore ~/pathwave-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias pathwave
+
+storeFile=/absolute/path/to/pathwave-release.jks
+storePassword=CHANGE_ME
+keyAlias=pathwave
+keyPassword=CHANGE_ME

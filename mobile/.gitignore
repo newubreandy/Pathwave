@@ -43,3 +43,15 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# PR #57 — Android Release signing (절대 커밋 금지)
+/android/key.properties
+/android/app/upload-keystore.jks
+/android/app/*.jks
+/android/app/*.keystore
+
+# Firebase config — 운영 키는 ENV/CI 로 별도 주입 (예시 파일만 커밋)
+**/google-services.json
+**/GoogleService-Info.plist
+!**/google-services.json.example
+!**/GoogleService-Info.plist.example

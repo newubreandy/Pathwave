@@ -1,9 +1,32 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// PR #57 — Release signing
+//   1) android/key.properties (gitignored — 로컬/CI 키스토어 경로 + 비번)
+//   2) ENV: PATHWAVE_KEYSTORE / PATHWAVE_KEYSTORE_PASSWORD / PATHWAVE_KEY_ALIAS / PATHWAVE_KEY_PASSWORD
+//   3) 둘 다 없으면 debug 로 fallback (개발 빌드용 — 출시 빌드는 별도 점검 필요)
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
+fun envOrProp(envKey: String, propKey: String): String? {
+    return System.getenv(envKey) ?: keystoreProperties.getProperty(propKey)
+}
+
+val releaseStoreFile     = envOrProp("PATHWAVE_KEYSTORE",          "storeFile")
+val releaseStorePassword = envOrProp("PATHWAVE_KEYSTORE_PASSWORD", "storePassword")
+val releaseKeyAlias      = envOrProp("PATHWAVE_KEY_ALIAS",         "keyAlias")
+val releaseKeyPassword   = envOrProp("PATHWAVE_KEY_PASSWORD",      "keyPassword")
+val hasReleaseSigning    = listOf(releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword).all { !it.isNullOrEmpty() }
 
 android {
     namespace = "com.triggersoft.pathwave_app"
@@ -20,21 +43,34 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.triggersoft.pathwave_app"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile     = file(releaseStoreFile!!)
+                storePassword = releaseStorePassword
+                keyAlias      = releaseKeyAlias
+                keyPassword   = releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (hasReleaseSigning) {
+                signingConfigs.getByName("release")
+            } else {
+                logger.warn("⚠️  PathWave: release 키스토어가 설정되지 않아 debug 키로 서명합니다. 출시 빌드 전 PATHWAVE_KEYSTORE ENV 또는 android/key.properties 설정 필수.")
+                signingConfigs.getByName("debug")
+            }
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }
