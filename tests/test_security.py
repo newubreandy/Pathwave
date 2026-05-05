@@ -74,9 +74,39 @@ except RuntimeError as e:
     err = str(e)
 _ok('dev 기본 SECRET_KEY 사용 → RuntimeError', err and 'SECRET_KEY' in err, err)
 
-print('\n[5] 모든 ENV 정상 + production → 부팅 성공')
+print('\n[5] DB URL 누락 → RuntimeError (PR #59 — 운영은 PostgreSQL 필수)')
 os.environ['SECRET_KEY'] = 'real-strong-secret-32bytes-AAAAA'
 os.environ['CORS_ORIGINS'] = 'https://app.pathwave.kr,https://admin.pathwave.kr'
+os.environ.pop('DATABASE_URL', None)
+sys.modules.pop('app', None)
+err = None
+try:
+    import app  # noqa: F401
+except RuntimeError as e:
+    err = str(e)
+_ok('DATABASE_URL 누락 → RuntimeError', err and 'DATABASE_URL' in err, err)
+
+print('\n[5b] sqlite:// DATABASE_URL → RuntimeError (운영은 PostgreSQL 만)')
+os.environ['DATABASE_URL'] = 'sqlite:///foo.db'
+sys.modules.pop('app', None)
+err = None
+try:
+    import app  # noqa: F401
+except RuntimeError as e:
+    err = str(e)
+_ok('sqlite URL → RuntimeError', err and 'DATABASE_URL' in err, err)
+
+print('\n[5c] 모든 ENV 정상 + PostgreSQL URL + production → 검증 통과')
+os.environ['DATABASE_URL'] = 'postgresql://u:p@h/db'  # 형식만 검증, 실제 연결은 안 함
+# init_db() 가 실 PG 연결을 시도하지 않도록 모듈 단위에서 use_postgres 를 SQLite 로 우회
+sys.modules.pop('app', None)
+sys.modules.pop('models.database', None)
+sys.modules.pop('models.db_adapter', None)
+import models.db_adapter as _dbadapter
+_dbadapter.use_postgres = lambda: False
+import models.database as _dbm2
+_dbm2.use_postgres = lambda: False
+_dbm2.get_db = _patched_get_db
 sys.modules.pop('app', None)
 import app as _app_prod  # noqa: F401
 _ok('production 정상 부팅', True)
@@ -87,6 +117,7 @@ os.environ['PATHWAVE_ENV'] = 'development'
 os.environ.pop('SECRET_KEY', None)
 os.environ.pop('PATHWAVE_AES_KEY', None)
 os.environ.pop('CORS_ORIGINS', None)
+os.environ.pop('DATABASE_URL', None)
 sys.modules.pop('app', None)
 import app as _app_dev  # noqa: F401
 _ok('development 정상 부팅 (ENV 없어도 통과)', True)

@@ -25,7 +25,7 @@ from routes.policy   import policy_bp
 
 # ── 운영 환경 보안 ENV 검증 ────────────────────────────────────────────────
 # PATHWAVE_ENV=production 일 때 dev 기본값/누락된 ENV로 부팅 못 하도록 차단.
-# (PR #35 — 보안 블로커: SECRET_KEY/AES_KEY/CORS 운영 강제)
+# (PR #35 — SECRET_KEY/AES_KEY/CORS 운영 강제 / PR #59 — DB/PG/이메일/푸시 운영 강제)
 _DEV_SECRET_DEFAULT = 'pathwave-super-secret-key-2024'
 
 
@@ -33,25 +33,55 @@ def _validate_production_env() -> None:
     if os.environ.get('PATHWAVE_ENV', 'development') != 'production':
         return
 
+    errors: list[str] = []
+
+    # 1) 보안 키 (PR #35)
     secret = os.environ.get('SECRET_KEY', '')
     if not secret or secret == _DEV_SECRET_DEFAULT:
-        raise RuntimeError(
-            '운영 환경: SECRET_KEY ENV 필수 (dev 기본값 금지).'
-        )
+        errors.append('SECRET_KEY (dev 기본값 금지)')
 
     if not os.environ.get('PATHWAVE_AES_KEY', ''):
-        raise RuntimeError(
-            '운영 환경: PATHWAVE_AES_KEY ENV 필수 (WiFi 비밀번호 암호화 키).'
-        )
+        errors.append('PATHWAVE_AES_KEY (WiFi 비밀번호 암호화 키)')
 
     if not os.environ.get('CORS_ORIGINS', '').strip():
-        raise RuntimeError(
-            '운영 환경: CORS_ORIGINS ENV 필수 (예: https://app.pathwave.kr,https://admin.pathwave.kr).'
-        )
+        errors.append('CORS_ORIGINS (예: https://app.pathwave.kr,https://admin.pathwave.kr)')
 
     if os.environ.get('FLASK_DEBUG', '0') == '1':
+        errors.append('FLASK_DEBUG=1 금지')
+
+    # 2) DB (PR #59) — 운영 모드는 PostgreSQL 필수
+    db_url = os.environ.get('DATABASE_URL', '').strip()
+    if not db_url or db_url.startswith('sqlite:'):
+        errors.append('DATABASE_URL (PostgreSQL — postgresql:// 으로 시작)')
+
+    # 3) PG (Toss) — provider=toss 면 시크릿 필수 (sim/stub 은 허용)
+    pg = os.environ.get('PG_PROVIDER', 'sim').lower()
+    if pg == 'toss' and not os.environ.get('TOSS_SECRET_KEY', '').strip():
+        errors.append('TOSS_SECRET_KEY (PG_PROVIDER=toss 일 때 필수)')
+
+    # 4) 이메일 — provider 명시 시 키 필수
+    email_p = os.environ.get('EMAIL_PROVIDER', '').lower().strip()
+    if email_p == 'sendgrid' and not os.environ.get('SENDGRID_API_KEY', '').strip():
+        errors.append('SENDGRID_API_KEY (EMAIL_PROVIDER=sendgrid)')
+    if email_p == 'smtp':
+        if not (os.environ.get('SMTP_USER') and os.environ.get('SMTP_PASS')):
+            errors.append('SMTP_USER + SMTP_PASS (EMAIL_PROVIDER=smtp)')
+
+    # 5) 푸시 — APNs 사용 시 .p8 키/ID 모두 필수
+    push_p = os.environ.get('PUSH_PROVIDER', '').lower().strip()
+    if push_p in ('apns', 'multi'):
+        for k in ('APNS_KEY_PATH', 'APNS_KEY_ID', 'APNS_TEAM_ID', 'APNS_BUNDLE_ID'):
+            if not os.environ.get(k, '').strip():
+                errors.append(f'{k} (APNs 운영 사용 시)')
+
+    # 6) Firebase — 소셜 로그인/FCM 사용 시 자격증명 필요
+    if push_p in ('fcm', 'multi') and not os.environ.get('FIREBASE_CREDENTIALS', '').strip():
+        errors.append('FIREBASE_CREDENTIALS (FCM/Firebase Admin 사용 시 — serviceAccountKey.json 경로)')
+
+    if errors:
         raise RuntimeError(
-            '운영 환경: FLASK_DEBUG=1 금지.'
+            '운영 환경(PATHWAVE_ENV=production) 부팅 차단 — 누락된 ENV:\n  - '
+            + '\n  - '.join(errors)
         )
 
 
