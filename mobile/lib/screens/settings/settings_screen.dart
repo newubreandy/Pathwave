@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -22,6 +23,18 @@ class SettingsScreen extends StatelessWidget {
         children: [
           _section(context, '계정', [
             _tile(context, Icons.email_outlined, '이메일', email),
+            _linkTile(context, Icons.password_outlined, '비밀번호 변경',
+              () => context.push('/settings/change-password')),
+          ]),
+          _section(context, '알림', [
+            _linkTile(context, Icons.notifications_outlined, '알림 보기',
+              () => context.go('/notifications')),
+          ]),
+          _section(context, '고객 지원', [
+            _linkTile(context, Icons.mail_outline, '이메일 문의',
+              () => _launchSupport(context)),
+            _linkTile(context, Icons.help_outline, '자주 묻는 질문',
+              () => _showFaq(context)),
           ]),
           _section(context, '서버', [
             _tile(context, Icons.cloud_outlined, 'API Base URL', ApiConfig.baseUrl,
@@ -68,6 +81,52 @@ class SettingsScreen extends StatelessWidget {
               )),
           ),
           const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  static const _supportEmail = 'support@triggersoft.kr';
+
+  Future<void> _launchSupport(BuildContext context) async {
+    // url_launcher 의존성 없이 클립보드 + 안내 — 실 앱에서는 url_launcher 추가 권장
+    await Clipboard.setData(const ClipboardData(text: _supportEmail));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('고객지원 이메일을 클립보드에 복사했습니다: support@triggersoft.kr')),
+    );
+  }
+
+  Future<void> _showFaq(BuildContext context) async {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('자주 묻는 질문'),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _FaqItem(q: 'Q. 비콘이 감지되지 않아요',
+                a: 'A. Bluetooth 와 위치 권한이 모두 허용되어 있는지 확인해 주세요. '
+                   '또한 매장에서 5~10m 이내에 있어야 감지됩니다.'),
+              SizedBox(height: 12),
+              _FaqItem(q: 'Q. WiFi 자동 연결이 안 돼요',
+                a: 'A. iOS 의 경우 설정 → PathWave → "WiFi 자동 연결" 권한을 확인해 주세요. '
+                   'Android 는 시스템 설정의 위치 권한이 활성화되어야 합니다.'),
+              SizedBox(height: 12),
+              _FaqItem(q: 'Q. 스탬프가 적립되지 않았어요',
+                a: 'A. 매장 비콘 감지 후 자동 적립됩니다. 같은 매장에서 24시간 내 재방문은 1회로 카운트됩니다.'),
+              SizedBox(height: 12),
+              _FaqItem(q: 'Q. 회원 탈퇴는 어떻게 하나요?',
+                a: 'A. 설정 → 회원 탈퇴 메뉴에서 진행 가능합니다. 즉시 모든 알림이 차단되며 14일 후 재가입 가능합니다.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('닫기'),
+          ),
         ],
       ),
     );
@@ -228,6 +287,24 @@ class _PolicySheet extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _FaqItem extends StatelessWidget {
+  final String q;
+  final String a;
+  const _FaqItem({required this.q, required this.a});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(q, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+        const SizedBox(height: 4),
+        Text(a, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12, height: 1.5)),
+      ],
     );
   }
 }

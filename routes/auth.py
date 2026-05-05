@@ -639,6 +639,52 @@ def delete_me():
         db.close()
 
 
+@auth_bp.route('/change-password', methods=['POST'])
+@require_auth(sub_type='user')
+def change_password():
+    """로그인된 사용자의 비밀번호 변경 (PR #63).
+
+    이메일 가입자만 사용 가능. 현재 비밀번호 검증 → 새 비밀번호로 교체.
+    소셜 가입자는 401 (해당 provider 의 비밀번호 관리 사용).
+    """
+    user_id = g.auth['user_id']
+    data = request.get_json(silent=True) or {}
+    current = data.get('current_password') or ''
+    new_pw  = data.get('new_password') or ''
+
+    if not current or not new_pw:
+        return jsonify({'success': False,
+                        'message': '현재 비밀번호와 새 비밀번호를 모두 입력해 주세요.'}), 400
+    if current == new_pw:
+        return jsonify({'success': False,
+                        'message': '현재 비밀번호와 다른 값을 입력해 주세요.'}), 400
+    pw_err = password_complexity_error(new_pw)
+    if pw_err:
+        return jsonify({'success': False, 'message': pw_err}), 400
+
+    db = get_db()
+    try:
+        row = db.execute(
+            "SELECT password, provider FROM users WHERE id=? AND deleted_at IS NULL",
+            (user_id,)
+        ).fetchone()
+        if not row:
+            return jsonify({'success': False, 'message': '계정을 찾을 수 없습니다.'}), 404
+        if row['provider'] != 'email' or not row['password']:
+            return jsonify({'success': False,
+                            'message': '소셜 가입 계정은 해당 서비스에서 비밀번호를 관리해 주세요.'}), 400
+        if not bcrypt.checkpw(current.encode(), row['password'].encode()):
+            return jsonify({'success': False,
+                            'message': '현재 비밀번호가 올바르지 않습니다.'}), 401
+
+        new_hash = bcrypt.hashpw(new_pw.encode(), bcrypt.gensalt()).decode()
+        db.execute("UPDATE users SET password=? WHERE id=?", (new_hash, user_id))
+        db.commit()
+        return jsonify({'success': True, 'message': '비밀번호가 변경되었습니다.'})
+    finally:
+        db.close()
+
+
 @auth_bp.route('/refresh', methods=['POST'])
 def refresh():
     """Refresh 토큰으로 새 access 토큰 발급. SRS FR-AUTH-002."""

@@ -108,8 +108,9 @@
 | **58** | **🛡️ 권한 사전 안내 (Apple HIG / Google Play 가이드라인)** | services/permission_service.dart — 위치/Bluetooth/알림 OS 다이얼로그 **전에** 사용 목적 안내 + 영구 거부 시 시스템 설정 진입 다이얼로그, home_screen.dart / search_screen.dart 호출 통합, ble_service.dart 단순화 (권한 체크는 UI 책임) |
 | **59** | **⚙️ 백엔드 운영 ENV 강제 (DB / PG / Email / Push)** | app.py `_validate_production_env()` 확장 — DATABASE_URL (PostgreSQL 만), PG_PROVIDER=toss → TOSS_SECRET_KEY, EMAIL_PROVIDER=sendgrid/smtp → 키, PUSH_PROVIDER=apns/multi → APNs 4종 키, FCM 사용 시 FIREBASE_CREDENTIALS. 실패 시 부팅 차단 (RuntimeError). test_security.py [5/5b/5c] 추가 |
 | **60** | **🔁 401 자동 리다이렉트 (모바일 + admin-web + provider-web)** | mobile ApiClient.onUnauthorized 콜백 + AuthService 가 메모리 비우고 notifyListeners → go_router refreshListenable 가 즉시 /auth/login 으로 이동. main.dart 가 AppRouter.create(AuthService) 로 주입. provider-web/admin-web apiClient — 401 시 `window.location.replace('/login?from=...')` + Login.jsx 가 로그인 후 `from` 으로 복귀 |
+| **63** | **🔧 모바일 Settings 보강 (비밀번호 변경 + 고객지원 + FAQ + 알림 라우팅)** | POST /api/auth/change-password (현재 비번 검증 → 새 비번 교체, 소셜 가입자 차단), screens/settings/change_password_screen.dart, Settings — 비번 변경 / 알림 보기 / 이메일 문의(클립보드) / FAQ 4문항 / 회원 탈퇴, tests/test_change_password.py (8 시나리오) |
 
-**누적 통계:** 60 PR · 17 blueprint · ~118 API endpoint · 29 DB 테이블 · 백엔드 ~7,850 LOC + admin-web 9페이지 + mobile 18화면 + provider-web + DB 어댑터 (SQLite/PostgreSQL)
+**누적 통계:** 61 PR · 17 blueprint · ~119 API endpoint · 29 DB 테이블 · 백엔드 ~7,900 LOC + admin-web 9페이지 + mobile 19화면 + provider-web + DB 어댑터 (SQLite/PostgreSQL)
 
 ### ✅ 출시 전 코드 PR 완료
 
