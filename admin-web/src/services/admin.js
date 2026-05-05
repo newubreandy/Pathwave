@@ -56,6 +56,24 @@ export const adminApi = {
   updateAnnouncement: (aid, payload) =>
     apiClient.patch(`/api/admin/announcements/${aid}`, payload),
   deleteAnnouncement: (aid) => apiClient.delete(`/api/admin/announcements/${aid}`),
+
+  // 약관/정책 관리 (PR #46)
+  listPolicies: (lang = 'ko') =>
+    apiClient.get(`/api/admin/policies?lang=${lang}`),
+  listPolicyVersions: (kind, lang = 'ko') =>
+    apiClient.get(`/api/policies/${kind}/versions?lang=${lang}`),
+  getPolicyVersion: (kind, pid) =>
+    apiClient.get(`/api/policies/${kind}/versions/${pid}`),
+  getActivePolicy: (kind, lang = 'ko') =>
+    apiClient.get(`/api/policies/${kind}?lang=${lang}`),
+  createPolicy: (payload) =>
+    apiClient.post('/api/admin/policies', payload),
+  updatePolicy: (pid, payload) =>
+    apiClient.patch(`/api/admin/policies/${pid}`, payload),
+  deletePolicy: (pid) =>
+    apiClient.delete(`/api/admin/policies/${pid}`),
+  notifyPolicy: (pid, subType = 'all') =>
+    apiClient.post(`/api/admin/policies/${pid}/notify`, { sub_type: subType }),
 };
 
 export default adminApi;
