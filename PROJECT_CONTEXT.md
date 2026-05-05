@@ -29,7 +29,7 @@
 | **암호화** | AES-256-GCM (WiFi 비밀번호) |
 | **모바일 앱 (User)** | Flutter (`mobile/`) — Phase 3 진행 중 |
 | **사장님/직원 포털** | React + Vite (`provider-web/`) — UI 진행 중 |
-| **Super Admin 웹** | 미착수 (백엔드 API만 완비) |
+| **Super Admin 웹** | React + Vite (`admin-web/`) — PR #36 베이스라인 완료, 후속 PR 에서 페이지별 구현 |
 | **외부 연동** | Stub ↔ Real 스위치: PG / FCM / Google Translate / SMTP |
 | **실시간** | SSE (chat 폴링 푸시) |
 
@@ -83,17 +83,19 @@
 | **33** | **시스템 공지 (Super Admin → 사장/사용자) 백엔드** | announcement, admin |
 | **34** | **비콘 배터리 모니터링 백엔드** | beacon, admin |
 | **35** | **🔒 보안 블로커 — SECRET_KEY/AES_KEY ENV 강제 + CORS 화이트리스트 + rate-limit** | app, auth, facility, staff, admin, beacon |
+| **36** | **🛡️ Super Admin Web UI 베이스라인 (Vite + React 19) — Login + 대시보드 + 4 placeholder** | admin-web/ (신규 폴더) |
 
-**누적 통계:** 35 PR · 16 blueprint · ~107 API endpoint · 27 DB 테이블 · 백엔드 ~6,800 LOC + provider-web 16페이지
+**누적 통계:** 36 PR · 16 blueprint · ~107 API endpoint · 27 DB 테이블 · 백엔드 ~6,800 LOC + provider-web 16페이지 + admin-web 5페이지
 
 ### ⬜ 후보 (다음 작업)
 
 | # | 제목 | 메모 |
 |---|---|---|
-| 36 | **Super Admin Web UI** | 운영자 콘솔 (배터리 대시보드 포함) |
-| 37 | **모바일 앱 Phase 3 마무리 (Flutter)** | 화면 + BLE + 푸시 + 소셜 |
-| 38 | **시스템 공지 — 푸시 발송 통합** | announcement + push provider |
-| 39 | **운영 전환** | PG / FCM / Google Translate / SMTP 실 키 |
+| 37 | **Admin Web — 비콘 인벤토리 + 사장 가입 승인 실 구현** | admin-web/pages/Beacons, Approvals |
+| 38 | **Admin Web — 배터리 모니터링 + 시스템 공지 + 푸시 통합** | admin-web/pages/Battery, Announcements |
+| 39 | **Admin Web — 결제·구독 관리 + 환불** | admin-web/pages/Payments |
+| 40 | **모바일 앱 Phase 3 마무리 (Flutter)** | 화면 + BLE + 푸시 + 소셜 |
+| 41 | **운영 전환** | PG / FCM / Google Translate / SMTP 실 키 |
 
 ---
 
@@ -185,8 +187,11 @@ python3 app.py            # http://localhost:5000
 # Flutter 앱 (Phase 3 진행 중)
 cd mobile && flutter run
 
-# Provider Web (UI 빌드 진행 중)
-cd provider-web && npm run dev
+# Provider Web (사장/직원 포털, UI 빌드 진행 중)
+cd provider-web && npm run dev      # http://localhost:5173
+
+# Admin Web (운영자 콘솔, PR #36 베이스라인)
+cd admin-web && npm install && npm run dev   # http://localhost:5174
 ```
 
 각 PR 머지 직전에 수행한 시나리오 테스트는 해당 PR description의 **"Test Plan"** 섹션에 체크리스트 형식으로 보존되어 있음 (GitHub PR 페이지에서 영구 조회 가능).
@@ -211,4 +216,4 @@ cd provider-web && npm run dev
 
 ---
 
-**마지막 업데이트:** 2026-05-05 (PR #35 — 보안 블로커 처리)
+**마지막 업데이트:** 2026-05-05 (PR #36 — Admin Web 베이스라인)
