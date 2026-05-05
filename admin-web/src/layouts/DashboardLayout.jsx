@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Radio, UserCheck, Battery, Megaphone, LogOut,
+  LayoutDashboard, Radio, UserCheck, Battery, Megaphone, CreditCard, LogOut,
 } from 'lucide-react';
 import { adminLogout, getCurrentAdmin } from '../services/auth.js';
 import './DashboardLayout.css';
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { to: '/dashboard/approvals',      icon: UserCheck,       label: '사장 가입 승인' },
   { to: '/dashboard/battery',        icon: Battery,         label: '배터리 모니터링'},
   { to: '/dashboard/announcements',  icon: Megaphone,       label: '시스템 공지'    },
+  { to: '/dashboard/payments',       icon: CreditCard,      label: '결제 / 구독'    },
 ];
 
 export default function DashboardLayout() {
