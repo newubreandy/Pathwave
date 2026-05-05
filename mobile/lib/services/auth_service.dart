@@ -190,6 +190,22 @@ class AuthService extends ChangeNotifier {
     return jsonDecode(res.body);
   }
 
+  // ── 비밀번호 변경 (PR #63) ──────────────────────────────────────
+  Future<Map<String, dynamic>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final res = await http.post(
+      Uri.parse('$_baseUrl/api/auth/change-password'),
+      headers: authHeaders,
+      body: jsonEncode({
+        'current_password': currentPassword,
+        'new_password':     newPassword,
+      }),
+    );
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
   // ── 회원 탈퇴 (PR #55) — Apple 5.1.1(v) / Google Play 정책 ─────
   Future<Map<String, dynamic>> deleteAccount({String? password}) async {
     final body = <String, dynamic>{};

@@ -19,6 +19,7 @@ import '../screens/notifications/notifications_screen.dart';
 import '../screens/chat/chat_list_screen.dart';
 import '../screens/chat/chat_detail_screen.dart';
 import '../screens/settings/settings_screen.dart';
+import '../screens/settings/change_password_screen.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -87,6 +88,8 @@ class AppRouter {
 
       // ── 설정 ────────────────────────────────────────────────────
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
+      GoRoute(path: '/settings/change-password',
+              builder: (_, _) => const ChangePasswordScreen()),
     ],
   );
 }
