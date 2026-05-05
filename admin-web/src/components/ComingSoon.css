@@ -1,0 +1,53 @@
+.coming-soon {
+  text-align: center;
+  padding: 3rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+.cs-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+.cs-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+.cs-pr {
+  color: var(--accent);
+  font-size: 0.875rem;
+}
+.cs-endpoints {
+  margin-top: 1.25rem;
+  width: 100%;
+  max-width: 540px;
+  text-align: left;
+}
+.cs-endpoints-label {
+  color: var(--text-hint);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.4rem;
+}
+.cs-endpoints pre {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.875rem 1rem;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  white-space: pre;
+  overflow-x: auto;
+  font-family: ui-monospace, 'SF Mono', monospace;
+}
