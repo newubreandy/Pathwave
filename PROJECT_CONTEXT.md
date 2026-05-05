@@ -89,16 +89,20 @@
 | **39** | **💳 Admin Web — 결제·구독 관리 + 환불 (Payments 페이지 신설)** | admin-web/pages/Payments (탭 2개) |
 | **40** | **📱 Mobile App — 컴파일 가능한 골격 + 인증 동선 + 14개 화면 (실+stub)** | mobile/lib/screens (14) + api_client + ApiConfig |
 | **41** | **🚀 운영 전환 — PG/Email provider 추상화 + gunicorn/Procfile + Sentry** | models/payment_provider.py, models/email_provider.py, wsgi.py, gunicorn.conf.py, Procfile |
+| **42** | **📱 Mobile API services — 6개 도메인 dart 모듈 + SSE 스트림 + Push 토큰 등록** | mobile/lib/services/{store,stamp,coupon,notification,chat,push}_service.dart |
 
-**누적 통계:** 41 PR · 16 blueprint · ~107 API endpoint · 27 DB 테이블 · 백엔드 ~6,950 LOC + provider-web 16페이지 + admin-web 8페이지 + mobile 14화면 + WSGI/observability
+**누적 통계:** 42 PR · 16 blueprint · ~107 API endpoint · 27 DB 테이블 · 백엔드 ~6,950 LOC + provider-web 16페이지 + admin-web 8페이지 + mobile 14화면 + 6개 service 모듈
 
 ### ⬜ 후보 (다음 작업)
 
 | # | 제목 | 메모 |
 |---|---|---|
-| 42 | **Mobile App — 시설 검색 / 스탬프 / 쿠폰 / 알림 / 채팅 실구현** | screens/{facility,mypage,notifications,chat}/* 의 stub → 실 |
-| 43 | **APNs Push Provider (iOS native)** | models/push.py 에 ApnsPushProvider 추가 |
-| 44 | **PostgreSQL 이전** | SQLite → PostgreSQL (10K 동시 접속 SRS 요건) |
+| 43 | **Mobile — Stamps + Coupons + Notifications 실 구현** | service 사용 → ListView |
+| 44 | **Mobile — 시설 검색 + 시설 상세** | StoreService + google_maps |
+| 45 | **Mobile — 채팅 목록 + 상세 (SSE)** | ChatService.streamMessages |
+| 46 | **Mobile — WiFi 자동 가입 native plugin** | Android SuggestNetwork + iOS NEHotspotConfiguration |
+| 47 | **APNs Push Provider (iOS native)** | models/push.py |
+| 48 | **PostgreSQL 이전** | 10K 동시접속 SRS 요건 |
 
 ---
 
@@ -227,4 +231,4 @@ cd admin-web && npm install && npm run dev   # http://localhost:5174
 
 ---
 
-**마지막 업데이트:** 2026-05-05 (PR #41 — 운영 전환: PG/Email provider 추상화 + gunicorn + Sentry)
+**마지막 업데이트:** 2026-05-05 (PR #42 — Mobile API services 6개 도메인 모듈)
