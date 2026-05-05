@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // ── 색상 팔레트 ─────────────────────────────────────────────────
@@ -102,7 +101,7 @@ class AppTheme {
       ),
 
       // 카드
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: surface,
         elevation: 0,
         shape: RoundedRectangleBorder(

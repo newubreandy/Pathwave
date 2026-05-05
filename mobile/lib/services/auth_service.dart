@@ -5,8 +5,10 @@ import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../utils/api_config.dart';
+
 class AuthService extends ChangeNotifier {
-  static const _baseUrl = 'http://172.30.1.72:8080'; // 개발: 로컬 서버
+  static String get _baseUrl => ApiConfig.baseUrl;
   static const _storage = FlutterSecureStorage();
 
   String? _token;
