@@ -4,29 +4,33 @@ import './Facilities.css';
 
 const Facilities = () => {
   const [facilities, setFacilities] = useState([
-    { 
-      id: 1, 
-      name: '호텔H (데모)', 
-      address: '서울특별시 중구 소공로 249', 
+    {
+      id: 1,
+      name: '호텔H (데모)',
+      address: '서울특별시 중구 소공로 249',
       phone: '02-2233-3131',
       description: '호텔H는 최고급 호스피탈리티를 목표로 오랜 세월 동안 전통과 혁신을 유지하며 고객들께 감동을 제공해 왔습니다.',
       benefits: '[혜택] 호텔H 숙박 스탬프 이벤트 진행',
       images: ['https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=400'],
-      status: '영업중' 
+      adult_only: true,
+      status: '영업중',
     },
   ]);
 
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
-  const [newFacility, setNewFacility] = useState({ name: '', address: '', phone: '', description: '', benefits: '' });
+  const [newFacility, setNewFacility] = useState({
+    name: '', address: '', phone: '', description: '', benefits: '',
+    adult_only: false,
+  });
   const [previewUrls, setPreviewUrls] = useState([]);
   const fileInputRef = useRef(null);
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
-    
+
     const remainingSlots = 5 - previewUrls.length;
     const filesToProcess = files.slice(0, remainingSlots);
     const newUrls = [];
@@ -43,7 +47,7 @@ const Facilities = () => {
       };
       reader.readAsDataURL(file);
     });
-    
+
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -53,7 +57,10 @@ const Facilities = () => {
 
   const openAddModal = () => {
     setIsEditing(false);
-    setNewFacility({ name: '', address: '', phone: '', description: '', benefits: '' });
+    setNewFacility({
+      name: '', address: '', phone: '', description: '', benefits: '',
+      adult_only: false,
+    });
     setPreviewUrls([]);
     setShowModal(true);
   };
@@ -61,12 +68,13 @@ const Facilities = () => {
   const openEditModal = (facility) => {
     setIsEditing(true);
     setCurrentId(facility.id);
-    setNewFacility({ 
-      name: facility.name || '', 
-      address: facility.address || '', 
+    setNewFacility({
+      name: facility.name || '',
+      address: facility.address || '',
       phone: facility.phone || '',
       description: facility.description || '',
-      benefits: facility.benefits || ''
+      benefits: facility.benefits || '',
+      adult_only: !!facility.adult_only,
     });
     setPreviewUrls(facility.images || []);
     setShowModal(true);
@@ -75,9 +83,13 @@ const Facilities = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isEditing) {
-      setFacilities(facilities.map(f => f.id === currentId ? { ...f, ...newFacility, images: previewUrls } : f));
+      setFacilities(facilities.map(f => f.id === currentId
+        ? { ...f, ...newFacility, images: previewUrls }
+        : f));
     } else {
-      setFacilities([...facilities, { ...newFacility, id: Date.now(), images: previewUrls, status: '영업중' }]);
+      setFacilities([...facilities, {
+        ...newFacility, id: Date.now(), images: previewUrls, status: '영업중',
+      }]);
     }
     setShowModal(false);
   };
@@ -86,12 +98,12 @@ const Facilities = () => {
     <div className="facilities-container">
       <div className="page-header-section" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ flex: '1 1 200px' }}>
-          <h1 className="page-title">{t('facility.title', '시설 등록 관리')}</h1>
+          <h1 className="page-title">시설 등록 관리</h1>
           <p className="sub-title">운영 중인 시설 정보를 등록하고 관리하세요.</p>
         </div>
-        <button className="btn-modern btn-modern-primary" style={{ flexShrink: 0 }} onClick={handleAddFacility}>
+        <button className="btn-modern btn-modern-primary" style={{ flexShrink: 0 }} onClick={openAddModal}>
           <Plus size={18} style={{ marginRight: '0.25rem' }} />
-          {t('facility.btn_add_facility', '시설 추가')}
+          시설 추가
         </button>
       </div>
 
@@ -122,27 +134,49 @@ const Facilities = () => {
               <div className="form-group">
                 <label className="form-label">매장명</label>
                 <div className="form-content">
-                  <input type="text" className="input-field" value={newFacility.name} onChange={e => setNewFacility({...newFacility, name: e.target.value})} required />
+                  <input type="text" className="input-field" value={newFacility.name} onChange={e => setNewFacility({ ...newFacility, name: e.target.value })} required />
                 </div>
               </div>
               <div className="form-group">
                 <label className="form-label">매장 주소</label>
                 <div className="form-content">
-                  <input type="text" className="input-field" value={newFacility.address} onChange={e => setNewFacility({...newFacility, address: e.target.value})} required />
+                  <input type="text" className="input-field" value={newFacility.address} onChange={e => setNewFacility({ ...newFacility, address: e.target.value })} required />
                 </div>
               </div>
               <div className="form-group">
                 <label className="form-label">전화번호</label>
                 <div className="form-content">
-                  <input type="text" className="input-field" value={newFacility.phone} onChange={e => setNewFacility({...newFacility, phone: e.target.value})} placeholder="예: 02-1234-5678" />
+                  <input type="text" className="input-field" value={newFacility.phone} onChange={e => setNewFacility({ ...newFacility, phone: e.target.value })} placeholder="예: 02-1234-5678" />
                 </div>
               </div>
               <div className="form-group">
                 <label className="form-label">매장 설명</label>
                 <div className="form-content">
-                  <textarea className="input-field" rows="4" value={newFacility.description} onChange={e => setNewFacility({...newFacility, description: e.target.value})} />
+                  <textarea className="input-field" rows="4" value={newFacility.description} onChange={e => setNewFacility({ ...newFacility, description: e.target.value })} />
                 </div>
               </div>
+
+              {/* PR #54 — 미성년자 출입 제한 시설 토글 (백엔드 facilities.adult_only) */}
+              <div className="form-group">
+                <label className="form-label">시설 분류</label>
+                <div className="form-content">
+                  <label className="adult-only-toggle">
+                    <input
+                      type="checkbox"
+                      checked={!!newFacility.adult_only}
+                      onChange={e => setNewFacility({ ...newFacility, adult_only: e.target.checked })}
+                    />
+                    <span className="toggle-label">
+                      <strong>🔞 미성년자 출입 제한 시설</strong>
+                      <em>
+                        숙박 / 유흥 / 술집 등. 활성화 시 만 14~18세 회원에게는
+                        매장 검색 결과에서 제외되며 비콘 자동 연결도 차단됩니다.
+                      </em>
+                    </span>
+                  </label>
+                </div>
+              </div>
+
               <div className="modal-actions">
                 <button type="button" className="btn-ghost" onClick={() => setShowModal(false)}>취소</button>
                 <button type="submit" className="btn-primary">{isEditing ? '수정 완료' : '등록하기'}</button>
@@ -162,7 +196,13 @@ const Facilities = () => {
             )}
             <div className="facility-content">
               <div className="facility-info">
-                <div className="facility-main"><h3 className="facility-name">{f.name}</h3><span className="status-badge">{f.status}</span></div>
+                <div className="facility-main">
+                  <h3 className="facility-name">{f.name}</h3>
+                  {f.adult_only && (
+                    <span className="adult-only-badge" title="만 19세 이상만 이용 가능">🔞 19+</span>
+                  )}
+                  <span className="status-badge">{f.status}</span>
+                </div>
                 <p className="facility-address"><MapPin size={14} /> {f.address}</p>
                 {f.phone && <p className="facility-meta">📞 {f.phone}</p>}
                 {f.benefits && <p className="facility-meta highlight">🎁 {f.benefits}</p>}

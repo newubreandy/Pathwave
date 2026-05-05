@@ -236,3 +236,62 @@
   gap: var(--pw-space-3);
   margin-top: var(--pw-space-6);
 }
+
+
+/* ── PR #54 — adult_only 토글 + 배지 ───────────────────── */
+
+.adult-only-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.875rem 1rem;
+  background: rgba(218, 54, 51, 0.08);
+  border: 1px solid rgba(218, 54, 51, 0.3);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.adult-only-toggle:hover {
+  background: rgba(218, 54, 51, 0.12);
+}
+
+.adult-only-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: #da3633;
+}
+
+.adult-only-toggle .toggle-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--pw-text, #e6edf3);
+}
+
+.adult-only-toggle .toggle-label strong {
+  color: #da3633;
+  font-weight: 600;
+}
+
+.adult-only-toggle .toggle-label em {
+  font-style: normal;
+  font-size: 0.75rem;
+  color: var(--pw-text-muted, #8b949e);
+  line-height: 1.5;
+}
+
+.adult-only-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  background: rgba(218, 54, 51, 0.2);
+  color: #ff7b72;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: 0.4rem;
+}
