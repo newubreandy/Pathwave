@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../services/permission_service.dart';
 import '../../services/store_service.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/empty_state.dart';
@@ -41,11 +42,10 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Future<void> _resolveLocation() async {
     try {
-      var perm = await Geolocator.checkPermission();
-      if (perm == LocationPermission.denied) {
-        perm = await Geolocator.requestPermission();
-      }
-      if (perm == LocationPermission.denied || perm == LocationPermission.deniedForever) {
+      // PR #58 — OS 다이얼로그 전에 사용 목적 안내
+      final granted = await PermissionService.instance.ensureLocation(context);
+      if (!granted) {
+        if (!mounted) return;
         setState(() => _locationDenied = true);
         await _runSearch();
         return;
@@ -53,9 +53,11 @@ class _SearchScreenState extends State<SearchScreen> {
       final pos = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium),
       );
+      if (!mounted) return;
       setState(() { _myPos = pos; });
       await _runSearch();
     } catch (_) {
+      if (!mounted) return;
       setState(() => _locationDenied = true);
       await _runSearch();
     }

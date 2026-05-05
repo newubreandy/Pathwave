@@ -105,8 +105,9 @@
 | **55** | **🔥 회원 탈퇴 (Apple 5.1.1(v)) + 정책 본문 링크** | DELETE /api/auth/me (이메일 익명화 + push_tokens 폐기) + 모바일 DeleteAccountScreen + Settings 약관 5종 모달 + tests/test_account_deletion.py (8 시나리오) |
 | **56** | **🔒 provider-web DEV MODE 제거 + RequireAuth 가드** | Login.jsx — DEV MODE 우회 버튼 삭제, App.jsx — `<RequireAuth>` 로 보호 라우트 분리 (login/signup 만 공개), 401 시 라우터 가드가 자동으로 `/login` 리다이렉트 + 원래 경로 복귀 |
 | **57** | **🔐 Android Release 서명 + iOS aps-environment=production + Apple Sign-In entitlement** | android/app/build.gradle.kts — `key.properties` / ENV 기반 release signing + debug fallback, key.properties.example, mobile/.gitignore — keystore/firebase config 차단, ios/Runner.entitlements — `aps-environment=production` + `applesignin`, RunnerDebug.entitlements (개발용 development) |
+| **58** | **🛡️ 권한 사전 안내 (Apple HIG / Google Play 가이드라인)** | services/permission_service.dart — 위치/Bluetooth/알림 OS 다이얼로그 **전에** 사용 목적 안내 + 영구 거부 시 시스템 설정 진입 다이얼로그, home_screen.dart / search_screen.dart 호출 통합, ble_service.dart 단순화 (권한 체크는 UI 책임) |
 
-**누적 통계:** 57 PR · 17 blueprint · ~118 API endpoint · 29 DB 테이블 · 백엔드 ~7,800 LOC + admin-web 9페이지 + mobile 18화면 + provider-web + DB 어댑터 (SQLite/PostgreSQL)
+**누적 통계:** 58 PR · 17 blueprint · ~118 API endpoint · 29 DB 테이블 · 백엔드 ~7,800 LOC + admin-web 9페이지 + mobile 18화면 + provider-web + DB 어댑터 (SQLite/PostgreSQL)
 
 ### ✅ 출시 전 코드 PR 완료
 
