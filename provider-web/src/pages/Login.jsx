@@ -1,20 +1,29 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import AuthService from '../services/auth/AuthService';
 import './Login.css';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // 이미 로그인된 사용자는 대시보드로 즉시 이동
+  useEffect(() => {
+    if (AuthService.isAuthenticated()) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       await AuthService.login(email, password);
-      navigate('/dashboard');
+      const from = location.state?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
     } catch (error) {
       alert('Login failed. Please check your credentials.');
     } finally {
@@ -70,16 +79,6 @@ const Login = () => {
               <Link to="/forgot-password" className="link-text">FORGOT PASSWORD</Link>
             </div>
           </div>
-
-          {/* TODO: 인증 구축 후 제거 */}
-          <button
-            type="button"
-            className="btn-modern btn-modern-outline full-width"
-            style={{ marginTop: 'var(--pw-space-10)', opacity: 0.5, fontSize: 'var(--pw-caption-size)' }}
-            onClick={() => navigate('/dashboard')}
-          >
-            DEV MODE — 바로 들어가기
-          </button>
         </form>
       </div>
     </div>

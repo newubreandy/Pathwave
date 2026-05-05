@@ -103,8 +103,9 @@
 | **53** | **🐛 빌드 회귀 + 채팅 키 mismatch 수정** | provider-web StaffService export 5개 + 모바일 chat_service.dart `body`/`sender_type` 키 정합화 |
 | **54** | **🔞 provider-web — adult_only 토글 UI 노출** | Facilities.jsx 등록/수정 모달에 시설 분류 섹션 + 19+ 배지 |
 | **55** | **🔥 회원 탈퇴 (Apple 5.1.1(v)) + 정책 본문 링크** | DELETE /api/auth/me (이메일 익명화 + push_tokens 폐기) + 모바일 DeleteAccountScreen + Settings 약관 5종 모달 + tests/test_account_deletion.py (8 시나리오) |
+| **56** | **🔒 provider-web DEV MODE 제거 + RequireAuth 가드** | Login.jsx — DEV MODE 우회 버튼 삭제, App.jsx — `<RequireAuth>` 로 보호 라우트 분리 (login/signup 만 공개), 401 시 라우터 가드가 자동으로 `/login` 리다이렉트 + 원래 경로 복귀 |
 
-**누적 통계:** 55 PR · 17 blueprint · ~118 API endpoint · 29 DB 테이블 · 백엔드 ~7,800 LOC + admin-web 9페이지 + mobile 18화면 + provider-web + DB 어댑터 (SQLite/PostgreSQL)
+**누적 통계:** 56 PR · 17 blueprint · ~118 API endpoint · 29 DB 테이블 · 백엔드 ~7,800 LOC + admin-web 9페이지 + mobile 18화면 + provider-web + DB 어댑터 (SQLite/PostgreSQL)
 
 ### ✅ 출시 전 코드 PR 완료
 

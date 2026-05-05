@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import DashboardLayout from './layouts/DashboardLayout';
+import RequireAuth from './components/RequireAuth';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
@@ -27,19 +28,20 @@ const ScrollToTop = () => {
   return null;
 };
 
-// StaffManagement는 별도 파일에서 import
 const ReportManagement = () => <div className="modern-page"><div className="page-header-section"><h1 className="page-title">리포트</h1><p className="sub-title">매장 방문객 및 매출, 스탬프 사용 통계를 확인합니다.</p></div><div className="card" style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-hint)' }}>차트 데이터가 준비 중입니다.</div></div>;
-const PaymentManagementLegacy = null; // Replaced by full component
 
 function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
       <Routes>
-        <Route element={<DashboardLayout />}>
+        {/* 공개 — 인증 불필요 */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+
+        {/* 보호 — 토큰 없으면 /login 으로 강제 리다이렉트 */}
+        <Route element={<RequireAuth><DashboardLayout /></RequireAuth>}>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/store" element={<StoreInfo />} />
           <Route path="/dashboard/report" element={<ReportManagement />} />
@@ -55,6 +57,9 @@ function App() {
           <Route path="/dashboard/profile" element={<Navigate to="/dashboard/staff" replace />} />
           <Route path="/dashboard/chat" element={<CustomerChat />} />
         </Route>
+
+        {/* Fallback — 알 수 없는 경로는 인증 상태에 따라 분기 */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
   );
