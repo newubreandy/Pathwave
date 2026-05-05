@@ -13,6 +13,7 @@ import jwt
 from flask import Blueprint, request, jsonify, g
 
 from models.database import get_db
+from models.email_provider import get_email_provider
 from models.rate_limit import limiter
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
@@ -225,42 +226,36 @@ def firebase_ready() -> bool:
 
 
 def send_email(to_email: str, code: str) -> bool:
-    if not SMTP_USER or not SMTP_PASS:
-        print(f"\n{'='*50}")
-        print('[개발 모드] 이메일 인증 코드')
-        print(f'수신: {to_email}')
-        print(f'코드: {code}')
-        print(f"{'='*50}\n")
-        return True
+    """인증 코드 메일 발송. EMAIL_PROVIDER 에 따라 console/smtp/ses/sendgrid 중 선택."""
+    html = f"""
+    <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px;
+                background:#0f0f1a;border-radius:16px;color:#fff;">
+      <h2 style="color:#7c3aed;">PathWave 이메일 인증</h2>
+      <p style="color:#a1a1aa;">아래 인증 코드를 입력해 주세요. (5분 내 유효)</p>
+      <div style="background:#1e1e2e;border:2px solid #7c3aed;border-radius:12px;
+                  padding:24px;text-align:center;">
+        <span style="font-size:40px;font-weight:bold;letter-spacing:12px;color:#a78bfa;">
+          {code}
+        </span>
+      </div>
+      <p style="color:#71717a;font-size:12px;margin-top:16px;">
+        본인이 요청하지 않은 경우 이 메일을 무시하세요.
+      </p>
+    </div>
+    """
+    text = f'PathWave 이메일 인증 코드: {code} (5분 내 유효)'
     try:
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = '[PathWave] 이메일 인증 코드'
-        msg['From']    = EMAIL_FROM
-        msg['To']      = to_email
-        html = f"""
-        <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px;
-                    background:#0f0f1a;border-radius:16px;color:#fff;">
-          <h2 style="color:#7c3aed;">PathWave 이메일 인증</h2>
-          <p style="color:#a1a1aa;">아래 인증 코드를 입력해 주세요. (5분 내 유효)</p>
-          <div style="background:#1e1e2e;border:2px solid #7c3aed;border-radius:12px;
-                      padding:24px;text-align:center;">
-            <span style="font-size:40px;font-weight:bold;letter-spacing:12px;color:#a78bfa;">
-              {code}
-            </span>
-          </div>
-          <p style="color:#71717a;font-size:12px;margin-top:16px;">
-            본인이 요청하지 않은 경우 이 메일을 무시하세요.
-          </p>
-        </div>
-        """
-        msg.attach(MIMEText(html, 'html'))
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASS)
-            server.sendmail(EMAIL_FROM, to_email, msg.as_string())
-        return True
+        res = get_email_provider().send(
+            to=to_email,
+            subject='[PathWave] 이메일 인증 코드',
+            html=html,
+            text=text,
+        )
+        if not res.get('success'):
+            print(f'[email] 발송 실패: {res}')
+        return bool(res.get('success'))
     except Exception as e:
-        print(f'[이메일 발송 오류] {e}')
+        print(f'[email] 예외: {e}')
         return False
 
 

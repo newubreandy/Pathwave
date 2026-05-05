@@ -18,6 +18,7 @@ import jwt
 from flask import Blueprint, request, jsonify, g
 
 from models.database import get_db
+from models.payment_provider import get_payment_provider
 from models.rate_limit import limiter
 from routes.auth import (
     SECRET_KEY, ACCESS_TTL_MIN, REFRESH_TTL_DAY,
@@ -599,7 +600,22 @@ def admin_refund_payment(pid):
         return jsonify({'success': False,
                         'message': f"환불 가능한 상태가 아닙니다 (현재 '{row['status']}')."}), 409
 
-    # 시뮬 — 실 PG 연동 시 토스/이니시스 환불 API 호출
+    # PG provider 환불 호출. sim 모드면 항상 성공, toss 모드면 실 호출.
+    provider = get_payment_provider()
+    refund_res = provider.refund(
+        payment_key=row['pg_tid'] or '',
+        amount=row['total'],
+        reason=reason,
+    )
+    if not refund_res.get('success'):
+        db.close()
+        return jsonify({
+            'success': False,
+            'message': refund_res.get('message', 'PG 환불 호출에 실패했습니다.'),
+            'pg_error': refund_res.get('error'),
+            'provider': refund_res.get('provider'),
+        }), 502
+
     db.execute(
         "UPDATE payments SET status='refunded' WHERE id=?", (pid,)
     )
@@ -607,7 +623,7 @@ def admin_refund_payment(pid):
     db.commit()
     db.close()
     return jsonify({'success': True,
-                    'message': '환불 처리되었습니다 (시뮬).',
+                    'message': f"환불 처리되었습니다 (provider={refund_res.get('provider')}).",
                     'refund_reason': reason,
                     'payment': _row_to_payment(new_row)})
 

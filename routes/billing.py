@@ -20,6 +20,7 @@ from dateutil_shim import add_months  # local import
 from flask import Blueprint, request, jsonify, g
 
 from models.database import get_db
+from models.payment_provider import get_payment_provider
 from routes.auth import require_facility_actor
 
 billing_bp = Blueprint('billing', __name__, url_prefix='/api/billing')
@@ -149,9 +150,17 @@ def _ensure_active_card(db, account_id: int):
     ).fetchone()
 
 
-def _simulate_pg_charge(card_pg_key: str, total: int) -> tuple[bool, str | None]:
-    """PG 결제 시뮬. 항상 성공. 운영에선 실제 호출."""
-    return True, f'tid-{secrets.token_hex(8)}'
+def _charge(card_pg_key: str, total: int, order_no: str,
+            customer_email: str | None = None) -> tuple[bool, str | None, str | None]:
+    """현재 ENV 의 PG provider 로 결제. (success, pg_tid, payment_key)."""
+    provider = get_payment_provider()
+    res = provider.charge(
+        billing_key=card_pg_key, total=total,
+        order_no=order_no, customer_email=customer_email,
+    )
+    if res.get('success'):
+        return True, res.get('pg_tid'), res.get('payment_key')
+    return False, None, None
 
 
 @billing_bp.route('/subscriptions', methods=['POST'])
@@ -197,12 +206,12 @@ def create_subscription():
     )
     sid = cur.lastrowid
 
-    # PG 결제 시뮬
+    # PG 결제 — provider 추상화 (sim / toss)
     order_no = f'ORD-{datetime.utcnow().strftime("%Y%m%d")}-{secrets.token_hex(4)}'
-    ok, pg_tid = _simulate_pg_charge(card['pg_key'], total)
     receipt_email = data.get('receipt_email') or db.execute(
         "SELECT email FROM facility_accounts WHERE id=?", (account_id,)
     ).fetchone()['email']
+    ok, pg_tid, _payment_key = _charge(card['pg_key'], total, order_no, receipt_email)
 
     cur2 = db.execute(
         """INSERT INTO payments
@@ -292,7 +301,10 @@ def extend_subscription(sid):
     vat  = row['total_price'] - base
     total = row['total_price']
     order_no = f'ORD-{datetime.utcnow().strftime("%Y%m%d")}-{secrets.token_hex(4)}'
-    ok, pg_tid = _simulate_pg_charge(card['pg_key'], total)
+    receipt_email = db.execute(
+        "SELECT email FROM facility_accounts WHERE id=?", (account_id,)
+    ).fetchone()['email']
+    ok, pg_tid, _payment_key = _charge(card['pg_key'], total, order_no, receipt_email)
 
     new_ends = add_months(datetime.utcnow(), row['period_months']).isoformat()
     db.execute(

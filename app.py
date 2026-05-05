@@ -57,6 +57,29 @@ def _validate_production_env() -> None:
 _validate_production_env()
 
 
+# ── Sentry SDK 초기화 (선택적) ───────────────────────────────────────────────
+# 운영: SENTRY_DSN=https://xxxx@oXXXX.ingest.sentry.io/xxxx
+# 미설정 시 no-op (개발 모드 호환).
+_sentry_dsn = os.environ.get('SENTRY_DSN', '').strip()
+if _sentry_dsn:
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.flask import FlaskIntegration
+        sentry_sdk.init(
+            dsn=_sentry_dsn,
+            integrations=[FlaskIntegration()],
+            traces_sample_rate=float(os.environ.get('SENTRY_TRACES_SAMPLE_RATE', '0.1')),
+            environment=os.environ.get('PATHWAVE_ENV', 'development'),
+            release=os.environ.get('GIT_SHA') or None,
+            send_default_pii=False,   # PII 누출 방지 (이메일 등)
+        )
+        print(f'[Sentry] 초기화 완료 (env={os.environ.get("PATHWAVE_ENV","development")})')
+    except ImportError:
+        print('[Sentry] sentry-sdk 미설치 — pip install sentry-sdk[flask]')
+    except Exception as e:
+        print(f'[Sentry] 초기화 실패: {e}')
+
+
 # ── Firebase Admin SDK 초기화 (선택적) ───────────────────────────────────────
 # Firebase 프로젝트 설정 후 serviceAccountKey.json 경로를 환경변수로 지정:
 # export FIREBASE_CREDENTIALS=/path/to/serviceAccountKey.json
