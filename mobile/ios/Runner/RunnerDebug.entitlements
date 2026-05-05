@@ -2,15 +2,15 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <!-- PR #49 — NEHotspotConfiguration (Apple Developer 콘솔에서 capability 활성 필요) -->
+    <!-- PR #57 — Debug 빌드용 entitlements (aps-environment=development) -->
+    <!-- Xcode > Build Settings > CODE_SIGN_ENTITLEMENTS 의 Debug configuration 에서 이 파일을 가리키면 됩니다. -->
+
     <key>com.apple.developer.networking.HotspotConfiguration</key>
     <true/>
 
-    <!-- PR #57 — APNs 운영 환경. 출시 빌드는 production. -->
     <key>aps-environment</key>
-    <string>production</string>
+    <string>development</string>
 
-    <!-- PR #57 — Sign in with Apple (Apple App Review 4.8 — 소셜 로그인 제공 시 필수) -->
     <key>com.apple.developer.applesignin</key>
     <array>
         <string>Default</string>
