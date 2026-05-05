@@ -179,6 +179,22 @@ class AuthService extends ChangeNotifier {
     return jsonDecode(res.body);
   }
 
+  // ── 회원 탈퇴 (PR #55) — Apple 5.1.1(v) / Google Play 정책 ─────
+  Future<Map<String, dynamic>> deleteAccount({String? password}) async {
+    final body = <String, dynamic>{};
+    if (password != null && password.isNotEmpty) body['password'] = password;
+    final res = await http.delete(
+      Uri.parse('$_baseUrl/api/auth/me'),
+      headers: authHeaders,
+      body: jsonEncode(body),
+    );
+    final data = jsonDecode(res.body);
+    if (data['success'] == true) {
+      await logout();
+    }
+    return data;
+  }
+
   // ── 로그아웃 ────────────────────────────────────────────────────
   Future<void> logout() async {
     await _storage.delete(key: 'jwt_token');

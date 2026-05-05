@@ -99,8 +99,12 @@
 | **49** | **📶 Mobile — WiFi 자동 가입 native plugin (Android + iOS)** | MainActivity.kt (WifiNetworkSuggestion), AppDelegate.swift (NEHotspotConfiguration), Runner.entitlements, services/wifi_connector.dart, AndroidManifest 권한 + Info.plist 권한 사유 |
 | **50** | **📨 APNs Push Provider — iOS native + Multi-platform 라우팅** | models/push.py: ApnsPushProvider (HTTP/2 + JWT ES256 + .p8 키) + MultiPlatformPushProvider + push_to_users platform 분기, httpx[http2] 의존성 |
 | **51** | **🐘 PostgreSQL 이전 — DB 어댑터 (DATABASE_URL ENV 기반 자동 분기)** | models/db_adapter.py (SQL 자동 변환: AUTOINCREMENT→SERIAL, datetime('now')→CURRENT_TIMESTAMP, ?→%s), `_PgConnectionWrapper`, `_add_column_if_missing` PostgreSQL 호환, scripts/migrate_sqlite_to_postgres.py, psycopg[binary] 의존성 |
+| **52** | **🧪 E2E user journey — 22 단계 / 55 assertion 통합 검증** | tests/test_e2e_user_journey.py (6 페르소나, BLE/WiFi/검색/채팅/공지/결제/환불/약관 전 흐름) |
+| **53** | **🐛 빌드 회귀 + 채팅 키 mismatch 수정** | provider-web StaffService export 5개 + 모바일 chat_service.dart `body`/`sender_type` 키 정합화 |
+| **54** | **🔞 provider-web — adult_only 토글 UI 노출** | Facilities.jsx 등록/수정 모달에 시설 분류 섹션 + 19+ 배지 |
+| **55** | **🔥 회원 탈퇴 (Apple 5.1.1(v)) + 정책 본문 링크** | DELETE /api/auth/me (이메일 익명화 + push_tokens 폐기) + 모바일 DeleteAccountScreen + Settings 약관 5종 모달 + tests/test_account_deletion.py (8 시나리오) |
 
-**누적 통계:** 51 PR · 17 blueprint · ~117 API endpoint · 29 DB 테이블 · 백엔드 ~7,700 LOC + admin-web 9페이지 + mobile 17화면 + provider-web + DB 어댑터 (SQLite/PostgreSQL)
+**누적 통계:** 55 PR · 17 blueprint · ~118 API endpoint · 29 DB 테이블 · 백엔드 ~7,800 LOC + admin-web 9페이지 + mobile 18화면 + provider-web + DB 어댑터 (SQLite/PostgreSQL)
 
 ### ✅ 출시 전 코드 PR 완료
 

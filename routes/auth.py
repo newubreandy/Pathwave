@@ -580,6 +580,65 @@ def me():
     return jsonify({'success': True, 'user': {'id': payload['user_id'], 'email': payload['email']}})
 
 
+@auth_bp.route('/me', methods=['DELETE'])
+@require_auth(sub_type='user')
+def delete_me():
+    """회원 탈퇴 (PR #55) — Apple App Store 5.1.1(v) / Google Play 정책 대응.
+
+    동작:
+      1. 비밀번호 재확인 (이메일 가입 한정 — 소셜은 skip)
+      2. ``users.deleted_at`` 설정 (soft delete)
+      3. ``users.email`` 익명화 (`<id>+deleted@deleted.local`) — UNIQUE 충돌 방지로 같은 이메일 재가입 가능
+      4. ``push_tokens`` row 삭제 (즉시 알림 차단)
+      5. 활성 ``chat_rooms`` 의 본인 메시지는 보존 (감사용) — 탈퇴 사실 표시
+      6. 클라이언트는 응답 후 토큰 폐기 + 로그인 화면으로 이동
+
+    body: {password?: str}  (소셜 가입자는 생략)
+    """
+    user_id = g.auth['user_id']
+    data = request.get_json(silent=True) or {}
+    password = data.get('password') or ''
+
+    db = get_db()
+    try:
+        row = db.execute(
+            "SELECT id, email, password, provider, deleted_at "
+            "FROM users WHERE id=?",
+            (user_id,)
+        ).fetchone()
+        if not row:
+            return jsonify({'success': False, 'message': '계정을 찾을 수 없습니다.'}), 404
+        if row['deleted_at']:
+            return jsonify({'success': False, 'message': '이미 탈퇴된 계정입니다.'}), 409
+
+        # 이메일 가입자 — 비밀번호 재확인 (소셜은 password 컬럼 NULL)
+        if row['provider'] == 'email' and row['password']:
+            if not password:
+                return jsonify({'success': False,
+                                'message': '비밀번호 확인이 필요합니다.'}), 400
+            if not bcrypt.checkpw(password.encode(), row['password'].encode()):
+                return jsonify({'success': False,
+                                'message': '비밀번호가 올바르지 않습니다.'}), 401
+
+        # 익명화된 이메일 — UNIQUE 충돌 방지 + 같은 이메일 재가입 허용
+        anonymized_email = f'{user_id}+deleted@deleted.local'
+
+        db.execute(
+            "UPDATE users SET deleted_at=datetime('now'), email=? WHERE id=?",
+            (anonymized_email, user_id)
+        )
+        # 푸시 토큰 즉시 폐기 (이후 알림 발송 불가)
+        db.execute("DELETE FROM push_tokens WHERE user_id=?", (user_id,))
+        db.commit()
+
+        return jsonify({
+            'success': True,
+            'message': '회원 탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.',
+        })
+    finally:
+        db.close()
+
+
 @auth_bp.route('/refresh', methods=['POST'])
 def refresh():
     """Refresh 토큰으로 새 access 토큰 발급. SRS FR-AUTH-002."""
