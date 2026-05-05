@@ -22,7 +22,10 @@ const Login = () => {
     setLoading(true);
     try {
       await AuthService.login(email, password);
-      const from = location.state?.from?.pathname || '/dashboard';
+      // PR #60 — RequireAuth (state.from) 또는 401 redirect (?from=...) 모두 지원
+      const params = new URLSearchParams(location.search);
+      const fromQuery = params.get('from');
+      const from = location.state?.from?.pathname || fromQuery || '/dashboard';
       navigate(from, { replace: true });
     } catch (error) {
       alert('Login failed. Please check your credentials.');

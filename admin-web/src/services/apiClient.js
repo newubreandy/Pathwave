@@ -30,9 +30,15 @@ async function request(path, { method = 'GET', body, headers = {}, raw = false }
   try { data = await resp.json(); } catch { data = {}; }
 
   if (resp.status === 401) {
+    // PR #60 — 토큰 만료/무효 → 자동 로그아웃 + /login 리다이렉트
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_KEY);
     localStorage.removeItem(USER_KEY);
+    if (typeof window !== 'undefined' &&
+        !window.location.pathname.startsWith('/login')) {
+      const from = window.location.pathname + window.location.search;
+      window.location.replace(`/login?from=${encodeURIComponent(from)}`);
+    }
     const err = new Error(data.message || '세션이 만료되었습니다. 다시 로그인해 주세요.');
     err.status = 401;
     err.unauthorized = true;

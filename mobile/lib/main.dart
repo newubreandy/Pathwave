@@ -24,21 +24,29 @@ void main() async {
   runApp(const PathWaveApp());
 }
 
-class PathWaveApp extends StatelessWidget {
+class PathWaveApp extends StatefulWidget {
   const PathWaveApp({super.key});
+  @override
+  State<PathWaveApp> createState() => _PathWaveAppState();
+}
+
+class _PathWaveAppState extends State<PathWaveApp> {
+  // PR #60 — AuthService 인스턴스를 라우터의 refreshListenable 로 사용
+  final _auth = AuthService();
+  late final _router = AppRouter.create(_auth);
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthService()),
+        ChangeNotifierProvider<AuthService>.value(value: _auth),
         ChangeNotifierProvider(create: (_) => BleService()),
       ],
       child: MaterialApp.router(
         title: 'PathWave',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
-        routerConfig: AppRouter.router,
+        routerConfig: _router,
 
         // 다국어 설정
         localizationsDelegates: const [

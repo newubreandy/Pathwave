@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
 import { adminLogin } from '../services/auth.js';
 import './Login.css';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -17,7 +18,11 @@ export default function Login() {
     setLoading(true);
     try {
       await adminLogin(email.trim().toLowerCase(), password);
-      navigate('/dashboard', { replace: true });
+      // PR #60 — 401 redirect 의 ?from=... 또는 RequireAuth 의 state.from 복귀
+      const params = new URLSearchParams(location.search);
+      const fromQuery = params.get('from');
+      const from = location.state?.from?.pathname || fromQuery || '/dashboard';
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err.message || '로그인에 실패했습니다.');
     } finally {
