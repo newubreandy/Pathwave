@@ -43,6 +43,19 @@ export const adminApi = {
     const q = new URLSearchParams(params).toString();
     return apiClient.get(`/api/admin/subscriptions${q ? '?' + q : ''}`);
   },
+
+  // 배터리 모니터링 (PR #38)
+  batteryStatus: (lowThreshold = 20) =>
+    apiClient.get(`/api/admin/beacons/battery-status?low_threshold=${lowThreshold}`),
+  batteryHistory: (bid, limit = 100) =>
+    apiClient.get(`/api/admin/beacons/${bid}/battery-history?limit=${limit}`),
+
+  // 시스템 공지 (PR #38)
+  listAnnouncements: () => apiClient.get('/api/admin/announcements'),
+  createAnnouncement: (payload) => apiClient.post('/api/admin/announcements', payload),
+  updateAnnouncement: (aid, payload) =>
+    apiClient.patch(`/api/admin/announcements/${aid}`, payload),
+  deleteAnnouncement: (aid) => apiClient.delete(`/api/admin/announcements/${aid}`),
 };
 
 export default adminApi;
