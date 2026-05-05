@@ -13,6 +13,53 @@
  */
 import apiClient from '../apiClient';
 
+export const ROLES = {
+  OWNER: 'OWNER',
+  MANAGER: 'MANAGER',
+  STAFF: 'STAFF',
+};
+
+export const ROLE_LABELS = {
+  [ROLES.OWNER]: '대표',
+  [ROLES.MANAGER]: '관리자',
+  [ROLES.STAFF]: '직원',
+};
+
+export const STATUS = {
+  ACTIVE: 'ACTIVE',
+  INVITED: 'INVITED',
+  DISABLED: 'DISABLED',
+};
+
+export const STATUS_LABELS = {
+  [STATUS.ACTIVE]: '활성',
+  [STATUS.INVITED]: '초대중',
+  [STATUS.DISABLED]: '비활성',
+};
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export const validateEmail = (email) => {
+  if (!email || typeof email !== 'string') {
+    return { valid: false, error: '이메일을 입력해 주세요.' };
+  }
+  const trimmed = email.trim();
+  if (trimmed.length === 0) {
+    return { valid: false, error: '이메일을 입력해 주세요.' };
+  }
+  if (trimmed.length > 254) {
+    return { valid: false, error: '이메일이 너무 깁니다.' };
+  }
+  if (!EMAIL_REGEX.test(trimmed)) {
+    return { valid: false, error: '유효한 이메일 형식이 아닙니다.' };
+  }
+  const domain = trimmed.split('@')[1];
+  if (!domain || !domain.includes('.')) {
+    return { valid: false, error: '유효한 이메일 도메인이 아닙니다.' };
+  }
+  return { valid: true, error: null };
+};
+
 const StaffService = {
   /** 직원 초대 (이메일 발송) */
   invite(payload) {
