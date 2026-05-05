@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, Search, Plus, Minus, X, Camera } from 'lucide-react';
+import { ChevronLeft, Search, Plus, Minus, X, Camera, Trash2 } from 'lucide-react';
 import BottomActionBar from '../components/common/BottomActionBar';
 import Button from '../components/common/Button';
 import ConfirmModal from '../components/common/ConfirmModal';
@@ -42,6 +42,16 @@ const CouponForm = () => {
 
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [limitMsg, setLimitMsg] = useState('');
+
+  // PR #66 — 수정 화면에서 삭제 가능
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeleteDone, setShowDeleteDone] = useState(false);
+
+  const handleDelete = () => {
+    // TODO: 실 API 연동 시 DELETE /api/coupons/<id> 호출
+    setShowDeleteConfirm(false);
+    setShowDeleteDone(true);
+  };
 
   useEffect(() => {
     // Scroll to top on mount
@@ -362,6 +372,24 @@ const CouponForm = () => {
               수정
             </Button>
           </>
+        ) : isEditMode && id ? (
+          <>
+            <Button
+              variant="outline"
+              fullWidth
+              icon={<Trash2 size={18} />}
+              onClick={() => setShowDeleteConfirm(true)}
+              style={{ color: 'var(--danger, #dc2626)', borderColor: 'var(--danger, #dc2626)' }}
+            >
+              삭제
+            </Button>
+            <Button variant="outline" fullWidth onClick={() => navigate('/dashboard/coupons')}>
+              취소
+            </Button>
+            <Button variant="primary" fullWidth onClick={handleSave}>
+              저장
+            </Button>
+          </>
         ) : (
           <>
             <Button variant="outline" fullWidth onClick={() => navigate('/dashboard/coupons')}>
@@ -381,13 +409,34 @@ const CouponForm = () => {
         singleButton={true}
       />
 
-      <ConfirmModal 
+      <ConfirmModal
         isOpen={showLimitModal}
         desc={limitMsg}
         onConfirm={() => setShowLimitModal(false)}
         onCancel={() => setShowLimitModal(false)}
         confirmText="구매하기"
         cancelText="닫기"
+      />
+
+      {/* PR #66 — 삭제 확인 */}
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        desc={'이 쿠폰을 삭제하시겠습니까?\n삭제된 쿠폰은 복구할 수 없습니다.'}
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+        confirmText="삭제"
+        cancelText="취소"
+      />
+
+      {/* PR #66 — 삭제 완료 */}
+      <ConfirmModal
+        isOpen={showDeleteDone}
+        desc={'쿠폰이 삭제되었습니다.'}
+        onConfirm={() => {
+          setShowDeleteDone(false);
+          navigate('/dashboard/coupons');
+        }}
+        singleButton={true}
       />
     </div>
   );

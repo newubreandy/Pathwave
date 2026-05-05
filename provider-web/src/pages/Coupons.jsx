@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Ticket, Plus, ChevronRight, MoreVertical } from 'lucide-react';
+import { Ticket, Plus, ChevronRight } from 'lucide-react';
 import BottomActionBar from '../components/common/BottomActionBar';
 import Button from '../components/common/Button';
 import '../pages/Stamps.css'; // 쿠폰/스탬프 리스트는 동일 카드 스타일 공유
@@ -26,16 +26,8 @@ const Coupons = () => {
     }
   ];
 
-  const [activeMenuId, setActiveMenuId] = useState(null);
-
-  const handleMenuClick = (e, id) => {
-    e.stopPropagation();
-    e.preventDefault();
-    setActiveMenuId(activeMenuId === id ? null : id);
-  };
-
   return (
-    <div className="stamps-page" onClick={() => setActiveMenuId(null)}>
+    <div className="stamps-page">
       <div className="page-header-section">
         <h1 className="page-title">{t('coupon.title_list', '쿠폰 관리')}</h1>
         <p className="sub-title">설치장소의 쿠폰을 관리합니다.</p>
@@ -57,32 +49,14 @@ const Coupons = () => {
               </div>
             </div>
             <ChevronRight className="stamp-arrow" size={20} />
-            
-            <button 
-              className="stamp-menu-btn"
-              onClick={(e) => handleMenuClick(e, coupon.id)}
-            >
-              <MoreVertical size={18} />
-            </button>
-
-            {activeMenuId === coupon.id && (
-              <div className="stamp-context-menu">
-                <button 
-                  className="context-menu-item danger"
-                  onClick={(e) => { e.stopPropagation(); e.preventDefault(); setActiveMenuId(null); }}
-                >
-                  삭제하기
-                </button>
-              </div>
-            )}
           </Link>
         ))}
       </div>
 
       <BottomActionBar>
-        <Button 
-          variant="primary" 
-          fullWidth 
+        <Button
+          variant="primary"
+          fullWidth
           icon={<Plus size={18} />}
           onClick={() => navigate('/dashboard/coupons/add')}
         >
