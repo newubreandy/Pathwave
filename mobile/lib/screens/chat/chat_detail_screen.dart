@@ -2,9 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
-import '../../services/auth_service.dart';
 import '../../services/chat_service.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/empty_state.dart';
@@ -111,12 +109,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     if (text.isEmpty || _roomId == null || _sending) return;
     setState(() => _sending = true);
     final tempId = -DateTime.now().millisecondsSinceEpoch;
-    final myAuth = context.read<AuthService>().user;
     setState(() {
+      // 백엔드 스키마: body / sender_type 사용
       _messages.add({
         'id': tempId,
-        'text': text,
-        'sender_user_id': myAuth?['id'],
+        'body': text,
+        'sender_type': 'user',   // 본 화면은 사용자 측 — 항상 'user'
         'created_at': DateTime.now().toIso8601String(),
         '_pending': true,
       });
@@ -172,15 +170,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         subtitle: '첫 메시지를 보내 대화를 시작하세요.',
       );
     }
-    final me = context.watch<AuthService>().user;
-    final myId = me?['id'];
     return ListView.builder(
       controller: _scrollCtrl,
       padding: const EdgeInsets.all(12),
       itemCount: _messages.length,
       itemBuilder: (context, i) => _MessageBubble(
         message: _messages[i],
-        isMe: _messages[i]['sender_user_id'] == myId,
+        // 1:1 채팅 — 사용자 측 화면이므로 sender_type='user' 면 본인.
+        isMe: _messages[i]['sender_type'] == 'user',
       ),
     );
   }
@@ -228,7 +225,8 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = message['text']?.toString() ?? '';
+    // 백엔드 스키마: body 키. 과거 잘못된 'text' 키도 fallback (낙관적 UI 호환).
+    final text = (message['body'] ?? message['text'])?.toString() ?? '';
     final at = message['created_at']?.toString();
     final pending = message['_pending'] == true;
     final failed = message['_failed'] == true;

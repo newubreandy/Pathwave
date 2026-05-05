@@ -364,6 +364,11 @@ _ok('메시지 전송 → 200/201', s in (200, 201), j)
 s, j = _get(f'/api/chat/rooms/{room_id}/messages', token=parent_token)
 _ok('메시지 목록 조회 → 200', s == 200)
 _ok(f'1건 이상 (got {len(j["messages"])})', len(j['messages']) >= 1)
+# Bug fix 회귀 — 백엔드 스키마 (body / sender_type) 노출 검증
+first_msg = j['messages'][0]
+_ok("응답에 'body' 키 포함 (모바일 호환)", 'body' in first_msg, first_msg)
+_ok("응답에 'sender_type' 키 포함", 'sender_type' in first_msg, first_msg)
+_ok("body 본문 일치", first_msg['body'] == '안녕하세요, 영업시간이 어떻게 되나요?')
 
 
 # ════════════════════════════════════════════════════════════════════════════
