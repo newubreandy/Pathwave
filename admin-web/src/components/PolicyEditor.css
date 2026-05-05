@@ -1,0 +1,17 @@
+.policy-editor-wrap {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: white;     /* MDXEditor 는 light 테마. 나중에 dark 추가 가능 */
+  overflow: hidden;
+}
+.policy-editor-wrap .mdxeditor-toolbar {
+  border-bottom: 1px solid #e5e7eb;
+}
+.policy-editor-wrap .mdxeditor-root-contenteditable {
+  min-height: 300px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}

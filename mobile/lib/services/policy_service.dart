@@ -15,8 +15,19 @@ class PolicyService {
     return (data['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
   }
 
-  /// 정책 본문 조회 (markdown).
+  /// 현재 시행 정책 본문 (markdown).
   Future<Map<String, dynamic>> body(String kind, {String lang = 'ko'}) async {
     return _api.get('/api/policies/$kind?lang=$lang');
+  }
+
+  /// 이전 버전 보기 — 모든 버전 목록 (가벼움, 본문 미포함).
+  Future<List<Map<String, dynamic>>> versions(String kind, {String lang = 'ko'}) async {
+    final data = await _api.get('/api/policies/$kind/versions?lang=$lang');
+    return (data['versions'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+  }
+
+  /// 특정 버전 본문 (이전 버전 클릭 시).
+  Future<Map<String, dynamic>> versionBody(String kind, int versionId) async {
+    return _api.get('/api/policies/$kind/versions/$versionId');
   }
 }

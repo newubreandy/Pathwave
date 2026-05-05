@@ -516,6 +516,25 @@ def init_db():
             ON consents(sub_type, account_id);
         CREATE INDEX IF NOT EXISTS idx_consents_kind
             ON consents(kind, version);
+
+        -- 정책 본문 버전 관리 (PR #46) — 약관/개인정보 등 모든 버전 보존.
+        -- 운영자 발행 → 적용일 도달 → 회원 자동 공지 + 재동의 요청.
+        CREATE TABLE IF NOT EXISTS policies (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            kind            TEXT NOT NULL,
+            lang            TEXT NOT NULL DEFAULT 'ko',
+            version         TEXT NOT NULL,
+            title           TEXT,
+            body            TEXT NOT NULL,
+            change_log      TEXT,
+            effective_at    TEXT NOT NULL,
+            created_by_admin_id INTEGER,
+            created_at      TEXT DEFAULT (datetime('now')),
+            email_notified  INTEGER DEFAULT 0,
+            UNIQUE (kind, lang, version)
+        );
+        CREATE INDEX IF NOT EXISTS idx_policies_kind_lang
+            ON policies(kind, lang, effective_at);
     """)
 
     # ── Super Admin 부트스트랩 ──────────────────────────────────────────────

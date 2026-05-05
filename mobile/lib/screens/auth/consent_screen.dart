@@ -220,10 +220,31 @@ class _ConsentItem extends StatelessWidget {
 }
 
 
-class _PolicyDialog extends StatelessWidget {
+class _PolicyDialog extends StatefulWidget {
   final String kind;
   final String label;
   const _PolicyDialog({required this.kind, required this.label});
+
+  @override
+  State<_PolicyDialog> createState() => _PolicyDialogState();
+}
+
+class _PolicyDialogState extends State<_PolicyDialog> {
+  int? _selectedVersionId;   // null = 현재 시행
+  late Future<List<Map<String, dynamic>>> _versionsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _versionsFuture = PolicyService().versions(widget.kind);
+  }
+
+  Future<Map<String, dynamic>> _loadBody() {
+    if (_selectedVersionId == null) {
+      return PolicyService().body(widget.kind);
+    }
+    return PolicyService().versionBody(widget.kind, _selectedVersionId!);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -232,14 +253,14 @@ class _PolicyDialog extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: SizedBox(
-          width: 480, height: 480,
+          width: 480, height: 540,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   Expanded(
-                    child: Text(label,
+                    child: Text(widget.label,
                       style: Theme.of(context).textTheme.headlineSmall),
                   ),
                   IconButton(
@@ -249,9 +270,50 @@ class _PolicyDialog extends StatelessWidget {
                 ],
               ),
               const Divider(color: AppTheme.border),
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: _versionsFuture,
+                builder: (context, snap) {
+                  final versions = snap.data ?? [];
+                  if (versions.isEmpty) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.history, size: 16, color: AppTheme.textSecondary),
+                        const SizedBox(width: 6),
+                        const Text('버전:', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: DropdownButton<int?>(
+                            value: _selectedVersionId,
+                            isDense: true,
+                            isExpanded: true,
+                            items: [
+                              const DropdownMenuItem<int?>(
+                                value: null,
+                                child: Text('현재 시행 중', style: TextStyle(fontSize: 13)),
+                              ),
+                              ...versions.map((v) => DropdownMenuItem<int?>(
+                                value: v['id'] as int?,
+                                child: Text(
+                                  '${v['version']} (${(v['effective_at']?.toString() ?? '').substring(0, 10)})',
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              )),
+                            ],
+                            onChanged: (v) => setState(() => _selectedVersionId = v),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              const Divider(color: AppTheme.border, height: 8),
               Expanded(
                 child: FutureBuilder<Map<String, dynamic>>(
-                  future: PolicyService().body(kind),
+                  // ignore: discarded_futures
+                  future: _loadBody(),
                   builder: (context, snap) {
                     if (snap.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());

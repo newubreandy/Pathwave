@@ -88,22 +88,38 @@ function PolicyModal({ kind, onClose }) {
   const [body, setBody] = useState('');
   const [label, setLabel] = useState('');
   const [needsContent, setNeedsContent] = useState(false);
+  const [versions, setVersions] = useState([]);
+  const [selectedVersionId, setSelectedVersionId] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // 버전 목록 1회 로드
+  useEffect(() => {
+    let alive = true;
+    fetch(`/api/policies/${kind}/versions?lang=ko`)
+      .then((r) => r.json())
+      .then((data) => { if (alive) setVersions(data.versions || []); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [kind]);
+
+  // 본문 로드 (선택된 버전 변경 시 재로드)
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    fetch(`/api/policies/${kind}?lang=ko`)
+    const url = selectedVersionId
+      ? `/api/policies/${kind}/versions/${selectedVersionId}`
+      : `/api/policies/${kind}?lang=ko`;
+    fetch(url)
       .then((r) => r.json())
       .then((data) => {
         if (!alive) return;
         setBody(data.body || '');
-        setLabel(data.label || kind);
+        setLabel(data.label || data.title || kind);
         setNeedsContent(!!data.needs_content);
       })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [kind]);
+  }, [kind, selectedVersionId]);
 
   return (
     <div className="policy-modal-backdrop" onClick={onClose}>
@@ -112,6 +128,24 @@ function PolicyModal({ kind, onClose }) {
           <h4>{label}</h4>
           <button onClick={onClose}>×</button>
         </div>
+        {versions.length > 0 && (
+          <div className="policy-version-bar">
+            <span>버전:</span>
+            <select
+              value={selectedVersionId ?? ''}
+              onChange={(e) => setSelectedVersionId(
+                e.target.value ? Number(e.target.value) : null
+              )}
+            >
+              <option value="">현재 시행 중</option>
+              {versions.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.version} ({(v.effective_at || '').slice(0, 10)})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="policy-modal-body">
           {loading ? (
             <div>로딩 중...</div>
