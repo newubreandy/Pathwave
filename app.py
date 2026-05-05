@@ -3,6 +3,7 @@ from flask import Flask, send_from_directory
 from flask_cors import CORS
 
 from models.database import init_db
+from models.rate_limit import limiter
 from routes.auth     import auth_bp
 from routes.beacon   import beacon_bp
 from routes.facility import facility_bp
@@ -19,6 +20,42 @@ from routes.search   import search_bp
 from routes.admin    import admin_bp
 from routes.invitation import invitation_bp
 from routes.announcement import announcement_bp
+
+
+# ── 운영 환경 보안 ENV 검증 ────────────────────────────────────────────────
+# PATHWAVE_ENV=production 일 때 dev 기본값/누락된 ENV로 부팅 못 하도록 차단.
+# (PR #35 — 보안 블로커: SECRET_KEY/AES_KEY/CORS 운영 강제)
+_DEV_SECRET_DEFAULT = 'pathwave-super-secret-key-2024'
+
+
+def _validate_production_env() -> None:
+    if os.environ.get('PATHWAVE_ENV', 'development') != 'production':
+        return
+
+    secret = os.environ.get('SECRET_KEY', '')
+    if not secret or secret == _DEV_SECRET_DEFAULT:
+        raise RuntimeError(
+            '운영 환경: SECRET_KEY ENV 필수 (dev 기본값 금지).'
+        )
+
+    if not os.environ.get('PATHWAVE_AES_KEY', ''):
+        raise RuntimeError(
+            '운영 환경: PATHWAVE_AES_KEY ENV 필수 (WiFi 비밀번호 암호화 키).'
+        )
+
+    if not os.environ.get('CORS_ORIGINS', '').strip():
+        raise RuntimeError(
+            '운영 환경: CORS_ORIGINS ENV 필수 (예: https://app.pathwave.kr,https://admin.pathwave.kr).'
+        )
+
+    if os.environ.get('FLASK_DEBUG', '0') == '1':
+        raise RuntimeError(
+            '운영 환경: FLASK_DEBUG=1 금지.'
+        )
+
+
+_validate_production_env()
+
 
 # ── Firebase Admin SDK 초기화 (선택적) ───────────────────────────────────────
 # Firebase 프로젝트 설정 후 serviceAccountKey.json 경로를 환경변수로 지정:
@@ -38,7 +75,19 @@ else:
 
 # ── App ──────────────────────────────────────────────────────────────────────
 app = Flask(__name__, static_folder='static')
-CORS(app)
+
+# CORS: CORS_ORIGINS ENV 가 있으면 화이트리스트, 없으면 dev 전체 허용
+_cors_origins_raw = os.environ.get('CORS_ORIGINS', '').strip()
+if _cors_origins_raw:
+    _origins = [o.strip() for o in _cors_origins_raw.split(',') if o.strip()]
+    CORS(app, resources={r'/api/*': {'origins': _origins}}, supports_credentials=True)
+    print(f'[CORS] 화이트리스트 활성: {_origins}')
+else:
+    CORS(app)
+    print('[CORS] 개발 모드: 전체 허용 (운영 전 CORS_ORIGINS 설정 필수)')
+
+# Rate limiter 연결 (각 라우트에서 @limiter.limit 데코레이터로 사용)
+limiter.init_app(app)
 
 # DB 초기화
 init_db()
