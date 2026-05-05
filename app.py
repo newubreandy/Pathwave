@@ -3,6 +3,7 @@ from flask import Flask, send_from_directory
 from flask_cors import CORS
 
 from models.database import init_db
+from models.log import logger
 from models.rate_limit import limiter
 from routes.auth     import auth_bp
 from routes.beacon   import beacon_bp
@@ -104,11 +105,11 @@ if _sentry_dsn:
             release=os.environ.get('GIT_SHA') or None,
             send_default_pii=False,   # PII 누출 방지 (이메일 등)
         )
-        print(f'[Sentry] 초기화 완료 (env={os.environ.get("PATHWAVE_ENV","development")})')
+        logger.info('[Sentry] 초기화 완료 (env=%s)', os.environ.get('PATHWAVE_ENV', 'development'))
     except ImportError:
-        print('[Sentry] sentry-sdk 미설치 — pip install sentry-sdk[flask]')
+        logger.warning('[Sentry] sentry-sdk 미설치 — pip install sentry-sdk[flask]')
     except Exception as e:
-        print(f'[Sentry] 초기화 실패: {e}')
+        logger.error('[Sentry] 초기화 실패: %s', e, exc_info=True)
 
 
 # ── Firebase Admin SDK 초기화 (선택적) ───────────────────────────────────────
@@ -121,11 +122,11 @@ if _firebase_cred_path and os.path.exists(_firebase_cred_path):
         from firebase_admin import credentials
         _cred = credentials.Certificate(_firebase_cred_path)
         firebase_admin.initialize_app(_cred)
-        print('[Firebase] Admin SDK 초기화 완료')
+        logger.info('[Firebase] Admin SDK 초기화 완료')
     except Exception as e:
-        print(f'[Firebase] 초기화 실패: {e}')
+        logger.error('[Firebase] 초기화 실패: %s', e, exc_info=True)
 else:
-    print('[Firebase] 개발 모드: Firebase 미연결 (소셜 로그인 비활성)')
+    logger.info('[Firebase] 개발 모드: Firebase 미연결 (소셜 로그인 비활성)')
 
 # ── App ──────────────────────────────────────────────────────────────────────
 app = Flask(__name__, static_folder='static')
@@ -135,10 +136,10 @@ _cors_origins_raw = os.environ.get('CORS_ORIGINS', '').strip()
 if _cors_origins_raw:
     _origins = [o.strip() for o in _cors_origins_raw.split(',') if o.strip()]
     CORS(app, resources={r'/api/*': {'origins': _origins}}, supports_credentials=True)
-    print(f'[CORS] 화이트리스트 활성: {_origins}')
+    logger.info('[CORS] 화이트리스트 활성: %s', _origins)
 else:
     CORS(app)
-    print('[CORS] 개발 모드: 전체 허용 (운영 전 CORS_ORIGINS 설정 필수)')
+    logger.info('[CORS] 개발 모드: 전체 허용 (운영 전 CORS_ORIGINS 설정 필수)')
 
 # Rate limiter 연결 (각 라우트에서 @limiter.limit 데코레이터로 사용)
 limiter.init_app(app)

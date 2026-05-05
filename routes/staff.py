@@ -19,6 +19,7 @@ import bcrypt
 from flask import Blueprint, request, jsonify, g
 
 from models.database import get_db
+from models.log import logger
 from models.rate_limit import limiter
 from routes.auth import (
     require_auth, require_facility_actor, send_email,
@@ -58,11 +59,9 @@ def _row_to_invite(row) -> dict:
 
 
 def _send_invite_email(to_email: str, token: str, role: str) -> bool:
-    """초대 메일 — 개발 모드에선 콘솔에 토큰 출력."""
-    print('\n' + '=' * 50)
-    print(f'[직원 초대] 수신: {to_email} / 역할: {role}')
-    print(f'토큰: {token}')
-    print('=' * 50 + '\n')
+    """초대 메일 — 개발 모드에선 콘솔에 토큰 출력 (LOG_LEVEL=DEBUG 시만)."""
+    # DEBUG 레벨에서만 토큰 노출 — 운영(INFO+) 에선 스킵해 토큰 누출 방지
+    logger.debug('[직원 초대] %s (role=%s) token=%s', to_email, role, token)
     # 실제 메일은 가입 코드 흐름과 별개. 추후 별도 템플릿 사용 권장.
     # 여기선 dev 우선 → 콘솔 출력 + 이메일 시도 (실패해도 무시)
     try:

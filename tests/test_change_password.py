@@ -28,6 +28,10 @@ _dbmod.get_db = _patched_get_db
 
 sys.modules.pop('app', None)
 from app import app  # noqa: E402
+from models.rate_limit import limiter as _limiter  # noqa: E402
+
+# 테스트 간 rate-limit 초기화 (5/min 등으로 시나리오 7~8 도달 못 하는 문제 방지)
+_limiter.enabled = False
 
 c = app.test_client()
 

@@ -57,7 +57,8 @@ class StubPushProvider:
                 f.write(json.dumps(rec, ensure_ascii=False) + '\n')
         except Exception:
             pass
-        print(f'[push:stub] {platform} {token[:8]}... title={title!r}', flush=True)
+        from models.log import logger as _lg
+        _lg.info('[push:stub] %s %s... title=%r', platform, token[:8], title)
         return {'success': True, 'message_id': f'stub-{len(StubPushProvider.sent_log)}'}
 
 

@@ -44,8 +44,10 @@ class ConsoleEmailProvider:
     def send(self, *, to, subject, html, text=None):
         rec = {'to': to, 'subject': subject, 'html': html, 'text': text}
         ConsoleEmailProvider.sent_log.append(rec)
-        print(f'\n{"="*50}\n[email:console] to={to} subject={subject}\n'
-              f'{(text or html)[:300]}\n{"="*50}\n', flush=True)
+        from models.log import logger as _lg
+        # DEBUG 레벨에서 본문 미리보기, INFO 레벨에선 메타만 (PII 누출 최소화)
+        _lg.info('[email:console] to=%s subject=%s', to, subject)
+        _lg.debug('[email:console] body=%s', (text or html)[:300])
         return {'success': True, 'provider': 'console'}
 
 
