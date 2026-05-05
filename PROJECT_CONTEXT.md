@@ -98,14 +98,18 @@
 | **48** | **💬 Mobile — 채팅 목록 + 상세 (SSE 실시간)** | screens/chat/{chat_list,chat_detail}_screen.dart, ChatService SSE 스트림 통합 + 메시지 입력 + 낙관적 UI |
 | **49** | **📶 Mobile — WiFi 자동 가입 native plugin (Android + iOS)** | MainActivity.kt (WifiNetworkSuggestion), AppDelegate.swift (NEHotspotConfiguration), Runner.entitlements, services/wifi_connector.dart, AndroidManifest 권한 + Info.plist 권한 사유 |
 | **50** | **📨 APNs Push Provider — iOS native + Multi-platform 라우팅** | models/push.py: ApnsPushProvider (HTTP/2 + JWT ES256 + .p8 키) + MultiPlatformPushProvider + push_to_users platform 분기, httpx[http2] 의존성 |
+| **51** | **🐘 PostgreSQL 이전 — DB 어댑터 (DATABASE_URL ENV 기반 자동 분기)** | models/db_adapter.py (SQL 자동 변환: AUTOINCREMENT→SERIAL, datetime('now')→CURRENT_TIMESTAMP, ?→%s), `_PgConnectionWrapper`, `_add_column_if_missing` PostgreSQL 호환, scripts/migrate_sqlite_to_postgres.py, psycopg[binary] 의존성 |
 
-**누적 통계:** 50 PR · 17 blueprint · ~117 API endpoint · 29 DB 테이블 · 백엔드 ~7,500 LOC + admin-web 9페이지 + mobile 17화면 + provider-web
+**누적 통계:** 51 PR · 17 blueprint · ~117 API endpoint · 29 DB 테이블 · 백엔드 ~7,700 LOC + admin-web 9페이지 + mobile 17화면 + provider-web + DB 어댑터 (SQLite/PostgreSQL)
 
-### ⬜ 후보 (다음 작업)
+### ✅ 출시 전 코드 PR 완료
 
-| # | 제목 | 메모 |
-|---|---|---|
-| 51 | **PostgreSQL 이전** | 10K 동시접속 SRS 요건 |
+후속은 운영 환경 작업:
+- HTTPS / 도메인 / DNS
+- Apple Developer / Google Play 등록
+- Firebase / Toss Payments 실 키
+- PostgreSQL 인스턴스 프로비저닝 + 마이그레이션 1회 실행
+- 실기기 E2E 시나리오 검증
 
 ---
 
@@ -234,4 +238,4 @@ cd admin-web && npm install && npm run dev   # http://localhost:5174
 
 ---
 
-**마지막 업데이트:** 2026-05-05 (PR #50 — APNs Push Provider + Multi-platform 라우팅)
+**마지막 업데이트:** 2026-05-05 (PR #51 — PostgreSQL DB 어댑터 — 출시 전 코드 PR 완료)
