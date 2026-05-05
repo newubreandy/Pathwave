@@ -7,3 +7,4 @@ firebase-admin
 cryptography
 gunicorn
 sentry-sdk[flask]
+httpx[http2]
