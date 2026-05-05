@@ -5,3 +5,5 @@ bcrypt
 pyjwt
 firebase-admin
 cryptography
+gunicorn
+sentry-sdk[flask]

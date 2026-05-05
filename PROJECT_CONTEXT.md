@@ -88,15 +88,17 @@
 | **38** | **🔋 Admin Web — Battery 모니터링 + 시스템 공지 CRUD + 실제 푸시 발송 통합** | admin-web/pages/Battery, Announcements + announcement.py push_to_users |
 | **39** | **💳 Admin Web — 결제·구독 관리 + 환불 (Payments 페이지 신설)** | admin-web/pages/Payments (탭 2개) |
 | **40** | **📱 Mobile App — 컴파일 가능한 골격 + 인증 동선 + 14개 화면 (실+stub)** | mobile/lib/screens (14) + api_client + ApiConfig |
+| **41** | **🚀 운영 전환 — PG/Email provider 추상화 + gunicorn/Procfile + Sentry** | models/payment_provider.py, models/email_provider.py, wsgi.py, gunicorn.conf.py, Procfile |
 
-**누적 통계:** 40 PR · 16 blueprint · ~107 API endpoint · 27 DB 테이블 · 백엔드 ~6,830 LOC + provider-web 16페이지 + admin-web 8페이지 + mobile 14화면 (인증/홈 실구현, 9개 stub)
+**누적 통계:** 41 PR · 16 blueprint · ~107 API endpoint · 27 DB 테이블 · 백엔드 ~6,950 LOC + provider-web 16페이지 + admin-web 8페이지 + mobile 14화면 + WSGI/observability
 
 ### ⬜ 후보 (다음 작업)
 
 | # | 제목 | 메모 |
 |---|---|---|
-| 41 | **Mobile App — 시설 검색 / 스탬프 / 쿠폰 / 알림 / 채팅 실구현** | screens/{facility,mypage,notifications,chat}/* 의 stub → 실 |
-| 42 | **운영 전환** | PG / FCM / Google Translate / SMTP 실 키 |
+| 42 | **Mobile App — 시설 검색 / 스탬프 / 쿠폰 / 알림 / 채팅 실구현** | screens/{facility,mypage,notifications,chat}/* 의 stub → 실 |
+| 43 | **APNs Push Provider (iOS native)** | models/push.py 에 ApnsPushProvider 추가 |
+| 44 | **PostgreSQL 이전** | SQLite → PostgreSQL (10K 동시 접속 SRS 요건) |
 
 ---
 
@@ -162,13 +164,18 @@
 | 변수 | Stub (개발) | Real (운영) |
 |---|---|---|
 | `PATHWAVE_ENV` | `development` (기본) | `production` (필수 — ENV 검증 발동) |
-| `PG_PROVIDER` | `sim` (sim-/tid- prefix) | `tosspayments` |
+| `PG_PROVIDER` | `sim` (sim-prefix 토큰) | `toss` (Toss Payments) |
+| `TOSS_SECRET_KEY` | — | `test_sk_xxxxx` 또는 `live_sk_xxxxx` |
+| `EMAIL_PROVIDER` | `console` (stdout) | `smtp` / `ses` / `sendgrid` |
+| `SENDGRID_API_KEY` | — | `SG.xxxxx` (sendgrid 시) |
+| `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | — | SES 사용 시 (boto3) |
+| `EMAIL_FROM` | — | 발신 주소 (모든 provider 공통) |
 | `PUSH_PROVIDER` | `stub` (로그만) | `fcm` (Firebase Service Account JSON) |
 | `TRANSLATION_PROVIDER` | `stub` ([ko]→[en] 더미) | `google` (API key) |
-| `SMTP_*` | 콘솔 출력 | 실제 SMTP 서버 |
 | `SECRET_KEY` | (개발 기본값 허용) | **운영: 필수, dev 기본값 금지** |
 | `PATHWAVE_AES_KEY` | (없으면 SECRET_KEY 파생) | **운영: 32바이트 base64 필수** |
 | `CORS_ORIGINS` | (없으면 전체 허용) | **운영: 콤마 구분 화이트리스트 필수** |
+| `SENTRY_DSN` | (미설정 → no-op) | Sentry 운영 DSN |
 | `SUPER_ADMIN_BOOTSTRAP_EMAIL` | — | 첫 super admin 자동 생성용 |
 
 > **PR #35 보안 블로커:** `PATHWAVE_ENV=production` 일 때 `SECRET_KEY`/`PATHWAVE_AES_KEY`/`CORS_ORIGINS` 누락 시 부팅 단계에서 `RuntimeError` 발생.
@@ -181,9 +188,12 @@
 ## 9. 로컬 실행 / 테스트
 
 ```bash
-# 백엔드
+# 백엔드 (개발)
 cd /Users/m5pro16/Desktop/pathwave
-python3 app.py            # http://localhost:5000
+python3 app.py            # http://localhost:8080
+
+# 백엔드 (운영) — gunicorn + WSGI
+gunicorn -c gunicorn.conf.py wsgi:app
 
 # Flutter 앱 (Phase 3 진행 중)
 cd mobile && flutter run
@@ -217,4 +227,4 @@ cd admin-web && npm install && npm run dev   # http://localhost:5174
 
 ---
 
-**마지막 업데이트:** 2026-05-05 (PR #40 — Mobile App 컴파일 가능 골격 + 인증/홈 동선)
+**마지막 업데이트:** 2026-05-05 (PR #41 — 운영 전환: PG/Email provider 추상화 + gunicorn + Sentry)
