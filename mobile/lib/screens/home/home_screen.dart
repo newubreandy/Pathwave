@@ -49,7 +49,14 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(child: tabs[_tab]),
       bottomNavigationBar: _NeuBottomNav(
         index: _tab,
-        onTap: (i) => setState(() => _tab = i),
+        onTap: (i) {
+          // 알림 탭은 인박스/공지 2탭 풀스크린으로 — 시설 공지 포함
+          if (i == 3) {
+            context.push('/notifications');
+            return;
+          }
+          setState(() => _tab = i);
+        },
       ),
     );
   }
