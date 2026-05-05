@@ -19,7 +19,7 @@ const Facilities = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
-  const [newFacility, setNewFacility] = useState({ name: '', address: '', phone: '', description: '', benefits: '' });
+  const [newFacility, setNewFacility] = useState({ name: '', address: '', phone: '', description: '', benefits: '', adult_only: false });
   const [previewUrls, setPreviewUrls] = useState([]);
   const fileInputRef = useRef(null);
 
@@ -53,7 +53,7 @@ const Facilities = () => {
 
   const openAddModal = () => {
     setIsEditing(false);
-    setNewFacility({ name: '', address: '', phone: '', description: '', benefits: '' });
+    setNewFacility({ name: '', address: '', phone: '', description: '', benefits: '', adult_only: false });
     setPreviewUrls([]);
     setShowModal(true);
   };
@@ -61,12 +61,13 @@ const Facilities = () => {
   const openEditModal = (facility) => {
     setIsEditing(true);
     setCurrentId(facility.id);
-    setNewFacility({ 
-      name: facility.name || '', 
-      address: facility.address || '', 
+    setNewFacility({
+      name: facility.name || '',
+      address: facility.address || '',
       phone: facility.phone || '',
       description: facility.description || '',
-      benefits: facility.benefits || ''
+      benefits: facility.benefits || '',
+      adult_only: facility.adult_only || false
     });
     setPreviewUrls(facility.images || []);
     setShowModal(true);
@@ -143,6 +144,20 @@ const Facilities = () => {
                   <textarea className="input-field" rows="4" value={newFacility.description} onChange={e => setNewFacility({...newFacility, description: e.target.value})} />
                 </div>
               </div>
+              <div className="form-group adult-only-group">
+                <label className="adult-only-toggle">
+                  <input
+                    type="checkbox"
+                    className="adult-only-checkbox"
+                    checked={newFacility.adult_only}
+                    onChange={e => setNewFacility({...newFacility, adult_only: e.target.checked})}
+                  />
+                  <span className="adult-only-label">미성년자 출입 제한 (숙박/유흥 등)</span>
+                </label>
+                {newFacility.adult_only && (
+                  <p className="adult-only-help">🔞 이 매장은 만 19세 이상만 이용 가능합니다.</p>
+                )}
+              </div>
               <div className="modal-actions">
                 <button type="button" className="btn-ghost" onClick={() => setShowModal(false)}>취소</button>
                 <button type="submit" className="btn-primary">{isEditing ? '수정 완료' : '등록하기'}</button>
@@ -162,7 +177,11 @@ const Facilities = () => {
             )}
             <div className="facility-content">
               <div className="facility-info">
-                <div className="facility-main"><h3 className="facility-name">{f.name}</h3><span className="status-badge">{f.status}</span></div>
+                <div className="facility-main">
+                  <h3 className="facility-name">{f.name}</h3>
+                  {f.adult_only && <span className="adult-only-badge" title="만 19세 이상 전용">🔞 19+</span>}
+                  <span className="status-badge">{f.status}</span>
+                </div>
                 <p className="facility-address"><MapPin size={14} /> {f.address}</p>
                 {f.phone && <p className="facility-meta">📞 {f.phone}</p>}
                 {f.benefits && <p className="facility-meta highlight">🎁 {f.benefits}</p>}
