@@ -12,6 +12,7 @@ import bcrypt
 import jwt
 from flask import Blueprint, request, jsonify, g
 
+from models.age import classify as classify_age, MINOR_GROUP
 from models.consent import record_consents, validate_consents
 from models.database import get_db
 from models.email_provider import get_email_provider
@@ -335,6 +336,7 @@ def register():
     password        = (data.get('password')        or '')
     invitation_code = (data.get('invitation_code') or '').strip() or None
     consents_in     = data.get('consents') or []
+    birth_year      = data.get('birth_year')
 
     if not email or not code or not password:
         return jsonify({'success': False, 'message': '모든 필드를 입력해 주세요.'}), 400
@@ -346,6 +348,11 @@ def register():
     ok, msg = validate_consents('user', consents_in)
     if not ok:
         return jsonify({'success': False, 'message': msg}), 400
+
+    # 연령 분류 (PR #47) — 만 14 미만 거부
+    age_group, age_err = classify_age(birth_year)
+    if age_err:
+        return jsonify({'success': False, 'message': age_err}), 400
 
     db  = get_db()
     row = db.execute(
@@ -363,8 +370,42 @@ def register():
         db.close()
         return jsonify({'success': False, 'message': '이미 가입된 이메일입니다.'}), 409
 
-    # 폐쇄형 가입: 초대 코드 검증
-    if is_invitation_required():
+    # 미성년자(만 14~18) → 부모(어른) 초대 코드 필수 (PR #47)
+    parent_invitation_id = None
+    if age_group == MINOR_GROUP:
+        if not invitation_code:
+            db.close()
+            return jsonify({
+                'success': False,
+                'message': '만 14~18세는 보호자가 발급한 초대 코드로만 가입할 수 있습니다.',
+            }), 403
+        minor_invite, err = validate_code(db, invitation_code)
+        if err or not minor_invite:
+            db.close()
+            return jsonify({'success': False,
+                            'message': err or '초대 코드가 유효하지 않습니다.'}), 400
+        if not minor_invite['is_minor_invite']:
+            db.close()
+            return jsonify({
+                'success': False,
+                'message': '본 초대 코드는 미성년자 초대용이 아닙니다. 보호자에게 새 초대를 요청해 주세요.',
+            }), 400
+        inviter_user_id = minor_invite['inviter_user_id']
+        if not inviter_user_id:
+            db.close()
+            return jsonify({'success': False,
+                            'message': '초대자 정보가 올바르지 않습니다.'}), 400
+        inviter = db.execute(
+            "SELECT age_group FROM users WHERE id=?", (inviter_user_id,)
+        ).fetchone()
+        if not inviter or inviter['age_group'] != 'adult_19_plus':
+            db.close()
+            return jsonify({'success': False,
+                            'message': '초대자가 성인 회원이 아닙니다.'}), 400
+        parent_invitation_id = minor_invite['id']
+
+    # 폐쇄형 가입: 초대 코드 검증 (성인 회원, INVITATION_REQUIRED=1 시)
+    elif is_invitation_required():
         if not invitation_code:
             db.close()
             return jsonify({'success': False,
@@ -376,8 +417,11 @@ def register():
 
     hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     cur = db.execute(
-        'INSERT INTO users (email, password, provider, invited_via_code) VALUES (?,?,?,?)',
-        (email, hashed, 'email', invitation_code)
+        """INSERT INTO users (email, password, provider, invited_via_code,
+                              birth_year, age_group, parent_invitation_id)
+           VALUES (?,?,?,?,?,?,?)""",
+        (email, hashed, 'email', invitation_code,
+         birth_year, age_group, parent_invitation_id)
     )
     user_id = cur.lastrowid
     db.execute('UPDATE email_codes SET used=1 WHERE email=? AND code=?', (email, code))

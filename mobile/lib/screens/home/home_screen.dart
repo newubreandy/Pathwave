@@ -265,6 +265,7 @@ class _MyPageTab extends StatelessWidget {
           const SizedBox(height: 16),
           _MenuTile(icon: Icons.local_activity_outlined, title: '내 스탬프', onTap: () => context.go('/mypage/stamps')),
           _MenuTile(icon: Icons.confirmation_number_outlined, title: '내 쿠폰', onTap: () => context.go('/mypage/coupons')),
+          _MenuTile(icon: Icons.family_restroom,            title: '자녀 초대', onTap: () => context.go('/mypage/parent-invite')),
           _MenuTile(icon: Icons.chat_bubble_outline,        title: '매장 채팅', onTap: () => context.go('/chat')),
           _MenuTile(icon: Icons.settings_outlined,          title: '설정', onTap: () => context.go('/settings')),
           const Spacer(),

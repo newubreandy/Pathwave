@@ -50,13 +50,25 @@ def handshake():
 
     # 시설 정보 조회
     facility = db.execute(
-        "SELECT id, name, address, description, image_url FROM facilities WHERE id=? AND active=1",
+        "SELECT id, name, address, description, image_url, adult_only "
+        "FROM facilities WHERE id=? AND active=1",
         (facility_id,)
     ).fetchone()
 
     if not facility:
         db.close()
         return jsonify({'success': False, 'message': '시설 정보를 찾을 수 없습니다.'}), 404
+
+    # PR #47 — 미성년자 + adult_only 시설 → 거부 (BLE/WiFi 동작 차단)
+    if facility['adult_only'] and user_id:
+        u = db.execute("SELECT age_group FROM users WHERE id=?", (user_id,)).fetchone()
+        if u and u['age_group'] == 'minor_14_18':
+            db.close()
+            return jsonify({
+                'success': False,
+                'message': '본 시설은 만 19세 이상만 이용 가능합니다.',
+                'reason': 'adult_only_minor_blocked',
+            }), 403
 
     # WiFi 프로필 조회
     wifi = db.execute(

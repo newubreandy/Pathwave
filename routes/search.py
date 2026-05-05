@@ -17,8 +17,34 @@ import math
 from flask import Blueprint, request, jsonify
 
 from models.database import get_db
+from routes.auth import decode_access_token
 
 search_bp = Blueprint('search', __name__, url_prefix='/api/search')
+
+
+def _is_minor_caller() -> bool:
+    """Authorization 헤더에서 user 토큰을 디코드 → age_group 이 minor 인지 확인.
+
+    토큰 없거나 user 가 아니면 False (성인/공개 호출 취급).
+    """
+    auth = request.headers.get('Authorization', '')
+    if not auth.startswith('Bearer '):
+        return False
+    payload = decode_access_token(auth.split(' ', 1)[1])
+    if not payload or payload.get('sub_type') not in (None, 'user'):
+        return False
+    user_id = payload.get('user_id')
+    if not user_id:
+        return False
+    db = get_db()
+    try:
+        row = db.execute(
+            "SELECT age_group FROM users WHERE id=? AND deleted_at IS NULL",
+            (user_id,)
+        ).fetchone()
+    finally:
+        db.close()
+    return bool(row and row['age_group'] == 'minor_14_18')
 
 
 def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
@@ -41,6 +67,7 @@ def _row_to_search_result(row) -> dict:
         'image_url':   row['image_url'],
         'latitude':    row['latitude'],
         'longitude':   row['longitude'],
+        'adult_only':  bool(row['adult_only']) if 'adult_only' in row.keys() else False,
     }
 
 
@@ -63,6 +90,9 @@ def search_facilities():
     db = get_db()
     sql = "SELECT * FROM facilities WHERE active=1"
     params: list = []
+    # PR #47 — 미성년자 토큰이면 adult_only 시설 자동 필터
+    if _is_minor_caller():
+        sql += " AND COALESCE(adult_only, 0) = 0"
     if q:
         sql += " AND (name LIKE ? OR address LIKE ? OR description LIKE ?)"
         like = f'%{q}%'
