@@ -8,6 +8,7 @@ import Beacons from './pages/Beacons.jsx';
 import Approvals from './pages/Approvals.jsx';
 import Battery from './pages/Battery.jsx';
 import Announcements from './pages/Announcements.jsx';
+import Payments from './pages/Payments.jsx';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/dashboard/approvals" element={<Approvals />} />
           <Route path="/dashboard/battery" element={<Battery />} />
           <Route path="/dashboard/announcements" element={<Announcements />} />
+          <Route path="/dashboard/payments" element={<Payments />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

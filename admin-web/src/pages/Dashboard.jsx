@@ -75,12 +75,14 @@ export default function Dashboard() {
       </div>
 
       <div className="card next-steps">
-        <h3 style={{ marginTop: 0 }}>구현 현황</h3>
+        <h3 style={{ marginTop: 0 }}>운영자 콘솔 구현 현황</h3>
         <ul>
           <li><strong>✅ PR #36</strong> — 베이스라인 (Login + Dashboard)</li>
-          <li><strong>✅ PR #37</strong> — Beacons 인벤토리 + Approvals 실 구현</li>
-          <li>⬜ PR #38 — 배터리 모니터링 + 시스템 공지 + 푸시 통합</li>
-          <li>⬜ PR #39 — 결제·구독 관리 + 환불</li>
+          <li><strong>✅ PR #37</strong> — Beacons 인벤토리 + Approvals</li>
+          <li><strong>✅ PR #38</strong> — Battery 모니터링 + 시스템 공지 + 푸시 통합</li>
+          <li><strong>✅ PR #39</strong> — 결제·구독 관리 + 환불</li>
+          <li>⬜ PR #40 — Mobile App Phase 3 (Flutter)</li>
+          <li>⬜ PR #41 — 운영 전환 (실 PG/FCM/Google/SMTP)</li>
         </ul>
       </div>
     </div>
