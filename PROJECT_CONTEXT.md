@@ -82,8 +82,10 @@
 | **32** | **Provider Web — 직원/와이파이/푸시/채팅 API 연동** | provider-web/services |
 | **33** | **시스템 공지 (Super Admin → 사장/사용자) 백엔드** | announcement, admin |
 | **34** | **비콘 배터리 모니터링 백엔드** | beacon, admin |
+| **35+36** | **provider-web 핫픽스 (Service shim, WiFi 리스트 정리)** | provider-web |
+| **37** | **휴대폰 인증 백엔드 (Stub SMS + Real hook)** | phone |
 
-**누적 통계:** 34 PR · 16 blueprint · ~107 API endpoint · 27 DB 테이블 · 백엔드 ~6,700 LOC + provider-web 16페이지
+**누적 통계:** 37 PR · 17 blueprint · ~109 API endpoint · 28 DB 테이블 · 백엔드 ~7,000 LOC + provider-web 16페이지
 
 ### ⬜ 후보 (다음 작업)
 
@@ -115,6 +117,7 @@
 | `admin_bp` | `/api/admin` | login, beacons (import/list/assign), facility-accounts (verify/suspend), stats/overview, payments (refund), subscriptions |
 | `invitation_bp` | `/api/invitations` | POST 발급, GET 목록, GET `<code>` 검증 (회원 폐쇄형 가입) |
 | `announcement_bp` | `/api/admin/announcements`, `/api/announcements` | 운영자 공지 CRUD + 사용자 측 audience 필터 + 읽음 처리 |
+| `phone_bp` | `/api/phone` | send-code, verify-code (Stub SMS / 실 SMS hook + 1회용 token) |
 
 ---
 

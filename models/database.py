@@ -479,6 +479,24 @@ def init_db():
     _add_column_if_missing(db, 'invitations', 'inviter_facility_account_id',
                            'inviter_facility_account_id INTEGER')
 
+    # 휴대폰 인증 (PR #37)
+    db.executescript("""
+        CREATE TABLE IF NOT EXISTS phone_verifications (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            phone       TEXT    NOT NULL,           -- E.164 권장 (010-...)
+            code        TEXT    NOT NULL,           -- 6자리 숫자
+            purpose     TEXT,                       -- 'register'|'login'|'reset' 등
+            verified    INTEGER DEFAULT 0,
+            used        INTEGER DEFAULT 0,
+            token       TEXT,                       -- verify 후 발급되는 1회용 토큰
+            expires_at  TEXT    NOT NULL,
+            verified_at TEXT,
+            created_at  TEXT    DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_phone_verif_phone   ON phone_verifications(phone);
+        CREATE INDEX IF NOT EXISTS idx_phone_verif_token   ON phone_verifications(token);
+    """)
+
     # beacons: 배터리 모니터링 메타 (PR #34)
     _add_column_if_missing(db, 'beacons', 'battery_updated_at', 'battery_updated_at TEXT')
     _add_column_if_missing(db, 'beacons', 'battery_voltage_mv', 'battery_voltage_mv INTEGER')
