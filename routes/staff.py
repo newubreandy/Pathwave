@@ -19,6 +19,7 @@ import bcrypt
 from flask import Blueprint, request, jsonify, g
 
 from models.database import get_db
+from models.rate_limit import limiter
 from routes.auth import (
     require_auth, require_facility_actor, send_email,
     password_complexity_error, issue_token_pair,
@@ -301,6 +302,7 @@ def accept_invite():
 # ── Login / Me ────────────────────────────────────────────────────────────────
 
 @staff_bp.route('/login', methods=['POST'])
+@limiter.limit('10 per minute; 100 per hour')
 def staff_login():
     """직원/관리자 로그인. 토큰에 role + owner_account_id 포함."""
     data     = request.get_json(silent=True) or {}

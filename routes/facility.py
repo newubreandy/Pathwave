@@ -15,6 +15,7 @@ import bcrypt
 from flask import Blueprint, request, jsonify
 
 from models.database import get_db
+from models.rate_limit import limiter
 from routes.auth import (
     generate_code, send_email,
     password_complexity_error, issue_token_pair, decode_access_token,
@@ -34,6 +35,7 @@ def _business_no_error(no: str) -> str | None:
 # ── 이메일 인증 ───────────────────────────────────────────────────────────────
 
 @facility_bp.route('/send-code', methods=['POST'])
+@limiter.limit('5 per minute; 30 per hour')
 def send_code():
     """시설 회원가입용 이메일 인증 코드 발송."""
     data  = request.get_json(silent=True) or {}
@@ -166,6 +168,7 @@ def register():
 # ── 로그인 ────────────────────────────────────────────────────────────────────
 
 @facility_bp.route('/login', methods=['POST'])
+@limiter.limit('10 per minute; 100 per hour')
 def login():
     """시설 계정 로그인."""
     data     = request.get_json(silent=True) or {}

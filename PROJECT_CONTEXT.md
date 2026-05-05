@@ -82,16 +82,18 @@
 | **32** | **Provider Web — 직원/와이파이/푸시/채팅 API 연동** | provider-web/services |
 | **33** | **시스템 공지 (Super Admin → 사장/사용자) 백엔드** | announcement, admin |
 | **34** | **비콘 배터리 모니터링 백엔드** | beacon, admin |
+| **35** | **🔒 보안 블로커 — SECRET_KEY/AES_KEY ENV 강제 + CORS 화이트리스트 + rate-limit** | app, auth, facility, staff, admin, beacon |
 
-**누적 통계:** 34 PR · 16 blueprint · ~107 API endpoint · 27 DB 테이블 · 백엔드 ~6,700 LOC + provider-web 16페이지
+**누적 통계:** 35 PR · 16 blueprint · ~107 API endpoint · 27 DB 테이블 · 백엔드 ~6,800 LOC + provider-web 16페이지
 
 ### ⬜ 후보 (다음 작업)
 
 | # | 제목 | 메모 |
 |---|---|---|
-| 35 | **모바일 앱 Phase 3 마무리 (Flutter)** | 화면 + BLE + 푸시 + 소셜 |
 | 36 | **Super Admin Web UI** | 운영자 콘솔 (배터리 대시보드 포함) |
-| 37 | **시스템 공지 — 푸시 발송 통합** | announcement + push provider |
+| 37 | **모바일 앱 Phase 3 마무리 (Flutter)** | 화면 + BLE + 푸시 + 소셜 |
+| 38 | **시스템 공지 — 푸시 발송 통합** | announcement + push provider |
+| 39 | **운영 전환** | PG / FCM / Google Translate / SMTP 실 키 |
 
 ---
 
@@ -156,13 +158,18 @@
 
 | 변수 | Stub (개발) | Real (운영) |
 |---|---|---|
+| `PATHWAVE_ENV` | `development` (기본) | `production` (필수 — ENV 검증 발동) |
 | `PG_PROVIDER` | `sim` (sim-/tid- prefix) | `tosspayments` |
 | `PUSH_PROVIDER` | `stub` (로그만) | `fcm` (Firebase Service Account JSON) |
 | `TRANSLATION_PROVIDER` | `stub` ([ko]→[en] 더미) | `google` (API key) |
 | `SMTP_*` | 콘솔 출력 | 실제 SMTP 서버 |
-| `JWT_SECRET` | (개발용) | (운영용 랜덤) |
-| `WIFI_AES_KEY` | (32바이트 hex) | (운영용 별도) |
+| `SECRET_KEY` | (개발 기본값 허용) | **운영: 필수, dev 기본값 금지** |
+| `PATHWAVE_AES_KEY` | (없으면 SECRET_KEY 파생) | **운영: 32바이트 base64 필수** |
+| `CORS_ORIGINS` | (없으면 전체 허용) | **운영: 콤마 구분 화이트리스트 필수** |
 | `SUPER_ADMIN_BOOTSTRAP_EMAIL` | — | 첫 super admin 자동 생성용 |
+
+> **PR #35 보안 블로커:** `PATHWAVE_ENV=production` 일 때 `SECRET_KEY`/`PATHWAVE_AES_KEY`/`CORS_ORIGINS` 누락 시 부팅 단계에서 `RuntimeError` 발생.
+> Rate-limit: `/api/auth/send-code` (5/분), `/api/*/login` (10/분), `/api/beacon/handshake` (60/분).
 
 > Firebase credentials, `google-services.json`, `GoogleService-Info.plist`은 `.gitignore` 처리됨 (커밋 금지).
 
@@ -204,4 +211,4 @@ cd provider-web && npm run dev
 
 ---
 
-**마지막 업데이트:** 2026-05-03 (PR #27 머지 직후 + 본 파일 신설)
+**마지막 업데이트:** 2026-05-05 (PR #35 — 보안 블로커 처리)

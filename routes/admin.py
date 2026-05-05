@@ -18,6 +18,7 @@ import jwt
 from flask import Blueprint, request, jsonify, g
 
 from models.database import get_db
+from models.rate_limit import limiter
 from routes.auth import (
     SECRET_KEY, ACCESS_TTL_MIN, REFRESH_TTL_DAY,
     make_jwt, issue_token_pair,
@@ -40,6 +41,7 @@ def _row_to_admin(row) -> dict:
 
 
 @admin_bp.route('/login', methods=['POST'])
+@limiter.limit('10 per minute; 100 per hour')
 def admin_login():
     """Super Admin 로그인 — sub_type='super_admin' 토큰 발급."""
     data = request.get_json(silent=True) or {}

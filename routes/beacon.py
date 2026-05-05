@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify, g
 from models.database import get_db
 from models.crypto import encrypt_secret, decrypt_secret
+from models.rate_limit import limiter
 from routes.auth import require_facility_actor, require_super_admin
 
 beacon_bp = Blueprint('beacon', __name__, url_prefix='/api/beacon')
@@ -16,6 +17,7 @@ def _ensure_facility_owned(db, facility_id: int, account_id: int) -> bool:
 
 
 @beacon_bp.route('/handshake', methods=['POST'])
+@limiter.limit('60 per minute; 600 per hour')
 def handshake():
     """BLE 핸드셰이크 핵심 API
     Flutter 앱이 BLE로 감지한 UUID를 전송하면

@@ -13,6 +13,7 @@ import jwt
 from flask import Blueprint, request, jsonify, g
 
 from models.database import get_db
+from models.rate_limit import limiter
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
@@ -266,6 +267,7 @@ def send_email(to_email: str, code: str) -> bool:
 # ── 이메일 인증 ───────────────────────────────────────────────────────────────
 
 @auth_bp.route('/send-code', methods=['POST'])
+@limiter.limit('5 per minute; 30 per hour')
 def send_code():
     """Step 1: 이메일 입력 → 인증 코드 발송"""
     data  = request.get_json(silent=True) or {}
@@ -391,6 +393,7 @@ def register():
 
 
 @auth_bp.route('/login', methods=['POST'])
+@limiter.limit('10 per minute; 100 per hour')
 def login():
     """이메일 로그인"""
     data     = request.get_json(silent=True) or {}
