@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import DashboardLayout from './layouts/DashboardLayout';
 import RequireAuth from './components/RequireAuth';
+import DevPreviewBar from './components/DevPreviewBar';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
@@ -34,6 +35,7 @@ function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <DevPreviewBar />
       <Routes>
         {/* 공개 — 인증 불필요 */}
         <Route path="/login" element={<Login />} />
