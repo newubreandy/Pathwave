@@ -8,3 +8,4 @@ cryptography
 gunicorn
 sentry-sdk[flask]
 httpx[http2]
+psycopg[binary]>=3.1

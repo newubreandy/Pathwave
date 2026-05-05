@@ -1,13 +1,18 @@
 import os
-import sqlite3
+import sqlite3  # noqa: F401  (호환성 — 외부 모듈에서 sqlite3.Row 등 import 시 대비)
+
+from models.db_adapter import open_connection, use_postgres
 
 DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'pathwave.db')
 
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    """DB connection — DATABASE_URL ENV 가 postgres 면 PostgreSQL, 아니면 SQLite (PR #51).
+
+    반환되는 connection 객체는 양쪽 모두 ``execute / commit / close / cursor``
+    인터페이스를 동일하게 제공 (PostgreSQL 측은 sqlite3 호환 wrapper).
+    """
+    return open_connection(sqlite_path=DB_PATH)
 
 
 def init_db():
@@ -586,9 +591,19 @@ def _bootstrap_super_admin(db) -> None:
 def _add_column_if_missing(db, table: str, column: str, ddl: str) -> None:
     """``column``이 ``table``에 이미 있으면 no-op, 없으면 ALTER ADD COLUMN.
 
-    SQLite는 ``ALTER TABLE ... ADD COLUMN``이 idempotent하지 않으므로
-    ``PRAGMA table_info``로 먼저 확인한다.
+    SQLite/PostgreSQL 모두 호환 (PR #51).
     """
-    existing = {r['name'] for r in db.execute(f'PRAGMA table_info({table})').fetchall()}
-    if column not in existing:
-        db.execute(f'ALTER TABLE {table} ADD COLUMN {ddl}')
+    if use_postgres():
+        # PostgreSQL: information_schema.columns
+        row = db.execute(
+            "SELECT 1 FROM information_schema.columns "
+            "WHERE table_name=? AND column_name=?",
+            (table, column),
+        ).fetchone()
+        if row is None:
+            db.execute(f'ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {ddl}')
+    else:
+        # SQLite: PRAGMA table_info
+        existing = {r['name'] for r in db.execute(f'PRAGMA table_info({table})').fetchall()}
+        if column not in existing:
+            db.execute(f'ALTER TABLE {table} ADD COLUMN {ddl}')
