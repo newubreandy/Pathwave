@@ -91,14 +91,14 @@
 | **41** | **🚀 운영 전환 — PG/Email provider 추상화 + gunicorn/Procfile + Sentry** | models/payment_provider.py, models/email_provider.py, wsgi.py, gunicorn.conf.py, Procfile |
 | **42** | **📱 Mobile API services — 6개 도메인 dart 모듈 + SSE 스트림 + Push 토큰 등록** | mobile/lib/services/{store,stamp,coupon,notification,chat,push}_service.dart |
 | **43** | **🎫 Mobile — Stamps + Coupons + Notifications 실 구현** | screens/mypage/{stamps,coupons}.dart, screens/notifications/notifications.dart, widgets/empty_state.dart |
+| **44** | **🔎 Mobile — 시설 검색 (위치 기반) + 시설 상세** | screens/search/search_screen.dart, screens/facility/facility_screen.dart |
 
-**누적 통계:** 43 PR · 16 blueprint · ~107 API endpoint · 27 DB 테이블 · 백엔드 ~6,950 LOC + provider-web 16페이지 + admin-web 8페이지 + mobile 14화면 (stamps/coupons/noti 실구현)
+**누적 통계:** 44 PR · 16 blueprint · ~107 API endpoint · 27 DB 테이블 · 백엔드 ~6,950 LOC + provider-web 16페이지 + admin-web 8페이지 + mobile 15화면 (stamps/coupons/noti/search/facility 실구현)
 
 ### ⬜ 후보 (다음 작업)
 
 | # | 제목 | 메모 |
 |---|---|---|
-| 44 | **Mobile — 시설 검색 + 시설 상세** | StoreService + google_maps |
 | 45 | **Mobile — 채팅 목록 + 상세 (SSE)** | ChatService.streamMessages |
 | 46 | **Mobile — WiFi 자동 가입 native plugin** | Android SuggestNetwork + iOS NEHotspotConfiguration |
 | 47 | **APNs Push Provider (iOS native)** | models/push.py |
@@ -231,4 +231,4 @@ cd admin-web && npm install && npm run dev   # http://localhost:5174
 
 ---
 
-**마지막 업데이트:** 2026-05-05 (PR #43 — Mobile Stamps + Coupons + Notifications 실 구현)
+**마지막 업데이트:** 2026-05-05 (PR #44 — Mobile 시설 검색 + 시설 상세 실 구현)
