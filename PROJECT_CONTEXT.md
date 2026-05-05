@@ -87,15 +87,16 @@
 | **37** | **🔌 Admin Web — Beacons 인벤토리 + Approvals + 통계 키 매칭 수정** | admin-web/pages/Beacons, Approvals + Modal |
 | **38** | **🔋 Admin Web — Battery 모니터링 + 시스템 공지 CRUD + 실제 푸시 발송 통합** | admin-web/pages/Battery, Announcements + announcement.py push_to_users |
 | **39** | **💳 Admin Web — 결제·구독 관리 + 환불 (Payments 페이지 신설)** | admin-web/pages/Payments (탭 2개) |
+| **40** | **📱 Mobile App — 컴파일 가능한 골격 + 인증 동선 + 14개 화면 (실+stub)** | mobile/lib/screens (14) + api_client + ApiConfig |
 
-**누적 통계:** 39 PR · 16 blueprint · ~107 API endpoint · 27 DB 테이블 · 백엔드 ~6,830 LOC + provider-web 16페이지 + admin-web 8페이지 (운영자 콘솔 본기능 완료)
+**누적 통계:** 40 PR · 16 blueprint · ~107 API endpoint · 27 DB 테이블 · 백엔드 ~6,830 LOC + provider-web 16페이지 + admin-web 8페이지 + mobile 14화면 (인증/홈 실구현, 9개 stub)
 
 ### ⬜ 후보 (다음 작업)
 
 | # | 제목 | 메모 |
 |---|---|---|
-| 40 | **모바일 앱 Phase 3 마무리 (Flutter)** | 화면 + BLE + 푸시 + 소셜 |
-| 41 | **운영 전환** | PG / FCM / Google Translate / SMTP 실 키 |
+| 41 | **Mobile App — 시설 검색 / 스탬프 / 쿠폰 / 알림 / 채팅 실구현** | screens/{facility,mypage,notifications,chat}/* 의 stub → 실 |
+| 42 | **운영 전환** | PG / FCM / Google Translate / SMTP 실 키 |
 
 ---
 
@@ -216,4 +217,4 @@ cd admin-web && npm install && npm run dev   # http://localhost:5174
 
 ---
 
-**마지막 업데이트:** 2026-05-05 (PR #39 — Payments / Subscriptions / 환불 — 운영자 콘솔 본기능 완료)
+**마지막 업데이트:** 2026-05-05 (PR #40 — Mobile App 컴파일 가능 골격 + 인증/홈 동선)

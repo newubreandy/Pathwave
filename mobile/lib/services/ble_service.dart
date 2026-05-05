@@ -5,9 +5,11 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 
+import '../utils/api_config.dart';
+
 /// BLE 비콘 감지 → 서버 핸드셰이크 → WiFi 프로필 반환
 class BleService extends ChangeNotifier {
-  static const _baseUrl = 'http://172.30.1.72:8080';
+  static String get _baseUrl => ApiConfig.baseUrl;
 
   // 감지 상태
   bool _isScanning = false;

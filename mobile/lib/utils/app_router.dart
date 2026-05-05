@@ -36,15 +36,15 @@ class AppRouter {
       return null;
     },
     routes: [
-      GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
+      GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
 
       // ── 인증 ────────────────────────────────────────────────────
-      GoRoute(path: '/auth/login',    builder: (_, __) => const LoginScreen()),
-      GoRoute(path: '/auth/register', builder: (_, __) => const RegisterScreen()),
-      GoRoute(path: '/auth/forgot',   builder: (_, __) => const ForgotPasswordScreen()),
+      GoRoute(path: '/auth/login',    builder: (_, _) => const LoginScreen()),
+      GoRoute(path: '/auth/register', builder: (_, _) => const RegisterScreen()),
+      GoRoute(path: '/auth/forgot',   builder: (_, _) => const ForgotPasswordScreen()),
 
       // ── 메인 ────────────────────────────────────────────────────
-      GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
+      GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
       GoRoute(
         path: '/wifi-connect',
         builder: (_, state) => WifiConnectScreen(
@@ -60,15 +60,15 @@ class AppRouter {
       ),
 
       // ── 마이페이지 ───────────────────────────────────────────────
-      GoRoute(path: '/mypage',       builder: (_, __) => const MyPageScreen()),
-      GoRoute(path: '/mypage/stamps', builder: (_, __) => const StampsScreen()),
-      GoRoute(path: '/mypage/coupons', builder: (_, __) => const CouponsScreen()),
+      GoRoute(path: '/mypage',       builder: (_, _) => const MyPageScreen()),
+      GoRoute(path: '/mypage/stamps', builder: (_, _) => const StampsScreen()),
+      GoRoute(path: '/mypage/coupons', builder: (_, _) => const CouponsScreen()),
 
       // ── 알림 ────────────────────────────────────────────────────
-      GoRoute(path: '/notifications', builder: (_, __) => const NotificationsScreen()),
+      GoRoute(path: '/notifications', builder: (_, _) => const NotificationsScreen()),
 
       // ── 채팅 ────────────────────────────────────────────────────
-      GoRoute(path: '/chat',          builder: (_, __) => const ChatListScreen()),
+      GoRoute(path: '/chat',          builder: (_, _) => const ChatListScreen()),
       GoRoute(
         path: '/chat/:facilityId',
         builder: (_, state) => ChatDetailScreen(
@@ -77,7 +77,7 @@ class AppRouter {
       ),
 
       // ── 설정 ────────────────────────────────────────────────────
-      GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
+      GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
     ],
   );
 }
