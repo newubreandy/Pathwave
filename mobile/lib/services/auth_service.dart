@@ -155,6 +155,51 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  // ── Facebook / Kakao / Naver (PR #68) ───────────────────────────
+  // 운영 활성화 절차 (각 Provider 별):
+  //   Facebook: developers.facebook.com 앱 생성 → flutter_facebook_auth 패키지 추가
+  //             + iOS Info.plist FacebookAppID, Android strings.xml facebook_app_id
+  //   Kakao:    developers.kakao.com 앱 생성 → kakao_flutter_sdk 패키지 추가
+  //             + iOS LSApplicationQueriesSchemes (kakaokompassauth, kakaolink)
+  //             + Android NativeAppKey, AndroidManifest.xml 의 redirect scheme
+  //   Naver:    developers.naver.com 애플리케이션 등록 → flutter_naver_login 패키지 추가
+  //             + iOS Info.plist (CFBundleURLSchemes), Android AndroidManifest.xml
+  // 백엔드는 `/api/auth/social` 의 provider 필드만 키 매칭하면 받음.
+  Future<Map<String, dynamic>> signInWithFacebook() async {
+    return _stubSocialNotice('facebook', 'Facebook');
+  }
+
+  Future<Map<String, dynamic>> signInWithKakao() async {
+    return _stubSocialNotice('kakao', '카카오');
+  }
+
+  Future<Map<String, dynamic>> signInWithNaver() async {
+    return _stubSocialNotice('naver', '네이버');
+  }
+
+  Future<Map<String, dynamic>> _stubSocialNotice(String key, String label) async {
+    return {
+      'success': false,
+      'message': '$label 로그인은 Developer Console 에서 API 키 발급 + '
+                 '네이티브 설정 (Info.plist / AndroidManifest.xml) 후 활성됩니다.\n'
+                 '코드 흐름은 _socialLogin(idToken, "$key") 로 백엔드에 전달.',
+    };
+  }
+
+  // ── 둘러보기 (PR #68) — 로그인 없이 화면 미리보기 ────────────
+  /// 가짜 토큰 + 익명 사용자를 메모리에 주입.
+  /// 실 API 호출은 401 로 실패하지만 UI 네비게이션/렌더링은 가능.
+  Future<void> enterPreviewMode() async {
+    _token = 'preview-mode-token';
+    _user  = {
+      'id': 0,
+      'email': 'preview@dev.local',
+      'name': '둘러보기',
+      'provider': 'preview',
+    };
+    notifyListeners();
+  }
+
   // ── 소셜 로그인 → 백엔드 ─────────────────────────────────────────
   Future<Map<String, dynamic>> _socialLogin(String idToken, String provider) async {
     final res = await http.post(

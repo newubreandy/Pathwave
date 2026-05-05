@@ -7,6 +7,7 @@ import '../../utils/neu_theme.dart';
 import '../../widgets/neu/neu_button.dart';
 import '../../widgets/neu/neu_card.dart';
 import '../../widgets/neu/neu_text_field.dart';
+import '../../widgets/social_login_row.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -28,21 +29,16 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _login() async {
-    final email = _emailCtrl.text.trim();
-    final pw    = _passwordCtrl.text;
-    if (email.isEmpty || pw.isEmpty) {
-      setState(() => _error = '이메일과 비밀번호를 입력해 주세요.');
-      return;
-    }
+  Future<void> _handle(Future<Map<String, dynamic>> Function() fn,
+      {required String fallbackErr}) async {
     setState(() { _busy = true; _error = null; });
     try {
-      final res = await context.read<AuthService>().login(email, pw);
+      final res = await fn();
       if (!mounted) return;
       if (res['success'] == true) {
         context.go('/home');
       } else {
-        setState(() => _error = res['message']?.toString() ?? '로그인 실패.');
+        setState(() => _error = res['message']?.toString() ?? fallbackErr);
       }
     } catch (e) {
       if (!mounted) return;
@@ -52,38 +48,26 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _socialGoogle() async {
-    setState(() { _busy = true; _error = null; });
-    try {
-      final res = await context.read<AuthService>().signInWithGoogle();
-      if (!mounted) return;
-      if (res['success'] == true) {
-        context.go('/home');
-      } else {
-        setState(() => _error = res['message']?.toString() ?? 'Google 로그인 실패.');
-      }
-    } finally {
-      if (mounted) setState(() => _busy = false);
+  Future<void> _login() async {
+    final email = _emailCtrl.text.trim();
+    final pw    = _passwordCtrl.text;
+    if (email.isEmpty || pw.isEmpty) {
+      setState(() => _error = '이메일과 비밀번호를 입력해 주세요.');
+      return;
     }
+    await _handle(() => context.read<AuthService>().login(email, pw),
+      fallbackErr: '로그인 실패.');
   }
 
-  Future<void> _socialApple() async {
-    setState(() { _busy = true; _error = null; });
-    try {
-      final res = await context.read<AuthService>().signInWithApple();
-      if (!mounted) return;
-      if (res['success'] == true) {
-        context.go('/home');
-      } else {
-        setState(() => _error = res['message']?.toString() ?? 'Apple 로그인 실패.');
-      }
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
+  Future<void> _previewMode() async {
+    await context.read<AuthService>().enterPreviewMode();
+    if (!mounted) return;
+    context.go('/home');
   }
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.read<AuthService>();
     return Scaffold(
       backgroundColor: NeuTheme.background,
       body: SafeArea(
@@ -92,7 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 40),
+              const SizedBox(height: 24),
               Center(
                 child: Container(
                   width: 88, height: 88,
@@ -113,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
               Center(
                 child: Text('PathWave',
                   style: Theme.of(context).textTheme.displaySmall),
@@ -123,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Text('이메일로 로그인',
                   style: TextStyle(color: NeuTheme.textSecondary)),
               ),
-              const SizedBox(height: 36),
+              const SizedBox(height: 28),
 
               NeuTextField(
                 controller: _emailCtrl,
@@ -131,7 +115,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 prefixIcon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               NeuTextField(
                 controller: _passwordCtrl,
                 hintText: '비밀번호',
@@ -141,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
 
               if (_error != null) ...[
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
                 NeuCard(
                   padding: const EdgeInsets.all(14),
                   child: Text(_error!,
@@ -149,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ],
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               NeuButton(
                 variant: NeuButtonVariant.primary,
                 onPressed: _busy ? null : _login,
@@ -162,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -179,43 +163,70 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               const Row(
                 children: [
                   Expanded(child: Divider(color: NeuTheme.border)),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('또는',
+                    child: Text('또는 SNS 로 계속',
                       style: TextStyle(color: NeuTheme.textHint, fontSize: 12)),
                   ),
                   Expanded(child: Divider(color: NeuTheme.border)),
                 ],
               ),
+              const SizedBox(height: 18),
+
+              SocialLoginRow(
+                busy: _busy,
+                onGoogle: () => _handle(
+                  () => auth.signInWithGoogle(),
+                  fallbackErr: 'Google 로그인 실패.'),
+                onApple: () => _handle(
+                  () => auth.signInWithApple(),
+                  fallbackErr: 'Apple 로그인 실패.'),
+                onFacebook: () => _handle(
+                  () => auth.signInWithFacebook(),
+                  fallbackErr: 'Facebook 로그인 실패.'),
+                onKakao: () => _handle(
+                  () => auth.signInWithKakao(),
+                  fallbackErr: '카카오 로그인 실패.'),
+                onNaver: () => _handle(
+                  () => auth.signInWithNaver(),
+                  fallbackErr: '네이버 로그인 실패.'),
+              ),
+
+              const SizedBox(height: 28),
+              const Divider(color: NeuTheme.border),
               const SizedBox(height: 16),
 
+              // PR #68 — 둘러보기 (로그인 없이 화면 미리보기)
               NeuButton(
-                onPressed: _busy ? null : _socialGoogle,
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.g_mobiledata, size: 28),
-                    SizedBox(width: 6),
-                    Text('Google로 계속'),
-                  ],
+                onPressed: _busy ? null : _previewMode,
+                child: const Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.visibility_outlined, size: 18,
+                        color: NeuTheme.textSecondary),
+                      SizedBox(width: 8),
+                      Text('로그인 없이 둘러보기',
+                        style: TextStyle(
+                          color: NeuTheme.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        )),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 10),
-              NeuButton(
-                onPressed: _busy ? null : _socialApple,
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.apple, size: 22),
-                    SizedBox(width: 6),
-                    Text('Apple로 계속'),
-                  ],
+              const SizedBox(height: 8),
+              const Center(
+                child: Text(
+                  '※ 둘러보기 모드는 실 데이터 호출은 제한됩니다',
+                  style: TextStyle(color: NeuTheme.textHint, fontSize: 11),
                 ),
               ),
+
               const SizedBox(height: 24),
             ],
           ),
