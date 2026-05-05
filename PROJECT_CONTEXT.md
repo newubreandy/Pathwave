@@ -109,8 +109,9 @@
 | **59** | **⚙️ 백엔드 운영 ENV 강제 (DB / PG / Email / Push)** | app.py `_validate_production_env()` 확장 — DATABASE_URL (PostgreSQL 만), PG_PROVIDER=toss → TOSS_SECRET_KEY, EMAIL_PROVIDER=sendgrid/smtp → 키, PUSH_PROVIDER=apns/multi → APNs 4종 키, FCM 사용 시 FIREBASE_CREDENTIALS. 실패 시 부팅 차단 (RuntimeError). test_security.py [5/5b/5c] 추가 |
 | **60** | **🔁 401 자동 리다이렉트 (모바일 + admin-web + provider-web)** | mobile ApiClient.onUnauthorized 콜백 + AuthService 가 메모리 비우고 notifyListeners → go_router refreshListenable 가 즉시 /auth/login 으로 이동. main.dart 가 AppRouter.create(AuthService) 로 주입. provider-web/admin-web apiClient — 401 시 `window.location.replace('/login?from=...')` + Login.jsx 가 로그인 후 `from` 으로 복귀 |
 | **63** | **🔧 모바일 Settings 보강 (비밀번호 변경 + 고객지원 + FAQ + 알림 라우팅)** | POST /api/auth/change-password (현재 비번 검증 → 새 비번 교체, 소셜 가입자 차단), screens/settings/change_password_screen.dart, Settings — 비번 변경 / 알림 보기 / 이메일 문의(클립보드) / FAQ 4문항 / 회원 탈퇴, tests/test_change_password.py (8 시나리오) |
+| **64** | **🧹 운영 정리 — print → logging + rate-limit 보강 + .gitignore 시크릿 차단** | models/log.py (중앙 logger, LOG_LEVEL ENV), 17개 print() → logger.info/warning/error/debug 일괄 교체, 직원 초대 토큰 노출 → DEBUG 레벨로 격하, auth: forgot/reset/change-password/verify-code 에 rate-limit 추가, .gitignore — *.p8 / serviceAccountKey.json / google-services.json / *.pem / *.key 일괄 차단 |
 
-**누적 통계:** 61 PR · 17 blueprint · ~119 API endpoint · 29 DB 테이블 · 백엔드 ~7,900 LOC + admin-web 9페이지 + mobile 19화면 + provider-web + DB 어댑터 (SQLite/PostgreSQL)
+**누적 통계:** 62 PR · 17 blueprint · ~119 API endpoint · 29 DB 테이블 · 백엔드 ~7,950 LOC + admin-web 9페이지 + mobile 19화면 + provider-web + DB 어댑터 (SQLite/PostgreSQL)
 
 ### ✅ 출시 전 코드 PR 완료
 

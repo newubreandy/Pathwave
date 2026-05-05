@@ -16,6 +16,7 @@ from models.age import classify as classify_age, MINOR_GROUP
 from models.consent import record_consents, validate_consents
 from models.database import get_db
 from models.email_provider import get_email_provider
+from models.log import logger
 from models.rate_limit import limiter
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
@@ -254,10 +255,10 @@ def send_email(to_email: str, code: str) -> bool:
             text=text,
         )
         if not res.get('success'):
-            print(f'[email] 발송 실패: {res}')
+            logger.warning('[email] 발송 실패: %s', res)
         return bool(res.get('success'))
     except Exception as e:
-        print(f'[email] 예외: {e}')
+        logger.error('[email] 예외: %s', e, exc_info=True)
         return False
 
 
@@ -297,6 +298,7 @@ def send_code():
 
 
 @auth_bp.route('/verify-code', methods=['POST'])
+@limiter.limit('10 per minute; 50 per hour')
 def verify_code():
     """Step 2: 인증 코드 검증"""
     data  = request.get_json(silent=True) or {}
@@ -640,6 +642,7 @@ def delete_me():
 
 
 @auth_bp.route('/change-password', methods=['POST'])
+@limiter.limit('5 per minute; 20 per hour')
 @require_auth(sub_type='user')
 def change_password():
     """로그인된 사용자의 비밀번호 변경 (PR #63).
@@ -717,6 +720,7 @@ def refresh():
 
 
 @auth_bp.route('/forgot-password', methods=['POST'])
+@limiter.limit('3 per minute; 10 per hour')
 def forgot_password():
     """비밀번호 찾기: 이메일 인증 코드 발송"""
     data  = request.get_json(silent=True) or {}
@@ -750,6 +754,7 @@ def forgot_password():
 
 
 @auth_bp.route('/reset-password', methods=['POST'])
+@limiter.limit('5 per minute; 20 per hour')
 def reset_password():
     """비밀번호 재설정"""
     data     = request.get_json(silent=True) or {}

@@ -585,7 +585,8 @@ def _bootstrap_super_admin(db) -> None:
            VALUES (?,?,'super','Bootstrap Admin')""",
         (email, hashed)
     )
-    print(f'[super-admin] Bootstrapped initial super admin: {email}')
+    from models.log import logger as _lg
+    _lg.info('[super-admin] Bootstrapped initial super admin: %s', email)
 
 
 def _add_column_if_missing(db, table: str, column: str, ddl: str) -> None:

@@ -12,9 +12,22 @@ venv/
 # Database (로컬 개발 DB는 올리지 않음)
 *.db
 
-# Firebase 서비스 계정 키 (절대 GitHub에 올리면 안됨!)
+# PR #64 — 시크릿/키 일괄 차단 (절대 GitHub에 올리면 안됨!)
+# Firebase 서비스 계정 키
 firebase-credentials.json
 *-firebase-adminsdk-*.json
+serviceAccountKey.json
+google-services.json
+GoogleService-Info.plist
+# APNs .p8 키 (PR #50)
+*.p8
+# 일반 시크릿
+.env.local
+.env.production
+.env.*.local
+secrets/
+*.pem
+*.key
 
 # OS
 .DS_Store
