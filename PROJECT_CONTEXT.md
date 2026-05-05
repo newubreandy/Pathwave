@@ -96,14 +96,14 @@
 | **46** | **📝 약관/정책 변경 관리 — DB 버전링 + MDXEditor + 이메일 공지 + 이전 버전 보기** | policies 테이블, models/policy_store.py, routes/policy.py 확장, admin-web/pages/Policies, admin-web/components/PolicyEditor, mobile + provider-web 버전 드롭다운 |
 | **47** | **🔞 연령 분류 + 부모 초대 + 미성년자 시설 제한** | users.{birth_year,age_group,parent_invitation_id} + facilities.adult_only + invitations.{is_minor_invite,inviter_liability_accepted_at} + 부모 초대 라우트 + 핸드셰이크/검색 자동 필터 + 모바일 5단계 가입 + 자녀 초대 화면 |
 | **48** | **💬 Mobile — 채팅 목록 + 상세 (SSE 실시간)** | screens/chat/{chat_list,chat_detail}_screen.dart, ChatService SSE 스트림 통합 + 메시지 입력 + 낙관적 UI |
+| **49** | **📶 Mobile — WiFi 자동 가입 native plugin (Android + iOS)** | MainActivity.kt (WifiNetworkSuggestion), AppDelegate.swift (NEHotspotConfiguration), Runner.entitlements, services/wifi_connector.dart, AndroidManifest 권한 + Info.plist 권한 사유 |
 
-**누적 통계:** 48 PR · 17 blueprint · ~117 API endpoint · 29 DB 테이블 · 백엔드 ~7,400 LOC + admin-web 9페이지 + mobile 17화면 + provider-web
+**누적 통계:** 49 PR · 17 blueprint · ~117 API endpoint · 29 DB 테이블 · 백엔드 ~7,400 LOC + admin-web 9페이지 + mobile 17화면 (native channel 통합) + provider-web
 
 ### ⬜ 후보 (다음 작업)
 
 | # | 제목 | 메모 |
 |---|---|---|
-| 49 | **Mobile — WiFi 자동 가입 native plugin** | Android SuggestNetwork + iOS NEHotspotConfiguration |
 | 50 | **APNs Push Provider (iOS native)** | models/push.py |
 | 51 | **PostgreSQL 이전** | 10K 동시접속 SRS 요건 |
 
@@ -234,4 +234,4 @@ cd admin-web && npm install && npm run dev   # http://localhost:5174
 
 ---
 
-**마지막 업데이트:** 2026-05-05 (PR #48 — Mobile 채팅 목록 + 상세 SSE 실시간)
+**마지막 업데이트:** 2026-05-05 (PR #49 — Mobile WiFi 자동 가입 native plugin)

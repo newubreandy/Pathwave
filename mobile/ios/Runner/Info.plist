@@ -4,6 +4,19 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<!-- PR #49 — 권한 사용 사유 (App Store 심사 필수) -->
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>매장 비콘을 감지해 자동으로 WiFi 에 연결하고 스탬프를 적립하기 위해 블루투스를 사용합니다.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>비콘 감지를 위해 블루투스를 사용합니다.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>주변 매장을 거리순으로 안내하고 비콘 감지를 위해 위치 정보를 사용합니다.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>매장 WiFi 자동 연결에 사용됩니다.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>프로필 사진 촬영 / 매장 QR 스캔에 사용됩니다.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>프로필 사진 / 매장 사진 첨부에 사용됩니다.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
