@@ -23,6 +23,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, g
 
 from models.database import get_db
+from models.push import push_to_users
 from routes.auth import decode_access_token, require_super_admin
 
 announcement_bp = Blueprint('announcement', __name__)
@@ -118,13 +119,37 @@ def admin_create_announcement():
     row = db.execute("SELECT * FROM announcements WHERE id=?", (aid,)).fetchone()
     db.close()
 
-    # send_push: 추후 PushProvider 통합. 현재는 push_sent 마킹만.
+    # send_push: PR #38 — 실제 푸시 발송.
+    # users / all → users 테이블 전수 → push_to_users
+    # facilities / staff → push_tokens 스키마가 user_id 기반이라 현재는 broadcast 미지원
+    #                       (FR-PUSH 후속에서 facility_account/staff push_tokens 추가 예정)
+    push_result = None
     if data.get('send_push'):
         db = get_db()
-        db.execute("UPDATE announcements SET push_sent=1 WHERE id=?", (aid,))
-        db.commit(); db.close()
+        try:
+            if audience in ('all', 'users'):
+                user_rows = db.execute(
+                    "SELECT id FROM users WHERE deleted_at IS NULL"
+                ).fetchall()
+                user_ids = [r['id'] for r in user_rows]
+                push_result = push_to_users(
+                    db, user_ids,
+                    title=title, body=body[:200],
+                    data={'announcement_id': str(aid), 'audience': audience}
+                )
+            else:
+                # facilities / staff 는 현재 토큰 인프라 부재 → no-op + 로그
+                push_result = {'sent': 0, 'failed': 0, 'no_tokens': 0,
+                               'skipped': f'audience={audience}_no_token_table'}
+            db.execute("UPDATE announcements SET push_sent=1 WHERE id=?", (aid,))
+            db.commit()
+        finally:
+            db.close()
 
-    return jsonify({'success': True, 'announcement': _row_to_dict(row)}), 201
+    resp = {'success': True, 'announcement': _row_to_dict(row)}
+    if push_result is not None:
+        resp['push_result'] = push_result
+    return jsonify(resp), 201
 
 
 @announcement_bp.route('/api/admin/announcements', methods=['GET'])
