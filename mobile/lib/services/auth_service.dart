@@ -69,12 +69,18 @@ class AuthService extends ChangeNotifier {
   }
 
   // ── 회원가입 ────────────────────────────────────────────────────
+  /// consents: [{kind, version, accepted}, ...] — PR #45 동의 시스템
   Future<Map<String, dynamic>> register(
-      String email, String code, String password) async {
+      String email, String code, String password,
+      {List<Map<String, dynamic>>? consents}) async {
+    final body = <String, dynamic>{
+      'email': email, 'code': code, 'password': password,
+    };
+    if (consents != null) body['consents'] = consents;
     final res = await http.post(
       Uri.parse('$_baseUrl/api/auth/register'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'code': code, 'password': password}),
+      body: jsonEncode(body),
     );
     final data = jsonDecode(res.body);
     if (data['success'] == true) {

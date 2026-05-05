@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 import bcrypt
 from flask import Blueprint, request, jsonify
 
+from models.consent import record_consents, validate_consents
 from models.database import get_db
 from models.rate_limit import limiter
 from routes.auth import (
@@ -109,6 +110,7 @@ def register():
     manager_name  = (data.get('manager_name')  or '').strip()
     manager_phone = (data.get('manager_phone') or '').strip()
     manager_email = (data.get('manager_email') or '').strip().lower()
+    consents_in   = data.get('consents') or []
 
     if not all([email, code, password, company_name, business_no,
                 manager_name, manager_phone, manager_email]):
@@ -118,6 +120,11 @@ def register():
         return jsonify({'success': False, 'message': err}), 400
     if (err := password_complexity_error(password)):
         return jsonify({'success': False, 'message': err}), 400
+
+    # 동의 항목 검증 (PR #45)
+    ok, msg = validate_consents('facility', consents_in)
+    if not ok:
+        return jsonify({'success': False, 'message': msg}), 400
 
     db  = get_db()
     row = db.execute(
@@ -149,6 +156,14 @@ def register():
     )
     facility_account_id = cur.lastrowid
     db.execute('UPDATE email_codes SET used=1 WHERE email=? AND code=?', (email, code))
+
+    # 동의 항목 저장 (감사 로그용)
+    record_consents(
+        db, 'facility', facility_account_id, consents_in,
+        ip=request.headers.get('X-Forwarded-For') or request.remote_addr,
+        user_agent=request.headers.get('User-Agent'),
+    )
+
     db.commit(); db.close()
 
     # 가입 즉시 토큰 발급은 하지 않음 — 운영자 승인 후 로그인.
