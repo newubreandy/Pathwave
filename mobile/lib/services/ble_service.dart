@@ -7,6 +7,9 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../utils/api_config.dart';
 
+/// 권한 사전 안내는 PR #58 의 PermissionService 가 호출자(UI) 측에서 담당.
+/// 본 서비스는 권한이 없을 때만 안전하게 no-op.
+
 /// BLE 비콘 감지 → 서버 핸드셰이크 → WiFi 프로필 반환
 class BleService extends ChangeNotifier {
   static String get _baseUrl => ApiConfig.baseUrl;
@@ -25,12 +28,11 @@ class BleService extends ChangeNotifier {
   StreamSubscription? _scanSub;
 
   // ── 스캔 시작 ─────────────────────────────────────────────────────
+  /// **호출 전 PermissionService.ensureBluetoothScan() 으로 권한을 받아야 함.**
+  /// 권한이 없으면 silently no-op (UI 가 사전 안내를 책임).
   Future<void> startScan({String? userId}) async {
-    // 권한 체크
-    final status = await Permission.bluetoothScan.request();
-    if (!status.isGranted) return;
-
-    await Permission.location.request();
+    final scanGranted = await Permission.bluetoothScan.status;
+    if (!scanGranted.isGranted) return;
 
     if (_isScanning) return;
     _isScanning = true;

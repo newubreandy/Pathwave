@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
 import '../../services/ble_service.dart';
+import '../../services/permission_service.dart';
 import '../../utils/app_theme.dart';
 import '../search/search_screen.dart';
 
@@ -20,12 +21,16 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     // 앱 진입 시 BLE 자동 스캔 시작 (백그라운드에서 비콘 감지)
+    // PR #58 — 권한 사전 안내 다이얼로그를 먼저 표시
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
       final auth = context.read<AuthService>();
       final ble  = context.read<BleService>();
-      if (auth.user != null && !ble.isScanning) {
-        await ble.startScan(userId: auth.user?['id']?.toString());
-      }
+      if (auth.user == null || ble.isScanning) return;
+
+      final granted = await PermissionService.instance.ensureBluetoothScan(context);
+      if (!granted || !mounted) return;
+      await ble.startScan(userId: auth.user?['id']?.toString());
     });
   }
 
@@ -113,6 +118,10 @@ class _HomeTab extends StatelessWidget {
                       value: ble.isScanning,
                       onChanged: (v) async {
                         if (v) {
+                          final granted = await PermissionService.instance
+                              .ensureBluetoothScan(context);
+                          if (!granted) return;
+                          if (!context.mounted) return;
                           final uid = context.read<AuthService>().user?['id']?.toString();
                           await ble.startScan(userId: uid);
                         } else {
