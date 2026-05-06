@@ -447,14 +447,15 @@ const WifiSettings = () => {
           )}
         </div>
 
-        {/* Photo actions — label 로 input 감싸 iOS Safari/Android 모두 안정 동작 */}
+        {/* Photo actions — label 로 input 감싸 iOS Safari/Android 모두 안정 동작
+            accept 을 명시적 이미지 MIME 로 좁혀 파일 선택 옵션 최소화 */}
         {canEdit && (
           <div className="wifi-photo-actions">
             <label className={`wifi-photo-action ${ocrLoading ? 'is-disabled' : ''}`}>
               <ImageIcon size={14} /> 앨범에서 선택
               <input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/gif"
                 onChange={handleImageChange}
                 disabled={ocrLoading}
                 className="wifi-photo-action-input"
@@ -464,7 +465,7 @@ const WifiSettings = () => {
               <Camera size={14} /> 카메라 촬영
               <input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
                 capture="environment"
                 onChange={handleImageChange}
                 disabled={ocrLoading}
