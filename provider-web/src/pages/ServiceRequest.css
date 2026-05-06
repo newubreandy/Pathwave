@@ -35,11 +35,10 @@
 
 .sr-title {
   flex: 1;
-  text-align: center;
+  text-align: left;
   font-size: var(--pw-title-size);
   font-weight: 700;
   margin: 0;
-  margin-right: 30px;
 }
 
 .sr-body {
@@ -441,7 +440,8 @@
   white-space: nowrap;
 }
 
-.sr-acc-status.done {
+/* status 모델: empty | editing | completed | error */
+.sr-acc-status.completed {
   background: var(--pw-success-light);
   color: var(--pw-success);
 }
@@ -451,10 +451,19 @@
   color: var(--pw-badge-neutral-fg);
 }
 
+.sr-acc-status.editing {
+  background: var(--pw-primary-light);
+  color: var(--pw-badge-active-fg);
+}
+
 .sr-acc-status.error {
   background: var(--pw-error-light);
   color: var(--pw-error);
 }
+
+/* 카드 자체 - error 시 빨간 테두리 살짝 강조 */
+.sr-acc-card.sr-acc-status-error { border-color: var(--pw-error); }
+.sr-acc-card.sr-acc-status-completed { border-color: var(--pw-success); }
 
 .sr-acc-toggle {
   flex-shrink: 0;
@@ -522,17 +531,45 @@
   color: var(--pw-text-hint);
 }
 
-/* 아코디언 액션 — '이 와이파이 삭제' */
+/* 아코디언 액션 — 재작성 / 저장 / 삭제 (3버튼 그리드) */
 .sr-acc-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: var(--pw-space-4);
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--pw-space-3);
+  margin-top: var(--pw-space-6);
+  padding-top: var(--pw-space-4);
+  border-top: 1px solid var(--pw-border);
+}
+
+.sr-acc-actions .common-btn { width: 100%; }
+
+@media (max-width: 480px) {
+  .sr-acc-actions {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "reset  save"
+      "remove remove";
+    gap: var(--pw-space-2);
+  }
+  .sr-acc-actions .common-btn:nth-child(1) { grid-area: reset; }
+  .sr-acc-actions .common-btn:nth-child(2) { grid-area: save; }
+  .sr-acc-actions .common-btn:nth-child(3) { grid-area: remove; }
+}
+
+/* 카드 안 사진 미리보기 영역 — 기존 wifi-photo-area 톤 유지하되 카드 안에 맞게 살짝 줄임 */
+.sr-acc-photo-area.wifi-photo-area {
+  max-height: 180px;
+  margin-top: calc(var(--pw-space-2) * -1);
+  margin-bottom: var(--pw-space-3);
+}
+@media (max-width: 768px) {
+  .sr-acc-photo-area.wifi-photo-area { max-height: 200px; }
 }
 
 /* 카드 안 사진 액션 — 기존 wifi-photo-actions 의 큰 간격을 카드 내부 톤으로 축소 */
 .sr-acc-photo.wifi-photo-actions {
   gap: var(--pw-space-4);
-  margin-top: calc(var(--pw-space-2) * -1);
+  margin-top: 0;
   margin-bottom: var(--pw-space-2);
   justify-content: flex-start;
   flex-wrap: wrap;

@@ -6,7 +6,7 @@ import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
 import './ServiceRequest.css';
 
-// 신청 가능 서비스 카테고리 (시안 4번 + 스탬프)
+// 신청 가능 서비스 카테고리
 const SERVICE_CATEGORIES = [
   {
     key: 'wifi',
@@ -65,7 +65,7 @@ const calcEndDate = (startStr) => {
   return d.toISOString().slice(0, 10);
 };
 
-// 빈 와이파이 아이템
+// 빈 와이파이 아이템 — status 모델 포함
 const makeEmptyWifi = (idSeed) => ({
   id: idSeed,
   location: '',
@@ -75,11 +75,41 @@ const makeEmptyWifi = (idSeed) => ({
   endDate: '',
   contractPeriod: '2_YEAR',
   memo: '',
-  endDateManual: false, // 사용자가 종료일을 수동 변경했는지
+  imageUrl: null,
+  endDateManual: false,
+  status: 'empty', // 'empty' | 'editing' | 'completed' | 'error'
 });
 
-const isWifiItemComplete = (item) =>
+// 필수값 검증
+const isWifiItemFilled = (item) =>
   !!(item.location && item.ssid && item.password && item.startDate && item.endDate);
+
+// OCR 텍스트 패턴 추출 (실 OCR 도입 시 텍스트 인풋만 넘기면 됨)
+// TODO: 실제 OCR 라이브러리(Tesseract.js) 또는 백엔드 API 연동 후
+//       extractWifiInfoFromText(rawText) 호출하도록 교체
+const SSID_PATTERNS = [
+  /SSID[:\s]+([^\s\n\r]+)/i,
+  /Wi[-\s]?Fi\s*(?:ID|Name)[:\s]+([^\s\n\r]+)/i,
+  /Network\s*Name[:\s]+([^\s\n\r]+)/i,
+];
+const PW_PATTERNS = [
+  /(?:Password|PW|비밀번호|패스워드)[:\s]+([^\s\n\r]+)/i,
+  /Wi[-\s]?Fi\s*(?:Password|PW)[:\s]+([^\s\n\r]+)/i,
+];
+const extractWifiInfoFromText = (rawText) => {
+  if (!rawText) return { ssid: '', password: '' };
+  let ssid = '';
+  let password = '';
+  for (const re of SSID_PATTERNS) {
+    const m = rawText.match(re);
+    if (m && m[1]) { ssid = m[1]; break; }
+  }
+  for (const re of PW_PATTERNS) {
+    const m = rawText.match(re);
+    if (m && m[1]) { password = m[1]; break; }
+  }
+  return { ssid, password };
+};
 
 const ServiceRequest = () => {
   const location = useLocation();
@@ -91,11 +121,11 @@ const ServiceRequest = () => {
     return params.get('type') || '';
   }, [location.search]);
 
-  const [step, setStep] = useState(initialType || 'category'); // 'category' | 'wifi' | 'stamp' | 'event' | 'noti' | 'payment'
+  const [step, setStep] = useState(initialType || 'category');
   const [categoryKey, setCategoryKey] = useState(initialType || 'wifi');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
-  // GNB '서비스 신청' 메뉴 재탭 시 카테고리 리스트로 복귀 (location.key 변경 감지)
+  // GNB '서비스 신청' 메뉴 재탭 시 카테고리 리스트로 복귀
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const t = params.get('type');
@@ -117,10 +147,13 @@ const ServiceRequest = () => {
 
   // 모달 / 알럿
   const [addConfirmOpen, setAddConfirmOpen] = useState(false);
-  const [incompleteAlert, setIncompleteAlert] = useState(null); // { msg, idx }
+  const [resetConfirmIdx, setResetConfirmIdx] = useState(null); // 재작성 confirm 대상 idx
+  const [removeConfirmIdx, setRemoveConfirmIdx] = useState(null); // 삭제 confirm 대상 idx
+  const [saveErrorMsg, setSaveErrorMsg] = useState(null); // 저장 검증 실패
+  const [nextConfirmOpen, setNextConfirmOpen] = useState(false); // 신청내역 진입 1차 확인
   const [showApplicationModal, setShowApplicationModal] = useState(false);
 
-  // 카드별 OCR 상태 (와이파이 정보 입력/수정 화면과 동일 mock 로직 재사용)
+  // 카드별 OCR 상태
   const [ocrLoadingIdx, setOcrLoadingIdx] = useState(null);
   const [ocrDoneIdx, setOcrDoneIdx] = useState(null);
   const [ocrErrorIdx, setOcrErrorIdx] = useState(null);
@@ -143,6 +176,13 @@ const ServiceRequest = () => {
   const selectedCategory = SERVICE_CATEGORIES.find((c) => c.key === categoryKey);
   const isDetailStep = (s) => ['wifi', 'stamp', 'event', 'noti'].includes(s);
 
+  // 모든 카드 입력완료 (저장 통과) — 다음 버튼 노출 조건
+  const allCompleted =
+    quantityConfirmed &&
+    wifiItems.length > 0 &&
+    wifiItems.length === quantity &&
+    wifiItems.every((it) => it.status === 'completed');
+
   // ── 핸들러 ──
   const handleBack = () => {
     if (isDetailStep(step)) setStep('category');
@@ -150,9 +190,8 @@ const ServiceRequest = () => {
     else navigate(-1);
   };
 
-  const handleNext = () => {
+  const handleNextOnNonWifi = () => {
     if (step === 'category') setStep(categoryKey);
-    else if (step === 'wifi') openApplicationReview();
     else if (isDetailStep(step)) setStep('payment');
   };
 
@@ -161,7 +200,7 @@ const ServiceRequest = () => {
     setStep(key);
   };
 
-  // 수량 확정 — 빈 슬롯 만들어 등록 영역 노출
+  // 수량 확정
   const handleConfirmQuantity = () => {
     setQuantityConfirmed(true);
     setWifiItems((prev) => {
@@ -173,9 +212,8 @@ const ServiceRequest = () => {
     setExpandedIndex(0);
   };
 
-  // 추가하기 — confirm 알럿 → 확인 시 카드 추가
+  // 추가하기 confirm
   const handleAddClick = () => setAddConfirmOpen(true);
-
   const handleAddConfirm = () => {
     setWifiItems((prev) => {
       const next = [...prev, makeEmptyWifi(Date.now())];
@@ -186,11 +224,38 @@ const ServiceRequest = () => {
     setAddConfirmOpen(false);
   };
 
-  // 카드 삭제 (수량도 같이 감소)
-  const handleRemoveWifi = (idx) => {
+  // 삭제 — confirm 알럿
+  const handleRemoveClick = (idx) => {
+    if (wifiItems.length <= 1) {
+      setSaveErrorMsg('최소 1개의 와이파이는 유지되어야 합니다. 삭제 대신 재작성을 사용하세요.');
+      return;
+    }
+    setRemoveConfirmIdx(idx);
+  };
+  const handleRemoveConfirmed = () => {
+    const idx = removeConfirmIdx;
+    if (idx == null) return;
     setWifiItems((prev) => prev.filter((_, i) => i !== idx));
     setQuantity((q) => Math.max(1, q - 1));
     setExpandedIndex(null);
+    setRemoveConfirmIdx(null);
+  };
+
+  // 재작성 — confirm 알럿
+  const handleResetClick = (idx) => setResetConfirmIdx(idx);
+  const handleResetConfirmed = () => {
+    const idx = resetConfirmIdx;
+    if (idx == null) return;
+    setWifiItems((prev) =>
+      prev.map((it, i) =>
+        i === idx
+          ? { ...makeEmptyWifi(it.id) }
+          : it
+      )
+    );
+    setOcrDoneIdx((cur) => (cur === idx ? null : cur));
+    setOcrErrorIdx((cur) => (cur === idx ? null : cur));
+    setResetConfirmIdx(null);
   };
 
   // 카드 펼침 토글 (한 번에 하나만)
@@ -198,41 +263,83 @@ const ServiceRequest = () => {
     setExpandedIndex((prev) => (prev === idx ? null : idx));
   };
 
-  // 필드 업데이트 (시작일 변경 시 종료일 자동 +2년, 단 사용자가 수동 변경한 경우 유지)
+  // 필드 업데이트 — 입력 시 status='editing' 으로 자동 전환
   const updateField = (idx, field, value) => {
     setWifiItems((prev) =>
       prev.map((item, i) => {
         if (i !== idx) return item;
+        let updated = { ...item };
         if (field === 'startDate') {
-          const updated = { ...item, startDate: value };
+          updated.startDate = value;
           if (!item.endDateManual) updated.endDate = calcEndDate(value);
-          return updated;
+        } else if (field === 'endDate') {
+          updated.endDate = value;
+          updated.endDateManual = true;
+        } else {
+          updated[field] = value;
         }
-        if (field === 'endDate') {
-          return { ...item, endDate: value, endDateManual: true };
+        // 상태: completed/error → editing 으로 되돌림 (사용자가 다시 수정 시작)
+        if (updated.status === 'completed' || updated.status === 'error') {
+          updated.status = 'editing';
+        } else if (updated.status === 'empty') {
+          updated.status = 'editing';
         }
-        return { ...item, [field]: value };
+        return updated;
       })
     );
   };
 
-  // ── OCR / 사진 자동입력 ── (WifiSettings 의 runOcrMock 과 동일 로직)
-  // TODO: 실제 OCR 연동 (백엔드 API 또는 Tesseract.js). 현재는 1초 후 mock 결과 자동 입력
+  // 저장 — 해당 카드 검증 → completed 또는 error
+  const handleSaveWifi = (idx) => {
+    const item = wifiItems[idx];
+    if (!item) return;
+    if (!isWifiItemFilled(item)) {
+      const missing = [];
+      if (!item.location) missing.push('설치위치');
+      if (!item.ssid) missing.push('와이파이 ID');
+      if (!item.password) missing.push('와이파이 PW');
+      if (!item.startDate) missing.push('서비스 시작일');
+      if (!item.endDate) missing.push('서비스 종료일');
+      setWifiItems((prev) => prev.map((it, i) => (i === idx ? { ...it, status: 'error' } : it)));
+      setSaveErrorMsg(`Wi-Fi ${idx + 1} 카드의 필수 정보가 누락되었습니다.\n(${missing.join(' / ')})`);
+      return;
+    }
+    setWifiItems((prev) => prev.map((it, i) => (i === idx ? { ...it, status: 'completed' } : it)));
+
+    // 저장 후: 다음 미입력 카드 자동 펼침. 없으면 접기
+    setTimeout(() => {
+      setWifiItems((latest) => {
+        const nextIdx = latest.findIndex((it, i) => i !== idx && it.status !== 'completed');
+        setExpandedIndex(nextIdx >= 0 ? nextIdx : null);
+        return latest;
+      });
+    }, 0);
+  };
+
+  // ── OCR / 사진 자동입력 ──
   const runOcrForCard = async (idx, imageUrl) => {
     console.log('[OCR mock] start', idx, imageUrl);
     setOcrErrorIdx(null);
     setOcrLoadingIdx(idx);
     try {
+      // TODO: 실 OCR — Tesseract.js 또는 백엔드 API 호출 후
+      //       extractWifiInfoFromText(rawText) 로 SSID/PW 추출
       await new Promise((r) => setTimeout(r, 1000));
+      // mock 결과 (실 OCR 도입 전까지)
       const mockResult = {
         ssid: 'kt5G_AUTO' + Math.floor(Math.random() * 9000 + 1000),
         password: 'Ezddd1@' + Math.floor(Math.random() * 9000 + 1000),
       };
       console.log('[OCR mock] result', mockResult);
       setWifiItems((prev) =>
-        prev.map((item, i) =>
-          i === idx ? { ...item, ssid: mockResult.ssid, password: mockResult.password } : item
-        )
+        prev.map((item, i) => {
+          if (i !== idx) return item;
+          const next = { ...item, ssid: mockResult.ssid, password: mockResult.password };
+          if (next.status === 'empty' || next.status === 'completed' || next.status === 'error') {
+            next.status = 'editing';
+          }
+          return next;
+        })
       );
       setOcrLoadingIdx(null);
       setOcrDoneIdx(idx);
@@ -249,49 +356,29 @@ const ServiceRequest = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
+    setWifiItems((prev) => prev.map((it, i) => (i === idx ? { ...it, imageUrl: url } : it)));
     const inputEl = e.target;
     setTimeout(() => { if (inputEl) inputEl.value = ''; }, 0);
     await runOcrForCard(idx, url);
   };
 
-  // 다음 → 신청내역 검증 + 팝업
-  const openApplicationReview = () => {
-    if (!quantityConfirmed) {
-      setIncompleteAlert({ msg: '먼저 수량을 확정해 주세요.', idx: null });
-      return;
-    }
-    const idx = wifiItems.findIndex((item) => !isWifiItemComplete(item));
-    if (idx >= 0) {
-      const item = wifiItems[idx];
-      const missing = [];
-      if (!item.location) missing.push('설치위치');
-      if (!item.ssid) missing.push('와이파이 ID');
-      if (!item.password) missing.push('와이파이 PW');
-      if (!item.startDate) missing.push('서비스 시작일');
-      if (!item.endDate) missing.push('서비스 종료일');
-      setIncompleteAlert({
-        msg: `Wi-Fi ${idx + 1} 카드에 누락된 항목이 있습니다.\n(${missing.join(' / ')})`,
-        idx,
-      });
-      return;
-    }
-    setShowApplicationModal(true);
+  const handleRemoveImage = (idx) => {
+    setWifiItems((prev) => prev.map((it, i) => (i === idx ? { ...it, imageUrl: null } : it)));
+    setOcrDoneIdx((cur) => (cur === idx ? null : cur));
+    setOcrErrorIdx((cur) => (cur === idx ? null : cur));
   };
 
-  const handleIncompleteConfirm = () => {
-    if (incompleteAlert?.idx != null) setExpandedIndex(incompleteAlert.idx);
-    setIncompleteAlert(null);
+  // 다음 → 1차 확인 알럿 → 신청내역 팝업
+  const handleNextClick = () => {
+    setNextConfirmOpen(true);
+  };
+  const handleNextConfirmed = () => {
+    setNextConfirmOpen(false);
+    setShowApplicationModal(true);
   };
 
   // 신청내역 팝업 → 결제하기
   const handleGoPayment = () => {
-    // TODO: 백엔드 API 연동 — POST /api/service-requests (draft 저장)
-    // 페이로드 모양:
-    // {
-    //   facilityId, storeId, quantity, contractType: '2_YEAR',
-    //   wifiItems: [{ installLocation, wifiId, wifiPassword, startDate, endDate, contractPeriod, memo, status }],
-    //   paymentStatus: 'PENDING', applicationStatus: 'DRAFT'
-    // }
     const payload = {
       facilityId: null,
       storeId: null,
@@ -305,11 +392,13 @@ const ServiceRequest = () => {
         endDate: it.endDate,
         contractPeriod: it.contractPeriod,
         memo: it.memo,
-        status: isWifiItemComplete(it) ? 'COMPLETE' : 'INCOMPLETE',
+        imageUrl: it.imageUrl,
+        status: it.status,
       })),
       paymentStatus: 'PENDING',
       applicationStatus: 'DRAFT',
     };
+    // TODO: 백엔드 연동 — POST /api/service-requests (draft 저장 + imageUrl 은 별도 업로드 후 URL 회신)
     console.log('[ServiceRequest] go to payment with', payload);
     setShowApplicationModal(false);
     setStep('payment');
@@ -320,9 +409,16 @@ const ServiceRequest = () => {
   };
 
   const doSubmit = () => {
-    // TODO: 백엔드 API 연동 — POST /api/service-requests (결제 후 최종 신청)
     setConfirmMsg(null);
     setSubmitted(true);
+  };
+
+  // 카드 헤더 status 라벨
+  const statusLabel = (s) => {
+    if (s === 'completed') return '입력완료';
+    if (s === 'error') return '오류';
+    if (s === 'editing') return '입력중';
+    return '미입력';
   };
 
   // ═══════════════════════════════════════
@@ -405,7 +501,7 @@ const ServiceRequest = () => {
             </div>
           )}
 
-          {/* Quantity stepper + 확인 버튼 */}
+          {/* Quantity stepper + 확인 */}
           <div className="sr-qty-row">
             <span className="sr-qty-label">Quantity</span>
             <div className="sr-qty-control">
@@ -438,10 +534,10 @@ const ServiceRequest = () => {
 
               <div className="sr-individual">
                 {wifiItems.map((item, idx) => {
-                  const complete = isWifiItemComplete(item);
                   const isOpen = expandedIndex === idx;
+                  const ocrLoading = ocrLoadingIdx === idx;
                   return (
-                    <div key={item.id} className={`sr-acc-card ${isOpen ? 'open' : ''}`}>
+                    <div key={item.id} className={`sr-acc-card ${isOpen ? 'open' : ''} sr-acc-status-${item.status}`}>
                       <button
                         type="button"
                         className="sr-acc-head"
@@ -458,8 +554,8 @@ const ServiceRequest = () => {
                               {item.ssid || 'ID 미입력'}
                             </span>
                           </div>
-                          <span className={`sr-acc-status ${complete ? 'done' : 'empty'}`}>
-                            {complete ? '입력완료' : '미입력'}
+                          <span className={`sr-acc-status ${item.status}`}>
+                            {statusLabel(item.status)}
                           </span>
                         </div>
                         {isOpen ? <ChevronUp size={18} className="sr-acc-toggle" /> : <ChevronDown size={18} className="sr-acc-toggle" />}
@@ -479,34 +575,56 @@ const ServiceRequest = () => {
                             <span className="wifi-field-hint">예) 1층 로비, 2층 카페, 5001호</span>
                           </div>
 
-                          {/* 사진으로 ID/PW 자동 입력 — 와이파이 정보 입력/수정 화면과 동일 */}
+                          {/* 사진 미리보기 영역 — 기존 와이파이 입력/수정 화면과 동일 */}
+                          <div className="wifi-photo-area sr-acc-photo-area">
+                            {item.imageUrl ? (
+                              <div className="wifi-photo-preview">
+                                <img src={item.imageUrl} alt={`Wi-Fi ${idx + 1} 공유기 사진`} />
+                                <button
+                                  type="button"
+                                  className="wifi-photo-remove"
+                                  onClick={(e) => { e.stopPropagation(); handleRemoveImage(idx); }}
+                                  aria-label="사진 제거"
+                                >
+                                  <X size={16} />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="wifi-photo-placeholder">
+                                <div className="wifi-photo-icon">
+                                  <Camera size={28} color="var(--pw-primary)" />
+                                </div>
+                                <p className="wifi-photo-title">공유기 뒷면의 와이파이정보를 촬영하세요!</p>
+                                <p className="wifi-photo-desc">※ 직접입력하기 어려우실 경우 공유기 뒷면의 와이파이 정보를 촬영하시면 입력을 도와드립니다!</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* 사진 액션 — 사진 영역 아래 (기존 화면과 동일) */}
                           <div className="wifi-photo-actions sr-acc-photo">
-                            <label className={`wifi-photo-action ${ocrLoadingIdx === idx ? 'is-disabled' : ''}`}>
+                            <label className={`wifi-photo-action ${ocrLoading ? 'is-disabled' : ''}`}>
                               <ImageIcon size={16} /> 앨범에서 선택
                               <input
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/gif"
                                 onChange={handleImageChangeForCard(idx)}
-                                disabled={ocrLoadingIdx === idx}
+                                disabled={ocrLoading}
                                 className="wifi-photo-action-input"
                               />
                             </label>
-                            <label className={`wifi-photo-action ${ocrLoadingIdx === idx ? 'is-disabled' : ''}`}>
+                            <label className={`wifi-photo-action ${ocrLoading ? 'is-disabled' : ''}`}>
                               <Camera size={16} /> 카메라 촬영
                               <input
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
                                 capture="environment"
                                 onChange={handleImageChangeForCard(idx)}
-                                disabled={ocrLoadingIdx === idx}
+                                disabled={ocrLoading}
                                 className="wifi-photo-action-input"
                               />
                             </label>
                           </div>
-                          <p className="sr-acc-photo-hint">
-                            ※ 공유기 뒷면 라벨을 촬영하면 ID / PW 가 자동 입력됩니다. 결과는 직접 수정 가능합니다.
-                          </p>
-                          {ocrLoadingIdx === idx && (
+                          {ocrLoading && (
                             <div className="wifi-ocr-status sr-acc-ocr">
                               <Loader2 size={14} className="wifi-ocr-spin" /> 사진에서 와이파이 정보 인식 중...
                             </div>
@@ -584,9 +702,9 @@ const ServiceRequest = () => {
                           </div>
 
                           <div className="sr-acc-actions">
-                            <Button variant="outline" onClick={() => handleRemoveWifi(idx)}>
-                              이 와이파이 삭제
-                            </Button>
+                            <Button variant="outline" onClick={() => handleResetClick(idx)}>재작성</Button>
+                            <Button variant="primary" onClick={() => handleSaveWifi(idx)}>저장</Button>
+                            <Button variant="danger" onClick={() => handleRemoveClick(idx)}>이 와이파이 삭제</Button>
                           </div>
                         </div>
                       )}
@@ -603,9 +721,12 @@ const ServiceRequest = () => {
           )}
         </div>
 
-        <BottomActionBar>
-          <Button variant="primary" fullWidth onClick={handleNext} disabled={!quantityConfirmed}>다음</Button>
-        </BottomActionBar>
+        {/* 다음 버튼 — 모든 카드 입력완료(저장됨) 시에만 노출 */}
+        {allCompleted && (
+          <BottomActionBar>
+            <Button variant="primary" fullWidth onClick={handleNextClick}>다음</Button>
+          </BottomActionBar>
+        )}
 
         {/* 추가하기 confirm */}
         <ConfirmModal
@@ -618,14 +739,47 @@ const ServiceRequest = () => {
           onCancel={() => setAddConfirmOpen(false)}
         />
 
-        {/* 누락 안내 */}
+        {/* 재작성 confirm */}
         <ConfirmModal
-          isOpen={!!incompleteAlert}
+          isOpen={resetConfirmIdx != null}
+          title="입력 내용 초기화"
+          desc={'입력한 와이파이 정보를 초기화하시겠습니까?\n사진 / ID / PW / 위치 / 기간 / 비고가 모두 비워집니다.'}
+          confirmText="초기화"
+          cancelText="취소"
+          onConfirm={handleResetConfirmed}
+          onCancel={() => setResetConfirmIdx(null)}
+        />
+
+        {/* 삭제 confirm */}
+        <ConfirmModal
+          isOpen={removeConfirmIdx != null}
+          title="와이파이 삭제"
+          desc={'이 와이파이 항목을 삭제하시겠습니까?\n선택 수량도 1개 감소합니다.'}
+          confirmText="삭제"
+          cancelText="취소"
+          onConfirm={handleRemoveConfirmed}
+          onCancel={() => setRemoveConfirmIdx(null)}
+        />
+
+        {/* 저장 검증 실패 / 안내 */}
+        <ConfirmModal
+          isOpen={!!saveErrorMsg}
           title="입력 정보 확인"
-          desc={incompleteAlert?.msg || ''}
+          desc={saveErrorMsg || ''}
           singleButton confirmText="확인"
-          onConfirm={handleIncompleteConfirm}
-          onCancel={handleIncompleteConfirm}
+          onConfirm={() => setSaveErrorMsg(null)}
+          onCancel={() => setSaveErrorMsg(null)}
+        />
+
+        {/* 다음 버튼 — 신청내역 진입 1차 확인 */}
+        <ConfirmModal
+          isOpen={nextConfirmOpen}
+          title="신청 정보 확인"
+          desc={'입력한 와이파이 정보가 정확한지 확인해 주세요.\n신청 후 정보가 잘못된 경우 설치 및 비콘 배송이 지연될 수 있습니다.\n신청내역을 확인하시겠습니까?'}
+          confirmText="확인"
+          cancelText="취소"
+          onConfirm={handleNextConfirmed}
+          onCancel={() => setNextConfirmOpen(false)}
         />
 
         {/* 신청내역 팝업 */}
@@ -693,7 +847,7 @@ const ServiceRequest = () => {
   }
 
   // ═══════════════════════════════════════
-  // STEP 2-B — 스탬프 / 이벤트 / 알림 신청 상세 (단순 안내 + 다음)
+  // STEP 2-B — 스탬프 / 이벤트 / 알림
   // ═══════════════════════════════════════
   if (step === 'stamp' || step === 'event' || step === 'noti') {
     const cat = SERVICE_CATEGORIES.find((c) => c.key === step);
@@ -733,7 +887,7 @@ const ServiceRequest = () => {
         </div>
 
         <BottomActionBar>
-          <Button variant="primary" fullWidth onClick={handleNext}>다음</Button>
+          <Button variant="primary" fullWidth onClick={handleNextOnNonWifi}>다음</Button>
         </BottomActionBar>
       </div>
     );
