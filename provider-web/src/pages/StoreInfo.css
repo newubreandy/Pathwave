@@ -260,6 +260,56 @@ textarea.input-modern {
   color: var(--error, #ef4444);
 }
 
+/* ── 검증 오류 배너 ── */
+.validation-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.5rem;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 10px;
+  color: #fecaca;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  animation: bannerIn 0.25s ease-out;
+}
+
+@keyframes bannerIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.validation-banner-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.validation-banner-text {
+  flex: 1;
+  color: #fecaca;
+  font-weight: 500;
+}
+
+.validation-banner-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #fecaca;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border-radius: 6px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.validation-banner-close:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
 /* Address Search */
 .address-edit-container {
   display: flex;
