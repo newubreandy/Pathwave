@@ -1,8 +1,18 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import AuthService from '../services/auth/AuthService';
 import ConsentSection from '../components/ConsentSection';
 import './Signup.css';
+
+// 출시 전 임시 — 사업자 검증 없이 시설관리자 콘솔을 둘러볼 수 있게.
+// 운영 출범 후에는 이 함수와 .signup-guest 영역 제거.
+function enterAsGuest(navigate) {
+  localStorage.setItem('pathwave_token', 'preview-mode-fake-token');
+  localStorage.setItem('pathwave_user', JSON.stringify({
+    id: 0, email: 'guest@dev.local', name: '게스트',
+  }));
+  navigate('/dashboard', { replace: true });
+}
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -152,8 +162,14 @@ const Signup = () => {
           </button>
         </form>
         
-        <div className="signup-footer">
-          <p>이미 계정이 있으신가요? <Link to="/login">로그인하기</Link></p>
+        <div className="signup-guest">
+          <button
+            type="button"
+            className="btn-guest"
+            onClick={() => enterAsGuest(navigate)}
+          >
+            로그인 없이 이용
+          </button>
         </div>
       </div>
     </div>

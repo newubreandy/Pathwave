@@ -111,3 +111,32 @@
 .signup-footer a:hover {
   color: var(--pw-primary);
 }
+
+/* 출시 전 임시 — 로그인 없이 둘러보기 */
+.signup-guest {
+  margin-top: var(--pw-space-8);
+  display: flex;
+  justify-content: center;
+}
+
+.btn-guest {
+  width: 100%;
+  max-width: 360px;
+  padding: var(--pw-space-4);
+  min-height: var(--pw-touch-comfortable);
+  background: transparent;
+  border: 1px solid var(--pw-border-strong);
+  border-radius: var(--pw-radius-sm);
+  color: var(--pw-text-secondary);
+  font-size: var(--pw-body-size);
+  font-weight: 500;
+  transition: background var(--pw-duration-fast) var(--pw-ease),
+              border-color var(--pw-duration-fast) var(--pw-ease),
+              color var(--pw-duration-fast) var(--pw-ease);
+}
+
+.btn-guest:hover {
+  background: var(--pw-bg-hover);
+  border-color: var(--pw-primary);
+  color: var(--pw-text);
+}
