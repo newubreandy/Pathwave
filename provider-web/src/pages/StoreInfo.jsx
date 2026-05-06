@@ -38,6 +38,20 @@ const StoreInfo = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // 검증 메시지 5초 후 자동 사라짐
+  useEffect(() => {
+    if (!errorMessage) return;
+    const timer = setTimeout(() => setErrorMessage(''), 5000);
+    return () => clearTimeout(timer);
+  }, [errorMessage]);
+
+  // 검증 메시지 표시 + 페이지 상단으로 스크롤
+  const showError = (msg) => {
+    setErrorMessage(msg);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   const [store, setStore] = useState({
     name: '패스트파이브 강남점',
     address: '서울특별시 강남구 테헤란로 123',
@@ -150,7 +164,7 @@ const StoreInfo = () => {
       return;
     }
     if (editData.categories.length >= 3) {
-      alert('업종은 최대 3개까지 선택할 수 있습니다.');
+      showError('업종은 최대 3개까지 선택할 수 있습니다.');
       return;
     }
     setEditData({ ...editData, categories: [...editData.categories, cat] });
@@ -232,9 +246,10 @@ const StoreInfo = () => {
   const handleSave = async () => {
     const errorMsg = validateBeforeSave();
     if (errorMsg) {
-      alert(errorMsg);
+      showError(errorMsg);
       return;
     }
+    setErrorMessage('');
 
     let newLat = editData.lat;
     let newLng = editData.lng;
@@ -271,6 +286,17 @@ const StoreInfo = () => {
         <h1 className="page-title">{isEditing ? t('store.title_edit') : store.name}</h1>
         <p className="sub-title">{t('store.subtitle')}</p>
       </header>
+
+      {/* 검증 오류 배너 — 5초 자동 소멸 */}
+      {errorMessage && (
+        <div className="validation-banner" role="alert">
+          <span className="validation-banner-icon">⚠️</span>
+          <span className="validation-banner-text">{errorMessage}</span>
+          <button className="validation-banner-close" onClick={() => setErrorMessage('')} aria-label="닫기">
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       <section className="modern-gallery">
         <div className="gallery-main" style={{ backgroundImage: `url(${isEditing ? editData.images[activeImageIndex] || editData.images[0] : store.images[activeImageIndex] || store.images[0]})` }}>
