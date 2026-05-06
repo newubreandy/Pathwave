@@ -250,6 +250,7 @@
 .wifi-status-dot.ok      { background: #22c55e; }
 .wifi-status-dot.low     { background: #f59e0b; animation: pulseDot 1.4s ease-in-out infinite; }
 .wifi-status-dot.offline { background: #ef4444; }
+.wifi-status-dot.off-dot { background: var(--pw-text-hint); }
 
 @keyframes pulseDot {
   0%, 100% { opacity: 1; }
@@ -601,6 +602,18 @@
   .common-form-page .wifi-detail-body {
     padding-top: var(--pw-space-8, 2.5rem);
   }
+}
+
+/* 와이파이 신청 안내 배너 */
+.wifi-request-notice {
+  margin-bottom: var(--pw-space-6, 1.5rem);
+  padding: 0.85rem 1rem;
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 10px;
+  color: var(--pw-primary, #8B5CF6);
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 /* ── Name 입력 + 사용/정지 토글 한 줄 ── */
