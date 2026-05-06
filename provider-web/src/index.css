@@ -361,7 +361,7 @@ input, textarea, select, button {
 
 @media (max-width: 768px) {
   .common-form-header {
-    background: white;
+    background: var(--pw-bg-3);
     margin: 0 calc(-1 * var(--pw-container-pad-m)) var(--pw-space-8) calc(-1 * var(--pw-container-pad-m));
     padding: calc(var(--pw-space-4) + env(safe-area-inset-top, 0px)) var(--pw-container-pad-m) var(--pw-space-4) var(--pw-container-pad-m);
     border-bottom: 1px solid var(--pw-border);

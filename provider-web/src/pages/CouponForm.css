@@ -101,7 +101,7 @@
 }
 
 .counter-btn {
-  background: var(--pw-white);
+  background: var(--pw-bg-3);
   border: 1px solid var(--pw-border);
   border-radius: var(--pw-radius-xs);
   width: 28px;
@@ -134,7 +134,7 @@
 }
 
 .btn-outline-small {
-  background: var(--pw-white);
+  background: var(--pw-bg-3);
   color: var(--pw-text);
   border: 1px solid var(--pw-border);
   border-radius: var(--pw-radius-full);
@@ -192,7 +192,7 @@
   width: 26px;
   left: 4px;
   bottom: 4px;
-  background-color: var(--pw-white);
+  background: var(--pw-bg-3);
   transition: var(--pw-duration-normal);
   border-radius: 50%;
   z-index: 2;

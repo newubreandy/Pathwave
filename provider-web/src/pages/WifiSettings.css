@@ -92,7 +92,7 @@
   padding: var(--pw-space-2) var(--pw-space-4);
   border: 1px solid var(--pw-gray-300);
   border-radius: var(--pw-radius-full);
-  background: var(--pw-white);
+  background: var(--pw-bg-3);
   font-size: var(--pw-label-size);
   font-weight: 500;
   color: var(--pw-text-secondary);

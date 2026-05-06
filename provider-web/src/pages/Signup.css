@@ -8,13 +8,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--pw-white);
+  background: var(--pw-bg-3);
   padding: var(--pw-space-10) var(--pw-container-pad-m);
   animation: fadeIn var(--pw-duration-slow) var(--pw-ease-out);
 }
 
 .signup-box {
-  background: var(--pw-white);
+  background: var(--pw-bg-3);
   padding: 0;
   width: 100%;
   max-width: 520px;

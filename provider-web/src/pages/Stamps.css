@@ -219,7 +219,7 @@
   position: absolute;
   right: var(--pw-space-6);
   top: var(--pw-space-10);
-  background: var(--pw-white);
+  background: var(--pw-bg-3);
   border: 1px solid var(--pw-border-light);
   border-radius: var(--pw-radius-md);
   box-shadow: var(--pw-shadow-lg);
