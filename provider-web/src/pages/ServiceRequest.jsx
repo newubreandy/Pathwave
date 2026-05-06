@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, ChevronDown, Plus, Minus, FileSpreadsheet, HelpCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, Minus, HelpCircle, X } from 'lucide-react';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
@@ -56,68 +56,30 @@ const WIFI_NOTICES = [
   '서비스 신청 후 와이파이 정보를 입력해 주세요.',
 ];
 
-// 와이파이 정보 수정 화면과 동일 구조의 폼 — 카드별 정보 입력
-const ProfileForm = ({ initial, showPeriod, calcEndDate, onCancel, onSave }) => {
-  const [form, setForm] = useState({
-    name: initial.name || '',
-    location: initial.location || '',
-    ssid: initial.ssid || '',
-    password: initial.password || '',
-    periodStart: initial.periodStart || '',
-  });
-  const setField = (k, v) => setForm((p) => ({ ...p, [k]: v }));
-
-  const handleSubmit = () => {
-    onSave({
-      name: form.name,
-      location: form.location,
-      ssid: form.ssid,
-      password: form.password,
-      periodStart: showPeriod ? form.periodStart : '',
-      periodEnd: showPeriod ? calcEndDate(form.periodStart) : '',
-    });
-  };
-
-  return (
-    <div className="sr-page">
-      <header className="sr-header">
-        <button className="sr-back" onClick={onCancel}><ChevronLeft size={22} /></button>
-        <h1 className="sr-title">와이파이 정보 입력</h1>
-      </header>
-
-      <div className="sr-body">
-        <div className="sr-pf-group">
-          <label className="sr-pf-label">Name</label>
-          <input className="sr-input" placeholder="예) 로비정문1" value={form.name} onChange={(e) => setField('name', e.target.value)} />
-        </div>
-        <div className="sr-pf-group">
-          <label className="sr-pf-label">설치 위치</label>
-          <input className="sr-input" placeholder="예) 1층 로비, 2층 카페, 5001호" value={form.location} onChange={(e) => setField('location', e.target.value)} />
-        </div>
-        <div className="sr-pf-group">
-          <label className="sr-pf-label">와이파이 ID (SSID)</label>
-          <input className="sr-input" placeholder="kt5G_1234789" value={form.ssid} onChange={(e) => setField('ssid', e.target.value)} />
-        </div>
-        <div className="sr-pf-group">
-          <label className="sr-pf-label">와이파이 PW</label>
-          <input className="sr-input" placeholder="Ezddd1@3356" value={form.password} onChange={(e) => setField('password', e.target.value)} />
-        </div>
-        {showPeriod && (
-          <div className="sr-pf-group">
-            <label className="sr-pf-label">약정 시작일</label>
-            <input type="date" className="sr-input" value={form.periodStart} onChange={(e) => setField('periodStart', e.target.value)} />
-            <p className="sr-hint">→ 종료일 {form.periodStart ? calcEndDate(form.periodStart) : '------'} (자동 +2년)</p>
-          </div>
-        )}
-      </div>
-
-      <BottomActionBar>
-        <Button variant="outline" fullWidth onClick={onCancel}>취소</Button>
-        <Button variant="primary" fullWidth onClick={handleSubmit}>저장</Button>
-      </BottomActionBar>
-    </div>
-  );
+// 시작일 + 2년 → 종료일
+const calcEndDate = (startStr) => {
+  if (!startStr) return '';
+  const d = new Date(startStr);
+  if (Number.isNaN(d.getTime())) return '';
+  d.setFullYear(d.getFullYear() + 2);
+  return d.toISOString().slice(0, 10);
 };
+
+// 빈 와이파이 아이템
+const makeEmptyWifi = (idSeed) => ({
+  id: idSeed,
+  location: '',
+  ssid: '',
+  password: '',
+  startDate: '',
+  endDate: '',
+  contractPeriod: '2_YEAR',
+  memo: '',
+  endDateManual: false, // 사용자가 종료일을 수동 변경했는지
+});
+
+const isWifiItemComplete = (item) =>
+  !!(item.location && item.ssid && item.password && item.startDate && item.endDate);
 
 const ServiceRequest = () => {
   const location = useLocation();
@@ -134,7 +96,6 @@ const ServiceRequest = () => {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   // GNB '서비스 신청' 메뉴 재탭 시 카테고리 리스트로 복귀 (location.key 변경 감지)
-  // ?type=wifi|stamp|... 쿼리가 있으면 그 단계로 점프
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const t = params.get('type');
@@ -151,19 +112,13 @@ const ServiceRequest = () => {
   // 와이파이 단계
   const [quantity, setQuantity] = useState(2);
   const [quantityConfirmed, setQuantityConfirmed] = useState(false);
-  const [regMode, setRegMode] = useState('individual'); // 'individual' | 'bulk'
-  // 개별 등록 카드 (수량만큼 빈 슬롯 + 채워진 데이터)
-  const [individualProfiles, setIndividualProfiles] = useState([]);
-  const [editingIndex, setEditingIndex] = useState(null);
+  const [wifiItems, setWifiItems] = useState([]);
+  const [expandedIndex, setExpandedIndex] = useState(null);
 
-  // 약정 기간: 개별/일괄 모드, 일괄 시 공통 시작일 (종료는 +2년 자동)
-  const [periodMode, setPeriodMode] = useState('common'); // 'common' | 'individual'
-  const [commonStart, setCommonStart] = useState('');
-
-  // 일괄 등록
-  const [excelFileName, setExcelFileName] = useState('');
-  const [bulkRows, setBulkRows] = useState([]); // 업로드 후 파싱 결과 (mock)
-  const fileInputRef = useRef(null);
+  // 모달 / 알럿
+  const [addConfirmOpen, setAddConfirmOpen] = useState(false);
+  const [incompleteAlert, setIncompleteAlert] = useState(null); // { msg, idx }
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
 
   // 결제 단계 (mock)
   const [card] = useState({
@@ -177,17 +132,14 @@ const ServiceRequest = () => {
   const [period] = useState({ start: '2021.02.13', end: '2023.02.12', payment: '1,024,100원 / 월', billDay: '매월 12일 결제' });
   const [email] = useState('ceo@hotelh.com');
 
-  // 모달
   const [confirmMsg, setConfirmMsg] = useState(null);
   const [submitted, setSubmitted] = useState(false);
 
   const selectedCategory = SERVICE_CATEGORIES.find((c) => c.key === categoryKey);
-
   const isDetailStep = (s) => ['wifi', 'stamp', 'event', 'noti'].includes(s);
 
   // ── 핸들러 ──
   const handleBack = () => {
-    if (step === 'profile') { setEditingIndex(null); setStep('wifi'); return; }
     if (isDetailStep(step)) setStep('category');
     else if (step === 'payment') setStep(categoryKey);
     else navigate(-1);
@@ -195,89 +147,129 @@ const ServiceRequest = () => {
 
   const handleNext = () => {
     if (step === 'category') setStep(categoryKey);
+    else if (step === 'wifi') openApplicationReview();
     else if (isDetailStep(step)) setStep('payment');
   };
 
-  // 카테고리 카드 클릭 시 즉시 해당 상세 화면으로 이동
   const goToCategory = (key) => {
     setCategoryKey(key);
     setStep(key);
   };
 
-  // 시작일 + 2년 → 종료일
-  const calcEndDate = (startStr) => {
-    if (!startStr) return '';
-    const d = new Date(startStr);
-    if (Number.isNaN(d.getTime())) return '';
-    d.setFullYear(d.getFullYear() + 2);
-    return d.toISOString().slice(0, 10);
-  };
-
   // 수량 확정 — 빈 슬롯 만들어 등록 영역 노출
   const handleConfirmQuantity = () => {
     setQuantityConfirmed(true);
-    setIndividualProfiles((prev) => {
+    setWifiItems((prev) => {
       if (prev.length >= quantity) return prev.slice(0, quantity);
       const need = quantity - prev.length;
-      const additions = Array.from({ length: need }, (_, i) => ({
-        id: Date.now() + i,
-        name: '',
-        location: '',
-        ssid: '',
-        password: '',
-        periodStart: '',
-        periodEnd: '',
-      }));
+      const additions = Array.from({ length: need }, (_, i) => makeEmptyWifi(Date.now() + i));
       return [...prev, ...additions];
     });
+    setExpandedIndex(0);
   };
 
-  // + 추가: 빈 슬롯 1개 추가 + 수량 +1
-  const handleAddIndividual = () => {
-    setIndividualProfiles((prev) => [
-      ...prev,
-      { id: Date.now(), name: '', location: '', ssid: '', password: '', periodStart: '', periodEnd: '' },
-    ]);
+  // 추가하기 — confirm 알럿 → 확인 시 카드 추가
+  const handleAddClick = () => setAddConfirmOpen(true);
+
+  const handleAddConfirm = () => {
+    setWifiItems((prev) => {
+      const next = [...prev, makeEmptyWifi(Date.now())];
+      setExpandedIndex(next.length - 1);
+      return next;
+    });
     setQuantity((q) => q + 1);
+    setAddConfirmOpen(false);
   };
 
   // 카드 삭제 (수량도 같이 감소)
-  const handleRemoveIndividual = (idx) => {
-    setIndividualProfiles((prev) => prev.filter((_, i) => i !== idx));
+  const handleRemoveWifi = (idx) => {
+    setWifiItems((prev) => prev.filter((_, i) => i !== idx));
     setQuantity((q) => Math.max(1, q - 1));
+    setExpandedIndex(null);
   };
 
-  // 카드 클릭 → 정보 입력 화면
-  const handleEditProfile = (idx) => {
-    setEditingIndex(idx);
-    setStep('profile');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  // 카드 펼침 토글 (한 번에 하나만)
+  const toggleExpand = (idx) => {
+    setExpandedIndex((prev) => (prev === idx ? null : idx));
   };
 
-  // 정보 입력 저장
-  const handleProfileSave = (data) => {
-    setIndividualProfiles((prev) => prev.map((p, i) => (i === editingIndex ? { ...p, ...data } : p)));
-    setEditingIndex(null);
-    setStep('wifi');
+  // 필드 업데이트 (시작일 변경 시 종료일 자동 +2년, 단 사용자가 수동 변경한 경우 유지)
+  const updateField = (idx, field, value) => {
+    setWifiItems((prev) =>
+      prev.map((item, i) => {
+        if (i !== idx) return item;
+        if (field === 'startDate') {
+          const updated = { ...item, startDate: value };
+          if (!item.endDateManual) updated.endDate = calcEndDate(value);
+          return updated;
+        }
+        if (field === 'endDate') {
+          return { ...item, endDate: value, endDateManual: true };
+        }
+        return { ...item, [field]: value };
+      })
+    );
   };
 
-  const handleExcelDownload = () => {
-    // TODO: 백엔드 GET /api/service-request/excel-template
-    alert('엑셀 양식: 설치위치 / 와이파이 ID / 와이파이 PW / 시작일 / 종료일 (자동 +2년)\n양식이 다운로드 됩니다.');
+  // 다음 → 신청내역 검증 + 팝업
+  const openApplicationReview = () => {
+    if (!quantityConfirmed) {
+      setIncompleteAlert({ msg: '먼저 수량을 확정해 주세요.', idx: null });
+      return;
+    }
+    const idx = wifiItems.findIndex((item) => !isWifiItemComplete(item));
+    if (idx >= 0) {
+      const item = wifiItems[idx];
+      const missing = [];
+      if (!item.location) missing.push('설치위치');
+      if (!item.ssid) missing.push('와이파이 ID');
+      if (!item.password) missing.push('와이파이 PW');
+      if (!item.startDate) missing.push('서비스 시작일');
+      if (!item.endDate) missing.push('서비스 종료일');
+      setIncompleteAlert({
+        msg: `Wi-Fi ${idx + 1} 카드에 누락된 항목이 있습니다.\n(${missing.join(' / ')})`,
+        idx,
+      });
+      return;
+    }
+    setShowApplicationModal(true);
   };
 
-  const handleExcelUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setExcelFileName(file.name);
-    // Mock 파싱 — 실제로는 SheetJS 또는 백엔드로 보내서 파싱
-    const today = new Date().toISOString().slice(0, 10);
-    setBulkRows([
-      { id: 'b1', location: '1층 로비', ssid: 'olleh_GiGA_LB01', password: '1234567890', periodStart: today, periodEnd: calcEndDate(today) },
-      { id: 'b2', location: '2층 카페',  ssid: 'olleh_GiGA_CF02', password: '0987654321', periodStart: today, periodEnd: calcEndDate(today) },
-      { id: 'b3', location: '5001호',   ssid: 'olleh_GiGA_5001', password: 'pass500120',  periodStart: today, periodEnd: calcEndDate(today) },
-    ]);
-    e.target.value = '';
+  const handleIncompleteConfirm = () => {
+    if (incompleteAlert?.idx != null) setExpandedIndex(incompleteAlert.idx);
+    setIncompleteAlert(null);
+  };
+
+  // 신청내역 팝업 → 결제하기
+  const handleGoPayment = () => {
+    // TODO: 백엔드 API 연동 — POST /api/service-requests (draft 저장)
+    // 페이로드 모양:
+    // {
+    //   facilityId, storeId, quantity, contractType: '2_YEAR',
+    //   wifiItems: [{ installLocation, wifiId, wifiPassword, startDate, endDate, contractPeriod, memo, status }],
+    //   paymentStatus: 'PENDING', applicationStatus: 'DRAFT'
+    // }
+    const payload = {
+      facilityId: null,
+      storeId: null,
+      quantity,
+      contractType: '2_YEAR',
+      wifiItems: wifiItems.map((it) => ({
+        installLocation: it.location,
+        wifiId: it.ssid,
+        wifiPassword: it.password,
+        startDate: it.startDate,
+        endDate: it.endDate,
+        contractPeriod: it.contractPeriod,
+        memo: it.memo,
+        status: isWifiItemComplete(it) ? 'COMPLETE' : 'INCOMPLETE',
+      })),
+      paymentStatus: 'PENDING',
+      applicationStatus: 'DRAFT',
+    };
+    console.log('[ServiceRequest] go to payment with', payload);
+    setShowApplicationModal(false);
+    setStep('payment');
   };
 
   const handleSubmit = () => {
@@ -285,14 +277,13 @@ const ServiceRequest = () => {
   };
 
   const doSubmit = () => {
-    // TODO: 백엔드 API 연동 — POST /api/service-requests
-    console.log('[ServiceRequest] submit', { categoryKey, quantity, regMode, individualProfiles, excelFileName });
+    // TODO: 백엔드 API 연동 — POST /api/service-requests (결제 후 최종 신청)
     setConfirmMsg(null);
     setSubmitted(true);
   };
 
   // ═══════════════════════════════════════
-  // STEP 1 — 카테고리 선택 (시안 4번)
+  // STEP 1 — 카테고리 선택
   // ═══════════════════════════════════════
   if (step === 'category') {
     return (
@@ -341,7 +332,7 @@ const ServiceRequest = () => {
   }
 
   // ═══════════════════════════════════════
-  // STEP 2 — 와이파이 신청 상세 (시안 1, 3번)
+  // STEP 2 — 와이파이 신청 상세 (개별 등록 + 아코디언)
   // ═══════════════════════════════════════
   if (step === 'wifi') {
     return (
@@ -363,7 +354,7 @@ const ServiceRequest = () => {
                 <button
                   key={c.key}
                   className={`sr-cat-dropdown-item ${categoryKey === c.key ? 'active' : ''}`}
-                  onClick={() => { setCategoryKey(c.key); setShowCategoryDropdown(false); }}
+                  onClick={() => { setCategoryKey(c.key); setStep(c.key); setShowCategoryDropdown(false); }}
                 >
                   {c.title}
                 </button>
@@ -395,129 +386,121 @@ const ServiceRequest = () => {
             {WIFI_NOTICES.map((n, i) => <li key={i}>{n}</li>)}
           </ul>
 
-          {/* 수량 확정 후에만 등록 영역 노출 */}
+          {/* 수량 확정 후 등록 영역 */}
           {quantityConfirmed && (
             <>
-              {/* 탭 */}
-              <div className="sr-tabs">
-                <button
-                  className={`sr-tab ${regMode === 'individual' ? 'active' : ''}`}
-                  onClick={() => setRegMode('individual')}
-                >개별등록</button>
-                <button
-                  className={`sr-tab ${regMode === 'bulk' ? 'active' : ''}`}
-                  onClick={() => setRegMode('bulk')}
-                >일괄등록</button>
+              <div className="sr-quantity-display">
+                선택 수량은 <strong>{quantity}개</strong>입니다.
               </div>
 
-              {/* 약정 기간 영역 */}
-              <div className="sr-period-block">
-                <div className="sr-period-head">
-                  <span className="sr-period-title">약정 기간 (2년)</span>
-                  {regMode === 'individual' && (
-                    <div className="sr-period-mode">
-                      <label className={`sr-radio ${periodMode === 'common' ? 'active' : ''}`}>
-                        <input type="radio" name="periodMode" checked={periodMode === 'common'} onChange={() => setPeriodMode('common')} />
-                        일괄
-                      </label>
-                      <label className={`sr-radio ${periodMode === 'individual' ? 'active' : ''}`}>
-                        <input type="radio" name="periodMode" checked={periodMode === 'individual'} onChange={() => setPeriodMode('individual')} />
-                        개별
-                      </label>
-                    </div>
-                  )}
-                </div>
-                {(regMode === 'bulk' || periodMode === 'common') && (
-                  <div className="sr-period-row">
-                    <label className="sr-period-label">시작일</label>
-                    <input
-                      type="date"
-                      className="sr-period-input"
-                      value={commonStart}
-                      onChange={(e) => setCommonStart(e.target.value)}
-                    />
-                    <span className="sr-period-end">→ 종료일 {calcEndDate(commonStart) || '------'}</span>
-                  </div>
-                )}
-                {regMode === 'individual' && periodMode === 'individual' && (
-                  <p className="sr-period-note">개별 등록 카드에서 각각 시작일을 입력해주세요.</p>
-                )}
-              </div>
-
-              {/* 탭 컨텐츠 */}
-              {regMode === 'individual' ? (
-                <div className="sr-individual">
-                  {individualProfiles.map((p, idx) => {
-                    const filled = p.name || p.ssid || p.password;
-                    return (
-                      <div key={p.id} className={`sr-profile-card ${filled ? 'filled' : 'empty'}`} onClick={() => handleEditProfile(idx)}>
-                        <div className="sr-profile-main">
-                          {filled ? (
-                            <>
-                              <div className="sr-profile-row"><span className="sr-profile-label">Name</span><span className="sr-profile-value">{p.name || '-'}</span></div>
-                              <div className="sr-profile-row">
-                                <span className="sr-profile-label">위치</span><span className="sr-profile-value">{p.location || '-'}</span>
-                                <span className="sr-profile-label" style={{ marginLeft: 'auto' }}>PW</span><span className="sr-profile-value">{p.password || '-'}</span>
-                              </div>
-                            </>
-                          ) : (
-                            <span className="sr-profile-empty-text">정보 입력 필요 (탭하여 입력)</span>
-                          )}
+              <div className="sr-individual">
+                {wifiItems.map((item, idx) => {
+                  const complete = isWifiItemComplete(item);
+                  const isOpen = expandedIndex === idx;
+                  return (
+                    <div key={item.id} className={`sr-acc-card ${isOpen ? 'open' : ''}`}>
+                      <button
+                        type="button"
+                        className="sr-acc-head"
+                        onClick={() => toggleExpand(idx)}
+                        aria-expanded={isOpen}
+                      >
+                        <div className="sr-acc-head-main">
+                          <span className="sr-acc-num">Wi-Fi {idx + 1}</span>
+                          <div className="sr-acc-head-info">
+                            <span className={`sr-acc-loc ${item.location ? '' : 'empty'}`}>
+                              {item.location || '설치위치 미입력'}
+                            </span>
+                            <span className={`sr-acc-ssid ${item.ssid ? '' : 'empty'}`}>
+                              {item.ssid || 'ID 미입력'}
+                            </span>
+                          </div>
+                          <span className={`sr-acc-status ${complete ? 'done' : 'empty'}`}>
+                            {complete ? '입력완료' : '미입력'}
+                          </span>
                         </div>
-                        <button className="sr-profile-remove" onClick={(e) => { e.stopPropagation(); handleRemoveIndividual(idx); }} aria-label="삭제">×</button>
-                        <ChevronRight size={16} className="sr-profile-arrow" />
-                      </div>
-                    );
-                  })}
-                  <button className="sr-add-card" onClick={handleAddIndividual}>
-                    <Plus size={20} />
-                    <span>와이파이 개별등록 (+1)</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="sr-bulk">
-                  <button className="sr-bulk-download" onClick={handleExcelDownload}>
-                    엑셀 양식 다운받기
-                    <FileSpreadsheet size={16} />
-                  </button>
-                  <p className="sr-bulk-hint">※ 엑셀양식 컬럼: 설치위치 / 와이파이 ID / 와이파이 PW / 시작일<br/>업로드하면 자동으로 리스트가 생성됩니다.</p>
-                  <label className="sr-bulk-upload">
-                    {excelFileName ? excelFileName : '엑셀 양식 업로드 / 재 업로드'}
-                    <input
-                      type="file"
-                      accept=".xlsx,.xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                      onChange={handleExcelUpload}
-                      ref={fileInputRef}
-                      style={{ display: 'none' }}
-                    />
-                  </label>
+                        {isOpen ? <ChevronUp size={18} className="sr-acc-toggle" /> : <ChevronDown size={18} className="sr-acc-toggle" />}
+                      </button>
 
-                  {bulkRows.length > 0 && (
-                    <div className="sr-bulk-result">
-                      <div className="sr-bulk-summary">
-                        <strong>총 {bulkRows.length}개</strong>
-                        {commonStart && (
-                          <span className="sr-bulk-period"> · {commonStart} ~ {calcEndDate(commonStart)}</span>
-                        )}
-                      </div>
-                      <div className="sr-bulk-list">
-                        {bulkRows.map((row) => (
-                          <div key={row.id} className="sr-bulk-row">
-                            <div className="sr-bulk-row-main">
-                              <span className="sr-bulk-row-loc">{row.location}</span>
-                              <span className="sr-bulk-row-ssid">{row.ssid}</span>
+                      {isOpen && (
+                        <div className="sr-acc-body">
+                          <div className="sr-pf-group">
+                            <label className="sr-pf-label">설치 위치 <span className="sr-pf-req">*</span></label>
+                            <input
+                              className="sr-input"
+                              placeholder="예) 1층 로비, 2층 카페, 5001호"
+                              value={item.location}
+                              onChange={(e) => updateField(idx, 'location', e.target.value)}
+                            />
+                          </div>
+                          <div className="sr-pf-group">
+                            <label className="sr-pf-label">와이파이 ID (SSID) <span className="sr-pf-req">*</span></label>
+                            <input
+                              className="sr-input"
+                              placeholder="kt5G_1234789"
+                              value={item.ssid}
+                              onChange={(e) => updateField(idx, 'ssid', e.target.value)}
+                            />
+                          </div>
+                          <div className="sr-pf-group">
+                            <label className="sr-pf-label">와이파이 PW <span className="sr-pf-req">*</span></label>
+                            <input
+                              className="sr-input"
+                              placeholder="Ezddd1@3356"
+                              value={item.password}
+                              onChange={(e) => updateField(idx, 'password', e.target.value)}
+                            />
+                          </div>
+                          <div className="sr-pf-row2">
+                            <div className="sr-pf-group">
+                              <label className="sr-pf-label">서비스 시작일 <span className="sr-pf-req">*</span></label>
+                              <input
+                                type="date"
+                                className="sr-input"
+                                value={item.startDate}
+                                onChange={(e) => updateField(idx, 'startDate', e.target.value)}
+                              />
                             </div>
-                            <div className="sr-bulk-row-sub">
-                              <span>PW {row.password}</span>
-                              <span>{row.periodStart} ~ {row.periodEnd}</span>
+                            <div className="sr-pf-group">
+                              <label className="sr-pf-label">서비스 종료일 <span className="sr-pf-req">*</span></label>
+                              <input
+                                type="date"
+                                className="sr-input"
+                                value={item.endDate}
+                                onChange={(e) => updateField(idx, 'endDate', e.target.value)}
+                              />
                             </div>
                           </div>
-                        ))}
-                      </div>
+                          <div className="sr-pf-group">
+                            <label className="sr-pf-label">약정기간</label>
+                            <div className="sr-pf-static">2년 (시작일 + 2년 자동 설정 · 종료일 직접 수정 가능)</div>
+                          </div>
+                          <div className="sr-pf-group">
+                            <label className="sr-pf-label">비고</label>
+                            <textarea
+                              className="sr-textarea"
+                              placeholder="설치 관련 메모 (선택)"
+                              rows={2}
+                              value={item.memo}
+                              onChange={(e) => updateField(idx, 'memo', e.target.value)}
+                            />
+                          </div>
+                          <div className="sr-acc-actions">
+                            <button type="button" className="sr-acc-remove" onClick={() => handleRemoveWifi(idx)}>
+                              이 와이파이 삭제
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              )}
+                  );
+                })}
+
+                <button type="button" className="sr-add-card" onClick={handleAddClick}>
+                  <Plus size={20} />
+                  <span>추가하기</span>
+                </button>
+              </div>
             </>
           )}
         </div>
@@ -525,23 +508,89 @@ const ServiceRequest = () => {
         <BottomActionBar>
           <Button variant="primary" fullWidth onClick={handleNext} disabled={!quantityConfirmed}>다음</Button>
         </BottomActionBar>
-      </div>
-    );
-  }
 
-  // ═══════════════════════════════════════
-  // STEP 2-A — 개별 와이파이 정보 입력 화면 (와이파이 정보 수정 화면과 동일 구조)
-  // ═══════════════════════════════════════
-  if (step === 'profile') {
-    const profile = individualProfiles[editingIndex] || {};
-    return (
-      <ProfileForm
-        initial={profile}
-        showPeriod={periodMode === 'individual'}
-        calcEndDate={calcEndDate}
-        onCancel={() => { setEditingIndex(null); setStep('wifi'); }}
-        onSave={handleProfileSave}
-      />
+        {/* 추가하기 confirm */}
+        <ConfirmModal
+          isOpen={addConfirmOpen}
+          title="와이파이 추가"
+          desc={`현재 선택 수량은 ${quantity}개입니다.\n1개를 추가하시겠습니까?`}
+          confirmText="추가"
+          cancelText="취소"
+          onConfirm={handleAddConfirm}
+          onCancel={() => setAddConfirmOpen(false)}
+        />
+
+        {/* 누락 안내 */}
+        <ConfirmModal
+          isOpen={!!incompleteAlert}
+          title="입력 정보 확인"
+          desc={incompleteAlert?.msg || ''}
+          singleButton confirmText="확인"
+          onConfirm={handleIncompleteConfirm}
+          onCancel={handleIncompleteConfirm}
+        />
+
+        {/* 신청내역 팝업 */}
+        {showApplicationModal && (
+          <div className="common-modal-overlay" onClick={() => setShowApplicationModal(false)}>
+            <div className="sr-app-modal" onClick={(e) => e.stopPropagation()}>
+              <header className="sr-app-modal-head">
+                <h3>와이파이 서비스 신청내역 확인</h3>
+                <button className="sr-app-modal-close" onClick={() => setShowApplicationModal(false)} aria-label="닫기">
+                  <X size={18} />
+                </button>
+              </header>
+              <div className="sr-app-modal-body">
+                <div className="sr-app-summary">
+                  <div className="sr-app-summary-row">
+                    <span className="sr-app-summary-label">신청 시설</span>
+                    <span className="sr-app-summary-value">호텔H 본점 (Mock)</span>
+                  </div>
+                  <div className="sr-app-summary-row">
+                    <span className="sr-app-summary-label">총 신청 수량</span>
+                    <span className="sr-app-summary-value"><strong>{quantity}개</strong></span>
+                  </div>
+                  <div className="sr-app-summary-row">
+                    <span className="sr-app-summary-label">약정기간</span>
+                    <span className="sr-app-summary-value">2년</span>
+                  </div>
+                  <div className="sr-app-summary-row">
+                    <span className="sr-app-summary-label">예상 결제금액</span>
+                    <span className="sr-app-summary-value sr-app-amount">월 {(quantity * 12100).toLocaleString()}원 <span className="sr-app-vat">(VAT 포함)</span></span>
+                  </div>
+                </div>
+
+                <h4 className="sr-app-list-title">와이파이 목록</h4>
+                <div className="sr-app-list">
+                  {wifiItems.map((item, idx) => (
+                    <div key={item.id} className="sr-app-list-row">
+                      <div className="sr-app-list-num">Wi-Fi {idx + 1}</div>
+                      <div className="sr-app-list-fields">
+                        <div className="sr-app-list-line">
+                          <span className="sr-app-list-label">위치</span>
+                          <span className="sr-app-list-value">{item.location}</span>
+                        </div>
+                        <div className="sr-app-list-line">
+                          <span className="sr-app-list-label">SSID</span>
+                          <span className="sr-app-list-value">{item.ssid}</span>
+                        </div>
+                        <div className="sr-app-list-line">
+                          <span className="sr-app-list-label">기간</span>
+                          <span className="sr-app-list-value">{item.startDate} ~ {item.endDate}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <footer className="sr-app-modal-actions">
+                <button className="sr-app-modal-btn" onClick={() => setShowApplicationModal(false)}>닫기</button>
+                <button className="sr-app-modal-btn primary" onClick={handleGoPayment}>결제하기</button>
+              </footer>
+            </div>
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -558,7 +607,6 @@ const ServiceRequest = () => {
         </header>
 
         <div className="sr-body">
-          {/* 카테고리 dropdown (다른 서비스로 전환 가능) */}
           <div className="sr-cat-select" onClick={() => setShowCategoryDropdown((v) => !v)}>
             <span className="sr-cat-select-title">{cat?.title}</span>
             <ChevronDown size={18} className={`sr-cat-select-arrow ${showCategoryDropdown ? 'open' : ''}`} />
@@ -577,7 +625,6 @@ const ServiceRequest = () => {
             </div>
           )}
 
-          {/* 안내 */}
           <ul className="sr-notices">
             {cat?.bullets.map((b, i) => <li key={i}>{b}</li>)}
           </ul>
@@ -595,7 +642,7 @@ const ServiceRequest = () => {
   }
 
   // ═══════════════════════════════════════
-  // STEP 3 — 결제 / 약정 (시안 2번)
+  // STEP 3 — 결제 / 약정
   // ═══════════════════════════════════════
   if (step === 'payment') {
     return (
@@ -606,7 +653,6 @@ const ServiceRequest = () => {
         </header>
 
         <div className="sr-body">
-          {/* 신청 내역 요약 */}
           <section className="sr-pay-section">
             <h2 className="sr-pay-section-title">{selectedCategory?.title} 신청내역</h2>
             <button className="sr-pay-summary" onClick={() => setStep(categoryKey)}>
@@ -615,7 +661,6 @@ const ServiceRequest = () => {
             </button>
           </section>
 
-          {/* 결제방법 */}
           <section className="sr-pay-section">
             <h2 className="sr-pay-section-title">결제방법</h2>
             <div className="sr-pay-card">
@@ -632,7 +677,6 @@ const ServiceRequest = () => {
             </div>
           </section>
 
-          {/* 서비스기간 */}
           <section className="sr-pay-section">
             <h2 className="sr-pay-section-title">서비스기간</h2>
             <div className="sr-pay-card">
@@ -650,7 +694,6 @@ const ServiceRequest = () => {
             </div>
           </section>
 
-          {/* 결제안내메일 */}
           <section className="sr-pay-section">
             <h2 className="sr-pay-section-title">결제안내메일</h2>
             <div className="sr-pay-card">
