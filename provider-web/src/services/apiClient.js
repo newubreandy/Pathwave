@@ -30,20 +30,26 @@ async function request(path, { method = 'GET', body, headers = {}, raw = false }
   try { data = await resp.json(); } catch { data = {}; }
 
   if (resp.status === 401) {
-    // PR #60 — 토큰 만료/무효 → 자동 로그아웃 + /login 리다이렉트.
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem('pathwave_user');
-    localStorage.removeItem('pathwave_refresh_token');
-    // 이미 /login 에 있으면 무한 루프 방지
-    if (typeof window !== 'undefined' &&
-        !window.location.pathname.startsWith('/login') &&
-        !window.location.pathname.startsWith('/signup')) {
-      const from = window.location.pathname + window.location.search;
-      window.location.replace(`/login?from=${encodeURIComponent(from)}`);
+    // PR #69 — 미리보기 토큰은 redirect 스킵
+    const currentToken = _getToken();
+    const isPreviewToken = currentToken === 'preview-mode-fake-token';
+
+    if (!isPreviewToken) {
+      // PR #60 — 정상 토큰 만료/무효 → 자동 로그아웃 + /login 리다이렉트
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem('pathwave_user');
+      localStorage.removeItem('pathwave_refresh_token');
+      if (typeof window !== 'undefined' &&
+          !window.location.pathname.startsWith('/login') &&
+          !window.location.pathname.startsWith('/signup')) {
+        const from = window.location.pathname + window.location.search;
+        window.location.replace(`/login?from=${encodeURIComponent(from)}`);
+      }
     }
     const err = new Error(data.message || '세션이 만료되었습니다. 다시 로그인해 주세요.');
     err.status = 401;
     err.unauthorized = true;
+    err.previewMode = isPreviewToken;
     throw err;
   }
 
