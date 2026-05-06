@@ -191,6 +191,8 @@ const WifiSettings = () => {
   // ── 수정 진입 — 안내 모달 없이 바로 수정 모드 (안내는 저장 시점) ──
   const startEdit = () => {
     setIsEditing(true);
+    // 화면 위로 스크롤 — 사용자가 모드 전환을 인지할 수 있도록
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // ── Touch swipe for list items ──
@@ -410,7 +412,11 @@ const WifiSettings = () => {
   // ═════════════════════════════════════
   const isAddMode = view === 'add';
   const canEdit = isEditing || isAddMode;
-  const title = isAddMode ? '와이파이 신청하기' : '와이파이 상세';
+  const title = isAddMode
+    ? '와이파이 신청하기'
+    : isEditing
+      ? '와이파이 수정'
+      : '와이파이 상세';
 
   return (
     <div className="common-form-page">
