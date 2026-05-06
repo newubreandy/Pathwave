@@ -1100,11 +1100,21 @@
 /* 말풍선 내 첨부 이미지 */
 .chat-attached-image {
   max-width: 100%;
-  max-height: 200px;
-  border-radius: 8px;
-  margin-bottom: 0.4rem;
+  max-height: 240px;
+  border-radius: 12px;
   display: block;
   object-fit: cover;
+}
+
+/* 텍스트 없이 이미지만 있을 때: 버블 padding 최소화 */
+.message-bubble:has(> .chat-attached-image:only-child) {
+  padding: 4px;
+}
+
+/* 이미지 + 텍스트 함께: 이미지 아래 여백 */
+.message-bubble .chat-attached-image + span {
+  display: block;
+  margin-top: 0.5rem;
 }
 
 /* 입력창 상단 미리보기 배너 */
@@ -1160,9 +1170,12 @@
 }
 
 .attachment-preview img {
-  height: 60px;
+  height: 64px;
+  width: 64px;
+  object-fit: cover;
   border-radius: 8px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--pw-border);
+  display: block;
 }
 
 .preview-close-btn {
@@ -1306,4 +1319,101 @@
   background: var(--pw-bg-hover);
   color: var(--pw-text);
   border-color: var(--pw-primary);
+}
+
+/* ── 첨부 시트 (사진 찍기 / 사진 첨부) ── */
+.attach-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.attach-sheet {
+  width: 100%;
+  max-width: 480px;
+  background: var(--pw-bg-3);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  border-top: 1px solid var(--pw-border);
+  border-left: 1px solid var(--pw-border);
+  border-right: 1px solid var(--pw-border);
+  padding: 0.5rem;
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  animation: sheetUp 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.attach-sheet-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.25rem;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  color: var(--pw-text);
+  font-size: 1rem;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.attach-sheet-btn:hover,
+.attach-sheet-btn:active {
+  background: var(--pw-bg-hover);
+}
+
+.attach-sheet-icon {
+  font-size: 1.4rem;
+  width: 28px;
+  text-align: center;
+}
+
+.attach-sheet-cancel {
+  margin-top: 0.25rem;
+  padding: 0.9rem 1.25rem;
+  background: var(--pw-bg-2);
+  border: 1px solid var(--pw-border);
+  border-radius: 12px;
+  color: var(--pw-text-secondary);
+  font-size: 1rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.attach-sheet-cancel:hover {
+  background: var(--pw-bg-hover);
+  color: var(--pw-text);
+}
+
+/* PC 에서는 가운데 모달 형태 */
+@media (min-width: 769px) {
+  .attach-sheet-overlay {
+    align-items: center;
+  }
+
+  .attach-sheet {
+    max-width: 320px;
+    border-radius: 16px;
+    border: 1px solid var(--pw-border);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.2s ease-out;
+  }
 }

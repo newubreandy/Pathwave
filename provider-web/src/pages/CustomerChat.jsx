@@ -87,10 +87,12 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
   const [attachment, setAttachment] = useState(null);
   const [activeMsgId, setActiveMsgId] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
-  
+  const [showAttachSheet, setShowAttachSheet] = useState(false);
+
   const bottomRef = useRef(null);
   const listRef = useRef(null);
-  const fileRef = useRef(null);
+  const cameraRef = useRef(null);
+  const galleryRef = useRef(null);
 
   useEffect(() => {
     if (!showScrollBtn) {
@@ -123,8 +125,9 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
     setInput('');
     setReplyingTo(null);
     setAttachment(null);
-    if (fileRef.current) fileRef.current.value = '';
-    
+    if (cameraRef.current) cameraRef.current.value = '';
+    if (galleryRef.current) galleryRef.current.value = '';
+
     setTimeout(scrollToBottom, 50); // 이미지 렌더링 시간 확보
   };
 
@@ -301,7 +304,14 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
           {attachment && (
             <div className="attachment-preview">
               <img src={attachment} alt="미리보기" />
-              <button className="preview-close-btn" onClick={() => { setAttachment(null); if (fileRef.current) fileRef.current.value = ''; }}><X size={14} /></button>
+              <button
+                className="preview-close-btn"
+                onClick={() => {
+                  setAttachment(null);
+                  if (cameraRef.current) cameraRef.current.value = '';
+                  if (galleryRef.current) galleryRef.current.value = '';
+                }}
+              ><X size={14} /></button>
             </div>
           )}
         </div>
@@ -309,8 +319,26 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
 
       {/* 입력창 */}
       <div className="chat-input-bar">
-        <button className="chat-attach-btn" onClick={() => fileRef.current?.click()}><Paperclip size={18} /></button>
-        <input type="file" accept="image/*" ref={fileRef} style={{ display: 'none' }} onChange={handleImageSelect} />
+        <button className="chat-attach-btn" onClick={() => setShowAttachSheet(true)} aria-label="사진 첨부">
+          <Paperclip size={18} />
+        </button>
+        {/* iOS/Android 모두: capture 속성으로 카메라 직접 호출 */}
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          ref={cameraRef}
+          style={{ display: 'none' }}
+          onChange={handleImageSelect}
+        />
+        {/* capture 미지정 → 갤러리 (사진 보관함) */}
+        <input
+          type="file"
+          accept="image/*"
+          ref={galleryRef}
+          style={{ display: 'none' }}
+          onChange={handleImageSelect}
+        />
         <input
           className="chat-input"
           type="text"
@@ -329,6 +357,37 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
           <Send size={18} />
         </button>
       </div>
+
+      {/* 첨부 옵션 시트 (사진 찍기 / 사진 첨부) */}
+      {showAttachSheet && (
+        <div className="attach-sheet-overlay" onClick={() => setShowAttachSheet(false)}>
+          <div className="attach-sheet" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="attach-sheet-btn"
+              onClick={() => {
+                setShowAttachSheet(false);
+                cameraRef.current?.click();
+              }}
+            >
+              <span className="attach-sheet-icon">📷</span>
+              <span>사진 찍기</span>
+            </button>
+            <button
+              className="attach-sheet-btn"
+              onClick={() => {
+                setShowAttachSheet(false);
+                galleryRef.current?.click();
+              }}
+            >
+              <span className="attach-sheet-icon">🖼️</span>
+              <span>사진 첨부</span>
+            </button>
+            <button className="attach-sheet-cancel" onClick={() => setShowAttachSheet(false)}>
+              취소
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
