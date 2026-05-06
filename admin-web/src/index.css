@@ -1,53 +1,60 @@
 /**
- * PR #69 — Admin Dark Premium Theme.
- * 레퍼런스: pure black bg + 미세 보더 카드 + 글로우 차트 + 상태 배지.
+ * PR #69 v2 — 미니멀 다크 + 녹색 포인트.
+ * 사용자 피드백: 답답함 ↓, 폰트 ↑, 컬러 최소, 녹색만 포인트.
  */
 :root {
-  /* ── 배경 계층 (어두울수록 뒤로) ─────────────────────────────── */
-  --bg:           #0A0A0F;       /* 페이지 배경 */
-  --bg-2:         #0F0F14;       /* 사이드바 */
-  --bg-3:         #15151D;       /* 카드 */
-  --bg-4:         #1A1A24;       /* 카드 안 inset (예: 차트 영역) */
-  --bg-hover:     #1F1F2A;
+  /* ── 배경 (4단계, 모두 무채색) ────────────────────────────── */
+  --bg:           #0B0B0F;
+  --bg-2:         #0F0F14;
+  --bg-3:         #14141B;
+  --bg-4:         #1A1A22;
+  --bg-hover:     #20202A;
 
-  /* ── 보더 (매우 미세) ───────────────────────────────────────── */
-  --border:        #1F1F2B;
+  /* ── 보더 (매우 미세) ───────────────────────────────────── */
+  --border:        #1E1E28;
   --border-strong: #2A2A38;
-  --border-glow:   rgba(255,255,255,0.04);
 
-  /* ── 텍스트 ─────────────────────────────────────────────────── */
-  --text:        #F1F2F6;
-  --text-muted:  #8A8F9C;
-  --text-hint:   #5A5F6E;
+  /* ── 텍스트 ─────────────────────────────────────────────── */
+  --text:        #F2F3F7;
+  --text-muted:  #9097A3;
+  --text-hint:   #5C6170;
 
-  /* ── 액센트 (글로우용) ──────────────────────────────────────── */
+  /* ── 포인트 컬러 — 녹색만 ───────────────────────────────── */
   --accent:        #22C55E;
-  --accent-glow:   rgba(34,197,94,0.18);
-  --info:          #3B82F6;
-  --info-glow:     rgba(59,130,246,0.20);
-  --primary:       #8B5CF6;
-  --primary-glow:  rgba(139,92,246,0.22);
-  --warn:          #EAB308;
-  --warn-glow:     rgba(234,179,8,0.16);
-  --danger:        #EF4444;
-  --danger-glow:   rgba(239,68,68,0.18);
+  --accent-hover:  #16A34A;
+  --accent-soft:   rgba(34,197,94,0.10);
+  --accent-glow:   rgba(34,197,94,0.30);
 
-  /* 상태 배지 색상 */
-  --badge-active-bg:   rgba(34,197,94,0.12);
-  --badge-active-fg:   #4ADE80;
-  --badge-paused-bg:   rgba(234,179,8,0.12);
-  --badge-paused-fg:   #FACC15;
-  --badge-inactive-bg: rgba(239,68,68,0.12);
+  /* ── 상태 (의미 색상은 최소화 — 빨강은 위험에만 한정) ────── */
+  --danger:        #EF4444;
+  --danger-soft:   rgba(239,68,68,0.10);
+
+  /* 상태 배지 — Active 만 녹색, 나머지는 무채 */
+  --badge-active-bg:   var(--accent-soft);
+  --badge-active-fg:   var(--accent);
+  --badge-neutral-bg:  rgba(255,255,255,0.04);
+  --badge-neutral-fg:  var(--text-muted);
+  --badge-inactive-bg: var(--danger-soft);
   --badge-inactive-fg: #F87171;
 
   /* 반경 */
-  --radius:    10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  --radius:    12px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
   --radius-xl: 28px;
 
   /* 그림자 */
-  --shadow-card: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 24px rgba(0,0,0,0.4);
+  --shadow-card: 0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 28px rgba(0,0,0,0.5);
+
+  /* 타이포 (기본 키 사이즈) */
+  --fs-xs:  12px;
+  --fs-sm:  14px;
+  --fs-md:  16px;
+  --fs-lg:  18px;
+  --fs-xl:  22px;
+  --fs-2xl: 30px;
+  --fs-3xl: 40px;
+  --fs-4xl: 52px;
 }
 
 * { box-sizing: border-box; }
@@ -59,6 +66,7 @@ html, body, #root {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
   background: var(--bg);
   color: var(--text);
+  font-size: var(--fs-md);
   -webkit-font-smoothing: antialiased;
   font-feature-settings: 'cv11', 'ss01';
 }
@@ -71,19 +79,19 @@ button {
 
 input, select, textarea {
   font-family: inherit;
-  font-size: 14px;
+  font-size: var(--fs-md);
   background: var(--bg-3);
   border: 1px solid var(--border);
   color: var(--text);
   border-radius: var(--radius);
-  padding: 10px 14px;
+  padding: 14px 16px;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 input::placeholder, textarea::placeholder { color: var(--text-hint); }
 input:focus, select:focus, textarea:focus {
-  border-color: var(--info);
-  box-shadow: 0 0 0 3px var(--info-glow);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 /* Card */
@@ -91,24 +99,27 @@ input:focus, select:focus, textarea:focus {
   background: var(--bg-3);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 20px;
+  padding: 28px;
   box-shadow: var(--shadow-card);
 }
 .card-title {
-  font-size: 13px; font-weight: 500;
+  font-size: var(--fs-sm);
+  font-weight: 500;
   color: var(--text-muted);
-  margin: 0 0 8px;
-  letter-spacing: 0.02em;
+  margin: 0 0 12px;
+  letter-spacing: 0.01em;
 }
 .card-value {
-  font-size: 32px; font-weight: 700;
+  font-size: var(--fs-3xl);
+  font-weight: 700;
   letter-spacing: -0.02em;
-  line-height: 1.1;
+  line-height: 1.05;
 }
 .card-delta {
   display: inline-flex; align-items: center; gap: 4px;
-  font-size: 12px; font-weight: 600;
-  padding: 3px 8px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  padding: 4px 10px;
   border-radius: 999px;
   background: var(--badge-active-bg);
   color: var(--badge-active-fg);
@@ -121,20 +132,20 @@ input:focus, select:focus, textarea:focus {
 /* Buttons */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
-  gap: 6px;
-  padding: 10px 16px;
+  gap: 8px;
+  padding: 12px 20px;
   border-radius: var(--radius);
-  font-size: 14px;
+  font-size: var(--fs-md);
   font-weight: 500;
   transition: background 0.15s, border-color 0.15s, transform 0.05s;
   border: 1px solid transparent;
 }
 .btn:active { transform: scale(0.985); }
 .btn-primary {
-  background: var(--info); color: white;
-  box-shadow: 0 0 0 1px var(--info), 0 8px 18px var(--info-glow);
+  background: var(--accent); color: #052e15;
+  font-weight: 600;
 }
-.btn-primary:hover { background: #2563EB; }
+.btn-primary:hover { background: var(--accent-hover); }
 .btn-ghost {
   background: var(--bg-3); border-color: var(--border); color: var(--text);
 }
@@ -142,17 +153,18 @@ input:focus, select:focus, textarea:focus {
 .btn-danger {
   background: transparent; border-color: var(--danger); color: var(--danger);
 }
-.btn-danger:hover { background: var(--danger-glow); }
+.btn-danger:hover { background: var(--danger-soft); }
 
 /* Pill 탭 */
 .pill-group {
   display: inline-flex; gap: 4px;
   background: var(--bg-3); border: 1px solid var(--border);
-  border-radius: 999px; padding: 4px;
+  border-radius: 999px; padding: 6px;
 }
 .pill {
-  padding: 6px 14px; border-radius: 999px;
-  font-size: 13px; color: var(--text-muted);
+  padding: 9px 18px; border-radius: 999px;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
   transition: background 0.15s, color 0.15s;
 }
 .pill.active {
@@ -164,27 +176,28 @@ input:focus, select:focus, textarea:focus {
 /* Status Badge */
 .status-badge {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 4px 10px; border-radius: 999px;
-  font-size: 12px; font-weight: 600;
+  padding: 6px 12px; border-radius: 999px;
+  font-size: var(--fs-xs); font-weight: 600;
 }
 .status-badge::before {
   content: ''; width: 6px; height: 6px; border-radius: 50%;
   background: currentColor;
 }
 .status-badge.active   { background: var(--badge-active-bg);   color: var(--badge-active-fg); }
-.status-badge.paused   { background: var(--badge-paused-bg);   color: var(--badge-paused-fg); }
+.status-badge.neutral,
+.status-badge.paused   { background: var(--badge-neutral-bg);  color: var(--badge-neutral-fg); }
 .status-badge.inactive { background: var(--badge-inactive-bg); color: var(--badge-inactive-fg); }
 
 /* DataTable */
 .data-table {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 0 8px;
+  border-spacing: 0 10px;
 }
 .data-table thead th {
   text-align: left;
-  padding: 8px 16px;
-  font-size: 11px; font-weight: 500;
+  padding: 10px 20px;
+  font-size: var(--fs-xs); font-weight: 500;
   letter-spacing: 0.06em; text-transform: uppercase;
   color: var(--text-hint);
 }
@@ -194,8 +207,8 @@ input:focus, select:focus, textarea:focus {
 }
 .data-table tbody tr:hover { background: var(--bg-hover); }
 .data-table tbody td {
-  padding: 16px;
-  font-size: 14px;
+  padding: 20px;
+  font-size: var(--fs-md);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
@@ -210,41 +223,42 @@ input:focus, select:focus, textarea:focus {
   border-bottom-right-radius: var(--radius-md);
 }
 .data-table .row-num {
-  font-size: 14px; color: var(--text-hint);
+  font-size: var(--fs-md); color: var(--text-hint);
   font-variant-numeric: tabular-nums;
 }
 
 /* CPU 게이지 바 */
-.cpu-bar { display: inline-flex; align-items: center; gap: 8px; }
-.cpu-bar-track {
-  width: 80px; height: 18px;
-  display: inline-flex; gap: 2px;
-}
+.cpu-bar { display: inline-flex; align-items: center; gap: 12px; }
+.cpu-bar-track { width: 100px; height: 22px; display: inline-flex; gap: 2px; }
 .cpu-bar-tick {
   flex: 1; border-radius: 1px;
   background: var(--border-strong);
 }
-.cpu-bar-tick.fill { background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); }
+.cpu-bar-tick.fill { background: var(--accent); }
 
 /* 페이지 헤더 */
 .page-header {
   display: flex; align-items: flex-end; justify-content: space-between;
-  margin-bottom: 24px; flex-wrap: wrap; gap: 16px;
+  margin-bottom: 36px; flex-wrap: wrap; gap: 20px;
 }
-.page-breadcrumb { font-size: 13px; color: var(--text-muted); }
+.page-breadcrumb {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
 .page-breadcrumb .sep { margin: 0 8px; color: var(--text-hint); }
 .page-breadcrumb .current { color: var(--text); font-weight: 500; }
 .page-title {
-  font-size: 26px; font-weight: 700;
-  margin: 4px 0 0;
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  margin: 8px 0 0;
   letter-spacing: -0.02em;
 }
 
 /* KPI 그리드 */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
   margin-bottom: 24px;
 }
-.spark { width: 100%; height: 40px; }
+.spark { width: 100%; height: 48px; }
