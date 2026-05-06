@@ -423,16 +423,26 @@
   color: var(--pw-text-hint);
 }
 
-/* ── Photo Area ── */
+/* ── Photo Area (다크) ── */
 .wifi-photo-area {
   position: relative;
   width: 100%;
+  /* 모바일 기본 16:9, PC 는 아래 미디어쿼리에서 더 작게 */
   aspect-ratio: 16 / 9;
+  max-height: 220px;
   border: 1px solid var(--pw-border);
   border-radius: var(--pw-radius-sm);
   overflow: hidden;
   margin-bottom: var(--pw-space-4);
-  background: var(--pw-gray-50);
+  background: var(--pw-bg-3);
+}
+
+@media (min-width: 769px) {
+  .wifi-photo-area {
+    aspect-ratio: auto;
+    height: 180px;
+    max-height: 180px;
+  }
 }
 
 .wifi-photo-preview {
@@ -585,3 +595,84 @@
     padding: var(--pw-space-4) var(--pw-space-5);
   }
 }
+
+/* ── 와이파이 토글 (on/off) ── */
+.wifi-toggle {
+  --w: 44px;
+  --h: 24px;
+  width: var(--w);
+  height: var(--h);
+  border-radius: 999px;
+  border: none;
+  background: var(--pw-bg-hover);
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background 0.18s ease;
+}
+
+.wifi-toggle.on {
+  background: var(--pw-primary, #8B5CF6);
+}
+
+.wifi-toggle-thumb {
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: left 0.18s ease;
+}
+
+.wifi-toggle.on .wifi-toggle-thumb {
+  left: calc(100% - 21px);
+}
+
+.wifi-item-content.is-disabled .wifi-item-name,
+.wifi-item-content.is-disabled .wifi-item-status-row {
+  opacity: 0.5;
+}
+
+.wifi-item-status.off {
+  color: var(--pw-text-hint);
+  font-weight: 600;
+}
+
+/* ── OCR 인식 상태 ── */
+.wifi-ocr-status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: -0.5rem 0 var(--pw-space-4);
+  font-size: 0.85rem;
+  color: var(--pw-primary, #8B5CF6);
+}
+
+.wifi-ocr-spin {
+  animation: wifiSpin 1s linear infinite;
+}
+
+@keyframes wifiSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── BottomActionBar 간격 가이드 (매장안내와 동일) ── */
+.common-form-page .bottom-action-bar-wrapper {
+  margin-top: 3rem;
+  padding-top: var(--pw-space-6, 2rem);
+  padding-bottom: 4rem;
+  border-top: 1px solid var(--pw-border);
+}
+
+.wifi-page .bottom-action-bar-wrapper {
+  margin-top: 3rem;
+  padding-top: var(--pw-space-6, 2rem);
+  padding-bottom: 4rem;
+  border-top: 1px solid var(--pw-border);
+}
+

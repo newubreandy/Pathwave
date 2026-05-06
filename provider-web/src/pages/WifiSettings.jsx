@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
-import { Camera, Plus, X, ChevronLeft, ChevronRight, Trash2, Edit3, Search, Image as ImageIcon } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { Camera, Plus, X, ChevronLeft, ChevronRight, Trash2, Edit3, Search, Image as ImageIcon, Loader2 } from 'lucide-react';
 import WifiService from '../services/wifi/WifiService';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
@@ -7,11 +8,11 @@ import ConfirmModal from '../components/common/ConfirmModal';
 import './WifiSettings.css';
 
 const MOCK_PROFILES = [
-  { id: 1, name: '로비정문1', message: 'Message', ssid: 'kt5G_1234789', password: 'Ezddd1@3356', date: '2022.03.15', image: null, status: 'ok', battery: 90 },
-  { id: 2, name: '수영장',   message: 'Message', ssid: 'kt5G_pool01',   password: 'Ezddd1@3356', date: '2022.03.10', image: null, status: 'ok', battery: 76 },
-  { id: 3, name: '1층카페',   message: 'Message', ssid: 'kt5G_cafe01',   password: 'Ezddd1@3356', date: '2022.02.28', image: null, status: 'low', battery: 22 },
-  { id: 4, name: '2층뷔페',   message: 'Message', ssid: 'kt5G_buffet',   password: 'Ezddd1@3356', date: '2022.02.20', image: null, status: 'ok', battery: 64 },
-  { id: 5, name: '5001호',   message: 'Message', ssid: 'kt5G_5001',     password: 'Ezddd1@3356', date: '2022.01.15', image: null, status: 'offline', battery: 0 },
+  { id: 1, name: '로비정문1', message: 'Message', ssid: 'kt5G_1234789', password: 'Ezddd1@3356', date: '2022.03.15', image: null, status: 'ok', battery: 90, enabled: true },
+  { id: 2, name: '수영장',   message: 'Message', ssid: 'kt5G_pool01',   password: 'Ezddd1@3356', date: '2022.03.10', image: null, status: 'ok', battery: 76, enabled: true },
+  { id: 3, name: '1층카페',   message: 'Message', ssid: 'kt5G_cafe01',   password: 'Ezddd1@3356', date: '2022.02.28', image: null, status: 'low', battery: 22, enabled: true },
+  { id: 4, name: '2층뷔페',   message: 'Message', ssid: 'kt5G_buffet',   password: 'Ezddd1@3356', date: '2022.02.20', image: null, status: 'ok', battery: 64, enabled: false },
+  { id: 5, name: '5001호',   message: 'Message', ssid: 'kt5G_5001',     password: 'Ezddd1@3356', date: '2022.01.15', image: null, status: 'offline', battery: 0, enabled: true },
 ];
 
 // 상태 라벨 + 색상
@@ -22,6 +23,7 @@ const STATUS_LABEL = {
 };
 
 const WifiSettings = () => {
+  const location = useLocation();
   const [profiles, setProfiles] = useState(MOCK_PROFILES);
   const [view, setView] = useState('list'); // 'list' | 'search' | 'detail' | 'add'
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -30,6 +32,8 @@ const WifiSettings = () => {
   const [selectedChips, setSelectedChips] = useState(new Set());
   const [activeFilter, setActiveFilter] = useState(null); // filtered name after search
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [editConfirm, setEditConfirm] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '', ssid: '', password: '', image: null
@@ -37,9 +41,20 @@ const WifiSettings = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  const fileInputRef = useRef(null);
+  // 갤러리 / 카메라 분리
+  const galleryInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
   const touchStartX = useRef(0);
   const touchCurrentX = useRef(0);
+
+  // GNB 의 "와이파이" 메뉴를 다시 탭하면 리스트로 복귀 (location.key 변경 감지)
+  useEffect(() => {
+    setView('list');
+    setSelectedProfile(null);
+    setIsEditing(false);
+    setEditConfirm(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
 
   // ── List Actions ──
   const openDetail = (profile) => {
@@ -87,16 +102,53 @@ const WifiSettings = () => {
     setView('list');
   };
 
+  // ── 사진 선택 + OCR (자동 ID/PW 추출) ──
+  // TODO: 실제 OCR 연동 (백엔드 API 또는 Tesseract.js). 현재는 1초 후 mock 결과 자동 입력
+  const runOcrMock = async (imageUrl) => {
+    setOcrLoading(true);
+    await new Promise((r) => setTimeout(r, 1000));
+    // 실제로는 imageUrl 을 OCR 서버로 보내고 결과 받음.
+    // 여기선 placeholder mock — 통신사 공유기 라벨을 가정한 더미 값.
+    const mockResult = {
+      ssid: 'kt5G_AUTO' + Math.floor(Math.random() * 9000 + 1000),
+      password: 'Ezddd1@' + Math.floor(Math.random() * 9000 + 1000),
+    };
+    setFormData((prev) => ({ ...prev, ssid: mockResult.ssid, password: mockResult.password }));
+    setOcrLoading(false);
+  };
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setPreviewUrl(URL.createObjectURL(file));
-    }
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    // 사진 선택 시 자동 OCR 실행
+    runOcrMock(url);
+    // 같은 파일 재선택 가능하도록 reset
+    e.target.value = '';
   };
 
   const removeImage = () => {
     setPreviewUrl(null);
     setFormData(prev => ({ ...prev, image: null }));
+  };
+
+  // ── 토글 (활성/비활성) ──
+  const toggleEnabled = (id, e) => {
+    if (e) e.stopPropagation();
+    setProfiles((prev) => prev.map((p) => (p.id === id ? { ...p, enabled: !p.enabled } : p)));
+    if (selectedProfile && selectedProfile.id === id) {
+      setSelectedProfile((prev) => ({ ...prev, enabled: !prev.enabled }));
+    }
+  };
+
+  // ── 수정 진입 시 안내 모달 → 확인 후 수정 모드 ──
+  const requestEdit = () => {
+    setEditConfirm(true);
+  };
+  const confirmEdit = () => {
+    setEditConfirm(false);
+    setIsEditing(true);
   };
 
   // ── Touch swipe for list items ──
@@ -251,16 +303,22 @@ const WifiSettings = () => {
               onTouchStart={(e) => handleTouchStart(e, p.id)}
               onTouchEnd={(e) => handleTouchEnd(e, p.id)}
             >
-              <div className="wifi-item-content" onClick={() => openDetail(p)}>
+              <div className={`wifi-item-content ${!p.enabled ? 'is-disabled' : ''}`} onClick={() => openDetail(p)}>
                 <div className="wifi-item-main">
                   <div className="wifi-item-name-row">
                     <span className="wifi-item-label">Name</span>
                     <span className="wifi-item-name">{p.name}</span>
                   </div>
                   <div className="wifi-item-status-row">
-                    <span className={`wifi-status-dot ${p.status}`} />
-                    <span className="wifi-item-status">{STATUS_LABEL[p.status] || '-'}</span>
-                    <span className="wifi-item-battery">(배터리 {p.battery}%)</span>
+                    {p.enabled ? (
+                      <>
+                        <span className={`wifi-status-dot ${p.status}`} />
+                        <span className="wifi-item-status">{STATUS_LABEL[p.status] || '-'}</span>
+                        <span className="wifi-item-battery">(배터리 {p.battery}%)</span>
+                      </>
+                    ) : (
+                      <span className="wifi-item-status off">서비스 중단됨</span>
+                    )}
                   </div>
                 </div>
                 <span className="wifi-item-detail-link">
@@ -288,14 +346,15 @@ const WifiSettings = () => {
           </Button>
         </BottomActionBar>
 
-        {deleteConfirm && (
-          <ConfirmModal
-            title="와이파이 삭제"
-            description="이 와이파이 정보를 삭제하시겠습니까?"
-            onConfirm={() => handleDelete(deleteConfirm)}
-            onCancel={() => setDeleteConfirm(null)}
-          />
-        )}
+        <ConfirmModal
+          isOpen={!!deleteConfirm}
+          title="와이파이 삭제"
+          desc="이 와이파이 정보를 삭제하시겠습니까?"
+          confirmText="삭제"
+          cancelText="취소"
+          onConfirm={() => handleDelete(deleteConfirm)}
+          onCancel={() => setDeleteConfirm(null)}
+        />
       </div>
     );
   }
@@ -315,6 +374,18 @@ const WifiSettings = () => {
           <ChevronLeft size={24} />
         </button>
         <h1>{title}</h1>
+        {selectedProfile && !isAddMode && (
+          <button
+            className={`wifi-toggle ${selectedProfile.enabled ? 'on' : 'off'}`}
+            onClick={() => toggleEnabled(selectedProfile.id)}
+            role="switch"
+            aria-checked={selectedProfile.enabled}
+            title={selectedProfile.enabled ? '서비스 ON — 클릭 시 OFF' : '서비스 OFF — 클릭 시 ON'}
+            style={{ marginLeft: 'auto' }}
+          >
+            <span className="wifi-toggle-thumb" />
+          </button>
+        )}
       </header>
 
       <div className="wifi-detail-body">
@@ -375,13 +446,14 @@ const WifiSettings = () => {
         {/* Photo actions */}
         {canEdit && (
           <div className="wifi-photo-actions">
-            <button className="wifi-photo-action" onClick={() => fileInputRef.current?.click()}>
+            <button className="wifi-photo-action" onClick={() => galleryInputRef.current?.click()} disabled={ocrLoading}>
               <ImageIcon size={14} /> 앨범에서 선택
             </button>
-            <button className="wifi-photo-action" onClick={() => fileInputRef.current?.click()}>
+            <button className="wifi-photo-action" onClick={() => cameraInputRef.current?.click()} disabled={ocrLoading}>
               <Camera size={14} /> 카메라 촬영
             </button>
-            <input type="file" ref={fileInputRef} accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
+            <input type="file" ref={galleryInputRef} accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
+            <input type="file" ref={cameraInputRef} accept="image/*" capture="environment" onChange={handleImageChange} style={{ display: 'none' }} />
           </div>
         )}
 
@@ -389,6 +461,13 @@ const WifiSettings = () => {
           <div className="wifi-photo-actions">
             <button className="wifi-photo-action" disabled>앨범에서 선택</button>
             <button className="wifi-photo-action" disabled>카메라 촬영</button>
+          </div>
+        )}
+
+        {/* OCR 인식 안내 */}
+        {ocrLoading && (
+          <div className="wifi-ocr-status">
+            <Loader2 size={14} className="wifi-ocr-spin" /> 사진에서 와이파이 정보 인식 중...
           </div>
         )}
 
@@ -446,7 +525,7 @@ const WifiSettings = () => {
         ) : (
           <>
             <Button variant="outline" fullWidth onClick={() => setDeleteConfirm(selectedProfile?.id)}>삭제</Button>
-            <Button variant="primary" fullWidth onClick={() => setIsEditing(true)}>
+            <Button variant="primary" fullWidth onClick={requestEdit}>
               수정
             </Button>
           </>
@@ -461,6 +540,17 @@ const WifiSettings = () => {
           onCancel={() => setDeleteConfirm(null)}
         />
       )}
+
+      {/* ID/PW 수정 진입 안내 모달 */}
+      <ConfirmModal
+        isOpen={editConfirm}
+        title="와이파이 정보 수정"
+        desc={"와이파이 정보는 통신사에서 제공한 아이디/비밀번호입니다.\n통신사에서 제공한 정보와 다를 시 서비스가 되지 않습니다.\n수정하시겠어요?"}
+        confirmText="수정"
+        cancelText="취소"
+        onConfirm={confirmEdit}
+        onCancel={() => setEditConfirm(false)}
+      />
     </div>
   );
 };
