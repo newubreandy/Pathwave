@@ -71,32 +71,35 @@ export default function Battery() {
       )}
 
       <div className="stat-grid">
-        <BatterySummaryCard label="전체 비콘" value={summary.total} icon={BatteryIcon} color="#1f6feb" />
-        <BatterySummaryCard label="활성"      value={summary.active} icon={Activity} color="#2ea043" />
+        <BatterySummaryCard label="전체 비콘" value={summary.total} icon={BatteryIcon} />
+        <BatterySummaryCard label="활성"      value={summary.active} icon={Activity} tone="accent" />
         <BatterySummaryCard
           label={`저전력 (≤${threshold}%)`}
           value={summary.low_battery}
           icon={BatteryLow}
-          color="#da3633"
+          tone="danger"
         />
         <BatterySummaryCard
           label="배터리 정보 없음"
           value={summary.unknown}
           icon={BatteryWarning}
-          color="#d29922"
         />
         <BatterySummaryCard
           label="평균 배터리"
           value={summary.avg_pct != null ? `${summary.avg_pct}%` : '—'}
           icon={BatteryIcon}
-          color="#a371f7"
         />
       </div>
 
-      <div className="card table-card" style={{ marginTop: '1.5rem' }}>
-        <div style={{ padding: '0.875rem 1rem', borderBottom: '1px solid var(--border)' }}>
-          <strong>저전력 비콘 ({lowList.length}대)</strong>
-        </div>
+      <div>
+        <h3 style={{
+          margin: '0 0 12px',
+          fontSize: 'var(--fs-md)',
+          fontWeight: 500,
+          color: 'var(--text-muted)',
+        }}>
+          저전력 비콘 ({lowList.length}대)
+        </h3>
         <table className="data-table">
           <thead>
             <tr>
@@ -128,8 +131,7 @@ export default function Battery() {
                 <td className="cell-mono">{b.battery_updated_at?.slice(0, 16) || '—'}</td>
                 <td className="cell-actions">
                   <button
-                    className="btn btn-ghost"
-                    style={{ padding: '0.3rem 0.7rem', fontSize: '0.8125rem' }}
+                    className="btn btn-ghost btn-sm"
                     onClick={() => setHistoryTarget(b)}
                   >
                     시계열
@@ -150,11 +152,11 @@ export default function Battery() {
 }
 
 
-function BatterySummaryCard({ label, value, icon: Icon, color }) {
+function BatterySummaryCard({ label, value, icon: Icon, tone }) {
   return (
     <div className="stat-card">
-      <div className="stat-icon" style={{ background: color + '22', color }}>
-        <Icon size={20} strokeWidth={2} />
+      <div className={`stat-icon ${tone || ''}`}>
+        <Icon size={20} strokeWidth={1.75} />
       </div>
       <div className="stat-content">
         <div className="stat-label">{label}</div>
@@ -167,24 +169,13 @@ function BatterySummaryCard({ label, value, icon: Icon, color }) {
 
 function BatteryBar({ pct }) {
   if (pct == null) return <span className="text-hint">—</span>;
-  const color = pct <= 10 ? '#da3633' : pct <= 20 ? '#d29922' : pct <= 50 ? '#1f6feb' : '#2ea043';
+  const tone = pct <= 20 ? 'low' : pct <= 50 ? 'mid' : '';
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 120 }}>
-      <div style={{
-        flex: 1,
-        height: 8,
-        background: 'var(--bg-3)',
-        borderRadius: 4,
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          width: `${pct}%`,
-          height: '100%',
-          background: color,
-          transition: 'width 0.3s',
-        }} />
+    <div className="battery-bar">
+      <div className="battery-bar-track">
+        <div className={`battery-bar-fill ${tone}`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="cell-mono" style={{ color, minWidth: 40, textAlign: 'right' }}>{pct}%</span>
+      <span className={`battery-bar-pct ${tone}`}>{pct}%</span>
     </div>
   );
 }
@@ -232,22 +223,23 @@ function HistoryModal({ beacon, onClose }) {
                 voltage: h.voltage_mv,
               }))}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="time" stroke="var(--text-muted)" tick={{ fontSize: 11 }} />
-                <YAxis domain={[0, 100]} stroke="var(--text-muted)" tick={{ fontSize: 11 }} />
+                <XAxis dataKey="time" stroke="var(--text-hint)" tick={{ fontSize: 11 }} />
+                <YAxis domain={[0, 100]} stroke="var(--text-hint)" tick={{ fontSize: 11 }} />
                 <Tooltip
                   contentStyle={{
-                    background: 'var(--bg-2)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 8,
+                    background: 'var(--bg-3)',
+                    border: '1px solid var(--border-strong)',
+                    borderRadius: 10,
                     fontSize: '0.8125rem',
+                    color: 'var(--text)',
                   }}
                 />
                 <Line
                   type="monotone"
                   dataKey="pct"
-                  stroke="#2ea043"
+                  stroke="var(--accent)"
                   strokeWidth={2}
-                  dot={{ r: 2 }}
+                  dot={{ r: 2, fill: 'var(--accent)' }}
                 />
               </LineChart>
             </ResponsiveContainer>

@@ -11,12 +11,11 @@ const STATUS_LABEL = {
   inactive:  '비활성',
   lost:      '분실',
 };
-const STATUS_COLOR = {
-  inventory: '#1f6feb',
-  active:    '#2ea043',
-  inactive:  '#8b949e',
-  lost:      '#da3633',
-};
+function badgeClass(status) {
+  if (status === 'active') return 'active';
+  if (status === 'lost')   return 'inactive';
+  return 'neutral';
+}
 
 export default function Beacons() {
   const [filter, setFilter] = useState({ status: 'all', q: '' });
@@ -125,13 +124,7 @@ export default function Beacons() {
                 <td className="cell-mono">{b.serial_no}</td>
                 <td className="cell-mono cell-uuid" title={b.uuid}>{b.uuid}</td>
                 <td>
-                  <span
-                    className="status-pill"
-                    style={{
-                      background: (STATUS_COLOR[b.status] || '#8b949e') + '22',
-                      color: STATUS_COLOR[b.status] || '#8b949e',
-                    }}
-                  >
+                  <span className={`status-badge ${badgeClass(b.status)}`}>
                     {STATUS_LABEL[b.status] || b.status}
                   </span>
                 </td>

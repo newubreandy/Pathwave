@@ -13,9 +13,6 @@ const AUDIENCE_OPTIONS = [
   { value: 'staff',      label: '직원만' },
 ];
 const AUDIENCE_LABEL = Object.fromEntries(AUDIENCE_OPTIONS.map((o) => [o.value, o.label]));
-const AUDIENCE_COLOR = {
-  all: '#a371f7', users: '#1f6feb', facilities: '#2ea043', staff: '#d29922',
-};
 
 export default function Announcements() {
   const [list, setList] = useState([]);
@@ -105,27 +102,23 @@ export default function Announcements() {
             {!loading && list.map((a) => (
               <tr key={a.id}>
                 <td>
-                  {a.pinned ? <Pin size={16} style={{ color: '#d29922' }} /> : null}
+                  {a.pinned ? <Pin size={16} style={{ color: 'var(--text-muted)' }} /> : null}
                 </td>
                 <td>
                   <div style={{ fontWeight: 500 }}>{a.title}</div>
-                  <div className="text-hint" style={{ fontSize: '0.8125rem' }}>
+                  <div className="text-hint" style={{ fontSize: 'var(--fs-xs)', marginTop: 2 }}>
                     {(a.body || '').slice(0, 80)}{(a.body || '').length > 80 ? '...' : ''}
                   </div>
                 </td>
                 <td>
-                  <span
-                    className="status-pill"
-                    style={{
-                      background: (AUDIENCE_COLOR[a.audience] || '#8b949e') + '22',
-                      color: AUDIENCE_COLOR[a.audience] || '#8b949e',
-                    }}
-                  >
+                  <span className="status-badge neutral">
                     {AUDIENCE_LABEL[a.audience] || a.audience}
                   </span>
                 </td>
                 <td className="cell-mono">
-                  {a.push_sent ? <span style={{ color: '#2ea043' }}>발송됨</span> : '—'}
+                  {a.push_sent
+                    ? <span style={{ color: 'var(--accent)' }}>발송됨</span>
+                    : <span className="text-hint">—</span>}
                 </td>
                 <td className="cell-mono" style={{ fontSize: '0.8125rem' }}>
                   {a.starts_at?.slice(0, 10) || '—'} ~ {a.ends_at?.slice(0, 10) || '∞'}
@@ -136,10 +129,10 @@ export default function Announcements() {
                     <Eye size={15} />
                   </button>
                   <button
-                    className="icon-btn"
+                    className={`icon-btn${a.pinned ? ' accent' : ''}`}
                     title={a.pinned ? '상단 고정 해제' : '상단 고정'}
                     onClick={() => handleTogglePin(a)}
-                    style={{ color: a.pinned ? '#d29922' : undefined }}
+                    style={a.pinned ? { color: 'var(--accent)' } : undefined}
                   >
                     <Pin size={15} />
                   </button>
@@ -147,10 +140,9 @@ export default function Announcements() {
                     <Pencil size={15} />
                   </button>
                   <button
-                    className="icon-btn"
+                    className="icon-btn danger"
                     title="삭제"
                     onClick={() => handleDelete(a)}
-                    style={{ color: '#da3633' }}
                   >
                     <Trash2 size={15} />
                   </button>
@@ -364,18 +356,12 @@ function PreviewModal({ announcement: a, onClose }) {
       {a && (
         <div>
           <div style={{
-            display: 'flex', alignItems: 'center', gap: '0.5rem',
-            marginBottom: '0.75rem',
+            display: 'flex', alignItems: 'center', gap: 8,
+            marginBottom: 12,
           }}>
-            {a.pinned && <Pin size={16} style={{ color: '#d29922' }} />}
+            {a.pinned && <Pin size={16} style={{ color: 'var(--accent)' }} />}
             <Megaphone size={16} className="text-muted" />
-            <span
-              className="status-pill"
-              style={{
-                background: (AUDIENCE_COLOR[a.audience] || '#8b949e') + '22',
-                color: AUDIENCE_COLOR[a.audience] || '#8b949e',
-              }}
-            >
+            <span className="status-badge neutral">
               {AUDIENCE_LABEL[a.audience] || a.audience}
             </span>
           </div>
