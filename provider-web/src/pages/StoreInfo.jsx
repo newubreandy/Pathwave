@@ -164,10 +164,48 @@ const StoreInfo = () => {
     });
   };
 
+  // ── 입력 검증 ──
+  const validateBeforeSave = () => {
+    // 1. 전화번호: 숫자/하이픈만, 최소 1자리 숫자
+    const phoneClean = (editData.phone || '').replace(/[^0-9]/g, '');
+    if (phoneClean.length < 8) {
+      return '전화번호를 정확히 입력해주세요. (숫자와 - 만 입력 가능)';
+    }
+
+    // 2. 영업시간: 시작 < 종료, 같으면 안 됨
+    const { start, end } = editData.hours;
+    if (start === end) {
+      return '영업 시작 시간과 종료 시간이 같을 수 없습니다.';
+    }
+    if (start >= end) {
+      return '영업 시작 시간은 종료 시간보다 빨라야 합니다.';
+    }
+
+    // 3. 정기휴무: 주 운영일 ≥ 3일 (= 휴무 ≤ 4일)
+    const operatingDays = 7 - editData.holidays.days.length;
+    if (operatingDays < 3) {
+      return '주 3일 이상 운영하는 매장만 등록할 수 있습니다. 휴무 요일을 4일 이하로 선택해주세요.';
+    }
+
+    // 4. 매장 소개: 최소 10자
+    const desc = (editData.description || '').trim();
+    if (desc.length < 10) {
+      return '매장 소개는 최소 10자 이상 입력해주세요.';
+    }
+
+    return null;
+  };
+
   const handleSave = async () => {
+    const errorMsg = validateBeforeSave();
+    if (errorMsg) {
+      alert(errorMsg);
+      return;
+    }
+
     let newLat = editData.lat;
     let newLng = editData.lng;
-    
+
     // 주소가 변경되었을 경우에만 Geocoding (LocationService 사용)
     if (editData.address !== store.address) {
       try {
@@ -180,7 +218,7 @@ const StoreInfo = () => {
         console.error("Geocoding failed", error);
       }
     }
-    
+
     const finalData = { ...editData, lat: newLat, lng: newLng };
     setStore(finalData);
     setEditData(finalData);
@@ -366,7 +404,21 @@ const StoreInfo = () => {
           <div className="detail-item">
             <label>{t('store.label_phone')}</label>
             {isEditing ? (
-              <input className="input-modern" value={editData.phone} onChange={e => setEditData({...editData, phone: e.target.value})} placeholder="예: 02-1234-5678" />
+              <>
+                <input
+                  className="input-modern"
+                  type="tel"
+                  inputMode="tel"
+                  value={editData.phone}
+                  onChange={e => {
+                    // 숫자와 하이픈(-) 만 허용
+                    const filtered = e.target.value.replace(/[^0-9-]/g, '');
+                    setEditData({ ...editData, phone: filtered });
+                  }}
+                  placeholder="예: 02-1234-5678"
+                />
+                <p className="field-hint">숫자와 하이픈(-) 만 입력할 수 있습니다.</p>
+              </>
             ) : (
               <div className="display-text">{store.phone}</div>
             )}
@@ -433,7 +485,20 @@ const StoreInfo = () => {
         <div className="detail-item">
           <label>{t('store.label_description')}</label>
           {isEditing ? (
-            <textarea className="input-modern" rows="4" value={editData.description} onChange={e => setEditData({...editData, description: e.target.value})} />
+            <>
+              <textarea
+                className="input-modern"
+                rows="4"
+                value={editData.description}
+                onChange={e => setEditData({ ...editData, description: e.target.value })}
+                placeholder="매장의 특징을 10자 이상 입력해주세요."
+              />
+              <p className={`field-hint ${(editData.description || '').trim().length < 10 ? 'warn' : ''}`}>
+                {(editData.description || '').trim().length < 10
+                  ? `최소 10자 이상 (현재 ${(editData.description || '').trim().length}자)`
+                  : `${(editData.description || '').trim().length}자 입력됨`}
+              </p>
+            </>
           ) : (
             <div className="display-text description">{store.description}</div>
           )}
