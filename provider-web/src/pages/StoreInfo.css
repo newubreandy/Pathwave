@@ -260,54 +260,83 @@ textarea.input-modern {
   color: var(--error, #ef4444);
 }
 
-/* ── 검증 오류 배너 ── */
-.validation-banner {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.85rem 1rem;
-  margin-bottom: 1.5rem;
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  border-radius: 10px;
-  color: #fecaca;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  animation: bannerIn 0.25s ease-out;
-}
-
-@keyframes bannerIn {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.validation-banner-icon {
-  font-size: 1.1rem;
-  flex-shrink: 0;
-}
-
-.validation-banner-text {
-  flex: 1;
-  color: #fecaca;
-  font-weight: 500;
-}
-
-.validation-banner-close {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #fecaca;
+/* ── 검증 오류 모달 ── */
+.validation-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.25rem;
-  border-radius: 6px;
-  transition: background 0.15s;
-  flex-shrink: 0;
+  padding: 1rem;
+  animation: vmFadeIn 0.18s ease;
 }
 
-.validation-banner-close:hover {
-  background: rgba(239, 68, 68, 0.2);
+@keyframes vmFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.validation-modal {
+  background: var(--pw-bg-3);
+  border: 1px solid var(--pw-border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 360px;
+  padding: 2rem 1.5rem 1.25rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  text-align: center;
+  animation: vmPopIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes vmPopIn {
+  from { opacity: 0; transform: scale(0.92) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.validation-modal-icon {
+  font-size: 2.25rem;
+  margin-bottom: 0.85rem;
+  line-height: 1;
+}
+
+.validation-modal-text {
+  margin: 0 0 1.5rem;
+  color: var(--pw-text);
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+.validation-modal-confirm {
+  display: block;
+  width: 100%;
+  padding: 0.9rem 1rem;
+  background: var(--pw-primary, #8B5CF6);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.validation-modal-confirm:hover {
+  background: var(--pw-primary-strong, #7C3AED);
+}
+
+.validation-modal-confirm:active {
+  transform: scale(0.98);
+}
+
+.validation-modal-confirm:focus-visible {
+  outline: 2px solid var(--pw-primary, #8B5CF6);
+  outline-offset: 2px;
 }
 
 /* Address Search */
