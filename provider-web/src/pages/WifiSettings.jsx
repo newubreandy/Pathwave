@@ -41,9 +41,6 @@ const WifiSettings = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  // 갤러리 / 카메라 분리
-  const galleryInputRef = useRef(null);
-  const cameraInputRef = useRef(null);
   const touchStartX = useRef(0);
   const touchCurrentX = useRef(0);
 
@@ -377,32 +374,36 @@ const WifiSettings = () => {
           <ChevronLeft size={24} />
         </button>
         <h1>{title}</h1>
-        {selectedProfile && !isAddMode && (
-          <button
-            className={`wifi-toggle ${selectedProfile.enabled ? 'on' : 'off'}`}
-            onClick={() => toggleEnabled(selectedProfile.id)}
-            role="switch"
-            aria-checked={selectedProfile.enabled}
-            title={selectedProfile.enabled ? '서비스 ON — 클릭 시 OFF' : '서비스 OFF — 클릭 시 ON'}
-            style={{ marginLeft: 'auto' }}
-          >
-            <span className="wifi-toggle-thumb" />
-          </button>
-        )}
       </header>
 
       <div className="wifi-detail-body">
         {/* Name */}
         <div className="wifi-field-group">
           <label className="wifi-field-label">Name</label>
-          <input
-            type="text"
-            className="wifi-field-input"
-            placeholder="설정하고자 하는 와이파이 위치를 입력하세요"
-            value={formData.name}
-            onChange={e => setFormData({ ...formData, name: e.target.value })}
-            disabled={!canEdit}
-          />
+          <div className="wifi-name-row">
+            <input
+              type="text"
+              className="wifi-field-input"
+              placeholder="설정하고자 하는 와이파이 위치를 입력하세요"
+              value={formData.name}
+              onChange={e => setFormData({ ...formData, name: e.target.value })}
+              disabled={!canEdit}
+            />
+            {selectedProfile && !isAddMode && (
+              <div className="wifi-name-toggle">
+                <span className="wifi-name-toggle-label">사용</span>
+                <button
+                  className={`wifi-toggle ${selectedProfile.enabled ? 'on' : 'off'}`}
+                  onClick={() => toggleEnabled(selectedProfile.id)}
+                  role="switch"
+                  aria-checked={selectedProfile.enabled}
+                  title={selectedProfile.enabled ? '서비스 ON — 클릭 시 OFF' : '서비스 OFF — 클릭 시 ON'}
+                >
+                  <span className="wifi-toggle-thumb" />
+                </button>
+              </div>
+            )}
+          </div>
           <div className="wifi-field-meta">
             <span className="wifi-field-hint">예) 로비, 정문1, 1234호, 카페앞문, 뒷문</span>
             {selectedProfile && <span className="wifi-field-date">등록일 {selectedProfile.date}</span>}
@@ -446,17 +447,30 @@ const WifiSettings = () => {
           )}
         </div>
 
-        {/* Photo actions */}
+        {/* Photo actions — label 로 input 감싸 iOS Safari/Android 모두 안정 동작 */}
         {canEdit && (
           <div className="wifi-photo-actions">
-            <button className="wifi-photo-action" onClick={() => galleryInputRef.current?.click()} disabled={ocrLoading}>
+            <label className={`wifi-photo-action ${ocrLoading ? 'is-disabled' : ''}`}>
               <ImageIcon size={14} /> 앨범에서 선택
-            </button>
-            <button className="wifi-photo-action" onClick={() => cameraInputRef.current?.click()} disabled={ocrLoading}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                disabled={ocrLoading}
+                className="wifi-photo-action-input"
+              />
+            </label>
+            <label className={`wifi-photo-action ${ocrLoading ? 'is-disabled' : ''}`}>
               <Camera size={14} /> 카메라 촬영
-            </button>
-            <input type="file" ref={galleryInputRef} accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
-            <input type="file" ref={cameraInputRef} accept="image/*" capture="environment" onChange={handleImageChange} style={{ display: 'none' }} />
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleImageChange}
+                disabled={ocrLoading}
+                className="wifi-photo-action-input"
+              />
+            </label>
           </div>
         )}
 
