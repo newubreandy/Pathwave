@@ -291,8 +291,7 @@ const WifiSettings = () => {
         )}
 
         <BottomActionBar>
-          <Button variant="primary" fullWidth onClick={confirmSearch}
-            style={{ background: 'var(--pw-gray-900)', borderColor: 'var(--pw-gray-900)' }}>
+          <Button variant="primary" fullWidth onClick={confirmSearch}>
             검색
           </Button>
         </BottomActionBar>
@@ -352,17 +351,20 @@ const WifiSettings = () => {
                   <span className="wifi-item-name">{p.name}</span>
                 </div>
 
-                {/* 상태 + 배터리 (우측 보조) */}
+                {/* 상태 + 배터리 (우측 보조) — 비사용일 때도 배터리 노출 */}
                 <div className="wifi-item-status-block">
                   {p.enabled ? (
                     <>
                       <span className={`wifi-status-dot ${p.status}`} />
                       <span className="wifi-item-status">{STATUS_LABEL[p.status] || '-'}</span>
-                      <span className="wifi-item-battery">(배터리 {p.battery}%)</span>
                     </>
                   ) : (
-                    <span className="wifi-item-status off">서비스 중단됨</span>
+                    <>
+                      <span className="wifi-status-dot off-dot" />
+                      <span className="wifi-item-status off">서비스 중단됨</span>
+                    </>
                   )}
+                  <span className="wifi-item-battery">(배터리 {p.battery}%)</span>
                 </div>
 
                 {/* 상세보기 링크 (가장 우측) */}
@@ -385,9 +387,8 @@ const WifiSettings = () => {
         </div>
 
         <BottomActionBar>
-          <Button variant="primary" fullWidth icon={<Plus size={18} />} onClick={openAdd}
-            style={{ background: 'var(--pw-gray-900)', borderColor: 'var(--pw-gray-900)' }}>
-            추가
+          <Button variant="primary" fullWidth icon={<Plus size={18} />} onClick={openAdd}>
+            와이파이 신청하기
           </Button>
         </BottomActionBar>
 
@@ -409,7 +410,7 @@ const WifiSettings = () => {
   // ═════════════════════════════════════
   const isAddMode = view === 'add';
   const canEdit = isEditing || isAddMode;
-  const title = isAddMode ? '와이파이 추가' : '와이파이 상세';
+  const title = isAddMode ? '와이파이 신청하기' : '와이파이 상세';
 
   return (
     <div className="common-form-page">
@@ -422,6 +423,11 @@ const WifiSettings = () => {
       </header>
 
       <div className="wifi-detail-body">
+        {isAddMode && (
+          <div className="wifi-request-notice">
+            아래 정보를 입력하시면 운영팀 검토 후 매장에 와이파이 정보가 등록됩니다.
+          </div>
+        )}
         {/* Name */}
         <div className="wifi-field-group">
           <label className="wifi-field-label">Name</label>
@@ -580,7 +586,7 @@ const WifiSettings = () => {
           <>
             <Button variant="outline" fullWidth onClick={() => setView('list')}>취소</Button>
             <Button variant="primary" fullWidth onClick={handleSave}>
-              저장
+              신청하기
             </Button>
           </>
         ) : canEdit ? (
