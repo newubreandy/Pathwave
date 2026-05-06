@@ -83,7 +83,7 @@ export default function Dashboard() {
         gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)',
         gap: 24, marginBottom: 24,
       }}>
-        <div className="card" style={{ minHeight: 320 }}>
+        <div className="card" style={{ minHeight: 320, display: 'flex', flexDirection: 'column' }}>
           <div className="card-title">이번 달 결제 합계</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, marginBottom: 24 }}>
             <span className="card-value" style={{ fontSize: 'var(--fs-4xl)' }}>
@@ -91,7 +91,9 @@ export default function Dashboard() {
             </span>
             <span className="card-delta">↑ 14.3%</span>
           </div>
-          <Sparkline points={DEMO_SPARK(0)} height={180} />
+          <div style={{ flex: 1, display: 'flex', minHeight: 180 }}>
+            <Sparkline points={DEMO_SPARK(0)} height={200} />
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -121,9 +123,9 @@ export default function Dashboard() {
         gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
         marginTop: 24,
       }}>
-        <div className="card">
-          <div className="card-title" style={{ marginBottom: 20 }}>최근 시스템 활동</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <div className="card" style={{ padding: 32 }}>
+          <div className="card-title" style={{ marginBottom: 24 }}>최근 시스템 활동</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             <ActivityRow icon={UserCheck}
               title="신규 사장 가입 승인 대기" subtitle="3건" time="방금" />
             <ActivityRow icon={Radio}
@@ -135,9 +137,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="card">
-          <div className="card-title" style={{ marginBottom: 20 }}>빠른 작업</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+        <div className="card" style={{ padding: 32 }}>
+          <div className="card-title" style={{ marginBottom: 24 }}>빠른 작업</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <QuickAction icon={UserCheck} label="가입 승인" to="/dashboard/approvals" />
             <QuickAction icon={Radio} label="비콘 등록" to="/dashboard/beacons" />
             <QuickAction icon={Megaphone} label="공지 발행" to="/dashboard/announcements" />
@@ -151,18 +153,18 @@ export default function Dashboard() {
 
 function ActivityRow({ icon: Icon, title, subtitle, time }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
       <div style={{
-        width: 40, height: 40, borderRadius: 12,
+        width: 52, height: 52, borderRadius: 14,
         background: 'var(--bg-4)',
         border: '1px solid var(--border)',
         display: 'grid', placeItems: 'center', flexShrink: 0,
       }}>
-        <Icon size={18} color="var(--text-muted)" strokeWidth={1.75} />
+        <Icon size={24} color="var(--text-muted)" strokeWidth={1.75} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 'var(--fs-md)', color: 'var(--text)', fontWeight: 500 }}>{title}</div>
-        <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', marginTop: 2 }}>{subtitle}</div>
+        <div style={{ fontSize: 'var(--fs-lg)', color: 'var(--text)', fontWeight: 500 }}>{title}</div>
+        <div style={{ fontSize: 'var(--fs-md)', color: 'var(--text-muted)', marginTop: 4 }}>{subtitle}</div>
       </div>
       <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-hint)' }}>{time}</div>
     </div>
@@ -172,8 +174,8 @@ function ActivityRow({ icon: Icon, title, subtitle, time }) {
 function QuickAction({ icon: Icon, label, to }) {
   return (
     <Link to={to} style={{
-      display: 'flex', alignItems: 'center', gap: 12,
-      padding: '18px 16px',
+      display: 'flex', alignItems: 'center', gap: 16,
+      padding: '24px 22px',
       background: 'var(--bg-4)',
       border: '1px solid var(--border)',
       borderRadius: 'var(--radius-md)',
@@ -187,8 +189,8 @@ function QuickAction({ icon: Icon, label, to }) {
       e.currentTarget.style.background = 'var(--bg-4)';
       e.currentTarget.style.borderColor = 'var(--border)';
     }}>
-      <Icon size={18} color="var(--text-muted)" strokeWidth={1.75} />
-      <span style={{ fontSize: 'var(--fs-md)', fontWeight: 500 }}>{label}</span>
+      <Icon size={22} color="var(--text-muted)" strokeWidth={1.75} />
+      <span style={{ fontSize: 'var(--fs-lg)', fontWeight: 500 }}>{label}</span>
     </Link>
   );
 }

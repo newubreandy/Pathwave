@@ -47,7 +47,7 @@ export default function KpiCard({
 }
 
 /**
- * 미니 SVG 스파크라인 — 녹색 단일 톤.
+ * 미니 SVG 스파크라인 — 녹색 단일 톤. Catmull-Rom 스플라인으로 부드러운 곡선.
  */
 export function Sparkline({ points, color = 'var(--accent)', height = 40 }) {
   if (!points || points.length < 2) return null;
@@ -56,25 +56,40 @@ export function Sparkline({ points, color = 'var(--accent)', height = 40 }) {
   const min = Math.min(...points, 0);
   const range = max - min || 1;
   const step = w / (points.length - 1);
-  const path = points.map((p, i) => {
-    const x = i * step;
-    const y = h - ((p - min) / range) * h;
-    return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
-  }).join(' ');
+  const xy = points.map((p, i) => ({
+    x: i * step,
+    y: h - ((p - min) / range) * h,
+  }));
+
+  // Catmull-Rom → cubic Bezier 변환 (tension 0.5 → /6).
+  const segs = [];
+  for (let i = 0; i < xy.length - 1; i++) {
+    const p0 = xy[i - 1] || xy[i];
+    const p1 = xy[i];
+    const p2 = xy[i + 1];
+    const p3 = xy[i + 2] || p2;
+    const c1x = p1.x + (p2.x - p0.x) / 6;
+    const c1y = p1.y + (p2.y - p0.y) / 6;
+    const c2x = p2.x - (p3.x - p1.x) / 6;
+    const c2y = p2.y - (p3.y - p1.y) / 6;
+    segs.push(`C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`);
+  }
+  const path = `M ${xy[0].x.toFixed(1)} ${xy[0].y.toFixed(1)} ${segs.join(' ')}`;
   const fillPath = `${path} L ${w} ${h} L 0 ${h} Z`;
   const id = `g${Math.random().toString(36).slice(2,8)}`;
 
   return (
     <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none"
-         style={{ height, flex: 1, minWidth: 80 }}>
+         width="100%"
+         style={{ height, display: 'block', flex: 1, minWidth: 80 }}>
       <defs>
         <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stopColor={color} stopOpacity="0.25" />
+          <stop offset="0%"   stopColor={color} stopOpacity="0.28" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={fillPath} fill={`url(#${id})`} />
-      <path d={path} fill="none" stroke={color} strokeWidth="1.6"
+      <path d={path} fill="none" stroke={color} strokeWidth="1.8"
             strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
