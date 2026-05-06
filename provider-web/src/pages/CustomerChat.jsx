@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Search, ChevronLeft, Send, Paperclip, MoreVertical, Loader2, Trash2, CheckCheck, X } from 'lucide-react';
 import './CustomerChat.css';
 
@@ -166,9 +167,9 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
           {showMenu && (
             <>
               <div className="menu-backdrop" onClick={() => setShowMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 10 }} />
-              <div className="chat-room-dropdown" style={{ position: 'absolute', right: 0, top: '100%', background: 'white', border: '1px solid var(--border)', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 20, minWidth: '120px', padding: '0.5rem 0', display: 'flex', flexDirection: 'column' }}>
-                <button onClick={() => { onLeaveChat(chat.id); setShowMenu(false); }} style={{ padding: '0.75rem 1rem', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-main)' }}>방 나가기</button>
-                <button onClick={() => { onBlockUser(chat.id); setShowMenu(false); }} style={{ padding: '0.75rem 1rem', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--danger)', borderTop: '1px solid var(--border)' }}>차단하기</button>
+              <div className="chat-room-dropdown" style={{ position: 'absolute', right: 0, top: '100%', background: 'var(--pw-bg-3)', border: '1px solid var(--pw-border-strong)', borderRadius: '10px', boxShadow: 'var(--pw-shadow-lg)', zIndex: 20, minWidth: '140px', padding: '0.4rem 0', display: 'flex', flexDirection: 'column' }}>
+                <button onClick={() => { onLeaveChat(chat.id); setShowMenu(false); }} style={{ padding: '0.75rem 1rem', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--pw-text)' }}>방 나가기</button>
+                <button onClick={() => { onBlockUser(chat.id); setShowMenu(false); }} style={{ padding: '0.75rem 1rem', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.9rem', color: '#F87171', borderTop: '1px solid var(--pw-border)' }}>차단하기</button>
               </div>
             </>
           )}
@@ -347,6 +348,14 @@ const CustomerChat = () => {
   const [showBlockList, setShowBlockList] = useState(false);
   const selectedIdRef = useRef(selectedId);
   useEffect(() => { selectedIdRef.current = selectedId; }, [selectedId]);
+
+  // GNB 의 "채팅" 메뉴를 다시 탭하면 리스트로 복귀.
+  // 같은 path 라도 NavLink 클릭은 location.key 를 갱신 → 이 effect 가 트리거됨.
+  // 단, chat row 클릭 시 setSelectedId 는 location 을 안 바꾸므로 여기 영향 없음.
+  const location = useLocation();
+  useEffect(() => {
+    setSelectedId(null);
+  }, [location.key]);
 
   // 채팅 상세 화면 진입 시 레이아웃 전환은 CSS hidden-panel로 처리
 
