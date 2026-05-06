@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, Minus, HelpCircle, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, Minus, HelpCircle, X, Camera, Image as ImageIcon, Loader2 } from 'lucide-react';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
@@ -120,6 +120,11 @@ const ServiceRequest = () => {
   const [incompleteAlert, setIncompleteAlert] = useState(null); // { msg, idx }
   const [showApplicationModal, setShowApplicationModal] = useState(false);
 
+  // 카드별 OCR 상태 (와이파이 정보 입력/수정 화면과 동일 mock 로직 재사용)
+  const [ocrLoadingIdx, setOcrLoadingIdx] = useState(null);
+  const [ocrDoneIdx, setOcrDoneIdx] = useState(null);
+  const [ocrErrorIdx, setOcrErrorIdx] = useState(null);
+
   // 결제 단계 (mock)
   const [card] = useState({
     name: '나라카드',
@@ -209,6 +214,44 @@ const ServiceRequest = () => {
         return { ...item, [field]: value };
       })
     );
+  };
+
+  // ── OCR / 사진 자동입력 ── (WifiSettings 의 runOcrMock 과 동일 로직)
+  // TODO: 실제 OCR 연동 (백엔드 API 또는 Tesseract.js). 현재는 1초 후 mock 결과 자동 입력
+  const runOcrForCard = async (idx, imageUrl) => {
+    console.log('[OCR mock] start', idx, imageUrl);
+    setOcrErrorIdx(null);
+    setOcrLoadingIdx(idx);
+    try {
+      await new Promise((r) => setTimeout(r, 1000));
+      const mockResult = {
+        ssid: 'kt5G_AUTO' + Math.floor(Math.random() * 9000 + 1000),
+        password: 'Ezddd1@' + Math.floor(Math.random() * 9000 + 1000),
+      };
+      console.log('[OCR mock] result', mockResult);
+      setWifiItems((prev) =>
+        prev.map((item, i) =>
+          i === idx ? { ...item, ssid: mockResult.ssid, password: mockResult.password } : item
+        )
+      );
+      setOcrLoadingIdx(null);
+      setOcrDoneIdx(idx);
+      setTimeout(() => setOcrDoneIdx((cur) => (cur === idx ? null : cur)), 2500);
+    } catch (err) {
+      console.warn('[OCR mock] failed', err);
+      setOcrLoadingIdx(null);
+      setOcrErrorIdx(idx);
+      setTimeout(() => setOcrErrorIdx((cur) => (cur === idx ? null : cur)), 3500);
+    }
+  };
+
+  const handleImageChangeForCard = (idx) => async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const inputEl = e.target;
+    setTimeout(() => { if (inputEl) inputEl.value = ''; }, 0);
+    await runOcrForCard(idx, url);
   };
 
   // 다음 → 신청내역 검증 + 팝업
@@ -435,6 +478,49 @@ const ServiceRequest = () => {
                             />
                             <span className="wifi-field-hint">예) 1층 로비, 2층 카페, 5001호</span>
                           </div>
+
+                          {/* 사진으로 ID/PW 자동 입력 — 와이파이 정보 입력/수정 화면과 동일 */}
+                          <div className="wifi-photo-actions sr-acc-photo">
+                            <label className={`wifi-photo-action ${ocrLoadingIdx === idx ? 'is-disabled' : ''}`}>
+                              <ImageIcon size={16} /> 앨범에서 선택
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/gif"
+                                onChange={handleImageChangeForCard(idx)}
+                                disabled={ocrLoadingIdx === idx}
+                                className="wifi-photo-action-input"
+                              />
+                            </label>
+                            <label className={`wifi-photo-action ${ocrLoadingIdx === idx ? 'is-disabled' : ''}`}>
+                              <Camera size={16} /> 카메라 촬영
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                                capture="environment"
+                                onChange={handleImageChangeForCard(idx)}
+                                disabled={ocrLoadingIdx === idx}
+                                className="wifi-photo-action-input"
+                              />
+                            </label>
+                          </div>
+                          <p className="sr-acc-photo-hint">
+                            ※ 공유기 뒷면 라벨을 촬영하면 ID / PW 가 자동 입력됩니다. 결과는 직접 수정 가능합니다.
+                          </p>
+                          {ocrLoadingIdx === idx && (
+                            <div className="wifi-ocr-status sr-acc-ocr">
+                              <Loader2 size={14} className="wifi-ocr-spin" /> 사진에서 와이파이 정보 인식 중...
+                            </div>
+                          )}
+                          {ocrDoneIdx === idx && (
+                            <div className="wifi-ocr-status done sr-acc-ocr">
+                              ✓ 사진에서 ID / PW 자동 입력했습니다. 확인 후 수정해주세요.
+                            </div>
+                          )}
+                          {ocrErrorIdx === idx && (
+                            <div className="wifi-ocr-status error sr-acc-ocr">
+                              ⚠ 사진에서 정보를 인식하지 못했습니다. 직접 입력해주세요.
+                            </div>
+                          )}
 
                           <div className="wifi-field-group">
                             <label className="wifi-field-label">ID *</label>

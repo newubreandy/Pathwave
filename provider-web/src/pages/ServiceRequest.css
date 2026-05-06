@@ -529,6 +529,31 @@
   margin-top: var(--pw-space-4);
 }
 
+/* 카드 안 사진 액션 — 기존 wifi-photo-actions 의 큰 간격을 카드 내부 톤으로 축소 */
+.sr-acc-photo.wifi-photo-actions {
+  gap: var(--pw-space-4);
+  margin-top: calc(var(--pw-space-2) * -1);
+  margin-bottom: var(--pw-space-2);
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.sr-acc-photo-hint {
+  margin: 0 0 var(--pw-space-4);
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-hint);
+  line-height: 1.55;
+}
+
+/* OCR 상태 — 카드 내부에서 너무 위쪽으로 붙지 않게 */
+.sr-acc-ocr.wifi-ocr-status {
+  margin: 0 0 var(--pw-space-4);
+}
+
+.sr-acc-ocr.wifi-ocr-status.error {
+  color: var(--pw-error);
+}
+
 /* 추가 안내 박스 (스탬프/이벤트/알림 단순 신청용) */
 .sr-soon-note {
   margin-top: var(--pw-space-2);
@@ -830,4 +855,145 @@
 .sr-app-modal-btn.primary {
   color: var(--pw-primary);
   font-weight: 800;
+}
+
+/* ════════════════════════════════════════════════════════
+   모바일 typography 보강 (≤ 768px)
+   - 새 폰트 체계를 만들지 않고 기존 토큰을 한 단계씩 위로 매핑
+     (caption 12px → label 14px, label 14px → body 16px)
+   - iOS Safari 의 16px 미만 input 자동 zoom 방지
+   - 터치 가능 최소 44px(--pw-touch-min) 유지
+   ════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* 카드 헤더 */
+  .sr-acc-head {
+    padding: var(--pw-space-4) var(--pw-space-4);
+    gap: var(--pw-space-2);
+  }
+  .sr-acc-head-main { gap: var(--pw-space-2); }
+
+  .sr-acc-num {
+    padding: var(--pw-space-1) var(--pw-space-3);
+    font-size: var(--pw-label-size);   /* 12 → 14 */
+  }
+
+  .sr-acc-loc {
+    font-size: var(--pw-body-size);    /* 14 → 16 */
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .sr-acc-ssid {
+    font-size: var(--pw-label-size);   /* 12 → 14 */
+    line-height: 1.5;
+  }
+
+  .sr-acc-status {
+    padding: var(--pw-space-1) var(--pw-space-3);
+    font-size: var(--pw-label-size);   /* 12 → 14 */
+  }
+
+  /* 아코디언 본문 시원하게 */
+  .sr-acc-body {
+    padding: var(--pw-space-6) var(--pw-space-4) var(--pw-space-5);
+  }
+
+  /* 약정기간 readonly */
+  .sr-acc-readonly {
+    font-size: var(--pw-body-size);    /* 14 → 16 */
+    line-height: 1.55;
+    padding: var(--pw-space-3) 0;
+  }
+
+  /* 비고 textarea — iOS Safari 16px 미만 zoom 방지 */
+  .wifi-field-textarea {
+    font-size: var(--pw-body-size);    /* 14 → 16 */
+    padding: var(--pw-space-3) var(--pw-space-4);
+    min-height: 84px;
+  }
+
+  /* 사진 안내 / OCR 상태 */
+  .sr-acc-photo-hint {
+    font-size: var(--pw-label-size);   /* 12 → 14 */
+  }
+  .sr-acc-ocr.wifi-ocr-status {
+    font-size: var(--pw-label-size);   /* 강조: 결과 안내 */
+  }
+  .sr-acc-photo.wifi-photo-actions { gap: var(--pw-space-3); }
+  .sr-acc-photo .wifi-photo-action {
+    font-size: var(--pw-body-size);    /* 14 → 16 (버튼 가독성) */
+  }
+
+  /* 추가하기 버튼 */
+  .sr-add-card {
+    font-size: var(--pw-body-size);    /* 14 → 16 */
+    padding: var(--pw-space-5);
+    min-height: var(--pw-touch-comfortable);
+  }
+
+  /* 안내 리스트 (※) */
+  .sr-notices {
+    font-size: var(--pw-label-size);   /* 12 → 14 */
+    gap: var(--pw-space-3);
+    line-height: 1.7;
+  }
+  .sr-cat-bullets {
+    font-size: var(--pw-label-size);   /* 12 → 14 */
+    line-height: 1.65;
+  }
+
+  /* 선택 수량 표시 */
+  .sr-quantity-display {
+    font-size: var(--pw-body-size);    /* 14 → 16 */
+    padding: var(--pw-space-4);
+  }
+
+  /* 카테고리 셀렉트 */
+  .sr-cat-select-title {
+    font-size: var(--pw-headline-size); /* 18 → 20 (모바일 미디어로 이미 정의됨) */
+  }
+  .sr-cat-dropdown-item {
+    font-size: var(--pw-body-size);    /* 14 → 16 */
+    padding: var(--pw-space-4);
+    min-height: var(--pw-touch-min);
+  }
+
+  /* Quantity stepper */
+  .sr-qty-label { font-size: var(--pw-body-size); }
+  .sr-qty-confirm {
+    font-size: var(--pw-body-size);    /* 14 → 16 */
+    padding: var(--pw-space-3) var(--pw-space-5);
+  }
+  .sr-qty-value { font-size: 1.75rem; }
+  .sr-qty-btn { width: 32px; height: 32px; }
+
+  /* 신청내역 모달 */
+  .sr-app-modal-head h3 {
+    font-size: var(--pw-headline-size); /* 18 → 20 */
+  }
+  .sr-app-summary-row {
+    font-size: var(--pw-body-size);    /* 14 → 16 */
+  }
+  .sr-app-list-row {
+    font-size: var(--pw-label-size);   /* 12 → 14 */
+    padding: var(--pw-space-4);
+  }
+  .sr-app-list-line { font-size: var(--pw-label-size); }
+  .sr-app-list-num { font-size: var(--pw-label-size); }
+  .sr-app-modal-btn {
+    font-size: var(--pw-body-size);    /* 14 → 16 */
+    padding: var(--pw-space-5) 0;
+    min-height: var(--pw-touch-comfortable);
+  }
+
+  /* 카테고리 카드 본문 */
+  .sr-cat-title { font-size: var(--pw-headline-size); }
+  .sr-soon-note { font-size: var(--pw-body-size); }
+}
+
+/* 더 작은 모바일 — 시작/종료일 1열로 떨어진 후 폰트만 한 번 더 보강 */
+@media (max-width: 480px) {
+  .sr-acc-head { padding: var(--pw-space-4) var(--pw-space-3); }
+  .sr-acc-body { padding: var(--pw-space-5) var(--pw-space-3); }
+  .sr-app-modal-body { padding: var(--pw-space-3) var(--pw-space-4); }
 }
