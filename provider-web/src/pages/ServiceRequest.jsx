@@ -424,71 +424,83 @@ const ServiceRequest = () => {
 
                       {isOpen && (
                         <div className="sr-acc-body">
-                          <div className="sr-pf-group">
-                            <label className="sr-pf-label">설치 위치 <span className="sr-pf-req">*</span></label>
+                          <div className="wifi-field-group">
+                            <label className="wifi-field-label">설치 위치 *</label>
                             <input
-                              className="sr-input"
-                              placeholder="예) 1층 로비, 2층 카페, 5001호"
+                              type="text"
+                              className="wifi-field-input"
+                              placeholder="설치하려는 와이파이 위치를 입력하세요"
                               value={item.location}
                               onChange={(e) => updateField(idx, 'location', e.target.value)}
                             />
+                            <span className="wifi-field-hint">예) 1층 로비, 2층 카페, 5001호</span>
                           </div>
-                          <div className="sr-pf-group">
-                            <label className="sr-pf-label">와이파이 ID (SSID) <span className="sr-pf-req">*</span></label>
+
+                          <div className="wifi-field-group">
+                            <label className="wifi-field-label">ID *</label>
                             <input
-                              className="sr-input"
-                              placeholder="kt5G_1234789"
+                              type="text"
+                              className="wifi-field-input"
+                              placeholder="해당와이파이의 ID를 입력해 주세요"
                               value={item.ssid}
                               onChange={(e) => updateField(idx, 'ssid', e.target.value)}
                             />
+                            <span className="wifi-field-hint">예) kt5g_1234789</span>
                           </div>
-                          <div className="sr-pf-group">
-                            <label className="sr-pf-label">와이파이 PW <span className="sr-pf-req">*</span></label>
+
+                          <div className="wifi-field-group">
+                            <label className="wifi-field-label">PW *</label>
                             <input
-                              className="sr-input"
-                              placeholder="Ezddd1@3356"
+                              type="text"
+                              className="wifi-field-input"
+                              placeholder="해당와이파이의 비밀번호를 입력해 주세요"
                               value={item.password}
                               onChange={(e) => updateField(idx, 'password', e.target.value)}
                             />
+                            <span className="wifi-field-hint">예) ezddd1@3356</span>
                           </div>
-                          <div className="sr-pf-row2">
-                            <div className="sr-pf-group">
-                              <label className="sr-pf-label">서비스 시작일 <span className="sr-pf-req">*</span></label>
+
+                          <div className="sr-acc-row2">
+                            <div className="wifi-field-group">
+                              <label className="wifi-field-label">서비스 시작일 *</label>
                               <input
                                 type="date"
-                                className="sr-input"
+                                className="wifi-field-input"
                                 value={item.startDate}
                                 onChange={(e) => updateField(idx, 'startDate', e.target.value)}
                               />
                             </div>
-                            <div className="sr-pf-group">
-                              <label className="sr-pf-label">서비스 종료일 <span className="sr-pf-req">*</span></label>
+                            <div className="wifi-field-group">
+                              <label className="wifi-field-label">서비스 종료일 *</label>
                               <input
                                 type="date"
-                                className="sr-input"
+                                className="wifi-field-input"
                                 value={item.endDate}
                                 onChange={(e) => updateField(idx, 'endDate', e.target.value)}
                               />
                             </div>
                           </div>
-                          <div className="sr-pf-group">
-                            <label className="sr-pf-label">약정기간</label>
-                            <div className="sr-pf-static">2년 (시작일 + 2년 자동 설정 · 종료일 직접 수정 가능)</div>
+
+                          <div className="wifi-field-group">
+                            <label className="wifi-field-label">약정기간</label>
+                            <p className="sr-acc-readonly">2년 약정 · 시작일 + 2년 자동 설정 (종료일 직접 수정 가능)</p>
                           </div>
-                          <div className="sr-pf-group">
-                            <label className="sr-pf-label">비고</label>
+
+                          <div className="wifi-field-group">
+                            <label className="wifi-field-label">비고</label>
                             <textarea
-                              className="sr-textarea"
+                              className="wifi-field-textarea"
                               placeholder="설치 관련 메모 (선택)"
                               rows={2}
                               value={item.memo}
                               onChange={(e) => updateField(idx, 'memo', e.target.value)}
                             />
                           </div>
+
                           <div className="sr-acc-actions">
-                            <button type="button" className="sr-acc-remove" onClick={() => handleRemoveWifi(idx)}>
+                            <Button variant="outline" onClick={() => handleRemoveWifi(idx)}>
                               이 와이파이 삭제
-                            </button>
+                            </Button>
                           </div>
                         </div>
                       )}
