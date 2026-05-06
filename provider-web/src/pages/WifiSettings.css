@@ -596,6 +596,13 @@
   }
 }
 
+/* 와이파이 상세: 모바일에서만 헤더 ↔ Name 영역 간격 추가 */
+@media (max-width: 768px) {
+  .common-form-page .wifi-detail-body {
+    padding-top: var(--pw-space-8, 2.5rem);
+  }
+}
+
 /* ── Name 입력 + 사용/정지 토글 한 줄 ── */
 .wifi-name-row {
   display: flex;
@@ -644,20 +651,24 @@
   pointer-events: none;
 }
 
-/* ── 와이파이 토글 (on/off) ── */
+/* ── 와이파이 토글 (on/off) — flex 정렬로 thumb 정중앙 ── */
 .wifi-toggle {
   --w: 44px;
   --h: 24px;
+  --thumb: 18px;
   width: var(--w);
   height: var(--h);
   border-radius: 999px;
   border: none;
   background: var(--pw-bg-hover);
-  position: relative;
   cursor: pointer;
   flex-shrink: 0;
-  padding: 0;
+  padding: 3px;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
   transition: background 0.18s ease;
+  line-height: 0;
 }
 
 .wifi-toggle.on {
@@ -665,20 +676,17 @@
 }
 
 .wifi-toggle-thumb {
-  position: absolute;
-  top: 50%;
-  left: 3px;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
+  display: block;
+  width: var(--thumb);
+  height: var(--thumb);
   border-radius: 50%;
   background: #fff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-  transition: left 0.18s ease;
+  transition: transform 0.18s ease;
 }
 
 .wifi-toggle.on .wifi-toggle-thumb {
-  left: calc(100% - 21px);
+  transform: translateX(calc(var(--w) - var(--h)));
 }
 
 .wifi-item-content.is-disabled .wifi-item-name,
