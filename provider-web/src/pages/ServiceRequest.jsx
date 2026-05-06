@@ -56,6 +56,69 @@ const WIFI_NOTICES = [
   '서비스 신청 후 와이파이 정보를 입력해 주세요.',
 ];
 
+// 와이파이 정보 수정 화면과 동일 구조의 폼 — 카드별 정보 입력
+const ProfileForm = ({ initial, showPeriod, calcEndDate, onCancel, onSave }) => {
+  const [form, setForm] = useState({
+    name: initial.name || '',
+    location: initial.location || '',
+    ssid: initial.ssid || '',
+    password: initial.password || '',
+    periodStart: initial.periodStart || '',
+  });
+  const setField = (k, v) => setForm((p) => ({ ...p, [k]: v }));
+
+  const handleSubmit = () => {
+    onSave({
+      name: form.name,
+      location: form.location,
+      ssid: form.ssid,
+      password: form.password,
+      periodStart: showPeriod ? form.periodStart : '',
+      periodEnd: showPeriod ? calcEndDate(form.periodStart) : '',
+    });
+  };
+
+  return (
+    <div className="sr-page">
+      <header className="sr-header">
+        <button className="sr-back" onClick={onCancel}><ChevronLeft size={22} /></button>
+        <h1 className="sr-title">와이파이 정보 입력</h1>
+      </header>
+
+      <div className="sr-body">
+        <div className="sr-pf-group">
+          <label className="sr-pf-label">Name</label>
+          <input className="sr-input" placeholder="예) 로비정문1" value={form.name} onChange={(e) => setField('name', e.target.value)} />
+        </div>
+        <div className="sr-pf-group">
+          <label className="sr-pf-label">설치 위치</label>
+          <input className="sr-input" placeholder="예) 1층 로비, 2층 카페, 5001호" value={form.location} onChange={(e) => setField('location', e.target.value)} />
+        </div>
+        <div className="sr-pf-group">
+          <label className="sr-pf-label">와이파이 ID (SSID)</label>
+          <input className="sr-input" placeholder="kt5G_1234789" value={form.ssid} onChange={(e) => setField('ssid', e.target.value)} />
+        </div>
+        <div className="sr-pf-group">
+          <label className="sr-pf-label">와이파이 PW</label>
+          <input className="sr-input" placeholder="Ezddd1@3356" value={form.password} onChange={(e) => setField('password', e.target.value)} />
+        </div>
+        {showPeriod && (
+          <div className="sr-pf-group">
+            <label className="sr-pf-label">약정 시작일</label>
+            <input type="date" className="sr-input" value={form.periodStart} onChange={(e) => setField('periodStart', e.target.value)} />
+            <p className="sr-hint">→ 종료일 {form.periodStart ? calcEndDate(form.periodStart) : '------'} (자동 +2년)</p>
+          </div>
+        )}
+      </div>
+
+      <BottomActionBar>
+        <Button variant="outline" fullWidth onClick={onCancel}>취소</Button>
+        <Button variant="primary" fullWidth onClick={handleSubmit}>저장</Button>
+      </BottomActionBar>
+    </div>
+  );
+};
+
 const ServiceRequest = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -87,11 +150,19 @@ const ServiceRequest = () => {
 
   // 와이파이 단계
   const [quantity, setQuantity] = useState(2);
+  const [quantityConfirmed, setQuantityConfirmed] = useState(false);
   const [regMode, setRegMode] = useState('individual'); // 'individual' | 'bulk'
-  const [individualProfiles, setIndividualProfiles] = useState([
-    { id: 1, name: '로비정문1', message: 'Message', password: 'Ezddd1@3356' },
-  ]);
+  // 개별 등록 카드 (수량만큼 빈 슬롯 + 채워진 데이터)
+  const [individualProfiles, setIndividualProfiles] = useState([]);
+  const [editingIndex, setEditingIndex] = useState(null);
+
+  // 약정 기간: 개별/일괄 모드, 일괄 시 공통 시작일 (종료는 +2년 자동)
+  const [periodMode, setPeriodMode] = useState('common'); // 'common' | 'individual'
+  const [commonStart, setCommonStart] = useState('');
+
+  // 일괄 등록
   const [excelFileName, setExcelFileName] = useState('');
+  const [bulkRows, setBulkRows] = useState([]); // 업로드 후 파싱 결과 (mock)
   const fileInputRef = useRef(null);
 
   // 결제 단계 (mock)
@@ -116,6 +187,7 @@ const ServiceRequest = () => {
 
   // ── 핸들러 ──
   const handleBack = () => {
+    if (step === 'profile') { setEditingIndex(null); setStep('wifi'); return; }
     if (isDetailStep(step)) setStep('category');
     else if (step === 'payment') setStep(categoryKey);
     else navigate(-1);
@@ -132,20 +204,80 @@ const ServiceRequest = () => {
     setStep(key);
   };
 
+  // 시작일 + 2년 → 종료일
+  const calcEndDate = (startStr) => {
+    if (!startStr) return '';
+    const d = new Date(startStr);
+    if (Number.isNaN(d.getTime())) return '';
+    d.setFullYear(d.getFullYear() + 2);
+    return d.toISOString().slice(0, 10);
+  };
+
+  // 수량 확정 — 빈 슬롯 만들어 등록 영역 노출
+  const handleConfirmQuantity = () => {
+    setQuantityConfirmed(true);
+    setIndividualProfiles((prev) => {
+      if (prev.length >= quantity) return prev.slice(0, quantity);
+      const need = quantity - prev.length;
+      const additions = Array.from({ length: need }, (_, i) => ({
+        id: Date.now() + i,
+        name: '',
+        location: '',
+        ssid: '',
+        password: '',
+        periodStart: '',
+        periodEnd: '',
+      }));
+      return [...prev, ...additions];
+    });
+  };
+
+  // + 추가: 빈 슬롯 1개 추가 + 수량 +1
+  const handleAddIndividual = () => {
+    setIndividualProfiles((prev) => [
+      ...prev,
+      { id: Date.now(), name: '', location: '', ssid: '', password: '', periodStart: '', periodEnd: '' },
+    ]);
+    setQuantity((q) => q + 1);
+  };
+
+  // 카드 삭제 (수량도 같이 감소)
+  const handleRemoveIndividual = (idx) => {
+    setIndividualProfiles((prev) => prev.filter((_, i) => i !== idx));
+    setQuantity((q) => Math.max(1, q - 1));
+  };
+
+  // 카드 클릭 → 정보 입력 화면
+  const handleEditProfile = (idx) => {
+    setEditingIndex(idx);
+    setStep('profile');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // 정보 입력 저장
+  const handleProfileSave = (data) => {
+    setIndividualProfiles((prev) => prev.map((p, i) => (i === editingIndex ? { ...p, ...data } : p)));
+    setEditingIndex(null);
+    setStep('wifi');
+  };
+
   const handleExcelDownload = () => {
-    // TODO: 백엔드에서 양식 제공
-    alert('와이파이 일괄등록 엑셀 양식이 다운로드 됩니다.');
+    // TODO: 백엔드 GET /api/service-request/excel-template
+    alert('엑셀 양식: 설치위치 / 와이파이 ID / 와이파이 PW / 시작일 / 종료일 (자동 +2년)\n양식이 다운로드 됩니다.');
   };
 
   const handleExcelUpload = (e) => {
     const file = e.target.files?.[0];
-    if (file) setExcelFileName(file.name);
+    if (!file) return;
+    setExcelFileName(file.name);
+    // Mock 파싱 — 실제로는 SheetJS 또는 백엔드로 보내서 파싱
+    const today = new Date().toISOString().slice(0, 10);
+    setBulkRows([
+      { id: 'b1', location: '1층 로비', ssid: 'olleh_GiGA_LB01', password: '1234567890', periodStart: today, periodEnd: calcEndDate(today) },
+      { id: 'b2', location: '2층 카페',  ssid: 'olleh_GiGA_CF02', password: '0987654321', periodStart: today, periodEnd: calcEndDate(today) },
+      { id: 'b3', location: '5001호',   ssid: 'olleh_GiGA_5001', password: 'pass500120',  periodStart: today, periodEnd: calcEndDate(today) },
+    ]);
     e.target.value = '';
-  };
-
-  const handleAddIndividual = () => {
-    const id = Date.now();
-    setIndividualProfiles((prev) => [...prev, { id, name: '', message: '', password: '' }]);
   };
 
   const handleSubmit = () => {
@@ -239,18 +371,23 @@ const ServiceRequest = () => {
             </div>
           )}
 
-          {/* Quantity stepper */}
+          {/* Quantity stepper + 확인 버튼 */}
           <div className="sr-qty-row">
             <span className="sr-qty-label">Quantity</span>
             <div className="sr-qty-control">
-              <button className="sr-qty-btn" onClick={() => setQuantity((q) => Math.max(1, q - 1))} aria-label="수량 감소">
+              <button className="sr-qty-btn" onClick={() => setQuantity((q) => Math.max(1, q - 1))} aria-label="수량 감소" disabled={quantityConfirmed}>
                 <Minus size={16} />
               </button>
               <span className="sr-qty-value">{String(quantity).padStart(2, '0')}</span>
-              <button className="sr-qty-btn" onClick={() => setQuantity((q) => Math.min(99, q + 1))} aria-label="수량 증가">
+              <button className="sr-qty-btn" onClick={() => setQuantity((q) => Math.min(99, q + 1))} aria-label="수량 증가" disabled={quantityConfirmed}>
                 <Plus size={16} />
               </button>
             </div>
+            {!quantityConfirmed ? (
+              <button className="sr-qty-confirm" onClick={handleConfirmQuantity}>확인</button>
+            ) : (
+              <button className="sr-qty-confirm ghost" onClick={() => setQuantityConfirmed(false)}>수량 변경</button>
+            )}
           </div>
 
           {/* 안내 */}
@@ -258,61 +395,153 @@ const ServiceRequest = () => {
             {WIFI_NOTICES.map((n, i) => <li key={i}>{n}</li>)}
           </ul>
 
-          {/* 탭 */}
-          <div className="sr-tabs">
-            <button
-              className={`sr-tab ${regMode === 'individual' ? 'active' : ''}`}
-              onClick={() => setRegMode('individual')}
-            >개별등록</button>
-            <button
-              className={`sr-tab ${regMode === 'bulk' ? 'active' : ''}`}
-              onClick={() => setRegMode('bulk')}
-            >일괄등록</button>
-          </div>
+          {/* 수량 확정 후에만 등록 영역 노출 */}
+          {quantityConfirmed && (
+            <>
+              {/* 탭 */}
+              <div className="sr-tabs">
+                <button
+                  className={`sr-tab ${regMode === 'individual' ? 'active' : ''}`}
+                  onClick={() => setRegMode('individual')}
+                >개별등록</button>
+                <button
+                  className={`sr-tab ${regMode === 'bulk' ? 'active' : ''}`}
+                  onClick={() => setRegMode('bulk')}
+                >일괄등록</button>
+              </div>
 
-          {/* 탭 컨텐츠 */}
-          {regMode === 'individual' ? (
-            <div className="sr-individual">
-              <button className="sr-add-card" onClick={handleAddIndividual}>
-                <Plus size={20} />
-                <span>와이파이 개별등록</span>
-              </button>
-              {individualProfiles.map((p) => (
-                <div key={p.id} className="sr-profile-card">
-                  <div className="sr-profile-row"><span className="sr-profile-label">Name</span><span className="sr-profile-value">{p.name || '-'}</span></div>
-                  <div className="sr-profile-row">
-                    <span className="sr-profile-label">Message</span><span className="sr-profile-value">{p.message || '-'}</span>
-                    <span className="sr-profile-label" style={{ marginLeft: 'auto' }}>PW</span><span className="sr-profile-value">{p.password || '-'}</span>
-                  </div>
-                  <ChevronRight size={16} className="sr-profile-arrow" />
+              {/* 약정 기간 영역 */}
+              <div className="sr-period-block">
+                <div className="sr-period-head">
+                  <span className="sr-period-title">약정 기간 (2년)</span>
+                  {regMode === 'individual' && (
+                    <div className="sr-period-mode">
+                      <label className={`sr-radio ${periodMode === 'common' ? 'active' : ''}`}>
+                        <input type="radio" name="periodMode" checked={periodMode === 'common'} onChange={() => setPeriodMode('common')} />
+                        일괄
+                      </label>
+                      <label className={`sr-radio ${periodMode === 'individual' ? 'active' : ''}`}>
+                        <input type="radio" name="periodMode" checked={periodMode === 'individual'} onChange={() => setPeriodMode('individual')} />
+                        개별
+                      </label>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="sr-bulk">
-              <button className="sr-bulk-download" onClick={handleExcelDownload}>
-                엑셀 양식 다운받기
-                <FileSpreadsheet size={16} />
-              </button>
-              <p className="sr-bulk-hint">※ 엑셀양식을 다운로드 후 파일을 첨부해 주시면 자동으로 입력됩니다.</p>
-              <label className="sr-bulk-upload">
-                {excelFileName ? excelFileName : '엑셀 양식 재 업로드'}
-                <input
-                  type="file"
-                  accept=".xlsx,.xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                  onChange={handleExcelUpload}
-                  ref={fileInputRef}
-                  style={{ display: 'none' }}
-                />
-              </label>
-            </div>
+                {(regMode === 'bulk' || periodMode === 'common') && (
+                  <div className="sr-period-row">
+                    <label className="sr-period-label">시작일</label>
+                    <input
+                      type="date"
+                      className="sr-period-input"
+                      value={commonStart}
+                      onChange={(e) => setCommonStart(e.target.value)}
+                    />
+                    <span className="sr-period-end">→ 종료일 {calcEndDate(commonStart) || '------'}</span>
+                  </div>
+                )}
+                {regMode === 'individual' && periodMode === 'individual' && (
+                  <p className="sr-period-note">개별 등록 카드에서 각각 시작일을 입력해주세요.</p>
+                )}
+              </div>
+
+              {/* 탭 컨텐츠 */}
+              {regMode === 'individual' ? (
+                <div className="sr-individual">
+                  {individualProfiles.map((p, idx) => {
+                    const filled = p.name || p.ssid || p.password;
+                    return (
+                      <div key={p.id} className={`sr-profile-card ${filled ? 'filled' : 'empty'}`} onClick={() => handleEditProfile(idx)}>
+                        <div className="sr-profile-main">
+                          {filled ? (
+                            <>
+                              <div className="sr-profile-row"><span className="sr-profile-label">Name</span><span className="sr-profile-value">{p.name || '-'}</span></div>
+                              <div className="sr-profile-row">
+                                <span className="sr-profile-label">위치</span><span className="sr-profile-value">{p.location || '-'}</span>
+                                <span className="sr-profile-label" style={{ marginLeft: 'auto' }}>PW</span><span className="sr-profile-value">{p.password || '-'}</span>
+                              </div>
+                            </>
+                          ) : (
+                            <span className="sr-profile-empty-text">정보 입력 필요 (탭하여 입력)</span>
+                          )}
+                        </div>
+                        <button className="sr-profile-remove" onClick={(e) => { e.stopPropagation(); handleRemoveIndividual(idx); }} aria-label="삭제">×</button>
+                        <ChevronRight size={16} className="sr-profile-arrow" />
+                      </div>
+                    );
+                  })}
+                  <button className="sr-add-card" onClick={handleAddIndividual}>
+                    <Plus size={20} />
+                    <span>와이파이 개별등록 (+1)</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="sr-bulk">
+                  <button className="sr-bulk-download" onClick={handleExcelDownload}>
+                    엑셀 양식 다운받기
+                    <FileSpreadsheet size={16} />
+                  </button>
+                  <p className="sr-bulk-hint">※ 엑셀양식 컬럼: 설치위치 / 와이파이 ID / 와이파이 PW / 시작일<br/>업로드하면 자동으로 리스트가 생성됩니다.</p>
+                  <label className="sr-bulk-upload">
+                    {excelFileName ? excelFileName : '엑셀 양식 업로드 / 재 업로드'}
+                    <input
+                      type="file"
+                      accept=".xlsx,.xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                      onChange={handleExcelUpload}
+                      ref={fileInputRef}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+
+                  {bulkRows.length > 0 && (
+                    <div className="sr-bulk-result">
+                      <div className="sr-bulk-summary">
+                        <strong>총 {bulkRows.length}개</strong>
+                        {commonStart && (
+                          <span className="sr-bulk-period"> · {commonStart} ~ {calcEndDate(commonStart)}</span>
+                        )}
+                      </div>
+                      <div className="sr-bulk-list">
+                        {bulkRows.map((row) => (
+                          <div key={row.id} className="sr-bulk-row">
+                            <div className="sr-bulk-row-main">
+                              <span className="sr-bulk-row-loc">{row.location}</span>
+                              <span className="sr-bulk-row-ssid">{row.ssid}</span>
+                            </div>
+                            <div className="sr-bulk-row-sub">
+                              <span>PW {row.password}</span>
+                              <span>{row.periodStart} ~ {row.periodEnd}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
 
         <BottomActionBar>
-          <Button variant="primary" fullWidth onClick={handleNext}>다음</Button>
+          <Button variant="primary" fullWidth onClick={handleNext} disabled={!quantityConfirmed}>다음</Button>
         </BottomActionBar>
       </div>
+    );
+  }
+
+  // ═══════════════════════════════════════
+  // STEP 2-A — 개별 와이파이 정보 입력 화면 (와이파이 정보 수정 화면과 동일 구조)
+  // ═══════════════════════════════════════
+  if (step === 'profile') {
+    const profile = individualProfiles[editingIndex] || {};
+    return (
+      <ProfileForm
+        initial={profile}
+        showPeriod={periodMode === 'individual'}
+        calcEndDate={calcEndDate}
+        onCancel={() => { setEditingIndex(null); setStep('wifi'); }}
+        onSave={handleProfileSave}
+      />
     );
   }
 
