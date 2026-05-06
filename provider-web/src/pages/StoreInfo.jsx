@@ -144,9 +144,16 @@ const StoreInfo = () => {
   };
 
   const addCategory = (cat) => {
-    if (!editData.categories.includes(cat)) {
-      setEditData({ ...editData, categories: [...editData.categories, cat] });
+    if (editData.categories.includes(cat)) {
+      setCategorySearch('');
+      setShowCategoryDropdown(false);
+      return;
     }
+    if (editData.categories.length >= 3) {
+      alert('업종은 최대 3개까지 선택할 수 있습니다.');
+      return;
+    }
+    setEditData({ ...editData, categories: [...editData.categories, cat] });
     setCategorySearch('');
     setShowCategoryDropdown(false);
   };
@@ -164,16 +171,42 @@ const StoreInfo = () => {
     });
   };
 
-  // ── 입력 검증 ──
+  // ── 입력 검증 (필수값) ──
   const validateBeforeSave = () => {
-    // 1. 전화번호: 숫자/하이픈만, 최소 1자리 숫자
+    // 0. 매장 사진 (1장 이상)
+    if (!editData.images || editData.images.length === 0) {
+      return '매장 사진을 1장 이상 등록해주세요.';
+    }
+
+    // 1. 매장명 (1자 이상)
+    if (!(editData.name || '').trim()) {
+      return '매장명을 입력해주세요.';
+    }
+
+    // 2. 업종 (1~3개)
+    if (!editData.categories || editData.categories.length === 0) {
+      return '업종을 1개 이상 선택해주세요.';
+    }
+    if (editData.categories.length > 3) {
+      return '업종은 최대 3개까지 선택할 수 있습니다.';
+    }
+
+    // 3. 위치(주소) 필수
+    if (!(editData.address || '').trim()) {
+      return '매장 주소를 입력해주세요.';
+    }
+
+    // 4. 전화번호: 숫자/하이픈만, 최소 8자리 숫자
     const phoneClean = (editData.phone || '').replace(/[^0-9]/g, '');
     if (phoneClean.length < 8) {
       return '전화번호를 정확히 입력해주세요. (숫자와 - 만 입력 가능)';
     }
 
-    // 2. 영업시간: 시작 < 종료, 같으면 안 됨
+    // 5. 영업시간: 시작 < 종료
     const { start, end } = editData.hours;
+    if (!start || !end) {
+      return '영업시간을 설정해주세요.';
+    }
     if (start === end) {
       return '영업 시작 시간과 종료 시간이 같을 수 없습니다.';
     }
@@ -181,13 +214,13 @@ const StoreInfo = () => {
       return '영업 시작 시간은 종료 시간보다 빨라야 합니다.';
     }
 
-    // 3. 정기휴무: 주 운영일 ≥ 3일 (= 휴무 ≤ 4일)
+    // 6. 정기휴무: 주 운영일 ≥ 3일 (= 휴무 ≤ 4일)
     const operatingDays = 7 - editData.holidays.days.length;
     if (operatingDays < 3) {
       return '주 3일 이상 운영하는 매장만 등록할 수 있습니다. 휴무 요일을 4일 이하로 선택해주세요.';
     }
 
-    // 4. 매장 소개: 최소 10자
+    // 7. 매장 소개: 최소 10자
     const desc = (editData.description || '').trim();
     if (desc.length < 10) {
       return '매장 소개는 최소 10자 이상 입력해주세요.';
@@ -344,6 +377,7 @@ const StoreInfo = () => {
                   ))}
                 </div>
               )}
+              <p className="field-hint">최대 3개까지 선택할 수 있습니다. ({editData.categories.length}/3)</p>
             </div>
           ) : (
             <div className="selected-chips read-only">
