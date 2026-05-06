@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, ChevronDown, Plus, Minus, FileSpreadsheet, HelpCircle } from 'lucide-react';
 import Button from '../components/common/Button';
@@ -69,6 +69,21 @@ const ServiceRequest = () => {
   const [step, setStep] = useState(initialType || 'category'); // 'category' | 'wifi' | 'stamp' | 'event' | 'noti' | 'payment'
   const [categoryKey, setCategoryKey] = useState(initialType || 'wifi');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
+  // GNB '서비스 신청' 메뉴 재탭 시 카테고리 리스트로 복귀 (location.key 변경 감지)
+  // ?type=wifi|stamp|... 쿼리가 있으면 그 단계로 점프
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const t = params.get('type');
+    if (t) {
+      setCategoryKey(t);
+      setStep(t);
+    } else {
+      setStep('category');
+    }
+    setShowCategoryDropdown(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
 
   // 와이파이 단계
   const [quantity, setQuantity] = useState(2);
