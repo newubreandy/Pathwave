@@ -343,11 +343,8 @@ const CustomerChat = () => {
   const [deletingId, setDeletingId] = useState(null);
   const [connStatus, setConnStatus] = useState('connected'); // 'connected' | 'syncing'
   const [lastUpdated, setLastUpdated] = useState(new Date());
-  const [newMsgAlert, setNewMsgAlert] = useState(null); // 새 메시지 토스트
   const [blockedUsers, setBlockedUsers] = useState([]);
   const [showBlockList, setShowBlockList] = useState(false);
-  const selectedIdRef = useRef(selectedId);
-  useEffect(() => { selectedIdRef.current = selectedId; }, [selectedId]);
 
   // GNB 의 "채팅" 메뉴를 다시 탭하면 리스트로 복귀.
   // 같은 path 라도 NavLink 클릭은 location.key 를 갱신 → 이 effect 가 트리거됨.
@@ -392,41 +389,6 @@ const CustomerChat = () => {
       setLastUpdated(new Date());
       setConnStatus('connected');
     }, 700);
-  };
-
-  // ── [데모] 고객 메시지 시뮬레이션 ──
-  const simulateIncoming = async () => {
-    const others = chats.filter((c) => c.id !== selectedIdRef.current);
-    if (!others.length) return;
-    const target = others[Math.floor(Math.random() * others.length)];
-    const demos = { ko: '안녕하세요! 문의드립니다.', en: 'Hello! I need help.', ja: 'すみません！', zh: '您好，请问一下！', 'zh-TW': '您好，請問一下！', 'zh-HK': '你好，請問一下！', fr: 'Bonjour, une question !' };
-    const text = demos[target.customerLang] || 'Hello!';
-    const now = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-    const msgId = Date.now();
-    setChats((prev) => prev.map((c) =>
-      c.id === target.id
-        ? { ...c, messages: [...c.messages, { id: msgId, from: 'customer', text, time: now }],
-            lastMessage: text, time: '방금 전', unread: c.unread + 1, sortKey: Date.now(), dateGroup: 'today' }
-        : c
-    ));
-    const cfg = LANG_CONFIG[target.customerLang] || {};
-    setNewMsgAlert({ id: target.id, name: target.customerName, text, flag: cfg.flag || '💬' });
-    setTimeout(() => setNewMsgAlert(null), 4500);
-
-    // 고객 언어 → 답변자 브라우저 언어로 자동 번역
-    const providerLang = getProviderLang();
-    if (target.customerLang !== providerLang) {
-      const translated = await translateText(text, target.customerLang, providerLang);
-      if (translated) {
-        setChats((prev) => prev.map((c) =>
-          c.id === target.id
-            ? { ...c, messages: c.messages.map((m) =>
-                m.id === msgId ? { ...m, incomingTranslation: translated } : m
-              )}
-            : c
-        ));
-      }
-    }
   };
 
   const selectedChat = chats.find((c) => c.id === selectedId);
@@ -594,19 +556,10 @@ const CustomerChat = () => {
           <span className="conn-label">
             {connStatus === 'syncing' ? '동기화 중...' : `업데이트 ${lastUpdated.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`}
           </span>
-          <button className="demo-incoming-btn" onClick={simulateIncoming} title="[데모] 고객 메시지 수신 시뮬레이션">📨 데모</button>
         </div>
       </div>
 
       <div className="customer-chat-container" onClick={() => setDeletingId(null)}>
-
-      {/* 새 메시지 토스트 알림 */}
-      {newMsgAlert && (
-        <div className="new-msg-toast" onClick={() => { handleSelect(newMsgAlert.id); setNewMsgAlert(null); }}>
-          <span className="toast-header">{newMsgAlert.flag} {newMsgAlert.name}</span>
-          <p className="toast-body">{newMsgAlert.text}</p>
-        </div>
-      )}
 
       {/* 리스트 패널 */}
       <div className={`chat-list-panel ${selectedId ? 'hidden-panel' : ''}`} onClick={(e) => e.stopPropagation()}>

@@ -169,21 +169,23 @@
 
 /* 차단 관리 버튼 (PC 우측 상단) */
 .chat-block-manage-btn {
-  background: none;
-  border: none;
+  background: var(--pw-bg-3);
+  border: 1px solid var(--pw-border);
   color: var(--pw-text-secondary);
-  font-size: var(--pw-label-size);
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
-  padding: var(--pw-space-2) var(--pw-space-3);
-  border-radius: var(--pw-radius-sm);
-  transition: color 0.15s, background 0.15s;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
   white-space: nowrap;
+  font-family: inherit;
 }
 
 .chat-block-manage-btn:hover {
   color: var(--pw-text);
-  background: var(--pw-surface-hover);
+  background: var(--pw-bg-hover);
+  border-color: var(--pw-primary);
 }
 
 /* ── 채팅 목록 ── */
@@ -321,6 +323,10 @@
   flex-direction: column;
   background: var(--pw-bg-2);
   overflow: hidden;
+}
+
+.chat-room-panel .chat-empty-state {
+  background: var(--pw-bg-2);
 }
 
 /* ── 패널 토글 전환 (모바일 전용) ── */
