@@ -193,8 +193,8 @@
   padding: var(--pw-space-5) var(--pw-space-6);
   cursor: pointer;
   display: flex;
-  flex-direction: column;
-  gap: var(--pw-space-2);
+  align-items: center;
+  gap: var(--pw-space-4);
   position: relative;
   transition: transform var(--pw-duration-normal) var(--pw-ease);
   background: var(--pw-surface);
@@ -205,17 +205,32 @@
   transform: translateX(-120px);
 }
 
-.wifi-item-row {
+.wifi-item-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-1, 4px);
+}
+
+.wifi-item-name-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--pw-space-3);
+}
+
+.wifi-item-status-row {
   display: flex;
   align-items: center;
-  gap: var(--pw-space-3);
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--pw-text-secondary);
 }
 
 .wifi-item-label {
   font-size: var(--pw-caption-size);
   font-weight: 500;
   color: var(--pw-text-hint);
-  min-width: 48px;
 }
 
 .wifi-item-name {
@@ -224,22 +239,46 @@
   color: var(--pw-text);
 }
 
-.wifi-item-sub {
-  font-size: var(--pw-label-size);
-  color: var(--pw-text-secondary);
+.wifi-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--pw-text-hint);
 }
 
-.wifi-item-arrow {
-  position: absolute;
-  right: var(--pw-space-6);
-  top: 50%;
-  transform: translateY(-50%);
+.wifi-status-dot.ok      { background: #22c55e; }
+.wifi-status-dot.low     { background: #f59e0b; animation: pulseDot 1.4s ease-in-out infinite; }
+.wifi-status-dot.offline { background: #ef4444; }
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+
+.wifi-item-status {
+  font-weight: 600;
+  color: var(--pw-text);
+}
+
+.wifi-item-battery {
   color: var(--pw-text-hint);
+}
+
+.wifi-item-detail-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--pw-primary, #8B5CF6);
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: transform var(--pw-duration-fast);
 }
 
-.wifi-list-item:hover .wifi-item-arrow {
-  transform: translateY(-50%) translateX(3px);
+.wifi-list-item:hover .wifi-item-detail-link {
+  transform: translateX(3px);
 }
 
 /* Swipe Actions */
