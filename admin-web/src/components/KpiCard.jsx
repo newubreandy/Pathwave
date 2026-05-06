@@ -52,13 +52,15 @@ export default function KpiCard({
 export function Sparkline({ points, color = 'var(--accent)', height = 40 }) {
   if (!points || points.length < 2) return null;
   const w = 100, h = 100;
+  const padY = 4;                       // stroke 가 svg 위/아래로 잘리지 않도록 여유
+  const usableH = h - 2 * padY;
   const max = Math.max(...points, 1);
   const min = Math.min(...points, 0);
   const range = max - min || 1;
   const step = w / (points.length - 1);
   const xy = points.map((p, i) => ({
     x: i * step,
-    y: h - ((p - min) / range) * h,
+    y: padY + (max - p) / range * usableH,
   }));
 
   // Catmull-Rom → cubic Bezier 변환 (tension 0.5 → /6).
@@ -81,15 +83,16 @@ export function Sparkline({ points, color = 'var(--accent)', height = 40 }) {
   return (
     <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none"
          width="100%"
-         style={{ height, display: 'block', flex: 1, minWidth: 80 }}>
+         style={{ height, display: 'block', flex: 1, minWidth: 80, overflow: 'visible' }}>
       <defs>
         <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stopColor={color} stopOpacity="0.28" />
+          <stop offset="0%"   stopColor={color} stopOpacity="0.10" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={fillPath} fill={`url(#${id})`} />
-      <path d={path} fill="none" stroke={color} strokeWidth="1.8"
+      <path d={path} fill="none" stroke={color} strokeWidth="2"
+            vectorEffect="non-scaling-stroke"
             strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
