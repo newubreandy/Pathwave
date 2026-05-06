@@ -248,6 +248,18 @@ textarea.input-modern {
   resize: none;
 }
 
+/* 입력 필드 보조 안내 */
+.field-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--pw-text-hint);
+  line-height: 1.5;
+}
+
+.field-hint.warn {
+  color: var(--error, #ef4444);
+}
+
 /* Address Search */
 .address-edit-container {
   display: flex;
