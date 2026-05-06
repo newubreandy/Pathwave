@@ -6,7 +6,7 @@ import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
 import './ServiceRequest.css';
 
-// 신청 가능 서비스 카테고리 (시안 4번)
+// 신청 가능 서비스 카테고리 (시안 4번 + 스탬프)
 const SERVICE_CATEGORIES = [
   {
     key: 'wifi',
@@ -15,6 +15,16 @@ const SERVICE_CATEGORIES = [
       '와이파이 서비스는 BE 서비스를 이용하는 사용자가 서비스시설에 들어왔을 경우 자동으로 서비스시설에서 제공중인 와이파이에 자동으로 접속하게 해주는 서비스 입니다.',
       '서비스 시설에 와이파이 제공 중계기가 여러대가 있어도 서비스에 가입하신 후 정보를 입력하시면 서비스 이용자는 한번의 인증으로 서비스 중인 와이파이를 끊김없이 이용할 수 있습니다.',
       '와이파이 서비스 설치 후 설치 위치별 이벤트 또는 혜택(쿠폰)을 사용자에게 알림 발송할 수 있습니다.',
+    ],
+  },
+  {
+    key: 'stamp',
+    title: '스탬프 서비스이용',
+    sample: 'SAMPLE',
+    bullets: [
+      '본 서비스는 와이파이 서비스 이용시 추가로 이용이 가능한 서비스 입니다.',
+      '매장 방문 / 결제 시 사용자에게 스탬프를 적립해 주고, 일정 개수 모이면 쿠폰 / 혜택으로 자동 전환할 수 있습니다.',
+      '스탬프 정책(적립 조건, 만료일, 보상 쿠폰)은 슈퍼어드민에서 매장별로 설정합니다.',
     ],
   },
   {
