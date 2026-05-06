@@ -34,6 +34,7 @@ const WifiSettings = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [editConfirm, setEditConfirm] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrDone, setOcrDone] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '', ssid: '', password: '', image: null
@@ -102,27 +103,31 @@ const WifiSettings = () => {
   // ── 사진 선택 + OCR (자동 ID/PW 추출) ──
   // TODO: 실제 OCR 연동 (백엔드 API 또는 Tesseract.js). 현재는 1초 후 mock 결과 자동 입력
   const runOcrMock = async (imageUrl) => {
+    console.log('[OCR mock] start', imageUrl);
     setOcrLoading(true);
     await new Promise((r) => setTimeout(r, 1000));
-    // 실제로는 imageUrl 을 OCR 서버로 보내고 결과 받음.
-    // 여기선 placeholder mock — 통신사 공유기 라벨을 가정한 더미 값.
     const mockResult = {
       ssid: 'kt5G_AUTO' + Math.floor(Math.random() * 9000 + 1000),
       password: 'Ezddd1@' + Math.floor(Math.random() * 9000 + 1000),
     };
+    console.log('[OCR mock] result', mockResult);
+    // 함수형 업데이트로 stale state 방지
     setFormData((prev) => ({ ...prev, ssid: mockResult.ssid, password: mockResult.password }));
     setOcrLoading(false);
+    setOcrDone(true);
+    setTimeout(() => setOcrDone(false), 2500);
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
+  const handleImageChange = async (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
+    // 같은 파일 재선택 가능하도록 reset (OCR 시작 전에 처리)
+    const inputEl = e.target;
+    setTimeout(() => { if (inputEl) inputEl.value = ''; }, 0);
     // 사진 선택 시 자동 OCR 실행
-    runOcrMock(url);
-    // 같은 파일 재선택 가능하도록 reset
-    e.target.value = '';
+    await runOcrMock(url);
   };
 
   const removeImage = () => {
@@ -486,6 +491,11 @@ const WifiSettings = () => {
         {ocrLoading && (
           <div className="wifi-ocr-status">
             <Loader2 size={14} className="wifi-ocr-spin" /> 사진에서 와이파이 정보 인식 중...
+          </div>
+        )}
+        {ocrDone && (
+          <div className="wifi-ocr-status done">
+            ✓ 사진에서 ID / PW 자동 입력했습니다. 확인 후 수정해주세요.
           </div>
         )}
 
