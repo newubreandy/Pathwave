@@ -190,7 +190,7 @@
 }
 
 .wifi-item-content {
-  padding: var(--pw-space-5) var(--pw-space-6);
+  padding: var(--pw-space-4) var(--pw-space-5);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -205,26 +205,26 @@
   transform: translateX(-120px);
 }
 
-.wifi-item-main {
+/* 이름 — 좌측. 카드 폭이 줄어도 잘리지 않게 우선권. */
+.wifi-item-name-block {
+  display: flex;
+  align-items: baseline;
+  gap: var(--pw-space-2);
+  flex-shrink: 0;
+}
+
+/* 상태 + 배터리 — 이름 우측 옆 (한 줄). 작은 화면에서 가장 먼저 줄어듦. */
+.wifi-item-status-block {
   flex: 1;
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  gap: var(--pw-space-1, 4px);
-}
-
-.wifi-item-name-row {
-  display: flex;
-  align-items: baseline;
-  gap: var(--pw-space-3);
-}
-
-.wifi-item-status-row {
-  display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   font-size: 0.85rem;
   color: var(--pw-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .wifi-item-label {

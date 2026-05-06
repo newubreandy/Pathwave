@@ -304,23 +304,26 @@ const WifiSettings = () => {
               onTouchEnd={(e) => handleTouchEnd(e, p.id)}
             >
               <div className={`wifi-item-content ${!p.enabled ? 'is-disabled' : ''}`} onClick={() => openDetail(p)}>
-                <div className="wifi-item-main">
-                  <div className="wifi-item-name-row">
-                    <span className="wifi-item-label">Name</span>
-                    <span className="wifi-item-name">{p.name}</span>
-                  </div>
-                  <div className="wifi-item-status-row">
-                    {p.enabled ? (
-                      <>
-                        <span className={`wifi-status-dot ${p.status}`} />
-                        <span className="wifi-item-status">{STATUS_LABEL[p.status] || '-'}</span>
-                        <span className="wifi-item-battery">(배터리 {p.battery}%)</span>
-                      </>
-                    ) : (
-                      <span className="wifi-item-status off">서비스 중단됨</span>
-                    )}
-                  </div>
+                {/* 이름 (좌) */}
+                <div className="wifi-item-name-block">
+                  <span className="wifi-item-label">Name</span>
+                  <span className="wifi-item-name">{p.name}</span>
                 </div>
+
+                {/* 상태 + 배터리 (우측 보조) */}
+                <div className="wifi-item-status-block">
+                  {p.enabled ? (
+                    <>
+                      <span className={`wifi-status-dot ${p.status}`} />
+                      <span className="wifi-item-status">{STATUS_LABEL[p.status] || '-'}</span>
+                      <span className="wifi-item-battery">(배터리 {p.battery}%)</span>
+                    </>
+                  ) : (
+                    <span className="wifi-item-status off">서비스 중단됨</span>
+                  )}
+                </div>
+
+                {/* 상세보기 링크 (가장 우측) */}
                 <span className="wifi-item-detail-link">
                   상세보기 <ChevronRight size={16} />
                 </span>
