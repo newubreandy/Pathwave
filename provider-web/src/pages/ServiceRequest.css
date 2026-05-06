@@ -1,0 +1,554 @@
+/* ───────────────────────────────────────
+   서비스 신청 (ServiceRequest)
+   provider-web 다크 + 보라 톤 적용
+   시안: 4단계 신청 흐름 (카테고리 → 와이파이 → 결제 → 완료)
+   ─────────────────────────────────────── */
+
+.sr-page {
+  animation: fadeIn var(--pw-duration-slow, 0.3s) var(--pw-ease-out, ease);
+  padding-bottom: 120px;
+  color: var(--pw-text);
+}
+
+.sr-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: var(--pw-space-5, 1.25rem) 0 var(--pw-space-6, 1.5rem);
+}
+
+.sr-back {
+  background: none;
+  border: none;
+  color: var(--pw-text);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s;
+}
+
+.sr-back:hover { background: var(--pw-bg-hover); }
+
+.sr-title {
+  flex: 1;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
+  margin-right: 30px; /* back-btn 너비 보정해 가운데 정렬감 */
+}
+
+.sr-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-5, 1.25rem);
+}
+
+/* ═══ STEP 1 — 카테고리 선택 ═══ */
+.sr-cat-block {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 1.1rem 1.25rem 1.5rem;
+  background: var(--pw-bg-3);
+  border: 1px solid var(--pw-border);
+  border-radius: 14px;
+  font-family: inherit;
+  color: var(--pw-text);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.sr-cat-block:hover {
+  border-color: var(--pw-primary, #8B5CF6);
+}
+
+.sr-cat-block.active {
+  border-color: var(--pw-primary, #8B5CF6);
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.sr-cat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--pw-border);
+}
+
+.sr-cat-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--pw-text);
+}
+
+.sr-cat-arrow {
+  color: var(--pw-text-hint);
+}
+
+.sr-cat-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.sr-cat-help {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--pw-primary, #8B5CF6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sr-cat-sample {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--pw-bg-hover);
+  color: var(--pw-text-hint);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sr-cat-bullets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--pw-text-secondary);
+  line-height: 1.55;
+}
+
+.sr-cat-bullets li {
+  position: relative;
+  padding-left: 0.85rem;
+}
+
+.sr-cat-bullets li::before {
+  content: '※';
+  position: absolute;
+  left: 0;
+  color: var(--pw-text-hint);
+}
+
+/* ═══ STEP 2 — 와이파이 상세 ═══ */
+.sr-cat-select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.95rem 0.25rem;
+  border-bottom: 2px solid var(--pw-text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.sr-cat-select-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--pw-text);
+}
+
+.sr-cat-select-arrow {
+  color: var(--pw-text);
+  transition: transform 0.18s;
+}
+
+.sr-cat-select-arrow.open {
+  transform: rotate(180deg);
+}
+
+.sr-cat-dropdown {
+  margin-top: -0.5rem;
+  background: var(--pw-bg-3);
+  border: 1px solid var(--pw-border);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sr-cat-dropdown-item {
+  padding: 0.85rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--pw-text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  border-bottom: 1px solid var(--pw-border);
+  transition: background 0.15s;
+}
+
+.sr-cat-dropdown-item:last-child { border-bottom: none; }
+.sr-cat-dropdown-item:hover { background: var(--pw-bg-hover); }
+.sr-cat-dropdown-item.active {
+  background: rgba(139, 92, 246, 0.12);
+  color: var(--pw-primary, #8B5CF6);
+  font-weight: 700;
+}
+
+/* Quantity stepper */
+.sr-qty-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.25rem;
+}
+
+.sr-qty-label {
+  font-size: 0.95rem;
+  color: var(--pw-text-secondary);
+}
+
+.sr-qty-control {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.sr-qty-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--pw-border);
+  color: var(--pw-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.sr-qty-btn:hover {
+  background: var(--pw-bg-hover);
+  border-color: var(--pw-primary, #8B5CF6);
+}
+
+.sr-qty-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--pw-text);
+  min-width: 2.5ch;
+  text-align: center;
+}
+
+/* 안내 리스트 */
+.sr-notices {
+  list-style: none;
+  margin: 0;
+  padding: 0.85rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  font-size: 0.83rem;
+  color: var(--pw-text-secondary);
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.sr-notices li {
+  position: relative;
+  padding-left: 0.85rem;
+}
+
+.sr-notices li::before {
+  content: '※';
+  position: absolute;
+  left: 0;
+  color: var(--pw-text-hint);
+}
+
+/* 탭 */
+.sr-tabs {
+  display: flex;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--pw-border);
+}
+
+.sr-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--pw-text-hint);
+  padding: 0.85rem 0;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s;
+}
+
+.sr-tab.active {
+  color: var(--pw-primary, #8B5CF6);
+  font-weight: 700;
+}
+
+.sr-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--pw-primary, #8B5CF6);
+}
+
+/* 개별등록 */
+.sr-individual {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding-top: 0.5rem;
+}
+
+.sr-add-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 1.25rem;
+  background: transparent;
+  border: 1.5px dashed var(--pw-border);
+  border-radius: 12px;
+  color: var(--pw-text-secondary);
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.sr-add-card:hover {
+  border-color: var(--pw-primary, #8B5CF6);
+  color: var(--pw-primary, #8B5CF6);
+}
+
+.sr-profile-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.95rem 1.1rem;
+  background: var(--pw-bg-3);
+  border: 1px solid var(--pw-border);
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.sr-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.sr-profile-label {
+  font-size: 0.75rem;
+  color: var(--pw-text-hint);
+  font-weight: 500;
+  min-width: 56px;
+}
+
+.sr-profile-value {
+  color: var(--pw-text);
+  font-weight: 600;
+}
+
+.sr-profile-arrow {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--pw-text-hint);
+}
+
+/* 일괄등록 */
+.sr-bulk {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding-top: 0.5rem;
+}
+
+.sr-bulk-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.95rem 1rem;
+  background: transparent;
+  border: 1.5px solid var(--pw-primary, #8B5CF6);
+  border-radius: 999px;
+  color: var(--pw-primary, #8B5CF6);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sr-bulk-download:hover {
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.sr-bulk-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--pw-text-hint);
+  line-height: 1.5;
+}
+
+.sr-bulk-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.95rem 1rem;
+  background: transparent;
+  border: 1.5px solid var(--pw-border);
+  border-radius: 999px;
+  color: var(--pw-text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.sr-bulk-upload:hover {
+  border-color: var(--pw-primary, #8B5CF6);
+  background: var(--pw-bg-hover);
+}
+
+/* ═══ STEP 3 — 결제 / 약정 ═══ */
+.sr-pay-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.sr-pay-section-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--pw-text);
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--pw-border);
+}
+
+.sr-pay-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 0.25rem;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--pw-text);
+  cursor: pointer;
+}
+
+.sr-pay-summary:hover { color: var(--pw-primary, #8B5CF6); }
+
+.sr-pay-card {
+  background: var(--pw-bg-3);
+  border: 1px solid var(--pw-border);
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.sr-pay-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.65rem 0;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--pw-border);
+}
+
+.sr-pay-row:last-child { border-bottom: none; }
+
+.sr-pay-row-split {
+  gap: 1.5rem;
+}
+
+.sr-pay-row-split > div {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1;
+}
+
+.sr-pay-label {
+  font-size: 0.78rem;
+  color: var(--pw-text-hint);
+  min-width: 80px;
+}
+
+.sr-pay-value {
+  color: var(--pw-text);
+  font-weight: 600;
+  flex: 1;
+}
+
+.sr-pay-vat {
+  color: var(--pw-text-hint);
+  font-weight: 400;
+  font-size: 0.78rem;
+}
+
+.sr-pay-row-arrow {
+  color: var(--pw-text-hint);
+}
+
+.sr-pay-row-action {
+  background: transparent;
+  border: none;
+  color: var(--pw-text-hint);
+  font-family: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+
+.sr-pay-row-action:hover { color: var(--pw-primary, #8B5CF6); }
+
+.sr-pay-note {
+  margin: 0;
+  padding: 0.5rem 0;
+  font-size: 0.78rem;
+  color: var(--pw-text-hint);
+  line-height: 1.5;
+}
+
+.sr-pay-email { color: var(--pw-primary, #8B5CF6); text-decoration: underline; }
+
+/* BottomActionBar 가이드 */
+.sr-page .bottom-action-bar-wrapper {
+  margin-top: 3rem;
+  padding-top: var(--pw-space-6, 2rem);
+  padding-bottom: 4rem;
+  border-top: 1px solid var(--pw-border);
+}

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Camera, Plus, X, ChevronLeft, ChevronRight, Trash2, Edit3, Search, Image as ImageIcon, Loader2 } from 'lucide-react';
 import WifiService from '../services/wifi/WifiService';
 import Button from '../components/common/Button';
@@ -24,6 +24,7 @@ const STATUS_LABEL = {
 
 const WifiSettings = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [profiles, setProfiles] = useState(MOCK_PROFILES);
   const [view, setView] = useState('list'); // 'list' | 'search' | 'detail' | 'add'
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -389,7 +390,7 @@ const WifiSettings = () => {
         </div>
 
         <BottomActionBar>
-          <Button variant="primary" fullWidth icon={<Plus size={18} />} onClick={openAdd}>
+          <Button variant="primary" fullWidth icon={<Plus size={18} />} onClick={() => navigate('/dashboard/service-request?type=wifi')}>
             와이파이 신청하기
           </Button>
         </BottomActionBar>
