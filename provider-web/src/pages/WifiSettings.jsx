@@ -7,12 +7,19 @@ import ConfirmModal from '../components/common/ConfirmModal';
 import './WifiSettings.css';
 
 const MOCK_PROFILES = [
-  { id: 1, name: '로비정문1', message: 'Message', ssid: 'kt5G_1234789', password: 'Ezddd1@3356', date: '2022.03.15', image: null },
-  { id: 2, name: '수영장', message: 'Message', ssid: 'kt5G_pool01', password: 'Ezddd1@3356', date: '2022.03.10', image: null },
-  { id: 3, name: '1층카페', message: 'Message', ssid: 'kt5G_cafe01', password: 'Ezddd1@3356', date: '2022.02.28', image: null },
-  { id: 4, name: '2층뷔페', message: 'Message', ssid: 'kt5G_buffet', password: 'Ezddd1@3356', date: '2022.02.20', image: null },
-  { id: 5, name: '5001호', message: 'Message', ssid: 'kt5G_5001', password: 'Ezddd1@3356', date: '2022.01.15', image: null },
+  { id: 1, name: '로비정문1', message: 'Message', ssid: 'kt5G_1234789', password: 'Ezddd1@3356', date: '2022.03.15', image: null, status: 'ok', battery: 90 },
+  { id: 2, name: '수영장',   message: 'Message', ssid: 'kt5G_pool01',   password: 'Ezddd1@3356', date: '2022.03.10', image: null, status: 'ok', battery: 76 },
+  { id: 3, name: '1층카페',   message: 'Message', ssid: 'kt5G_cafe01',   password: 'Ezddd1@3356', date: '2022.02.28', image: null, status: 'low', battery: 22 },
+  { id: 4, name: '2층뷔페',   message: 'Message', ssid: 'kt5G_buffet',   password: 'Ezddd1@3356', date: '2022.02.20', image: null, status: 'ok', battery: 64 },
+  { id: 5, name: '5001호',   message: 'Message', ssid: 'kt5G_5001',     password: 'Ezddd1@3356', date: '2022.01.15', image: null, status: 'offline', battery: 0 },
 ];
+
+// 상태 라벨 + 색상
+const STATUS_LABEL = {
+  ok: '정상',
+  low: '배터리 부족',
+  offline: '연결 끊김',
+};
 
 const WifiSettings = () => {
   const [profiles, setProfiles] = useState(MOCK_PROFILES);
@@ -245,17 +252,20 @@ const WifiSettings = () => {
               onTouchEnd={(e) => handleTouchEnd(e, p.id)}
             >
               <div className="wifi-item-content" onClick={() => openDetail(p)}>
-                <div className="wifi-item-row">
-                  <span className="wifi-item-label">Name</span>
-                  <span className="wifi-item-name">{p.name}</span>
+                <div className="wifi-item-main">
+                  <div className="wifi-item-name-row">
+                    <span className="wifi-item-label">Name</span>
+                    <span className="wifi-item-name">{p.name}</span>
+                  </div>
+                  <div className="wifi-item-status-row">
+                    <span className={`wifi-status-dot ${p.status}`} />
+                    <span className="wifi-item-status">{STATUS_LABEL[p.status] || '-'}</span>
+                    <span className="wifi-item-battery">(배터리 {p.battery}%)</span>
+                  </div>
                 </div>
-                <div className="wifi-item-row">
-                  <span className="wifi-item-label">Message</span>
-                  <span className="wifi-item-sub">{p.message}</span>
-                  <span className="wifi-item-label" style={{ marginLeft: 'auto' }}>PW</span>
-                  <span className="wifi-item-sub">{p.password}</span>
-                </div>
-                <ChevronRight size={18} className="wifi-item-arrow" />
+                <span className="wifi-item-detail-link">
+                  상세보기 <ChevronRight size={16} />
+                </span>
               </div>
 
               {/* Swipe actions */}
