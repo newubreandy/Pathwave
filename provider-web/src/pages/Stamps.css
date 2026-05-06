@@ -271,3 +271,49 @@
     font-size: var(--pw-body-size);
   }
 }
+
+/* ── 스탬프 서비스 미가입 안내 ── */
+.stamp-empty-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: var(--pw-bg-3);
+  border: 1px solid var(--pw-border);
+  border-radius: 16px;
+}
+
+.stamp-empty-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(139, 92, 246, 0.12);
+  color: var(--pw-primary, #8B5CF6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.stamp-empty-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--pw-text);
+}
+
+.stamp-empty-desc {
+  margin: 0;
+  color: var(--pw-text-secondary);
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+
+.stamps-page .bottom-action-bar-wrapper {
+  margin-top: 3rem;
+  padding-top: var(--pw-space-6, 2rem);
+  padding-bottom: 4rem;
+  border-top: 1px solid var(--pw-border);
+}
+
