@@ -32,8 +32,10 @@ const WifiSettings = () => {
   const [selectedChips, setSelectedChips] = useState(new Set());
   const [activeFilter, setActiveFilter] = useState(null); // filtered name after search
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [editConfirm, setEditConfirm] = useState(false);
+  const [saveConfirmMsg, setSaveConfirmMsg] = useState(null); // 저장 시 안내 (ID/PW + enabled)
+  const [errorMsg, setErrorMsg] = useState(null);             // 검증 실패 모달
   const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrDone, setOcrDone] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '', ssid: '', password: '', image: null
@@ -49,7 +51,8 @@ const WifiSettings = () => {
     setView('list');
     setSelectedProfile(null);
     setIsEditing(false);
-    setEditConfirm(false);
+    setSaveConfirmMsg(null);
+    setErrorMsg(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.key]);
 
@@ -77,7 +80,38 @@ const WifiSettings = () => {
     if (view !== 'list') setView('list');
   };
 
+  // 저장 입력 검증 (필수값)
+  const validateWifi = () => {
+    if (!(formData.name || '').trim()) return 'Name(와이파이 위치)을 입력해주세요.';
+    if (!(formData.ssid || '').trim()) return 'ID(SSID)는 필수 입력입니다.';
+    if (!(formData.password || '').trim()) return 'PW(비밀번호)는 필수 입력입니다.';
+    return null;
+  };
+
+  // 저장 클릭 → 검증 → 안내 모달
   const handleSave = () => {
+    const err = validateWifi();
+    if (err) {
+      setErrorMsg(err);
+      return;
+    }
+    // 추가 모드는 안내 없이 바로 저장
+    if (view === 'add') {
+      doSave();
+      return;
+    }
+    // 수정 모드: 비사용 + ID/PW 통신사 안내 통합
+    const messages = [];
+    if (selectedProfile && selectedProfile.enabled === false) {
+      messages.push('와이파이를 비사용 상태로 저장합니다. 저장 후 매장 와이파이 서비스가 중단됩니다.');
+    }
+    messages.push('와이파이 정보는 통신사에서 제공한 아이디 / 비밀번호입니다. 통신사에서 제공한 정보와 다를 시 서비스가 되지 않습니다.');
+    messages.push('저장하시겠어요?');
+    setSaveConfirmMsg(messages.join('\n\n'));
+  };
+
+  // 안내 모달 확인 시 실제 저장
+  const doSave = () => {
     if (view === 'add') {
       const newProfile = {
         id: Date.now(),
@@ -86,43 +120,58 @@ const WifiSettings = () => {
         ssid: formData.ssid,
         password: formData.password,
         date: new Date().toISOString().slice(0, 10).replace(/-/g, '.'),
-        image: previewUrl
+        image: previewUrl,
+        status: 'ok',
+        battery: 100,
+        enabled: true,
       };
       setProfiles(prev => [...prev, newProfile]);
     } else if (selectedProfile) {
       setProfiles(prev => prev.map(p =>
         p.id === selectedProfile.id
-          ? { ...p, name: formData.name, ssid: formData.ssid, password: formData.password, image: previewUrl }
+          ? {
+              ...p,
+              name: formData.name,
+              ssid: formData.ssid,
+              password: formData.password,
+              image: previewUrl,
+              enabled: selectedProfile.enabled,
+            }
           : p
       ));
     }
+    setSaveConfirmMsg(null);
     setView('list');
   };
 
   // ── 사진 선택 + OCR (자동 ID/PW 추출) ──
   // TODO: 실제 OCR 연동 (백엔드 API 또는 Tesseract.js). 현재는 1초 후 mock 결과 자동 입력
   const runOcrMock = async (imageUrl) => {
+    console.log('[OCR mock] start', imageUrl);
     setOcrLoading(true);
     await new Promise((r) => setTimeout(r, 1000));
-    // 실제로는 imageUrl 을 OCR 서버로 보내고 결과 받음.
-    // 여기선 placeholder mock — 통신사 공유기 라벨을 가정한 더미 값.
     const mockResult = {
       ssid: 'kt5G_AUTO' + Math.floor(Math.random() * 9000 + 1000),
       password: 'Ezddd1@' + Math.floor(Math.random() * 9000 + 1000),
     };
+    console.log('[OCR mock] result', mockResult);
+    // 함수형 업데이트로 stale state 방지
     setFormData((prev) => ({ ...prev, ssid: mockResult.ssid, password: mockResult.password }));
     setOcrLoading(false);
+    setOcrDone(true);
+    setTimeout(() => setOcrDone(false), 2500);
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
+  const handleImageChange = async (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
+    // 같은 파일 재선택 가능하도록 reset (OCR 시작 전에 처리)
+    const inputEl = e.target;
+    setTimeout(() => { if (inputEl) inputEl.value = ''; }, 0);
     // 사진 선택 시 자동 OCR 실행
-    runOcrMock(url);
-    // 같은 파일 재선택 가능하도록 reset
-    e.target.value = '';
+    await runOcrMock(url);
   };
 
   const removeImage = () => {
@@ -139,12 +188,8 @@ const WifiSettings = () => {
     }
   };
 
-  // ── 수정 진입 시 안내 모달 → 확인 후 수정 모드 ──
-  const requestEdit = () => {
-    setEditConfirm(true);
-  };
-  const confirmEdit = () => {
-    setEditConfirm(false);
+  // ── 수정 진입 — 안내 모달 없이 바로 수정 모드 (안내는 저장 시점) ──
+  const startEdit = () => {
     setIsEditing(true);
   };
 
@@ -488,6 +533,11 @@ const WifiSettings = () => {
             <Loader2 size={14} className="wifi-ocr-spin" /> 사진에서 와이파이 정보 인식 중...
           </div>
         )}
+        {ocrDone && (
+          <div className="wifi-ocr-status done">
+            ✓ 사진에서 ID / PW 자동 입력했습니다. 확인 후 수정해주세요.
+          </div>
+        )}
 
         {/* ID */}
         <div className="wifi-field-group">
@@ -537,37 +587,49 @@ const WifiSettings = () => {
           <>
             <Button variant="outline" fullWidth onClick={() => setIsEditing(false)}>취소</Button>
             <Button variant="primary" fullWidth onClick={handleSave}>
-              수정
+              저장
             </Button>
           </>
         ) : (
           <>
-            <Button variant="outline" fullWidth onClick={() => setDeleteConfirm(selectedProfile?.id)}>삭제</Button>
-            <Button variant="primary" fullWidth onClick={requestEdit}>
+            <Button variant="outline" fullWidth onClick={() => setView('list')}>닫기</Button>
+            <Button variant="primary" fullWidth onClick={startEdit}>
               수정
             </Button>
           </>
         )}
       </BottomActionBar>
 
-      {deleteConfirm && (
-        <ConfirmModal
-          title="와이파이 삭제"
-          description="이 와이파이 정보를 삭제하시겠습니까?"
-          onConfirm={() => handleDelete(deleteConfirm)}
-          onCancel={() => setDeleteConfirm(null)}
-        />
-      )}
-
-      {/* ID/PW 수정 진입 안내 모달 */}
       <ConfirmModal
-        isOpen={editConfirm}
-        title="와이파이 정보 수정"
-        desc={"와이파이 정보는 통신사에서 제공한 아이디/비밀번호입니다.\n통신사에서 제공한 정보와 다를 시 서비스가 되지 않습니다.\n수정하시겠어요?"}
-        confirmText="수정"
+        isOpen={!!deleteConfirm}
+        title="와이파이 삭제"
+        desc="이 와이파이 정보를 삭제하시겠습니까?"
+        confirmText="삭제"
         cancelText="취소"
-        onConfirm={confirmEdit}
-        onCancel={() => setEditConfirm(false)}
+        onConfirm={() => handleDelete(deleteConfirm)}
+        onCancel={() => setDeleteConfirm(null)}
+      />
+
+      {/* 저장 확인 모달 (ID/PW 안내 + 비사용 안내 통합) */}
+      <ConfirmModal
+        isOpen={!!saveConfirmMsg}
+        title="와이파이 정보 저장"
+        desc={saveConfirmMsg || ''}
+        confirmText="저장"
+        cancelText="취소"
+        onConfirm={doSave}
+        onCancel={() => setSaveConfirmMsg(null)}
+      />
+
+      {/* 검증 실패 모달 */}
+      <ConfirmModal
+        isOpen={!!errorMsg}
+        title="입력 확인"
+        desc={errorMsg || ''}
+        singleButton
+        confirmText="확인"
+        onConfirm={() => setErrorMsg(null)}
+        onCancel={() => setErrorMsg(null)}
       />
     </div>
   );

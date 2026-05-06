@@ -707,6 +707,16 @@
   margin: -0.5rem 0 var(--pw-space-4);
   font-size: 0.85rem;
   color: var(--pw-primary, #8B5CF6);
+  animation: ocrFade 0.25s ease;
+}
+
+.wifi-ocr-status.done {
+  color: #22c55e;
+}
+
+@keyframes ocrFade {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .wifi-ocr-spin {
