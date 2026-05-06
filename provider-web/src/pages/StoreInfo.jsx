@@ -40,17 +40,9 @@ const StoreInfo = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // 검증 메시지 5초 후 자동 사라짐
-  useEffect(() => {
-    if (!errorMessage) return;
-    const timer = setTimeout(() => setErrorMessage(''), 5000);
-    return () => clearTimeout(timer);
-  }, [errorMessage]);
-
-  // 검증 메시지 표시 + 페이지 상단으로 스크롤
+  // 검증 메시지 표시 (모달)
   const showError = (msg) => {
     setErrorMessage(msg);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   const [store, setStore] = useState({
     name: '패스트파이브 강남점',
@@ -287,14 +279,16 @@ const StoreInfo = () => {
         <p className="sub-title">{t('store.subtitle')}</p>
       </header>
 
-      {/* 검증 오류 배너 — 5초 자동 소멸 */}
+      {/* 검증 오류 모달 — 확인 버튼으로 닫기 */}
       {errorMessage && (
-        <div className="validation-banner" role="alert">
-          <span className="validation-banner-icon">⚠️</span>
-          <span className="validation-banner-text">{errorMessage}</span>
-          <button className="validation-banner-close" onClick={() => setErrorMessage('')} aria-label="닫기">
-            <X size={16} />
-          </button>
+        <div className="validation-modal-overlay" role="alertdialog" onClick={() => setErrorMessage('')}>
+          <div className="validation-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="validation-modal-icon">⚠️</div>
+            <p className="validation-modal-text">{errorMessage}</p>
+            <button className="validation-modal-confirm" onClick={() => setErrorMessage('')} autoFocus>
+              확인
+            </button>
+          </div>
         </div>
       )}
 
