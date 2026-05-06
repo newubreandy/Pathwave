@@ -509,14 +509,13 @@ textarea.input-modern {
 }
 
 /* ── 정보수정 / 저장 버튼 간격 가이드 (PC / 모바일 공통) ──
-   - 버튼 위 (마지막 컨텐츠와의 간격) = 6rem
-     · 컨텐츠끼리 간격(4rem)보다 크게 → 버튼이 컨텐츠 일부로 보이지 않음
-   - 버튼 아래 (footer 와의 간격) = 5rem (80px)
+   - 버튼 위 (마지막 컨텐츠와의 간격) = 3rem
+   - 버튼 아래 (footer 와의 간격) = 4rem
    - 상단 구분선으로 시각적 분리 */
 .modern-store-page .bottom-action-bar-wrapper {
-  margin-top: 6rem;
+  margin-top: 3rem;
   padding-top: var(--pw-space-6, 2rem);
-  padding-bottom: 5rem;
+  padding-bottom: 4rem;
   border-top: 1px solid var(--pw-border);
 }
 
