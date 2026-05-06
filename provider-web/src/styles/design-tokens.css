@@ -73,6 +73,10 @@
   --pw-badge-inactive-bg: var(--pw-error-light);
   --pw-badge-inactive-fg: #F87171;
 
+  /* OS light scheme 에서도 native form 컨트롤 (input/textarea/select/button)
+     이 흰색으로 보이지 않도록 강제 다크. */
+  color-scheme: dark;
+
   /* ── Typography: Font Family ── */
   --pw-font: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
