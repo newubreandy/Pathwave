@@ -18,6 +18,7 @@ import Settings from './pages/Settings';
 import MemberProfile from './pages/MemberProfile';
 import StaffManagement from './pages/StaffManagement';
 import PaymentManagement from './pages/PaymentManagement';
+import ServiceRequest from './pages/ServiceRequest';
 
 // 페이지 전환 시 스크롤 상단으로 리셋
 const ScrollToTop = () => {
@@ -46,6 +47,7 @@ function App() {
           <Route path="/dashboard/store" element={<StoreInfo />} />
           <Route path="/dashboard/report" element={<ReportManagement />} />
           <Route path="/dashboard/wifi" element={<WifiSettings />} />
+          <Route path="/dashboard/service-request" element={<ServiceRequest />} />
           <Route path="/dashboard/staff" element={<StaffManagement />} />
           <Route path="/dashboard/notifications" element={<Notifications />} />
           <Route path="/dashboard/stamps" element={<Stamps />} />
