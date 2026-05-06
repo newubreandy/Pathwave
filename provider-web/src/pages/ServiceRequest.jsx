@@ -60,14 +60,14 @@ const ServiceRequest = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 쿼리 파라미터 ?type=wifi 로 진입하면 wifi 단계로 점프
-  const initialStep = useMemo(() => {
+  // 쿼리 파라미터 ?type=wifi|stamp|event|noti 로 진입하면 해당 상세 단계로 점프
+  const initialType = useMemo(() => {
     const params = new URLSearchParams(location.search);
-    return params.get('type') === 'wifi' ? 'wifi' : 'category';
+    return params.get('type') || '';
   }, [location.search]);
 
-  const [step, setStep] = useState(initialStep); // 'category' | 'wifi' | 'payment' | 'done'
-  const [categoryKey, setCategoryKey] = useState('wifi');
+  const [step, setStep] = useState(initialType || 'category'); // 'category' | 'wifi' | 'stamp' | 'event' | 'noti' | 'payment'
+  const [categoryKey, setCategoryKey] = useState(initialType || 'wifi');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   // 와이파이 단계
@@ -97,16 +97,24 @@ const ServiceRequest = () => {
 
   const selectedCategory = SERVICE_CATEGORIES.find((c) => c.key === categoryKey);
 
+  const isDetailStep = (s) => ['wifi', 'stamp', 'event', 'noti'].includes(s);
+
   // ── 핸들러 ──
   const handleBack = () => {
-    if (step === 'wifi') setStep('category');
-    else if (step === 'payment') setStep('wifi');
+    if (isDetailStep(step)) setStep('category');
+    else if (step === 'payment') setStep(categoryKey);
     else navigate(-1);
   };
 
   const handleNext = () => {
-    if (step === 'category') setStep('wifi');
-    else if (step === 'wifi') setStep('payment');
+    if (step === 'category') setStep(categoryKey);
+    else if (isDetailStep(step)) setStep('payment');
+  };
+
+  // 카테고리 카드 클릭 시 즉시 해당 상세 화면으로 이동
+  const goToCategory = (key) => {
+    setCategoryKey(key);
+    setStep(key);
   };
 
   const handleExcelDownload = () => {
@@ -152,7 +160,7 @@ const ServiceRequest = () => {
             <button
               key={cat.key}
               className={`sr-cat-block ${categoryKey === cat.key ? 'active' : ''}`}
-              onClick={() => { setCategoryKey(cat.key); }}
+              onClick={() => goToCategory(cat.key)}
             >
               <div className="sr-cat-head">
                 <span className="sr-cat-title">{cat.title}</span>
@@ -173,17 +181,13 @@ const ServiceRequest = () => {
           ))}
         </div>
 
-        <BottomActionBar>
-          <Button variant="primary" fullWidth onClick={handleNext}>서비스 신청</Button>
-        </BottomActionBar>
-
         <ConfirmModal
           isOpen={submitted}
           title="신청 완료"
           desc={"신청이 접수되었습니다.\n운영팀 검토 후 등록한 연락처로 안내드립니다."}
           singleButton confirmText="확인"
-          onConfirm={() => { setSubmitted(false); navigate('/dashboard/wifi'); }}
-          onCancel={() => { setSubmitted(false); navigate('/dashboard/wifi'); }}
+          onConfirm={() => { setSubmitted(false); navigate('/dashboard'); }}
+          onCancel={() => { setSubmitted(false); navigate('/dashboard'); }}
         />
       </div>
     );
@@ -298,6 +302,55 @@ const ServiceRequest = () => {
   }
 
   // ═══════════════════════════════════════
+  // STEP 2-B — 스탬프 / 이벤트 / 알림 신청 상세 (단순 안내 + 다음)
+  // ═══════════════════════════════════════
+  if (step === 'stamp' || step === 'event' || step === 'noti') {
+    const cat = SERVICE_CATEGORIES.find((c) => c.key === step);
+    return (
+      <div className="sr-page">
+        <header className="sr-header">
+          <button className="sr-back" onClick={handleBack}><ChevronLeft size={22} /></button>
+          <h1 className="sr-title">서비스 신청</h1>
+        </header>
+
+        <div className="sr-body">
+          {/* 카테고리 dropdown (다른 서비스로 전환 가능) */}
+          <div className="sr-cat-select" onClick={() => setShowCategoryDropdown((v) => !v)}>
+            <span className="sr-cat-select-title">{cat?.title}</span>
+            <ChevronDown size={18} className={`sr-cat-select-arrow ${showCategoryDropdown ? 'open' : ''}`} />
+          </div>
+          {showCategoryDropdown && (
+            <div className="sr-cat-dropdown">
+              {SERVICE_CATEGORIES.map((c) => (
+                <button
+                  key={c.key}
+                  className={`sr-cat-dropdown-item ${categoryKey === c.key ? 'active' : ''}`}
+                  onClick={() => { setCategoryKey(c.key); setStep(c.key); setShowCategoryDropdown(false); }}
+                >
+                  {c.title}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* 안내 */}
+          <ul className="sr-notices">
+            {cat?.bullets.map((b, i) => <li key={i}>{b}</li>)}
+          </ul>
+
+          <div className="sr-soon-note">
+            상세 설정은 서비스 신청 후 슈퍼어드민에서 매장별로 진행합니다.
+          </div>
+        </div>
+
+        <BottomActionBar>
+          <Button variant="primary" fullWidth onClick={handleNext}>다음</Button>
+        </BottomActionBar>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════
   // STEP 3 — 결제 / 약정 (시안 2번)
   // ═══════════════════════════════════════
   if (step === 'payment') {
@@ -311,9 +364,9 @@ const ServiceRequest = () => {
         <div className="sr-body">
           {/* 신청 내역 요약 */}
           <section className="sr-pay-section">
-            <h2 className="sr-pay-section-title">wifi 서비스 신청내역</h2>
-            <button className="sr-pay-summary" onClick={() => setStep('wifi')}>
-              <span>{quantity}개의 서비스이용 예정입니다.</span>
+            <h2 className="sr-pay-section-title">{selectedCategory?.title} 신청내역</h2>
+            <button className="sr-pay-summary" onClick={() => setStep(categoryKey)}>
+              <span>{categoryKey === 'wifi' ? `${quantity}개의 서비스이용 예정입니다.` : '서비스 신청 예정입니다.'}</span>
               <ChevronRight size={18} />
             </button>
           </section>
@@ -368,8 +421,8 @@ const ServiceRequest = () => {
         </div>
 
         <BottomActionBar>
-          <Button variant="outline" fullWidth onClick={() => setStep('wifi')}>와이파이 재등록</Button>
-          <Button variant="primary" fullWidth onClick={handleSubmit}>서비스신청</Button>
+          <Button variant="outline" fullWidth onClick={() => setStep(categoryKey)}>이전 단계</Button>
+          <Button variant="primary" fullWidth onClick={handleSubmit}>서비스 신청</Button>
         </BottomActionBar>
 
         <ConfirmModal

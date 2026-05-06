@@ -437,6 +437,18 @@
   background: var(--pw-bg-hover);
 }
 
+/* 추가 안내 박스 (스탬프/이벤트/알림 단순 신청용) */
+.sr-soon-note {
+  margin-top: 0.5rem;
+  padding: 0.85rem 1rem;
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 10px;
+  color: var(--pw-primary, #8B5CF6);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
 /* ═══ STEP 3 — 결제 / 약정 ═══ */
 .sr-pay-section {
   display: flex;
