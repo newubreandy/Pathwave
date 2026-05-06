@@ -505,16 +505,25 @@ textarea.input-modern {
 
   .modern-store-page {
     padding: 0;
-    padding-bottom: 6rem;
+    padding-bottom: 1.5rem;
   }
 }
 
 /* ── 정보수정 / 저장 버튼: 혜택 카드와 시각적 분리 ──
    혜택이 카드형이라 BottomActionBar 가 카드처럼 인식됨 → 위에 큰 여백 + 구분선 */
 .modern-store-page .bottom-action-bar-wrapper {
-  margin-top: var(--pw-space-10, 4rem);
+  margin-top: 8rem;
   padding-top: var(--pw-space-6, 2rem);
   border-top: 1px solid var(--pw-border);
+}
+
+@media (max-width: 768px) {
+  .modern-store-page .bottom-action-bar-wrapper {
+    /* 모바일: 위 분리감은 유지하되 footer 와의 간격은 줄임 */
+    margin-top: 5rem;
+    padding-top: var(--pw-space-5, 1.25rem);
+    padding-bottom: 0;
+  }
 }
 
 
