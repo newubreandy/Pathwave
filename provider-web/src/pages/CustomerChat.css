@@ -612,8 +612,8 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.85rem 3rem;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
+  background: var(--pw-bg-2);
+  border-top: 1px solid var(--pw-border);
 }
 
 .chat-attach-btn {
@@ -635,20 +635,24 @@
 
 .chat-input {
   flex: 1;
-  border: 1px solid var(--border);
+  border: 1px solid var(--pw-border-strong);
   border-radius: 10px;
   padding: 0.6rem 0.9rem;
   font-size: 1rem; /* iOS Safari 자동 확대 방지 (16px 이상) */
   font-family: inherit;
   outline: none;
-  background: var(--background);
-  color: var(--text-primary);
-  transition: border-color 0.2s;
+  background: var(--pw-bg-3);
+  color: var(--pw-text);
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.chat-input::placeholder {
+  color: var(--pw-text-hint);
 }
 
 .chat-input:focus {
-  border-color: var(--primary);
-  background: var(--surface);
+  border-color: var(--pw-primary);
+  background: var(--pw-bg-3);
 }
 
 .chat-send-btn {
