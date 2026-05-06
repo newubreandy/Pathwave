@@ -48,17 +48,22 @@
 }
 
 @media (max-width: 768px) {
+  /* 리스트 상태: 일반 layout flow → footer 보임 */
   .chat-page-wrapper {
+    display: flex;
+    flex-direction: column;
+    background: var(--pw-bg);
+  }
+
+  /* 채팅 상세 진입 시에만 풀스크린 fixed (입력창 키보드 위 고정) */
+  .chat-page-wrapper.is-room-open {
     position: fixed;
     top: var(--pw-gnb-total);
     left: 0;
     right: 0;
     bottom: 0;
-    display: flex;
-    flex-direction: column;
     overflow: hidden;
-    z-index: 1;
-    background: var(--pw-bg);
+    z-index: 5;
   }
 
   .chat-page-wrapper .page-header-section {
