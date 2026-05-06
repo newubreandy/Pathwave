@@ -613,21 +613,21 @@ const CustomerChat = () => {
     </div>
       {/* 차단 관리 모달 */}
       {showBlockList && (
-        <div className="mobile-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowBlockList(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '16px', width: '100%', maxWidth: '400px', padding: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>차단된 고객 관리</h2>
-              <button onClick={() => setShowBlockList(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+        <div className="block-modal-overlay" onClick={() => setShowBlockList(false)}>
+          <div className="block-modal" onClick={e => e.stopPropagation()}>
+            <div className="block-modal-header">
+              <h2 className="block-modal-title">차단된 고객 관리</h2>
+              <button className="block-modal-close" onClick={() => setShowBlockList(false)}><X size={20} /></button>
             </div>
-            
-            <div className="block-list-container" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+
+            <div className="block-list-container">
               {blockedUsers.length === 0 ? (
-                <p style={{ color: 'var(--text-sub)', textAlign: 'center', padding: '2rem 0' }}>차단된 고객이 없습니다.</p>
+                <p className="block-empty">차단된 고객이 없습니다.</p>
               ) : (
                 blockedUsers.map(u => (
-                  <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 0', borderBottom: '1px solid var(--border)' }}>
-                    <span style={{ fontWeight: 600 }}>{u.name}</span>
-                    <button onClick={() => handleUnblockUser(u.id)} style={{ padding: '0.4rem 0.75rem', background: 'var(--background)', border: 'none', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer' }}>차단 해제</button>
+                  <div key={u.id} className="block-row">
+                    <span className="block-name">{u.name}</span>
+                    <button className="block-unblock-btn" onClick={() => handleUnblockUser(u.id)}>차단 해제</button>
                   </div>
                 ))
               )}
