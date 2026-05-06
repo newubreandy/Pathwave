@@ -24,7 +24,7 @@
   border-bottom: 1px solid var(--pw-border-light);
   position: sticky;
   top: var(--pw-gnb-total);
-  background: white;
+  background: var(--pw-bg-3);
   z-index: 50;
 }
 
@@ -96,7 +96,7 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--pw-space-4) var(--pw-space-5);
-  background: white;
+  background: var(--pw-bg-3);
   border-radius: var(--pw-radius-lg);
   border: 1px solid var(--pw-border-light);
   margin-bottom: var(--pw-space-6);
@@ -167,7 +167,7 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--pw-space-4) var(--pw-space-5);
-  background: white;
+  background: var(--pw-bg-3);
   border-radius: var(--pw-radius-lg);
   border: 1px solid var(--pw-border-light);
   cursor: pointer;
@@ -272,8 +272,8 @@
 
 .role-owner {
   background: #F0FDF4;
-  color: #16A34A;
-  border: 1px solid #BBF7D0;
+  color: #8B5CF6;
+  border: 1px solid rgba(139,92,246,0.30);
 }
 
 .role-manager {
@@ -301,11 +301,11 @@
 
 .status-active {
   background: #F0FDF4;
-  color: #16A34A;
+  color: #8B5CF6;
 }
 
 .status-invited {
-  background: #FFF7ED;
+  background: var(--pw-warning-light);
   color: #EA580C;
 }
 
@@ -525,7 +525,7 @@
   padding: var(--pw-space-3);
   border: 1px solid var(--pw-border);
   border-radius: var(--pw-radius-sm);
-  background: white;
+  background: var(--pw-bg-3);
   font-size: var(--pw-label-size);
   font-weight: 600;
   font-family: inherit;
@@ -548,7 +548,7 @@
   padding: var(--pw-space-3);
   border: 1px solid var(--pw-border);
   border-radius: var(--pw-radius-sm);
-  background: white;
+  background: var(--pw-bg-3);
   font-size: var(--pw-label-size);
   font-weight: 500;
   font-family: inherit;
@@ -580,7 +580,7 @@
 
 /* ── Permission Info ── */
 .staff-permission-info {
-  background: white;
+  background: var(--pw-bg-3);
   border-radius: var(--pw-radius-lg);
   border: 1px solid var(--pw-border-light);
   padding: var(--pw-space-6);
@@ -652,7 +652,7 @@
     margin-right: calc(-1 * var(--pw-container-pad-m));
     padding-left: var(--pw-container-pad-m);
     padding-right: var(--pw-container-pad-m);
-    background: white;
+    background: var(--pw-bg-3);
     border-top: 1px solid var(--pw-border-light);
   }
 

@@ -134,7 +134,7 @@
 }
 
 .noti-badge.badge-benefit {
-  background: var(--pw-white);
+  background: var(--pw-bg-3);
   color: var(--pw-text);
   border: 1px solid var(--pw-border);
   border-radius: var(--pw-radius-full);
@@ -165,7 +165,7 @@
 }
 
 .noti-status.pending-locked {
-  background: var(--pw-white);
+  background: var(--pw-bg-3);
   color: var(--pw-text);
   border: 1px solid var(--pw-border);
 }
@@ -305,7 +305,7 @@ textarea.form-textarea:focus {
   width: 26px;
   left: 3px;
   bottom: 3px;
-  background-color: var(--pw-white);
+  background: var(--pw-bg-3);
   transition: var(--pw-duration-normal);
   border-radius: 50%;
   z-index: 2;

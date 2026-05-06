@@ -4,7 +4,7 @@
   display: flex;
   height: calc(100vh - 200px); /* 기본 고정 높이 (PC fallback) */
   min-height: 500px;
-  background: white;
+  background: var(--pw-bg-3);
   width: 100%;
   box-sizing: border-box;
   border: 1px solid var(--border);
@@ -85,7 +85,7 @@
   flex: none;
   display: flex;
   flex-direction: column;
-  background: white;
+  background: var(--pw-bg-3);
   border-right: 1px solid var(--border);
   min-height: 0;
 }
@@ -1170,7 +1170,7 @@
   position: absolute;
   top: -6px;
   right: -6px;
-  background: white;
+  background: var(--pw-bg-3);
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 

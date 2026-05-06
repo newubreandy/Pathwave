@@ -10,7 +10,7 @@
   min-height: 100vh;
   min-height: 100dvh;
   padding: var(--pw-space-10) var(--pw-container-pad-m);
-  background: var(--pw-white);
+  background: var(--pw-bg-3);
   animation: fadeIn var(--pw-duration-slow) var(--pw-ease-out);
 }
 

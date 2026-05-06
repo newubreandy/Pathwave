@@ -234,7 +234,7 @@
 }
 
 .btn-outline-small {
-  background: white;
+  background: var(--pw-bg-3);
   color: var(--pw-text);
   border: 1px solid var(--pw-border);
   border-radius: var(--pw-radius-full);
@@ -268,7 +268,7 @@
 }
 
 .counter-btn {
-  background: white;
+  background: var(--pw-bg-3);
   border: 1px solid var(--pw-border);
   border-radius: var(--pw-radius-xs);
   width: 32px;

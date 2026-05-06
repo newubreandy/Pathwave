@@ -145,7 +145,7 @@
   width: 26px;
   left: 3px;
   top: 3px;
-  background-color: white;
+  background: var(--pw-bg-3);
   transition: transform var(--pw-duration-normal) var(--pw-ease);
   border-radius: 50%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
@@ -339,7 +339,7 @@ body:has(.settings-modal-overlay) .main-viewport {
 }
 
 .settings-modal {
-  background: white;
+  background: var(--pw-bg-3);
   border-radius: var(--pw-radius-lg);
   width: 100%;
   max-width: 420px;
@@ -459,7 +459,7 @@ body:has(.settings-modal-overlay) .main-viewport {
 }
 
 .settings-modal-btn.cancel {
-  background: white;
+  background: var(--pw-bg-3);
   border: 1px solid var(--pw-border);
   color: var(--pw-text);
 }

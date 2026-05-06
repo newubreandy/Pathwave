@@ -11,7 +11,7 @@ const MOCK_CARD = { name: '나라카드', number: '****-****-****-6789' };
 const MOCK_EMAIL = 'ceo@hotelh.com';
 
 const MOCK_SERVICES = [
-  { id: 'wifi', name: 'wifi 서비스', label: 'Wifi', icon: Wifi, color: '#16A34A',
+  { id: 'wifi', name: 'wifi 서비스', label: 'Wifi', icon: Wifi, color: '#8B5CF6',
     desc: '와이파이 서비스는 BE 서비스를 이용하는 사용자가 서비스시설에 들어왔을 경우 자동으로 와이파이에 접속하게 해 주는 서비스입니다.',
     plans: [
       { id: 'wifi-monthly', name: '월간', price: 7700, unit: '원/월', min: 1 },
@@ -22,7 +22,7 @@ const MOCK_SERVICES = [
       { id: 'wifi-2', quantity: 132, price: '1,016,000원', priceNote: 'VAT 포함', billingNote: '※ 매월 12일 결제', period: '2021.02.13 ~ 2023.02.12', appliedAt: '(신청일 2021.02.28)' },
     ],
   },
-  { id: 'event', name: '이벤트 서비스', label: '이벤트', icon: Gift, color: '#3B82F6',
+  { id: 'event', name: '이벤트 서비스', label: '이벤트', icon: Gift, color: '#A78BFA',
     desc: '서비스 시설에서 특정 위치에 방문하였을 경우 쿠폰 및 혜택을 제공할 수 있는 서비스입니다.',
     plans: [
       { id: 'event-basic', name: '기본', price: 6000, unit: '원/월', min: 1 },
