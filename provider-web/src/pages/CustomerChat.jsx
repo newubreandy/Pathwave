@@ -593,7 +593,7 @@ const CustomerChat = () => {
   };
 
   return (
-    <div className="chat-page-wrapper">
+    <div className={`chat-page-wrapper ${selectedId ? 'is-room-open' : ''}`}>
       <div className={`page-header-section ${selectedId ? 'hidden-panel' : ''}`}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1 className="page-title">답변대기 {totalUnread > 0 ? totalUnread : 0}</h1>
