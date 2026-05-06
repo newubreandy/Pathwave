@@ -11,7 +11,7 @@
 }
 
 .dashboard-stat-card {
-  background: white;
+  background: var(--pw-bg-3);
   border: 1px solid var(--pw-border-light);
   border-radius: var(--pw-radius-lg);
   padding: var(--pw-space-5);
@@ -103,7 +103,7 @@
 }
 
 .dashboard-chart-card {
-  background: white;
+  background: var(--pw-bg-3);
   border: 1px solid var(--pw-border-light);
   border-radius: var(--pw-radius-lg);
   padding: var(--pw-space-5);

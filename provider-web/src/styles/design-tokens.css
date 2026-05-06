@@ -1,59 +1,77 @@
 /* ═══════════════════════════════════════════════════
-   PathWave Design Tokens
-   Hybrid: Figma Minimal + PathWave Lifestyle
+   PathWave Design Tokens — Provider (시설 관리자)
+   Dark + 보라 (#8B5CF6) 단일 포인트.
+   슈퍼어드민(admin-web) 의 녹색 톤과 시각 구분.
    Compliant: Apple HIG + Material Design 3
    ═══════════════════════════════════════════════════ */
 
 :root {
-  /* ── Color: Primary (PathWave Mint Green) ── */
-  --pw-primary:        #10B981;
-  --pw-primary-hover:  #059669;
-  --pw-primary-active: #047857;
-  --pw-primary-light:  #D1FAE5;
-  --pw-primary-subtle: #ECFDF5;
+  /* ── Color: Primary (시설관리자 — 보라 / Violet) ── */
+  --pw-primary:        #8B5CF6;
+  --pw-primary-hover:  #7C3AED;
+  --pw-primary-active: #6D28D9;
+  --pw-primary-light:  rgba(139, 92, 246, 0.18);
+  --pw-primary-subtle: rgba(139, 92, 246, 0.08);
+  --pw-primary-glow:   rgba(139, 92, 246, 0.32);
 
-  /* ── Color: Secondary (Cyan for accents) ── */
-  --pw-secondary:       #06B6D4;
-  --pw-secondary-light: #CFFAFE;
+  /* ── Color: Secondary (보조 — 거의 사용 안 함, 톤 통일) ── */
+  --pw-secondary:       #A78BFA;
+  --pw-secondary-light: rgba(167, 139, 250, 0.16);
 
-  /* ── Color: Neutral (Figma-style deep blacks + soft grays) ── */
-  --pw-gray-950: #030712;
-  --pw-gray-900: #111827;
-  --pw-gray-800: #1F2937;
-  --pw-gray-700: #374151;
-  --pw-gray-600: #4B5563;
-  --pw-gray-500: #6B7280;
-  --pw-gray-400: #9CA3AF;
-  --pw-gray-300: #D1D5DB;
-  --pw-gray-200: #E5E7EB;
-  --pw-gray-100: #F3F4F6;
-  --pw-gray-50:  #F9FAFB;
+  /* ── Color: Neutral (다크 톤) ──
+     - gray-950 ~ gray-50 의 의미는 "더 어두움 → 더 밝음" 에서
+       다크 테마에서는 "더 깊은 배경 → 더 밝은 텍스트" 로 매핑.
+  ── */
+  --pw-gray-950: #07070B;   /* 가장 깊은 배경 */
+  --pw-gray-900: #0B0B12;
+  --pw-gray-800: #14141C;
+  --pw-gray-700: #1B1B25;
+  --pw-gray-600: #25252F;
+  --pw-gray-500: #3A3A46;
+  --pw-gray-400: #5A6072;   /* hint */
+  --pw-gray-300: #8A91A3;   /* secondary text */
+  --pw-gray-200: #B6BCC9;
+  --pw-gray-100: #DBDFE7;
+  --pw-gray-50:  #F2F3F7;   /* 가장 밝은 텍스트 */
   --pw-white:    #FFFFFF;
 
   /* ── Color: Semantic ── */
   --pw-error:        #EF4444;
-  --pw-error-light:  #FEE2E2;
+  --pw-error-light:  rgba(239, 68, 68, 0.10);
   --pw-warning:      #F59E0B;
-  --pw-warning-light:#FEF3C7;
-  --pw-success:      #10B981;
-  --pw-success-light:#D1FAE5;
-  --pw-info:         #3B82F6;
-  --pw-info-light:   #DBEAFE;
+  --pw-warning-light:rgba(245, 158, 11, 0.10);
+  --pw-success:      #22C55E;
+  --pw-success-light:rgba(34, 197, 94, 0.10);
+  --pw-info:         #8B5CF6;            /* primary 와 동일 — 의미 컬러 최소화 */
+  --pw-info-light:   var(--pw-primary-light);
 
-  /* ── Color: Surface & Background ── */
-  --pw-bg:           var(--pw-gray-50);
-  --pw-surface:      var(--pw-white);
-  --pw-surface-hover:var(--pw-gray-100);
-  --pw-border:       var(--pw-gray-200);
-  --pw-border-light: rgba(0, 0, 0, 0.06);
-  --pw-divider:      var(--pw-gray-200);
+  /* ── Color: Surface & Background (다크 4단계) ── */
+  --pw-bg:           #0B0B12;            /* 페이지 */
+  --pw-bg-2:         #0F0F17;            /* 사이드바 */
+  --pw-bg-3:         #14141C;            /* 카드 */
+  --pw-bg-4:         #1A1A24;            /* 카드 안 inset */
+  --pw-bg-hover:     #20202A;
+  --pw-surface:      var(--pw-bg-3);
+  --pw-surface-hover:var(--pw-bg-hover);
+  --pw-border:       #1F1F2B;
+  --pw-border-strong:#2A2A38;
+  --pw-border-light: rgba(255, 255, 255, 0.04);
+  --pw-divider:      var(--pw-border);
 
   /* ── Color: Text ── */
-  --pw-text:         var(--pw-gray-900);
-  --pw-text-secondary: var(--pw-gray-500);
-  --pw-text-hint:    var(--pw-gray-400);
-  --pw-text-disabled:var(--pw-gray-300);
-  --pw-text-inverse: var(--pw-white);
+  --pw-text:           var(--pw-gray-50);     /* #F2F3F7 */
+  --pw-text-secondary: var(--pw-gray-300);    /* #8A91A3 */
+  --pw-text-hint:      var(--pw-gray-400);    /* #5A6072 */
+  --pw-text-disabled:  var(--pw-gray-500);
+  --pw-text-inverse:   var(--pw-gray-900);
+
+  /* ── Status badge (admin-web 과 동일 명명) ── */
+  --pw-badge-active-bg:   var(--pw-primary-light);
+  --pw-badge-active-fg:   #C4B5FD;          /* violet-300 */
+  --pw-badge-neutral-bg:  rgba(255,255,255,0.04);
+  --pw-badge-neutral-fg:  var(--pw-text-secondary);
+  --pw-badge-inactive-bg: var(--pw-error-light);
+  --pw-badge-inactive-fg: #F87171;
 
   /* ── Typography: Font Family ── */
   --pw-font: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -117,13 +135,13 @@
   --pw-radius-xl:   20px;
   --pw-radius-full: 999px;
 
-  /* ── Shadows (Layered for depth) ── */
-  --pw-shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.04);
-  --pw-shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --pw-shadow-md:  0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-  --pw-shadow-lg:  0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
-  --pw-shadow-xl:  0 20px 40px -10px rgba(0, 0, 0, 0.1);
-  --pw-shadow-card:0 2px 8px rgba(0, 0, 0, 0.06);
+  /* ── Shadows (다크 테마용 — inset highlight + 깊은 drop shadow) ── */
+  --pw-shadow-xs:  0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 1px 2px rgba(0, 0, 0, 0.4);
+  --pw-shadow-sm:  0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 2px 6px rgba(0, 0, 0, 0.4);
+  --pw-shadow-md:  0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 6px 16px rgba(0, 0, 0, 0.45);
+  --pw-shadow-lg:  0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 12px 32px rgba(0, 0, 0, 0.5);
+  --pw-shadow-xl:  0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 24px 48px rgba(0, 0, 0, 0.55);
+  --pw-shadow-card:0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 8px 28px rgba(0, 0, 0, 0.5);
 
   /* ── Motion / Transitions ── */
   --pw-ease:       cubic-bezier(0.4, 0, 0.2, 1);  /* Material standard */

@@ -31,20 +31,20 @@ const REVENUE_DATA = [
   { month: '4월', wifi: 1024, event: 24, push: 12 },
 ];
 
-// 쿠폰 사용률
+// 쿠폰 사용률 — 보라(사용) + 무채(미사용/만료) 톤
 const COUPON_DATA = [
-  { name: '사용', value: 89, color: '#16A34A' },
-  { name: '미사용', value: 45, color: '#D1D5DB' },
-  { name: '만료', value: 22, color: '#F59E0B' },
+  { name: '사용',   value: 89, color: '#8B5CF6' },
+  { name: '미사용', value: 45, color: '#3A3A46' },
+  { name: '만료',   value: 22, color: '#5A6072' },
 ];
 
-// 차트 색상 (디자인 토큰 연동)
+// 차트 색상 — 다크 + 보라 단일 포인트 톤 (provider 시설관리자)
 const CHART_COLORS = {
-  primary: '#16A34A',
-  primaryLight: '#DCFCE7',
-  secondary: '#3B82F6',
-  warning: '#F59E0B',
-  gray: '#9CA3AF',
+  primary: '#8B5CF6',          // 보라 (--pw-primary)
+  primaryLight: 'rgba(139,92,246,0.18)',
+  secondary: '#A78BFA',         // 옅은 보라
+  warning: '#5A6072',           // 무채 (강조 컬러 최소화)
+  gray: '#5A6072',
 };
 
 /* ═══════════════════════════════════════════════════
@@ -54,12 +54,13 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
-      background: 'white',
-      border: '1px solid var(--pw-border-light)',
+      background: 'var(--pw-bg-3)',
+      border: '1px solid var(--pw-border-strong)',
       borderRadius: 'var(--pw-radius-md)',
       padding: '8px 12px',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+      boxShadow: 'var(--pw-shadow-md)',
       fontSize: 'var(--pw-caption-size)',
+      color: 'var(--pw-text)',
     }}>
       <div style={{ fontWeight: 600, marginBottom: 4 }}>{label}</div>
       {payload.map((entry, i) => (
@@ -122,7 +123,7 @@ const Dashboard = () => {
       <div className="dashboard-stats">
         <StatCard
           icon={Store} label="운영 중인 매장" value="3개"
-          color="#111827" trend={null}
+          color="#8A91A3" trend={null}
           to="/dashboard/store"
         />
         <StatCard
@@ -160,14 +161,14 @@ const Dashboard = () => {
                   <stop offset="100%" stopColor={CHART_COLORS.primary} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--pw-border)" vertical={false} />
               <XAxis
                 dataKey="date" axisLine={false} tickLine={false}
-                tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                tick={{ fontSize: 11, fill: '#8A91A3' }}
               />
               <YAxis
                 axisLine={false} tickLine={false}
-                tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                tick={{ fontSize: 11, fill: '#8A91A3' }}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area
@@ -175,7 +176,7 @@ const Dashboard = () => {
                 stroke={CHART_COLORS.primary} strokeWidth={2.5}
                 fill="url(#gradientGreen)"
                 dot={{ r: 3, fill: CHART_COLORS.primary, strokeWidth: 0 }}
-                activeDot={{ r: 5, fill: CHART_COLORS.primary, strokeWidth: 2, stroke: 'white' }}
+                activeDot={{ r: 5, fill: CHART_COLORS.primary, strokeWidth: 2, stroke: 'var(--pw-bg-3)' }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -189,14 +190,14 @@ const Dashboard = () => {
           </div>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={REVENUE_DATA} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--pw-border)" vertical={false} />
               <XAxis
                 dataKey="month" axisLine={false} tickLine={false}
-                tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                tick={{ fontSize: 11, fill: '#8A91A3' }}
               />
               <YAxis
                 axisLine={false} tickLine={false}
-                tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                tick={{ fontSize: 11, fill: '#8A91A3' }}
                 tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(0)}K` : v}
               />
               <Tooltip content={<CustomTooltip />} />

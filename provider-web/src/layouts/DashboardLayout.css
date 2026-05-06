@@ -7,7 +7,7 @@
 .gnb {
   display: flex;
   flex-direction: column;
-  background-color: rgba(255, 255, 255, 0.92);
+  background-color: rgba(11, 11, 18, 0.88);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   transition: all var(--pw-duration-normal) var(--pw-ease);
@@ -20,14 +20,14 @@
 }
 
 .gnb.scrolled {
-  background-color: rgba(255, 255, 255, 0.85);
+  background-color: rgba(11, 11, 18, 0.94);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   box-shadow: var(--pw-shadow-sm);
 }
 
 .gnb.menu-open {
-  background-color: white;
+  background-color: var(--pw-bg-2);
   border-bottom: 1px solid var(--pw-border);
 }
 
@@ -275,18 +275,18 @@
   }
   .nav-scroll-indicator.left {
     left: 0;
-    background: linear-gradient(to right, rgba(255,255,255,0.95) 50%, transparent);
+    background: linear-gradient(to right, rgba(11,11,18,0.95) 50%, transparent);
   }
   .nav-scroll-indicator.right {
     right: 0;
-    background: linear-gradient(to left, rgba(255,255,255,0.95) 50%, transparent);
+    background: linear-gradient(to left, rgba(11,11,18,0.95) 50%, transparent);
   }
   
   /* ── Mobile Full-Screen Menu Overlay ── */
   .mobile-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(255, 255, 255, 0.98);
+    background: rgba(15, 15, 23, 0.98);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     z-index: 999;
@@ -350,7 +350,7 @@
 }
 
 .btn-modern-outline {
-  background: white;
+  background: var(--pw-bg-2);
   border: 1px solid var(--pw-border);
   color: var(--pw-text);
 }
