@@ -1,100 +1,152 @@
+/**
+ * PR #69 Phase 2 — admin-web 운영 페이지 6종 공용 스타일.
+ * Beacons / Approvals / Battery / Announcements / Payments / Policies 가 모두 import.
+ * 톤: PR #69 v2 미니멀 다크 + 녹색 포인트 (다른 컬러는 무채/danger 만).
+ */
+
+/* ── 페이지 기본 컨테이너 ─────────────────────────────────────── */
+.modern-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.page-header-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 .page-header-row {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 20px;
   flex-wrap: wrap;
+}
+.page-header-row .page-title {
+  margin: 0;
+}
+.sub-title {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  max-width: 640px;
 }
 .header-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 10px;
   align-items: center;
+  flex-shrink: 0;
 }
 
+/* ── 필터 바 ─────────────────────────────────────────────────── */
 .filter-bar {
   display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: 12px;
   flex-wrap: wrap;
+  align-items: center;
 }
 .filter-group {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  background: var(--bg-2);
+  gap: 10px;
+  background: var(--bg-3);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 0.25rem 0.5rem 0.25rem 0.75rem;
+  padding: 6px 14px 6px 16px;
+  height: 44px;
+  color: var(--text-muted);
 }
 .filter-label {
-  color: var(--text-muted);
-  font-size: 0.8125rem;
+  color: var(--text-hint);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
 }
 .filter-group select,
 .filter-group input {
   background: transparent;
   border: none;
-  padding: 0.4rem 0.25rem;
+  padding: 8px 4px;
+  color: var(--text);
+  font-size: var(--fs-sm);
   outline: none;
+  height: auto;
+  border-radius: 0;
+}
+.filter-group select:focus,
+.filter-group input:focus {
+  box-shadow: none;
+  border: none;
 }
 .filter-search {
   flex: 1;
-  min-width: 240px;
-  color: var(--text-muted);
+  min-width: 260px;
+}
+.filter-search input {
+  flex: 1;
+  width: 100%;
 }
 
+/* ── 테이블 카드 — index.css 의 .data-table 새 스타일 그대로 살림 ── */
 .table-card {
   padding: 0;
-  overflow: hidden;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.875rem;
+.table-card .data-table {
+  /* index.css 정의 (border-spacing 0 10px, rounded rows) 사용 */
+  font-size: var(--fs-sm);
 }
-.data-table thead th {
-  text-align: left;
-  font-weight: 500;
-  color: var(--text-muted);
-  background: var(--bg-3);
-  padding: 0.65rem 0.875rem;
-  border-bottom: 1px solid var(--border);
-  font-size: 0.8125rem;
-  white-space: nowrap;
-}
-.data-table tbody td {
-  padding: 0.7rem 0.875rem;
-  border-bottom: 1px solid var(--border);
+/* 테이블 셀 — 컬럼이 많은 운영 페이지 대응으로 padding 약간 축소 */
+.table-card .data-table tbody td {
+  padding: 16px 18px;
+  font-size: var(--fs-sm);
   vertical-align: middle;
 }
-.data-table tbody tr:last-child td {
-  border-bottom: none;
-}
-.data-table tbody tr:hover {
-  background: var(--bg-3);
+.table-card .data-table thead th {
+  padding: 10px 18px;
 }
 
+/* 빈/로딩 row */
+.row-empty {
+  text-align: center;
+  color: var(--text-hint);
+  padding: 48px 16px !important;
+  background: transparent;
+  border: 1px dashed var(--border) !important;
+  border-radius: var(--radius-md);
+}
+.data-table tbody tr.empty-row,
+.data-table tbody td.row-empty {
+  background: transparent;
+}
+
+/* mono 셀 */
 .cell-mono {
-  font-family: ui-monospace, 'SF Mono', monospace;
-  font-size: 0.8125rem;
+  font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
 }
 .cell-uuid {
-  max-width: 240px;
+  max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--text-muted);
 }
 .cell-actions {
   white-space: nowrap;
   display: flex;
-  gap: 0.25rem;
+  gap: 4px;
   justify-content: flex-end;
 }
+
+/* 아이콘 버튼 (테이블 row 액션) */
 .icon-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -102,25 +154,30 @@
   transition: background 0.12s, color 0.12s;
 }
 .icon-btn:hover {
-  background: var(--bg-3);
+  background: var(--bg-hover);
   color: var(--text);
 }
-
-.row-empty {
-  text-align: center;
-  color: var(--text-hint);
-  padding: 2.5rem 1rem !important;
+.icon-btn.danger:hover {
+  color: var(--danger);
+}
+.icon-btn.accent:hover {
+  color: var(--accent);
 }
 
+/* 옛 status-pill — 신규 코드는 .status-badge 사용. 하위 호환만 남김. */
 .status-pill {
-  display: inline-block;
-  padding: 0.2rem 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: var(--fs-xs);
+  font-weight: 600;
   white-space: nowrap;
+  background: var(--badge-neutral-bg);
+  color: var(--badge-neutral-fg);
 }
 
+/* spin 애니메이션 */
 .spin {
   animation: spin 0.7s linear infinite;
 }
@@ -129,50 +186,194 @@
   to   { transform: rotate(360deg); }
 }
 
-/* ── 모달 폼 공통 ───────────────────────────────────────────── */
+/* ── stat 카드 (Battery / Payments 의 요약 그리드) ─────────────── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  box-shadow: var(--shadow-card);
+}
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--bg-4);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.stat-icon.accent {
+  background: var(--accent-soft);
+  border-color: transparent;
+  color: var(--accent);
+}
+.stat-icon.danger {
+  background: var(--danger-soft);
+  border-color: transparent;
+  color: var(--danger);
+}
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.stat-label {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+.stat-value {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+/* ── 탭 바 (Payments) ────────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+}
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  color: var(--text-muted);
+  font-size: var(--fs-md);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.12s, border-color 0.12s;
+}
+.tab-btn:hover {
+  color: var(--text);
+}
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── 폼 / 모달 공용 ──────────────────────────────────────────── */
 .form-label {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  font-size: 0.875rem;
+  gap: 8px;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
-  margin-bottom: 0.875rem;
+  margin-bottom: 14px;
+}
+.form-label > span:first-child {
+  font-weight: 500;
+  color: var(--text);
 }
 .form-label input,
 .form-label select,
 .form-label textarea {
   width: 100%;
+  font-size: var(--fs-sm);
+  padding: 12px 14px;
+}
+.form-label.row {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
 }
 
 .import-textarea {
   width: 100%;
-  font-family: ui-monospace, 'SF Mono', monospace;
-  font-size: 0.8125rem;
+  font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+  font-size: var(--fs-sm);
   resize: vertical;
 }
 
 .error-box {
-  background: rgba(218,54,51,0.12);
-  color: var(--danger);
-  padding: 0.55rem 0.75rem;
+  background: var(--danger-soft);
+  color: var(--badge-inactive-fg);
+  padding: 12px 14px;
   border-radius: var(--radius);
-  font-size: 0.8125rem;
-  border: 1px solid rgba(218,54,51,0.3);
-  margin-top: 0.75rem;
+  font-size: var(--fs-sm);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  margin-top: 12px;
 }
 
+/* key-value 카드 (모달 안 정보 표시) */
 .kv {
-  background: var(--bg-3);
+  background: var(--bg-4);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
+  padding: 14px 16px;
+  font-size: var(--fs-sm);
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 8px;
+}
+.kv > div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 .kv-key {
   color: var(--text-hint);
   display: inline-block;
-  min-width: 6rem;
+  min-width: 96px;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
+
+/* hint / muted (인라인용 짧은 클래스) */
+.text-muted { color: var(--text-muted); }
+.text-hint  { color: var(--text-hint); }
+
+/* 작은 ghost 버튼 (inline 액션, 예: 시계열 보기) */
+.btn-sm {
+  padding: 8px 14px !important;
+  font-size: var(--fs-sm) !important;
+  border-radius: 10px !important;
+}
+.flex-1 { flex: 1; }
+
+/* ── 배터리 게이지 바 ─────────────────────────────────────────── */
+.battery-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 140px;
+}
+.battery-bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-4);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.battery-bar-fill {
+  height: 100%;
+  transition: width 0.3s;
+  background: var(--accent);
+}
+.battery-bar-fill.low { background: var(--danger); }
+.battery-bar-fill.mid { background: var(--text-muted); }
+.battery-bar-pct {
+  min-width: 44px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-sm);
+  color: var(--text);
+}
+.battery-bar-pct.low { color: var(--danger); }
+.battery-bar-pct.mid { color: var(--text-muted); }

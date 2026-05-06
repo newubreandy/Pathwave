@@ -10,11 +10,11 @@ const STATUS_LABEL = {
   verified:   '승인됨',
   suspended:  '정지됨',
 };
-const STATUS_COLOR = {
-  pending:   '#d29922',
-  verified:  '#2ea043',
-  suspended: '#da3633',
-};
+function badgeClass(status) {
+  if (status === 'verified')  return 'active';
+  if (status === 'suspended') return 'inactive';
+  return 'neutral';
+}
 
 export default function Approvals() {
   const [filter, setFilter] = useState({ status: 'pending', q: '' });
@@ -139,13 +139,7 @@ export default function Approvals() {
                 <td>{a.email}</td>
                 <td>{a.manager_name || '—'}</td>
                 <td>
-                  <span
-                    className="status-pill"
-                    style={{
-                      background: (STATUS_COLOR[a.status] || '#8b949e') + '22',
-                      color: STATUS_COLOR[a.status] || '#8b949e',
-                    }}
-                  >
+                  <span className={`status-badge ${badgeClass(a.status)}`}>
                     {STATUS_LABEL[a.status] || a.status}
                   </span>
                 </td>
@@ -160,20 +154,18 @@ export default function Approvals() {
                   </button>
                   {a.status === 'pending' && (
                     <button
-                      className="icon-btn"
+                      className="icon-btn accent"
                       title="승인"
                       onClick={() => handleVerify(a)}
-                      style={{ color: '#2ea043' }}
                     >
                       <CheckCircle2 size={15} />
                     </button>
                   )}
                   {a.status !== 'suspended' && (
                     <button
-                      className="icon-btn"
+                      className="icon-btn danger"
                       title="정지"
                       onClick={() => setSuspendTarget(a)}
-                      style={{ color: '#da3633' }}
                     >
                       <XCircle size={15} />
                     </button>
@@ -183,7 +175,6 @@ export default function Approvals() {
                       className="icon-btn"
                       title="정지 해제"
                       onClick={() => handleReactivate(a)}
-                      style={{ color: '#1f6feb' }}
                     >
                       <RotateCcw size={15} />
                     </button>

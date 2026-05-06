@@ -5,19 +5,18 @@ import {
 import Modal from '../components/Modal.jsx';
 import { adminApi } from '../services/admin.js';
 import './Beacons.css';
-import './Payments.css';
 
 const PAYMENT_STATUS = {
-  paid:     { label: '결제 완료',  color: '#2ea043' },
-  pending:  { label: '대기',      color: '#d29922' },
-  failed:   { label: '실패',      color: '#da3633' },
-  refunded: { label: '환불됨',    color: '#a371f7' },
-  cancelled:{ label: '취소',      color: '#8b949e' },
+  paid:     { label: '결제 완료', tone: 'active' },
+  pending:  { label: '대기',     tone: 'neutral' },
+  failed:   { label: '실패',     tone: 'inactive' },
+  refunded: { label: '환불됨',   tone: 'neutral' },
+  cancelled:{ label: '취소',     tone: 'neutral' },
 };
 const SUBSCRIPTION_STATUS = {
-  active:    { label: '구독 중',  color: '#2ea043' },
-  expired:   { label: '만료',     color: '#8b949e' },
-  cancelled: { label: '해지',     color: '#da3633' },
+  active:    { label: '구독 중', tone: 'active' },
+  expired:   { label: '만료',    tone: 'neutral' },
+  cancelled: { label: '해지',    tone: 'inactive' },
 };
 
 const PAYMENT_FILTERS = ['all', 'paid', 'pending', 'failed', 'refunded'];
@@ -116,10 +115,10 @@ function PaymentsTab() {
         </button>
       </div>
 
-      <div className="stat-grid" style={{ marginBottom: '1rem' }}>
+      <div className="stat-grid">
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#2ea04322', color: '#2ea043' }}>
-            <Receipt size={20} />
+          <div className="stat-icon accent">
+            <Receipt size={20} strokeWidth={1.75} />
           </div>
           <div className="stat-content">
             <div className="stat-label">결제 합계 (필터)</div>
@@ -127,8 +126,8 @@ function PaymentsTab() {
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#a371f722', color: '#a371f7' }}>
-            <RotateCcw size={20} />
+          <div className="stat-icon">
+            <RotateCcw size={20} strokeWidth={1.75} />
           </div>
           <div className="stat-content">
             <div className="stat-label">환불 합계</div>
@@ -136,8 +135,8 @@ function PaymentsTab() {
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#1f6feb22', color: '#1f6feb' }}>
-            <CreditCard size={20} />
+          <div className="stat-icon">
+            <CreditCard size={20} strokeWidth={1.75} />
           </div>
           <div className="stat-content">
             <div className="stat-label">건수</div>
@@ -172,7 +171,7 @@ function PaymentsTab() {
               <tr><td colSpan={10} className="row-empty">결제 내역이 없습니다.</td></tr>
             )}
             {!loading && list.map((p) => {
-              const st = PAYMENT_STATUS[p.status] || { label: p.status, color: '#8b949e' };
+              const st = PAYMENT_STATUS[p.status] || { label: p.status, tone: 'neutral' };
               return (
                 <tr key={p.id}>
                   <td className="cell-mono">{p.id}</td>
@@ -183,9 +182,7 @@ function PaymentsTab() {
                   <td className="cell-mono"><strong>{p.total?.toLocaleString() ?? '—'}</strong></td>
                   <td className="cell-mono cell-uuid" title={p.pg_tid}>{p.pg_tid || '—'}</td>
                   <td>
-                    <span className="status-pill" style={{ background: st.color + '22', color: st.color }}>
-                      {st.label}
-                    </span>
+                    <span className={`status-badge ${st.tone}`}>{st.label}</span>
                   </td>
                   <td className="cell-mono">{(p.paid_at || p.created_at)?.slice(0, 16) || '—'}</td>
                   <td className="cell-actions">
@@ -194,7 +191,6 @@ function PaymentsTab() {
                         className="icon-btn"
                         title="환불"
                         onClick={() => setRefundTarget(p)}
-                        style={{ color: '#a371f7' }}
                       >
                         <RotateCcw size={15} />
                       </button>
@@ -278,7 +274,7 @@ function SubscriptionsTab() {
               <tr><td colSpan={10} className="row-empty">구독 내역이 없습니다.</td></tr>
             )}
             {!loading && list.map((s) => {
-              const st = SUBSCRIPTION_STATUS[s.status] || { label: s.status, color: '#8b949e' };
+              const st = SUBSCRIPTION_STATUS[s.status] || { label: s.status, tone: 'neutral' };
               return (
                 <tr key={s.id}>
                   <td className="cell-mono">{s.id}</td>
@@ -291,9 +287,7 @@ function SubscriptionsTab() {
                   <td className="cell-mono">{s.started_at?.slice(0, 10) || '—'}</td>
                   <td className="cell-mono">{s.ends_at?.slice(0, 10) || '—'}</td>
                   <td>
-                    <span className="status-pill" style={{ background: st.color + '22', color: st.color }}>
-                      {st.label}
-                    </span>
+                    <span className={`status-badge ${st.tone}`}>{st.label}</span>
                   </td>
                 </tr>
               );

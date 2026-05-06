@@ -118,24 +118,18 @@ export default function Policies() {
                 </td>
                 <td>
                   {p.source === 'static_file' && (
-                    <span className="status-pill" style={{ background: '#8b949e22', color: '#8b949e' }}>
-                      파일 (PR #45)
-                    </span>
+                    <span className="status-badge neutral">파일 (PR #45)</span>
                   )}
                   {p.source === 'placeholder' && (
-                    <span className="status-pill" style={{ background: '#d2992222', color: '#d29922' }}>
-                      placeholder
-                    </span>
+                    <span className="status-badge neutral">placeholder</span>
                   )}
                   {!p.source && (
-                    <span className="status-pill" style={{ background: '#2ea04322', color: '#2ea043' }}>
-                      DB
-                    </span>
+                    <span className="status-badge active">DB</span>
                   )}
                 </td>
                 <td>
                   {p.email_notified
-                    ? <span style={{ color: '#2ea043' }}>발송됨</span>
+                    ? <span style={{ color: 'var(--accent)' }}>발송됨</span>
                     : <span className="text-hint">—</span>}
                 </td>
                 <td className="cell-actions">
@@ -177,7 +171,7 @@ export default function Policies() {
                     </td>
                     <td>
                       {p.email_notified
-                        ? <span style={{ color: '#2ea043' }}>발송됨</span>
+                        ? <span style={{ color: 'var(--accent)' }}>발송됨</span>
                         : <span className="text-hint">미발송</span>}
                     </td>
                     <td className="cell-actions">
@@ -189,8 +183,7 @@ export default function Policies() {
                       <button className="icon-btn" title="수정" onClick={() => setEditTarget(p)}>
                         <Pencil size={15} />
                       </button>
-                      <button className="icon-btn" title="삭제"
-                              style={{ color: 'var(--danger)' }}
+                      <button className="icon-btn danger" title="삭제"
                               onClick={() => handleDelete(p)}>
                         <Trash2 size={15} />
                       </button>
