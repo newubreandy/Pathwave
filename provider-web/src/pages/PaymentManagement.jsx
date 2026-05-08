@@ -12,7 +12,7 @@ const MOCK_EMAIL = 'ceo@hotelh.com';
 
 const MOCK_SERVICES = [
   { id: 'wifi', name: 'wifi 서비스', label: 'Wifi', icon: Wifi, color: '#8B5CF6',
-    desc: '와이파이 서비스는 BE 서비스를 이용하는 사용자가 서비스시설에 들어왔을 경우 자동으로 와이파이에 접속하게 해 주는 서비스입니다.',
+    desc: 'PathWave WiFi 서비스는 매장 방문 고객이 자동으로 매장 WiFi 에 접속할 수 있도록 지원하는 서비스입니다.',
     plans: [
       { id: 'wifi-monthly', name: '월간', price: 7700, unit: '원/월', min: 1 },
       { id: 'wifi-yearly', name: '연간', price: 77000, unit: '원/년', min: 1, discount: '17%' },
