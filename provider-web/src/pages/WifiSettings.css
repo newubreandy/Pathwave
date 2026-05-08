@@ -17,6 +17,14 @@
   margin-bottom: var(--pw-space-4);
 }
 
+/* 탭 도입 후: 검색만 우측 정렬, 카운트는 탭 헤더에 통합됨 */
+.wifi-list-meta.wifi-list-meta--right {
+  justify-content: flex-end;
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: var(--pw-space-2);
+}
+
 .wifi-count {
   font-size: var(--pw-label-size);
   color: var(--pw-text-secondary);
@@ -259,6 +267,97 @@
 
 @media (max-width: 480px) {
   .wifi-item-timeline { max-width: 100%; }
+}
+
+/* ═════════════════════════════════════════════════════════════
+   탭 — 신청 진행중 / 운영중 / 점검·해지
+   sticky 처리: 모바일에서도 상태 빠르게 전환 가능
+   ═════════════════════════════════════════════════════════════ */
+.wifi-tabs {
+  display: flex;
+  gap: var(--pw-space-1);
+  position: sticky;
+  top: 0;
+  z-index: var(--pw-z-sticky, 200);
+  padding: var(--pw-space-3) 0;
+  margin: 0 0 var(--pw-space-4);
+  background: var(--pw-bg, #0A0A12);
+  border-bottom: 1px solid var(--pw-border);
+  /* 좌우 viewport 끝까지 자연스럽게 — 부모 padding 안에 있을 때 보더만 노출 */
+}
+
+.wifi-tab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pw-space-2);
+  padding: var(--pw-space-3) var(--pw-space-4);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--pw-text-secondary);
+  font-family: inherit;
+  font-size: var(--pw-label-size);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: var(--pw-touch-min);
+  transition: color var(--pw-duration-fast), border-color var(--pw-duration-fast);
+}
+
+.wifi-tab:hover {
+  color: var(--pw-text);
+}
+
+.wifi-tab.active {
+  color: var(--pw-primary);
+  border-bottom-color: var(--pw-primary);
+}
+
+.wifi-tab--live.active        { color: var(--pw-success); border-bottom-color: var(--pw-success); }
+.wifi-tab--maintenance.active { color: var(--pw-warning); border-bottom-color: var(--pw-warning); }
+
+.wifi-tab-label { letter-spacing: -0.005em; }
+
+.wifi-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  padding: 0 var(--pw-space-2);
+  border-radius: var(--pw-radius-full);
+  background: var(--pw-badge-neutral-bg);
+  color: var(--pw-text-secondary);
+  font-size: 0.7rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.wifi-tab.active .wifi-tab-count {
+  background: var(--pw-primary-light);
+  color: var(--pw-badge-active-fg);
+}
+.wifi-tab--live.active .wifi-tab-count        { background: var(--pw-success-light); color: var(--pw-success); }
+.wifi-tab--maintenance.active .wifi-tab-count { background: var(--pw-warning-light); color: var(--pw-warning); }
+
+@media (max-width: 768px) {
+  .wifi-tab { font-size: var(--pw-body-size); padding: var(--pw-space-3); }
+  .wifi-tab-count { font-size: var(--pw-caption-size); min-width: 22px; }
+}
+
+/* 탭 빈 상태 */
+.wifi-tab-empty {
+  padding: var(--pw-space-12) var(--pw-space-5);
+  text-align: center;
+  color: var(--pw-text-hint);
+  font-size: var(--pw-label-size);
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+@media (max-width: 768px) {
+  .wifi-tab-empty { font-size: var(--pw-body-size); }
 }
 
 /* 사장님 콘솔 — 4 섹션 카운트 (단순 텍스트 라인, 0건 숨김) */
