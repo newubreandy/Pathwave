@@ -250,6 +250,134 @@
   .wifi-item-meta-pill { font-size: var(--pw-caption-size); }
 }
 
+/* StatusTimeline — 카드 안 좌측 영역 자연 폭 사용 */
+.wifi-item-timeline {
+  margin-top: var(--pw-space-2);
+  width: 100%;
+  max-width: 560px;
+}
+
+@media (max-width: 480px) {
+  .wifi-item-timeline { max-width: 100%; }
+}
+
+/* 사장님 콘솔 — 신청 진행 현황판 (6개 그룹 카운트) */
+.wifi-summary-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pw-space-2);
+  margin: 0 0 var(--pw-space-4);
+  padding: var(--pw-space-3) var(--pw-space-4);
+  background: var(--pw-bg-3);
+  border: 1px solid var(--pw-border);
+  border-radius: var(--pw-radius-md);
+}
+
+.wifi-summary-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pw-space-2);
+  padding: var(--pw-space-1) var(--pw-space-3);
+  border-radius: var(--pw-radius-full);
+  font-size: var(--pw-caption-size);
+  font-weight: 600;
+  background: var(--pw-badge-neutral-bg);
+  color: var(--pw-badge-neutral-fg);
+}
+.wifi-summary-chip.pw-status-info    { background: var(--pw-primary-light); color: var(--pw-badge-active-fg); }
+.wifi-summary-chip.pw-status-success { background: var(--pw-success-light); color: var(--pw-success); }
+.wifi-summary-chip.pw-status-warning { background: var(--pw-warning-light); color: var(--pw-warning); }
+
+.wifi-summary-label { letter-spacing: 0.01em; }
+.wifi-summary-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: var(--pw-radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 768px) {
+  .wifi-summary-chip { font-size: var(--pw-label-size); padding: var(--pw-space-1) var(--pw-space-3); }
+  .wifi-summary-count { min-width: 22px; }
+}
+
+/* 그룹 (단건/다건 묶음) — 카드 컨테이너 */
+.wifi-group { display: flex; flex-direction: column; gap: 0; }
+.wifi-group.is-multi { padding: 0; }
+
+/* 다건 신청 그룹 헤더 — 신청번호 / 총 수량 / 결제일 */
+.wifi-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pw-space-3);
+  padding: var(--pw-space-3) var(--pw-space-4);
+  margin: var(--pw-space-2) 0 var(--pw-space-1);
+  background: var(--pw-bg-2);
+  border: 1px solid var(--pw-border);
+  border-left: 3px solid var(--pw-primary);
+  border-radius: var(--pw-radius-sm);
+}
+
+.wifi-group-header-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.wifi-group-id {
+  font-size: var(--pw-caption-size);
+  font-weight: 700;
+  color: var(--pw-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.wifi-group-meta {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-hint);
+}
+
+@media (max-width: 768px) {
+  .wifi-group-id { font-size: var(--pw-label-size); }
+  .wifi-group-meta { font-size: var(--pw-label-size); }
+}
+
+/* 그룹 안 카드 — 좌측 inset 으로 그룹 소속 시각화 */
+.wifi-group.is-multi .wifi-list-item {
+  margin-left: var(--pw-space-3);
+  border-left-width: 1px;
+  position: relative;
+}
+.wifi-group.is-multi .wifi-list-item::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--pw-space-3) * -1);
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--pw-border);
+}
+@media (max-width: 480px) {
+  .wifi-group.is-multi .wifi-list-item { margin-left: var(--pw-space-2); }
+  .wifi-group.is-multi .wifi-list-item::before { left: calc(var(--pw-space-2) * -1); }
+}
+
+/* 신청번호 pill — 단건 카드에 작은 보조 표시 */
+.wifi-item-meta-pill.subtle {
+  background: transparent;
+  color: var(--pw-text-hint);
+  border-color: transparent;
+  padding-left: 0;
+  padding-right: 0;
+}
+
 /* 상태 + 배터리 — 이름 우측 옆 (한 줄). 작은 화면에서 가장 먼저 줄어듦. */
 .wifi-item-status-block {
   flex: 1;

@@ -1,11 +1,13 @@
 /* ───────────────────────────────────────
    StatusBadge — 서비스 신청/운영 상태 공통 배지
    디자인 토큰 (--pw-*) 만 사용 — 새 색 정의 X
+   a11y: 텍스트 + 색상 + (강조 시) dot/inset border 로 의미 중복 전달
    ─────────────────────────────────────── */
 
 .pw-status-badge {
   display: inline-flex;
   align-items: center;
+  gap: var(--pw-space-1);
   border-radius: var(--pw-radius-full);
   font-weight: 700;
   white-space: nowrap;
@@ -32,7 +34,7 @@
   min-height: 28px;
 }
 
-/* variant */
+/* variant — 디자인 토큰 기반 (신규 색 도입 X) */
 .pw-status-neutral {
   background: var(--pw-badge-neutral-bg);
   color: var(--pw-badge-neutral-fg);
@@ -53,12 +55,30 @@
   color: var(--pw-warning);
 }
 
+/* 강조: 즉시 액션 필요 — warning 톤 + inset border */
+.pw-status-attention {
+  background: var(--pw-warning-light);
+  color: var(--pw-warning);
+  box-shadow: inset 0 0 0 1px var(--pw-warning);
+}
+
+/* 강조: 부정 종결 — error 톤 + inset border */
 .pw-status-danger {
   background: var(--pw-error-light);
   color: var(--pw-error);
+  box-shadow: inset 0 0 0 1px var(--pw-error);
 }
 
-/* 모바일 — 가독성 한 단계 위로 (사용자 가이드 동일 적용) */
+/* 좌측 dot — attention/danger 전용 */
+.pw-status-badge.has-dot .pw-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* 모바일 — 가독성 한 단계 위로 (기존 가이드와 동일 톤) */
 @media (max-width: 768px) {
   .pw-status-sm  { font-size: var(--pw-caption-size); }
   .pw-status-md  { font-size: var(--pw-label-size); }
