@@ -261,7 +261,47 @@
   .wifi-item-timeline { max-width: 100%; }
 }
 
-/* 사장님 콘솔 — 신청 진행 현황판 (6개 그룹 카운트) */
+/* 사장님 콘솔 — 4 섹션 카운트 (단순 텍스트 라인, 0건 숨김) */
+.wifi-overview {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--pw-space-3);
+  font-size: var(--pw-label-size);
+  color: var(--pw-text-secondary);
+}
+
+.wifi-overview-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.wifi-overview-item + .wifi-overview-item::before {
+  content: '·';
+  color: var(--pw-text-hint);
+  margin-right: var(--pw-space-2);
+}
+
+.wifi-overview-label {
+  color: var(--pw-text-secondary);
+}
+
+.wifi-overview-count {
+  color: var(--pw-text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.wifi-overview-inProgress .wifi-overview-count { color: var(--pw-primary); }
+.wifi-overview-live       .wifi-overview-count { color: var(--pw-success); }
+.wifi-overview-paused     .wifi-overview-count { color: var(--pw-warning); }
+
+@media (max-width: 768px) {
+  .wifi-overview { font-size: var(--pw-body-size); }
+}
+
+/* 호환 유지(미사용) — 기존 .wifi-summary-bar 흔적 — 안전하게 비활성 */
 .wifi-summary-bar {
   display: flex;
   flex-wrap: wrap;
@@ -376,6 +416,173 @@
   border-color: transparent;
   padding-left: 0;
   padding-right: 0;
+}
+
+/* ═════════════════════════════════════════════════════════════
+   섹션 (신청 진행중 / 운영중 / 일시중지·점검 / 해지)
+   ═════════════════════════════════════════════════════════════ */
+.wifi-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-3);
+  margin-bottom: var(--pw-space-8);
+}
+
+.wifi-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--pw-space-3);
+  padding-bottom: var(--pw-space-2);
+  border-bottom: 1px solid var(--pw-border);
+}
+
+.wifi-section-title {
+  margin: 0;
+  font-size: var(--pw-title-size);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--pw-text);
+}
+
+.wifi-section-count {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-hint);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 768px) {
+  .wifi-section-title { font-size: var(--pw-headline-size); }
+  .wifi-section-count { font-size: var(--pw-label-size); }
+}
+
+/* 신청 진행중 — 가장 강조 */
+.wifi-section--inprogress .wifi-section-title { color: var(--pw-primary); }
+
+/* 운영중 — 차분한 톤 */
+.wifi-section--live .wifi-section-title { color: var(--pw-text); opacity: 0.95; }
+
+/* 일시중지/해지 — 회색 톤 */
+.wifi-section--paused     .wifi-section-title { color: var(--pw-text-secondary); }
+.wifi-section--terminated .wifi-section-title { color: var(--pw-text-hint); }
+
+/* ═════════════════════════════════════════════════════════════
+   그룹 헤더 안 미니 카운트 칩 (다건 신청 진행상태)
+   ═════════════════════════════════════════════════════════════ */
+.wifi-group-mini-counts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--pw-space-2);
+  margin-top: var(--pw-space-2);
+}
+
+.wifi-group-mini-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--pw-space-2);
+  background: var(--pw-primary-light);
+  color: var(--pw-badge-active-fg);
+  border-radius: var(--pw-radius-full);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.wifi-group-mini-chip strong {
+  font-weight: 800;
+  color: var(--pw-text);
+}
+
+@media (max-width: 768px) {
+  .wifi-group-mini-chip { font-size: var(--pw-caption-size); }
+}
+
+/* ═════════════════════════════════════════════════════════════
+   prominent 카드 — 신청 진행중 (강조)
+   ═════════════════════════════════════════════════════════════ */
+.wifi-list-item.wifi-list-item--prominent {
+  border-color: var(--pw-border-strong);
+  box-shadow: var(--pw-shadow-sm);
+}
+
+.wifi-list-item.wifi-list-item--prominent:hover {
+  border-color: var(--pw-primary);
+  box-shadow: var(--pw-shadow-md);
+}
+
+/* 송장번호 영역 — 배송중 단계 전용 강조 */
+.wifi-shipping-row {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-2);
+  margin-top: var(--pw-space-2);
+  padding: var(--pw-space-2) var(--pw-space-3);
+  background: var(--pw-primary-subtle);
+  border: 1px solid var(--pw-primary-light);
+  border-radius: var(--pw-radius-sm);
+}
+
+.wifi-shipping-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.wifi-shipping-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.wifi-shipping-label {
+  font-size: 0.7rem;
+  color: var(--pw-text-hint);
+  letter-spacing: 0.04em;
+}
+
+.wifi-shipping-value {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
+}
+
+@media (max-width: 768px) {
+  .wifi-shipping-label { font-size: var(--pw-caption-size); }
+  .wifi-shipping-value { font-size: var(--pw-label-size); }
+}
+
+/* ═════════════════════════════════════════════════════════════
+   compact 카드 — 운영중 (덜 강조 / 보기 전용)
+   ═════════════════════════════════════════════════════════════ */
+.wifi-list-item.wifi-list-item--compact {
+  margin-bottom: var(--pw-space-2);
+  background: var(--pw-bg-3);
+  box-shadow: none;
+}
+
+.wifi-list-item.wifi-list-item--compact .wifi-item-content {
+  padding: var(--pw-space-3) var(--pw-space-4);
+  gap: var(--pw-space-3);
+}
+
+.wifi-list-item.wifi-list-item--compact .wifi-item-name-block {
+  gap: 2px;
+}
+
+.wifi-list-item.wifi-list-item--compact .wifi-item-name {
+  font-size: var(--pw-label-size);
+  font-weight: 700;
+}
+
+.wifi-list-item.wifi-list-item--compact .wifi-item-meta {
+  margin-top: 0;
+}
+
+@media (max-width: 768px) {
+  .wifi-list-item.wifi-list-item--compact .wifi-item-name {
+    font-size: var(--pw-body-size);
+  }
 }
 
 /* 상태 + 배터리 — 이름 우측 옆 (한 줄). 작은 화면에서 가장 먼저 줄어듦. */
