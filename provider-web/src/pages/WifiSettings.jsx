@@ -136,6 +136,8 @@ const WifiSettings = () => {
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState(MOCK_PROFILES);
   const [view, setView] = useState('list'); // 'list' | 'search' | 'detail' | 'add'
+  // 리스트 탭 — 사용자 요구: 3개 탭 구조 (신청 진행중 / 운영중 / 점검·해지)
+  const [activeTab, setActiveTab] = useState('inProgress'); // 'inProgress' | 'live' | 'maintenance'
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [swipedId, setSwipedId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -486,20 +488,8 @@ const WifiSettings = () => {
           </div>
         </div>
 
-        {/* Count + Search — 4 섹션 카운트 (단순 텍스트) */}
-        <div className="wifi-list-meta">
-          <div className="wifi-overview" role="status">
-            {Object.entries(PROVIDER_SECTIONS).map(([key, def]) => {
-              const cnt = (profilesBySection[key] || []).length;
-              if (cnt === 0) return null; // 0건은 자동 숨김 (해지 포함)
-              return (
-                <span key={key} className={`wifi-overview-item wifi-overview-${key}`}>
-                  <span className="wifi-overview-label">{def.label}</span>
-                  <span className="wifi-overview-count">{cnt}건</span>
-                </span>
-              );
-            })}
-          </div>
+        {/* 검색 우측 정렬 */}
+        <div className="wifi-list-meta wifi-list-meta--right">
           <button className="wifi-search-btn" onClick={openSearch}>
             <Search size={16} />
             검색
@@ -520,8 +510,68 @@ const WifiSettings = () => {
           </div>
         )}
 
-        {/* ─── 4 섹션 — 신청 진행중 → 운영중 → 일시중지 → 해지 ─── */}
-        {Object.entries(PROVIDER_SECTIONS).map(([sectionKey, def]) => {
+        {/* ─── 탭 헤더 (sticky) ─── */}
+        {(() => {
+          const inProgressCount  = (profilesBySection.inProgress || []).length;
+          const liveCount        = (profilesBySection.live || []).length;
+          const maintenanceCount = (profilesBySection.paused || []).length + (profilesBySection.terminated || []).length;
+          const tabDefs = [
+            { key: 'inProgress',  label: '신청 진행중', count: inProgressCount },
+            { key: 'live',        label: '운영중',     count: liveCount },
+            { key: 'maintenance', label: '점검/해지',  count: maintenanceCount },
+          ];
+          return (
+            <nav className="wifi-tabs" role="tablist" aria-label="와이파이 상태 탭">
+              {tabDefs.map((t) => (
+                <button
+                  key={t.key}
+                  role="tab"
+                  type="button"
+                  aria-selected={activeTab === t.key}
+                  className={`wifi-tab ${activeTab === t.key ? 'active' : ''} wifi-tab--${t.key}`}
+                  onClick={() => {
+                    if (activeTab === t.key) return;
+                    setActiveTab(t.key);
+                    // 사용자 요구 #5: 탭 전환 시 스크롤 위치 초기화
+                    window.scrollTo({ top: 0, behavior: 'auto' });
+                  }}
+                >
+                  <span className="wifi-tab-label">{t.label}</span>
+                  <span className="wifi-tab-count">{t.count}</span>
+                </button>
+              ))}
+            </nav>
+          );
+        })()}
+
+        {/* ─── 활성 탭 내용만 렌더 (기존 세로 4섹션 제거) ─── */}
+        {(() => {
+          // 활성 탭에 보여줄 섹션 키 목록
+          let visibleSections;
+          if (activeTab === 'inProgress')  visibleSections = ['inProgress'];
+          else if (activeTab === 'live')   visibleSections = ['live'];
+          else /* maintenance */            visibleSections = ['paused', 'terminated'];
+
+          // 빈 상태
+          const totalCount = visibleSections.reduce(
+            (acc, k) => acc + ((profilesBySection[k] || []).length), 0
+          );
+          if (totalCount === 0) {
+            const emptyMsg =
+              activeTab === 'inProgress' ? '현재 진행 중인 신청이 없습니다.\n새 와이파이를 신청해보세요.'
+              : activeTab === 'live'      ? '운영 중인 서비스가 없습니다.\n신청 절차가 끝나면 이곳에 표시됩니다.'
+              :                              '일시중지 또는 해지된 서비스가 없습니다.';
+            return (
+              <div className="wifi-tab-empty" role="status">
+                <p>{emptyMsg}</p>
+              </div>
+            );
+          }
+
+          return visibleSections.map((sectionKey) => {
+            const profiles = profilesBySection[sectionKey] || [];
+            if (profiles.length === 0) return null;
+            const def = PROVIDER_SECTIONS[sectionKey];
           const profiles = profilesBySection[sectionKey] || [];
           if (profiles.length === 0) return null;
 
@@ -738,7 +788,8 @@ const WifiSettings = () => {
               </div>
             </section>
           );
-        })}
+        });
+        })()}
 
         <BottomActionBar>
           <Button variant="primary" fullWidth icon={<Plus size={18} />} onClick={() => navigate('/dashboard/service-request?type=wifi')}>
