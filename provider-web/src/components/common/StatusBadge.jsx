@@ -73,14 +73,45 @@ export const STATUS_META = {
 };
 
 // ── 사장님 콘솔용 6개 그룹 ─────────────────────────────────────
-// PROVIDER_STATUS_GROUPS — 그룹 라벨/variant 정의 + 그룹 카운트 카운트 표시 순서
+// PROVIDER_STATUS_GROUPS — 그룹 라벨/variant 정의 + 그룹 카운트 표시 순서
+//
+// 정책 매핑 (사용자 요구 #7):
+//   submitted / receiving                                → 신청완료
+//   beacon_setting / shipping_ready / service_ready      → 준비중
+//   shipping / delivered                                 → 배송중
+//   active                                               → 서비스중
+//   paused                                               → 일시중지
+//   terminated                                           → 해지
 export const PROVIDER_STATUS_GROUPS = {
-  applied:    { label: '신청완료',   variant: 'info',    keys: ['submitted', 'receiving', 'applied', 'paid', 'review', 'under_review'] },
-  preparing:  { label: '준비중',     variant: 'info',    keys: ['beacon_setting', 'shipping_ready', 'provisioning', 'installation_pending'] },
-  shipping:   { label: '배송중',     variant: 'info',    keys: ['shipping'] },
-  live:       { label: '서비스중',   variant: 'success', keys: ['delivered', 'service_ready', 'active', 'installed'] },
-  paused:     { label: '일시중지',   variant: 'warning', keys: ['paused'] },
-  terminated: { label: '해지',       variant: 'neutral', keys: ['terminated', 'ended'] },
+  applied:    { label: '신청완료', variant: 'info',    keys: ['submitted', 'receiving', 'applied', 'paid', 'review', 'under_review'] },
+  preparing:  { label: '준비중',   variant: 'info',    keys: ['beacon_setting', 'shipping_ready', 'service_ready', 'provisioning', 'installation_pending'] },
+  shipping:   { label: '배송중',   variant: 'info',    keys: ['shipping', 'delivered', 'installed'] },
+  live:       { label: '서비스중', variant: 'success', keys: ['active'] },
+  paused:     { label: '일시중지', variant: 'warning', keys: ['paused'] },
+  terminated: { label: '해지',     variant: 'neutral', keys: ['terminated', 'ended'] },
+};
+
+// ── 4 섹션 ─────────────────────────────────────────────────────
+// 사장님 콘솔 리스트 화면 분리 기준 (강조도 순서대로):
+//   1) 신청 진행중   = 신청완료 + 준비중 + 배송중 (가장 강조)
+//   2) 운영중 서비스 = 서비스중 (compact)
+//   3) 일시중지·점검 = 일시중지
+//   4) 해지         = 해지 (0건 자동 숨김)
+export const PROVIDER_SECTIONS = {
+  inProgress: { label: '신청 진행중',   groups: ['applied', 'preparing', 'shipping'] },
+  live:       { label: '운영중 서비스', groups: ['live'] },
+  paused:     { label: '일시중지·점검', groups: ['paused'] },
+  terminated: { label: '해지',          groups: ['terminated'] },
+};
+
+// status enum → 섹션 key (inProgress/live/paused/terminated)
+export const getProviderSection = (status) => {
+  const groupKey = getProviderGroup(status);
+  if (!groupKey) return null;
+  for (const [sectionKey, def] of Object.entries(PROVIDER_SECTIONS)) {
+    if (def.groups.includes(groupKey)) return sectionKey;
+  }
+  return null;
 };
 
 // 사장님 콘솔에서 리스트/카운트 자체에서 비노출할 status 키
