@@ -5,90 +5,118 @@ import WifiService from '../services/wifi/WifiService';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
-import StatusBadge from '../components/common/StatusBadge';
+import StatusBadge, {
+  PROVIDER_STATUS_GROUPS,
+  PROVIDER_HIDDEN_STATUSES,
+  getProviderGroup,
+} from '../components/common/StatusBadge';
 import StatusTimeline from '../components/common/StatusTimeline';
 import './WifiSettings.css';
 
+// 워크플로우 정책 (사장님 콘솔):
+//   - 결제 성공 후에만 신청건 생성 → 첫 status 는 'submitted'
+//   - draft / payment_failed / info_requested / rejected 는 리스트 비노출 (PROVIDER_HIDDEN_STATUSES)
+//   - 사장님 라벨은 6개 그룹: 신청완료 / 준비중 / 배송중 / 서비스중 / 일시중지 / 해지
+//
+// 데이터 구조:
+//   - 단건 신청  : applicationGroupId 가 단독 — UI 그룹 헤더 생략
+//   - 다건 신청  : 같은 applicationGroupId 로 묶이며 UI 그룹 헤더(신청번호/총수량/결제일) + 자식 카드
+//
 // status 필드 분리:
-//   applicationStatus — 신청/결제/적용/사용/종료 (공통 enum, StatusBadge 매핑)
-//   deviceStatus      — 운영 디바이스 상태 (정상/배터리부족/연결끊김)
+//   applicationStatus — 12개 세분 enum (호환 별칭 포함). StatusBadge 가 6개 그룹 라벨로 렌더
+//   deviceStatus      — 운영 디바이스 상태 (정상/배터리부족/연결끊김) — 'active' 단계만 의미
 //
-// workflow 모델 (1단계 — 본 PR):
-//   statusMessage     — 마지막 상태 변경 시 어드민/시스템이 남긴 안내 문구
-//   statusUpdatedAt   — 'YYYY.MM.DD HH:mm' 또는 ISO8601 (StatusTimeline 이 자동 변환)
-//   statusHistory     — 향후 이력 노출용 (현재 UI 미사용, mock 만 보유 — 후속 PR 활용)
-//
-// 공통 enum 키는 components/common/StatusBadge.jsx 의 STATUS_META 와 1:1 일치.
+// workflow 추가 필드:
+//   statusMessage     — 슈퍼어드민/시스템이 남긴 안내
+//   statusUpdatedAt   — 'YYYY.MM.DD HH:mm' 또는 ISO8601
+//   statusHistory     — 후속 PR 활용
+
 const MOCK_PROFILES = [
-  { id: 1, name: '로비정문1', message: 'Message', ssid: 'kt5G_1234789', beaconSn: 'BCN-2024-0001', password: 'Ezddd1@3356', date: '2022.03.15', periodEnd: '2024.03.14', image: null,
+  // ── 기존 운영 중 와이파이 (단건 신청) ─────────────────────────
+  { id: 1, name: '로비정문1', applicationGroupId: 'PW-20220315-001', applicationGroupSeq: 1, applicationGroupTotal: 1,
+    paidAt: '2022.03.15 09:30',
+    message: 'Message', ssid: 'kt5G_1234789', beaconSn: 'BCN-2024-0001', password: 'Ezddd1@3356', date: '2022.03.15', periodEnd: '2024.03.14', image: null,
     applicationStatus: 'active',
     statusMessage: '',
     statusUpdatedAt: '2024.03.20 10:00',
-    statusHistory: [
-      { status: 'active',               message: '서비스가 활성화되었습니다.',        changedAt: '2024.03.20 10:00', changedBy: 'admin' },
-      { status: 'installed',            message: '설치 완료',                     changedAt: '2024.03.18 16:30', changedBy: 'admin' },
-      { status: 'installation_pending', message: '설치 일정 조율 중',                changedAt: '2024.03.16 09:10', changedBy: 'admin' },
-    ],
-    deviceStatus: 'ok',      battery: 90, enabled: true },
-  { id: 2, name: '수영장',   message: 'Message', ssid: 'kt5G_pool01',   beaconSn: 'BCN-2024-0002', password: 'Ezddd1@3356', date: '2022.03.10', periodEnd: '2024.03.09', image: null,
+    statusHistory: [],
+    deviceStatus: 'ok', battery: 90, enabled: true },
+  { id: 2, name: '수영장', applicationGroupId: 'PW-20220310-002', applicationGroupSeq: 1, applicationGroupTotal: 1,
+    paidAt: '2022.03.10 14:00',
+    message: 'Message', ssid: 'kt5G_pool01', beaconSn: 'BCN-2024-0002', password: 'Ezddd1@3356', date: '2022.03.10', periodEnd: '2024.03.09', image: null,
     applicationStatus: 'active',
     statusMessage: '',
     statusUpdatedAt: '2024.03.15 14:00',
     statusHistory: [],
     deviceStatus: 'ok', battery: 76, enabled: true },
-  { id: 3, name: '1층카페', message: 'Message', ssid: 'kt5G_cafe01', beaconSn: 'BCN-2024-0003', password: 'Ezddd1@3356', date: '2022.02.28', periodEnd: '2024.02.27', image: null,
+  { id: 3, name: '1층카페', applicationGroupId: 'PW-20220228-003', applicationGroupSeq: 1, applicationGroupTotal: 1,
+    paidAt: '2022.02.28 11:00',
+    message: 'Message', ssid: 'kt5G_cafe01', beaconSn: 'BCN-2024-0003', password: 'Ezddd1@3356', date: '2022.02.28', periodEnd: '2024.02.27', image: null,
     applicationStatus: 'active',
     statusMessage: '',
     statusUpdatedAt: '2024.03.05 11:20',
     statusHistory: [],
     deviceStatus: 'low', battery: 22, enabled: true },
-  { id: 4, name: '2층뷔페', message: 'Message', ssid: 'kt5G_buffet', beaconSn: 'BCN-2024-0004', password: 'Ezddd1@3356', date: '2022.02.20', periodEnd: '2024.02.19', image: null,
-    applicationStatus: 'terminated',
-    statusMessage: '서비스 해지가 완료되었습니다.',
-    statusUpdatedAt: '2024.02.25 17:45',
-    statusHistory: [],
-    deviceStatus: 'ok', battery: 64, enabled: false },
-  { id: 5, name: '5001호', message: 'Message', ssid: 'kt5G_5001', beaconSn: 'BCN-2024-0005', password: 'Ezddd1@3356', date: '2022.01.15', periodEnd: '2024.01.14', image: null,
+  { id: 4, name: '5001호', applicationGroupId: 'PW-20220115-004', applicationGroupSeq: 1, applicationGroupTotal: 1,
+    paidAt: '2022.01.15 10:00',
+    message: 'Message', ssid: 'kt5G_5001', beaconSn: 'BCN-2024-0005', password: 'Ezddd1@3356', date: '2022.01.15', periodEnd: '2024.01.14', image: null,
     applicationStatus: 'active',
     statusMessage: '',
     statusUpdatedAt: '2024.02.01 10:00',
     statusHistory: [],
     deviceStatus: 'offline', battery: 0, enabled: true },
 
-  // ── 신청 흐름 데모 (workflow 시각화) ───────────────────────────
-  { id: 6, name: '신관 1층', message: '', ssid: '', beaconSn: '', password: '', date: '2026.05.08', periodEnd: '', image: null,
-    applicationStatus: 'under_review',
-    statusMessage: '검토 중입니다. 사업자등록증 확인 후 결제 안내를 드릴 예정입니다.',
+  // ── 일시중지 (단건) ───────────────────────────────────────────
+  { id: 5, name: '2층뷔페', applicationGroupId: 'PW-20220220-005', applicationGroupSeq: 1, applicationGroupTotal: 1,
+    paidAt: '2022.02.20 13:00',
+    message: 'Message', ssid: 'kt5G_buffet', beaconSn: 'BCN-2024-0004', password: 'Ezddd1@3356', date: '2022.02.20', periodEnd: '2024.02.19', image: null,
+    applicationStatus: 'paused',
+    statusMessage: '배터리 점검을 위해 일시 중지되었습니다.',
+    statusUpdatedAt: '2024.02.25 17:45',
+    statusHistory: [],
+    deviceStatus: 'ok', battery: 12, enabled: false },
+
+  // ── 다건 신청 그룹 #1 — 신관 (3개) ────────────────────────────
+  // 결제 1회로 3개 wifi 동시 신청. 각 wifiItem 단계 다양함.
+  { id: 6, name: '신관 1층', applicationGroupId: 'PW-20260509-001', applicationGroupSeq: 1, applicationGroupTotal: 3,
+    paidAt: '2026.05.09 09:00',
+    message: '', ssid: 'kt5G_NW_F1', beaconSn: 'BCN-2026-0010', password: 'Ezddd1@8801', date: '2026.05.09', periodEnd: '2028.05.08', image: null,
+    applicationStatus: 'beacon_setting',
+    statusMessage: '비콘 SN 매핑 진행 중입니다.',
     statusUpdatedAt: '2026.05.09 14:22',
     statusHistory: [
-      { status: 'under_review', message: '관리자 검토를 시작했습니다.',  changedAt: '2026.05.09 14:22', changedBy: 'admin' },
-      { status: 'submitted',    message: '신청이 접수되었습니다.',       changedAt: '2026.05.08 18:10', changedBy: 'system' },
+      { status: 'beacon_setting', message: '비콘 SN 매핑 시작',          changedAt: '2026.05.09 14:22', changedBy: 'admin' },
+      { status: 'receiving',      message: '슈퍼어드민이 신청을 확인했습니다.', changedAt: '2026.05.09 11:00', changedBy: 'admin' },
+      { status: 'submitted',      message: '결제 완료 — 신청이 접수되었습니다.', changedAt: '2026.05.09 09:00', changedBy: 'system' },
     ],
     deviceStatus: 'ok', battery: 0, enabled: false },
+  { id: 7, name: '신관 2층', applicationGroupId: 'PW-20260509-001', applicationGroupSeq: 2, applicationGroupTotal: 3,
+    paidAt: '2026.05.09 09:00',
+    message: '', ssid: 'kt5G_NW_F2', beaconSn: 'BCN-2026-0011', password: 'Ezddd1@8802', date: '2026.05.09', periodEnd: '2028.05.08', image: null,
+    applicationStatus: 'shipping_ready',
+    statusMessage: '출고 준비 중입니다.',
+    statusUpdatedAt: '2026.05.09 16:10',
+    statusHistory: [],
+    deviceStatus: 'ok', battery: 0, enabled: false },
+  { id: 8, name: '신관 루프탑', applicationGroupId: 'PW-20260509-001', applicationGroupSeq: 3, applicationGroupTotal: 3,
+    paidAt: '2026.05.09 09:00',
+    message: '', ssid: 'kt5G_NW_RF', beaconSn: 'BCN-2026-0012', password: 'Ezddd1@8803', date: '2026.05.09', periodEnd: '2028.05.08', image: null,
+    applicationStatus: 'shipping',
+    statusMessage: 'CJ대한통운 송장번호 1234-5678-9012로 배송 중입니다.',
+    statusUpdatedAt: '2026.05.09 17:00',
+    statusHistory: [],
+    deviceStatus: 'ok', battery: 0, enabled: false },
 
-  { id: 7, name: '신관 2층', message: '', ssid: '', beaconSn: '', password: '', date: '2026.05.07', periodEnd: '', image: null,
-    applicationStatus: 'info_requested',
-    statusMessage: '설치 위치 사진을 등록해주세요. 공유기 뒷면이 보이는 사진 1장이 필요합니다.',
-    statusUpdatedAt: '2026.05.09 11:05',
+  // ── 단건 신청 — 접수확인중 ───────────────────────────────────
+  { id: 9, name: '별관 1층', applicationGroupId: 'PW-20260508-002', applicationGroupSeq: 1, applicationGroupTotal: 1,
+    paidAt: '2026.05.08 18:30',
+    message: '', ssid: 'kt5G_BR_F1', beaconSn: '', password: 'Ezddd1@8810', date: '2026.05.08', periodEnd: '2028.05.07', image: null,
+    applicationStatus: 'submitted',
+    statusMessage: '결제가 완료되었습니다. 슈퍼어드민이 신청을 확인하면 다음 단계로 진행됩니다.',
+    statusUpdatedAt: '2026.05.08 18:30',
     statusHistory: [
-      { status: 'info_requested', message: '설치 위치 사진을 등록해주세요.', changedAt: '2026.05.09 11:05', changedBy: 'admin' },
-      { status: 'under_review',   message: '관리자 검토 시작',              changedAt: '2026.05.08 09:30', changedBy: 'admin' },
-      { status: 'submitted',      message: '신청 접수',                    changedAt: '2026.05.07 17:20', changedBy: 'system' },
+      { status: 'submitted', message: '결제 완료 — 신청이 접수되었습니다.', changedAt: '2026.05.08 18:30', changedBy: 'system' },
     ],
-    deviceStatus: 'ok', battery: 0, enabled: false },
-
-  { id: 8, name: '별관 1층', message: '', ssid: '', beaconSn: '', password: '', date: '2026.05.05', periodEnd: '', image: null,
-    applicationStatus: 'payment_pending',
-    statusMessage: '신청이 승인되었습니다. 결제 페이지에서 결제를 완료해 주세요.',
-    statusUpdatedAt: '2026.05.06 16:00',
-    statusHistory: [],
-    deviceStatus: 'ok', battery: 0, enabled: false },
-
-  { id: 9, name: '별관 2층', message: '', ssid: '', beaconSn: '', password: '', date: '2026.05.04', periodEnd: '', image: null,
-    applicationStatus: 'rejected',
-    statusMessage: '신청 위치가 운영 가능 지역이 아닙니다. 운영팀에 문의해주세요.',
-    statusUpdatedAt: '2026.05.05 11:30',
-    statusHistory: [],
     deviceStatus: 'ok', battery: 0, enabled: false },
 ];
 
@@ -196,6 +224,7 @@ const WifiSettings = () => {
         const pad = (n) => String(n).padStart(2, '0');
         return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
       })();
+      const newGroupId = `PW-${nowKr.slice(0, 10).replace(/\./g, '')}-${String(Date.now()).slice(-3)}`;
       const newProfile = {
         id: Date.now(),
         name: formData.name,
@@ -206,12 +235,17 @@ const WifiSettings = () => {
         date: nowKr.slice(0, 10),
         periodEnd: '',
         image: previewUrl,
-        // 신청 직후: submitted (= 신청접수). 검토/결제 단계로 진행 예정
+        // 신정책: 결제 완료 후에만 신청건 생성 → 첫 status 는 'submitted'
+        // 본 mock 은 카드 단축 추가 모드 (결제 단계 없음) 라 동일 시점 submitted 로 부여
+        applicationGroupId: newGroupId,
+        applicationGroupSeq: 1,
+        applicationGroupTotal: 1,
+        paidAt: nowKr,
         applicationStatus: 'submitted',
-        statusMessage: '신청이 접수되었습니다. 관리자 검토 후 안내드립니다.',
+        statusMessage: '결제가 완료되었습니다. 슈퍼어드민이 신청을 확인하면 다음 단계로 진행됩니다.',
         statusUpdatedAt: nowKr,
         statusHistory: [
-          { status: 'submitted', message: '신청이 접수되었습니다.', changedAt: nowKr, changedBy: 'system' },
+          { status: 'submitted', message: '결제 완료 — 신청이 접수되었습니다.', changedAt: nowKr, changedBy: 'system' },
         ],
         deviceStatus: 'ok',
         battery: 100,
@@ -338,9 +372,38 @@ const WifiSettings = () => {
     p.ssid.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // 사장님 콘솔 정책: 결제실패/추가정보 요청/반려 등은 리스트에서 비노출
+  const visibleProfiles = profiles.filter(
+    (p) => !PROVIDER_HIDDEN_STATUSES.has(p.applicationStatus)
+  );
+
   const displayProfiles = activeFilter
-    ? profiles.filter(p => activeFilter.includes(p.name))
-    : profiles;
+    ? visibleProfiles.filter((p) => activeFilter.includes(p.name))
+    : visibleProfiles;
+
+  // 6개 그룹 카운트 (사장님 콘솔용 요약 영역)
+  const groupCounts = displayProfiles.reduce((acc, p) => {
+    const g = getProviderGroup(p.applicationStatus);
+    if (!g) return acc;
+    acc[g] = (acc[g] || 0) + 1;
+    return acc;
+  }, {});
+
+  // applicationGroupId 로 묶기 (다건 신청 그룹 헤더용).
+  // 동일 group 인 카드들이 연속으로 나타나도록 list 정렬은 유지하되 group 별 카드 그룹화.
+  const groupedProfiles = (() => {
+    const groups = []; // [{ groupId, items: [...] }]
+    const indexById = new Map();
+    for (const p of displayProfiles) {
+      const gid = p.applicationGroupId || `__single_${p.id}`;
+      if (!indexById.has(gid)) {
+        indexById.set(gid, groups.length);
+        groups.push({ groupId: gid, items: [], paidAt: p.paidAt, total: p.applicationGroupTotal || 1 });
+      }
+      groups[indexById.get(gid)].items.push(p);
+    }
+    return groups;
+  })();
 
   // ═════════════════════════════════════
   // SEARCH VIEW — Figma "와이파이 검색"
@@ -408,12 +471,33 @@ const WifiSettings = () => {
 
         {/* Count + Search */}
         <div className="wifi-list-meta">
-          <span className="wifi-count">{displayProfiles.length}개의 서비스이용중 입니다.</span>
+          <span className="wifi-count">총 {displayProfiles.length}개 와이파이</span>
           <button className="wifi-search-btn" onClick={openSearch}>
             <Search size={16} />
             검색
           </button>
         </div>
+
+        {/* 신청 진행 현황판 — 6개 그룹 카운트 (사장님 콘솔 정책) */}
+        {displayProfiles.length > 0 && (
+          <div className="wifi-summary-bar" role="list" aria-label="신청 진행 현황">
+            {Object.entries(PROVIDER_STATUS_GROUPS).map(([key, meta]) => {
+              const count = groupCounts[key] || 0;
+              if (count === 0) return null;
+              return (
+                <div
+                  key={key}
+                  className={`wifi-summary-chip pw-status-${meta.variant}`}
+                  role="listitem"
+                  title={meta.label}
+                >
+                  <span className="wifi-summary-label">{meta.label}</span>
+                  <span className="wifi-summary-count">{count}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Active filter indicator */}
         {activeFilter && (
@@ -429,75 +513,94 @@ const WifiSettings = () => {
           </div>
         )}
 
-        {/* WiFi List */}
+        {/* WiFi List — 다건 신청은 그룹 헤더 + 자식 카드, 단건은 카드만 */}
         <div className="wifi-list">
-          {displayProfiles.map(p => (
-            <div
-              key={p.id}
-              className={`wifi-list-item ${swipedId === p.id ? 'swiped' : ''}`}
-              onTouchStart={(e) => handleTouchStart(e, p.id)}
-              onTouchEnd={(e) => handleTouchEnd(e, p.id)}
-            >
-              <div className={`wifi-item-content ${!p.enabled ? 'is-disabled' : ''}`} onClick={() => openDetail(p)}>
-                {/* 좌측 — 설치위치(Name) + 신청/운영 상태 배지 + 메타 + 상태 타임라인 */}
-                <div className="wifi-item-name-block">
-                  <div className="wifi-item-name-row">
-                    <span className="wifi-item-name">{p.name}</span>
-                    <StatusBadge status={p.applicationStatus} size="sm" />
+          {groupedProfiles.map((group) => {
+            const isMulti = group.items.length > 1 || (group.items[0]?.applicationGroupTotal || 1) > 1;
+            return (
+              <div key={group.groupId} className={`wifi-group ${isMulti ? 'is-multi' : 'is-single'}`}>
+                {isMulti && (
+                  <div className="wifi-group-header">
+                    <div className="wifi-group-header-main">
+                      <span className="wifi-group-id">신청번호 {group.groupId}</span>
+                      <span className="wifi-group-meta">
+                        총 {group.items[0]?.applicationGroupTotal || group.items.length}개 와이파이
+                        {group.paidAt && ` · 결제 ${group.paidAt}`}
+                      </span>
+                    </div>
                   </div>
-                  <div className="wifi-item-meta">
-                    {p.ssid && <span className="wifi-item-meta-pill">SSID {p.ssid}</span>}
-                    {p.beaconSn && <span className="wifi-item-meta-pill">{p.beaconSn}</span>}
-                    {p.periodEnd && <span className="wifi-item-meta-pill">~ {p.periodEnd}</span>}
+                )}
+                {group.items.map((p) => (
+                  <div
+                    key={p.id}
+                    className={`wifi-list-item ${swipedId === p.id ? 'swiped' : ''}`}
+                    onTouchStart={(e) => handleTouchStart(e, p.id)}
+                    onTouchEnd={(e) => handleTouchEnd(e, p.id)}
+                  >
+                    <div className={`wifi-item-content ${!p.enabled ? 'is-disabled' : ''}`} onClick={() => openDetail(p)}>
+                      {/* 좌측 — 설치위치(Name) + 신청/운영 상태 배지 + 메타 + 상태 타임라인 */}
+                      <div className="wifi-item-name-block">
+                        <div className="wifi-item-name-row">
+                          <span className="wifi-item-name">{p.name}</span>
+                          <StatusBadge status={p.applicationStatus} size="sm" mode="provider" />
+                        </div>
+                        <div className="wifi-item-meta">
+                          {p.ssid && <span className="wifi-item-meta-pill">SSID {p.ssid}</span>}
+                          {p.beaconSn && <span className="wifi-item-meta-pill">{p.beaconSn}</span>}
+                          {p.periodEnd && <span className="wifi-item-meta-pill">~ {p.periodEnd}</span>}
+                          {!isMulti && p.applicationGroupId && (
+                            <span className="wifi-item-meta-pill subtle">신청 {p.applicationGroupId}</span>
+                          )}
+                        </div>
+                        {/* workflow 상태 메시지 + 마지막 업데이트 — 'active' 단계는 우측 운영 dot 사용 */}
+                        {(p.statusMessage || p.statusUpdatedAt) && p.applicationStatus !== 'active' && (
+                          <StatusTimeline
+                            status={p.applicationStatus}
+                            statusMessage={p.statusMessage}
+                            statusUpdatedAt={p.statusUpdatedAt}
+                            compact
+                            className="wifi-item-timeline"
+                          />
+                        )}
+                      </div>
+
+                      {/* 운영 상태 + 배터리 (우측 보조) — 사용중(active) 단계에서만 의미 있음 */}
+                      <div className="wifi-item-status-block">
+                        {p.applicationStatus === 'active' ? (
+                          p.enabled ? (
+                            <>
+                              <span className={`wifi-status-dot ${p.deviceStatus}`} />
+                              <span className="wifi-item-status">{STATUS_LABEL[p.deviceStatus] || '-'}</span>
+                              <span className="wifi-item-battery">(배터리 {p.battery}%)</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="wifi-status-dot off-dot" />
+                              <span className="wifi-item-status off">서비스 중단됨</span>
+                              <span className="wifi-item-battery">(배터리 {p.battery}%)</span>
+                            </>
+                          )
+                        ) : null}
+                      </div>
+
+                      <span className="wifi-item-detail-link">
+                        상세보기 <ChevronRight size={16} />
+                      </span>
+                    </div>
+
+                    <div className="wifi-swipe-actions">
+                      <button className="swipe-btn delete" onClick={() => setDeleteConfirm(p.id)}>
+                        <Trash2 size={20} />
+                      </button>
+                      <button className="swipe-btn edit" onClick={() => { openDetail(p); setIsEditing(true); }}>
+                        <Edit3 size={20} />
+                      </button>
+                    </div>
                   </div>
-                  {/* workflow 1단계 — 상태 메시지 + 마지막 업데이트 시각 */}
-                  {(p.statusMessage || p.statusUpdatedAt) && p.applicationStatus !== 'active' && (
-                    <StatusTimeline
-                      status={p.applicationStatus}
-                      statusMessage={p.statusMessage}
-                      statusUpdatedAt={p.statusUpdatedAt}
-                      compact
-                      className="wifi-item-timeline"
-                    />
-                  )}
-                </div>
-
-                {/* 운영 상태 + 배터리 (우측 보조) — 사용중(active) 단계에서만 의미 있음 */}
-                <div className="wifi-item-status-block">
-                  {p.applicationStatus === 'active' ? (
-                    p.enabled ? (
-                      <>
-                        <span className={`wifi-status-dot ${p.deviceStatus}`} />
-                        <span className="wifi-item-status">{STATUS_LABEL[p.deviceStatus] || '-'}</span>
-                        <span className="wifi-item-battery">(배터리 {p.battery}%)</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="wifi-status-dot off-dot" />
-                        <span className="wifi-item-status off">서비스 중단됨</span>
-                        <span className="wifi-item-battery">(배터리 {p.battery}%)</span>
-                      </>
-                    )
-                  ) : null /* active 외 단계는 좌측 StatusTimeline 으로 표현 */}
-                </div>
-
-                {/* 상세보기 링크 (가장 우측) */}
-                <span className="wifi-item-detail-link">
-                  상세보기 <ChevronRight size={16} />
-                </span>
+                ))}
               </div>
-
-              {/* Swipe actions */}
-              <div className="wifi-swipe-actions">
-                <button className="swipe-btn delete" onClick={() => setDeleteConfirm(p.id)}>
-                  <Trash2 size={20} />
-                </button>
-                <button className="swipe-btn edit" onClick={() => { openDetail(p); setIsEditing(true); }}>
-                  <Edit3 size={20} />
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <BottomActionBar>
