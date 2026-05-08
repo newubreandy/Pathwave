@@ -5,14 +5,22 @@ import WifiService from '../services/wifi/WifiService';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
+import StatusBadge from '../components/common/StatusBadge';
 import './WifiSettings.css';
 
+// status 필드 분리:
+//   applicationStatus — 신청/결제/적용/사용/종료 (공통 enum, StatusBadge 매핑)
+//   deviceStatus      — 운영 디바이스 상태 (정상/배터리부족/연결끊김)
+// 공통 enum 키는 components/common/StatusBadge.jsx 의 STATUS_META 와 1:1 일치.
 const MOCK_PROFILES = [
-  { id: 1, name: '로비정문1', message: 'Message', ssid: 'kt5G_1234789', password: 'Ezddd1@3356', date: '2022.03.15', image: null, status: 'ok', battery: 90, enabled: true },
-  { id: 2, name: '수영장',   message: 'Message', ssid: 'kt5G_pool01',   password: 'Ezddd1@3356', date: '2022.03.10', image: null, status: 'ok', battery: 76, enabled: true },
-  { id: 3, name: '1층카페',   message: 'Message', ssid: 'kt5G_cafe01',   password: 'Ezddd1@3356', date: '2022.02.28', image: null, status: 'low', battery: 22, enabled: true },
-  { id: 4, name: '2층뷔페',   message: 'Message', ssid: 'kt5G_buffet',   password: 'Ezddd1@3356', date: '2022.02.20', image: null, status: 'ok', battery: 64, enabled: false },
-  { id: 5, name: '5001호',   message: 'Message', ssid: 'kt5G_5001',     password: 'Ezddd1@3356', date: '2022.01.15', image: null, status: 'offline', battery: 0, enabled: true },
+  { id: 1, name: '로비정문1', message: 'Message', ssid: 'kt5G_1234789', beaconSn: 'BCN-2024-0001', password: 'Ezddd1@3356', date: '2022.03.15', periodEnd: '2024.03.14', image: null, applicationStatus: 'active',   deviceStatus: 'ok',      battery: 90, enabled: true },
+  { id: 2, name: '수영장',   message: 'Message', ssid: 'kt5G_pool01',   beaconSn: 'BCN-2024-0002', password: 'Ezddd1@3356', date: '2022.03.10', periodEnd: '2024.03.09', image: null, applicationStatus: 'active',   deviceStatus: 'ok',      battery: 76, enabled: true },
+  { id: 3, name: '1층카페',   message: 'Message', ssid: 'kt5G_cafe01',   beaconSn: 'BCN-2024-0003', password: 'Ezddd1@3356', date: '2022.02.28', periodEnd: '2024.02.27', image: null, applicationStatus: 'active',   deviceStatus: 'low',     battery: 22, enabled: true },
+  { id: 4, name: '2층뷔페',   message: 'Message', ssid: 'kt5G_buffet',   beaconSn: 'BCN-2024-0004', password: 'Ezddd1@3356', date: '2022.02.20', periodEnd: '2024.02.19', image: null, applicationStatus: 'terminated', deviceStatus: 'ok',     battery: 64, enabled: false },
+  { id: 5, name: '5001호',   message: 'Message', ssid: 'kt5G_5001',     beaconSn: 'BCN-2024-0005', password: 'Ezddd1@3356', date: '2022.01.15', periodEnd: '2024.01.14', image: null, applicationStatus: 'active',   deviceStatus: 'offline', battery: 0,  enabled: true },
+  // 신청 흐름 단계별 데모 — 향후 실 신청건이 합쳐질 위치
+  { id: 6, name: '신관 1층',   message: 'Message', ssid: '',              beaconSn: '',              password: '',           date: '2026.05.08', periodEnd: '',            image: null, applicationStatus: 'review',          deviceStatus: 'ok', battery: 0, enabled: false },
+  { id: 7, name: '신관 2층',   message: 'Message', ssid: '',              beaconSn: '',              password: '',           date: '2026.05.07', periodEnd: '',            image: null, applicationStatus: 'payment_pending', deviceStatus: 'ok', battery: 0, enabled: false },
 ];
 
 // 상태 라벨 + 색상
@@ -119,10 +127,13 @@ const WifiSettings = () => {
         name: formData.name,
         message: 'Message',
         ssid: formData.ssid,
+        beaconSn: '',
         password: formData.password,
         date: new Date().toISOString().slice(0, 10).replace(/-/g, '.'),
+        periodEnd: '',
         image: previewUrl,
-        status: 'ok',
+        applicationStatus: 'applied', // 신청 직후 — 검토/결제 단계로 진행 예정
+        deviceStatus: 'ok',
         battery: 100,
         enabled: true,
       };
@@ -348,26 +359,38 @@ const WifiSettings = () => {
               onTouchEnd={(e) => handleTouchEnd(e, p.id)}
             >
               <div className={`wifi-item-content ${!p.enabled ? 'is-disabled' : ''}`} onClick={() => openDetail(p)}>
-                {/* 이름 (좌) */}
+                {/* 좌측 — 설치위치(Name) + 신청/운영 상태 배지 */}
                 <div className="wifi-item-name-block">
-                  <span className="wifi-item-label">Name</span>
-                  <span className="wifi-item-name">{p.name}</span>
+                  <div className="wifi-item-name-row">
+                    <span className="wifi-item-name">{p.name}</span>
+                    <StatusBadge status={p.applicationStatus} size="sm" />
+                  </div>
+                  <div className="wifi-item-meta">
+                    {p.ssid && <span className="wifi-item-meta-pill">SSID {p.ssid}</span>}
+                    {p.beaconSn && <span className="wifi-item-meta-pill">{p.beaconSn}</span>}
+                    {p.periodEnd && <span className="wifi-item-meta-pill">~ {p.periodEnd}</span>}
+                  </div>
                 </div>
 
-                {/* 상태 + 배터리 (우측 보조) — 비사용일 때도 배터리 노출 */}
+                {/* 운영 상태 + 배터리 (우측 보조) — 사용중(active) 단계에서만 의미 있음 */}
                 <div className="wifi-item-status-block">
-                  {p.enabled ? (
-                    <>
-                      <span className={`wifi-status-dot ${p.status}`} />
-                      <span className="wifi-item-status">{STATUS_LABEL[p.status] || '-'}</span>
-                    </>
+                  {p.applicationStatus === 'active' ? (
+                    p.enabled ? (
+                      <>
+                        <span className={`wifi-status-dot ${p.deviceStatus}`} />
+                        <span className="wifi-item-status">{STATUS_LABEL[p.deviceStatus] || '-'}</span>
+                        <span className="wifi-item-battery">(배터리 {p.battery}%)</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="wifi-status-dot off-dot" />
+                        <span className="wifi-item-status off">서비스 중단됨</span>
+                        <span className="wifi-item-battery">(배터리 {p.battery}%)</span>
+                      </>
+                    )
                   ) : (
-                    <>
-                      <span className="wifi-status-dot off-dot" />
-                      <span className="wifi-item-status off">서비스 중단됨</span>
-                    </>
+                    <span className="wifi-item-status off">신청 진행 중</span>
                   )}
-                  <span className="wifi-item-battery">(배터리 {p.battery}%)</span>
                 </div>
 
                 {/* 상세보기 링크 (가장 우측) */}

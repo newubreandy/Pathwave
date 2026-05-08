@@ -1,0 +1,66 @@
+/* ───────────────────────────────────────
+   StatusBadge — 서비스 신청/운영 상태 공통 배지
+   디자인 토큰 (--pw-*) 만 사용 — 새 색 정의 X
+   ─────────────────────────────────────── */
+
+.pw-status-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--pw-radius-full);
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+/* size */
+.pw-status-sm {
+  padding: 2px var(--pw-space-2);
+  font-size: 0.7rem;
+  min-height: 18px;
+}
+
+.pw-status-md {
+  padding: var(--pw-space-1) var(--pw-space-3);
+  font-size: var(--pw-caption-size);
+  min-height: 22px;
+}
+
+.pw-status-lg {
+  padding: var(--pw-space-2) var(--pw-space-4);
+  font-size: var(--pw-label-size);
+  min-height: 28px;
+}
+
+/* variant */
+.pw-status-neutral {
+  background: var(--pw-badge-neutral-bg);
+  color: var(--pw-badge-neutral-fg);
+}
+
+.pw-status-info {
+  background: var(--pw-primary-light);
+  color: var(--pw-badge-active-fg);
+}
+
+.pw-status-success {
+  background: var(--pw-success-light);
+  color: var(--pw-success);
+}
+
+.pw-status-warning {
+  background: var(--pw-warning-light);
+  color: var(--pw-warning);
+}
+
+.pw-status-danger {
+  background: var(--pw-error-light);
+  color: var(--pw-error);
+}
+
+/* 모바일 — 가독성 한 단계 위로 (사용자 가이드 동일 적용) */
+@media (max-width: 768px) {
+  .pw-status-sm  { font-size: var(--pw-caption-size); }
+  .pw-status-md  { font-size: var(--pw-label-size); }
+  .pw-status-lg  { font-size: var(--pw-body-size); }
+}

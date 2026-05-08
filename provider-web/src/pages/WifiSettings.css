@@ -205,12 +205,49 @@
   transform: translateX(-120px);
 }
 
-/* 이름 — 좌측. 카드 폭이 줄어도 잘리지 않게 우선권. */
+/* 좌측 — 설치위치(Name) + 신청/운영 상태 배지 + 메타(SSID/비콘 SN/기간) */
 .wifi-item-name-block {
   display: flex;
-  align-items: baseline;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.wifi-item-name-row {
+  display: flex;
+  align-items: center;
   gap: var(--pw-space-2);
-  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.wifi-item-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--pw-space-1);
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-hint);
+}
+
+.wifi-item-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--pw-space-2);
+  background: var(--pw-bg-2);
+  border: 1px solid var(--pw-border);
+  border-radius: var(--pw-radius-xs);
+  font-size: 0.7rem;
+  color: var(--pw-text-secondary);
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .wifi-item-meta { font-size: var(--pw-label-size); }
+  .wifi-item-meta-pill { font-size: var(--pw-caption-size); }
 }
 
 /* 상태 + 배터리 — 이름 우측 옆 (한 줄). 작은 화면에서 가장 먼저 줄어듦. */
