@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, Minus, HelpCircle, X, Camera, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, Minus, HelpCircle, X, Camera, Image as ImageIcon, Loader2, Edit3, Trash2 } from 'lucide-react';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
@@ -538,10 +538,14 @@ const ServiceRequest = () => {
                   const ocrLoading = ocrLoadingIdx === idx;
                   return (
                     <div key={item.id} className={`sr-acc-card ${isOpen ? 'open' : ''} sr-acc-status-${item.status}`}>
-                      <button
-                        type="button"
+                      <div
+                        role="button"
+                        tabIndex={0}
                         className="sr-acc-head"
                         onClick={() => toggleExpand(idx)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpand(idx); }
+                        }}
                         aria-expanded={isOpen}
                       >
                         <div className="sr-acc-head-main">
@@ -558,8 +562,34 @@ const ServiceRequest = () => {
                             {statusLabel(item.status)}
                           </span>
                         </div>
-                        {isOpen ? <ChevronUp size={18} className="sr-acc-toggle" /> : <ChevronDown size={18} className="sr-acc-toggle" />}
-                      </button>
+                        {/* 우측 액션: completed && collapsed → [수정][삭제] / 그 외 → chevron */}
+                        {item.status === 'completed' && !isOpen ? (
+                          <div className="sr-acc-head-actions" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              className="sr-acc-head-btn"
+                              onClick={() => setExpandedIndex(idx)}
+                              aria-label="수정"
+                            >
+                              <Edit3 size={14} />
+                              <span>수정</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="sr-acc-head-btn danger"
+                              onClick={() => handleRemoveClick(idx)}
+                              aria-label="삭제"
+                            >
+                              <Trash2 size={14} />
+                              <span>삭제</span>
+                            </button>
+                          </div>
+                        ) : (
+                          isOpen
+                            ? <ChevronUp size={18} className="sr-acc-toggle" />
+                            : <ChevronDown size={18} className="sr-acc-toggle" />
+                        )}
+                      </div>
 
                       {isOpen && (
                         <div className="sr-acc-body">
@@ -701,10 +731,10 @@ const ServiceRequest = () => {
                             />
                           </div>
 
+                          {/* HIG/MD3 우선순위 — Primary: 저장 / Secondary: 재작성 / Destructive(삭제) 는 저장 후 헤더에서만 노출 */}
                           <div className="sr-acc-actions">
                             <Button variant="outline" onClick={() => handleResetClick(idx)}>재작성</Button>
                             <Button variant="primary" onClick={() => handleSaveWifi(idx)}>저장</Button>
-                            <Button variant="danger" onClick={() => handleRemoveClick(idx)}>이 와이파이 삭제</Button>
                           </div>
                         </div>
                       )}
@@ -750,11 +780,11 @@ const ServiceRequest = () => {
           onCancel={() => setResetConfirmIdx(null)}
         />
 
-        {/* 삭제 confirm */}
+        {/* 삭제 confirm — 저장된 와이파이만 삭제 동작이 노출되므로 destructive 강조 */}
         <ConfirmModal
           isOpen={removeConfirmIdx != null}
           title="와이파이 삭제"
-          desc={'이 와이파이 항목을 삭제하시겠습니까?\n선택 수량도 1개 감소합니다.'}
+          desc={'등록된 와이파이를 삭제하시겠습니까?\n선택 수량도 1개 감소합니다.'}
           confirmText="삭제"
           cancelText="취소"
           onConfirm={handleRemoveConfirmed}

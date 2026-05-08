@@ -531,10 +531,11 @@
   color: var(--pw-text-hint);
 }
 
-/* 아코디언 액션 — 재작성 / 저장 / 삭제 (3버튼 그리드) */
+/* 아코디언 본문 액션 — 재작성(secondary) / 저장(primary) 2버튼
+   삭제는 저장 후 헤더에서만 노출 (destructive 분리) */
 .sr-acc-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: var(--pw-space-3);
   margin-top: var(--pw-space-6);
   padding-top: var(--pw-space-4);
@@ -543,17 +544,75 @@
 
 .sr-acc-actions .common-btn { width: 100%; }
 
-@media (max-width: 480px) {
-  .sr-acc-actions {
-    grid-template-columns: 1fr 1fr;
-    grid-template-areas:
-      "reset  save"
-      "remove remove";
-    gap: var(--pw-space-2);
+@media (max-width: 380px) {
+  .sr-acc-actions { gap: var(--pw-space-2); }
+}
+
+/* 헤더 우측 액션 — completed && collapsed 상태에서만 노출 ([수정][삭제]) */
+.sr-acc-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pw-space-2);
+  flex-shrink: 0;
+}
+
+.sr-acc-head-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.4rem 0.7rem;
+  background: transparent;
+  border: 1px solid var(--pw-border-strong);
+  border-radius: var(--pw-radius-sm);
+  color: var(--pw-text-secondary);
+  font-family: inherit;
+  font-size: var(--pw-caption-size);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 32px;
+  transition: color var(--pw-duration-fast),
+              border-color var(--pw-duration-fast),
+              background var(--pw-duration-fast);
+}
+
+.sr-acc-head-btn:hover {
+  color: var(--pw-text);
+  border-color: var(--pw-primary);
+  background: var(--pw-primary-subtle);
+}
+
+.sr-acc-head-btn.danger {
+  color: var(--pw-error);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.sr-acc-head-btn.danger:hover {
+  color: var(--pw-error);
+  border-color: var(--pw-error);
+  background: var(--pw-error-light);
+}
+
+/* 모바일 — 헤더 폭 좁아도 overflow 방지 */
+@media (max-width: 768px) {
+  .sr-acc-head-btn {
+    font-size: var(--pw-label-size); /* 12 → 14 */
+    padding: 0.45rem 0.65rem;
+    min-height: 36px;
   }
-  .sr-acc-actions .common-btn:nth-child(1) { grid-area: reset; }
-  .sr-acc-actions .common-btn:nth-child(2) { grid-area: save; }
-  .sr-acc-actions .common-btn:nth-child(3) { grid-area: remove; }
+}
+
+/* iPhone mini / SE 등 매우 좁은 화면 — 텍스트 숨기고 아이콘만 */
+@media (max-width: 380px) {
+  .sr-acc-head-actions { gap: 4px; }
+  .sr-acc-head-btn {
+    padding: 0.5rem;
+    min-width: 36px;
+    justify-content: center;
+  }
+  .sr-acc-head-btn span { display: none; }
+  .sr-acc-head-main { gap: var(--pw-space-2); }
+  .sr-acc-head { padding: var(--pw-space-3); gap: var(--pw-space-2); }
 }
 
 /* 카드 안 사진 미리보기 영역 — 기존 wifi-photo-area 톤 유지하되 카드 안에 맞게 살짝 줄임 */
