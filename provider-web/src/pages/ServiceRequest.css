@@ -479,7 +479,9 @@
 
 /* 본문 내부에서 wifi-field-group 의 큰 마지막 margin 줄임 */
 .sr-acc-body .wifi-field-group { margin-bottom: var(--pw-space-6); }
-.sr-acc-body .wifi-field-group:last-of-type { margin-bottom: var(--pw-space-4); }
+.sr-acc-body .wifi-field-group:last-of-type { margin-bottom: var(--pw-space-3); }
+/* 비고 영역 제거에 따라 마지막 필드(약정기간)와 액션 사이 간격 더 타이트 */
+.sr-acc-body .sr-acc-last-field { margin-bottom: var(--pw-space-3); }
 
 /* 시작일/종료일 2열 */
 .sr-acc-row2 {
@@ -532,20 +534,21 @@
 }
 
 /* 아코디언 본문 액션 — 재작성(secondary) / 저장(primary) 2버튼
-   삭제는 저장 후 헤더에서만 노출 (destructive 분리) */
+   삭제는 저장 후 헤더에서만 노출 (destructive 분리)
+   비고 제거에 따라 CTA 를 한 화면에서 더 가까이 노출하도록 margin 단축 */
 .sr-acc-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--pw-space-3);
-  margin-top: var(--pw-space-6);
-  padding-top: var(--pw-space-4);
+  margin-top: var(--pw-space-4);
+  padding-top: var(--pw-space-3);
   border-top: 1px solid var(--pw-border);
 }
 
 .sr-acc-actions .common-btn { width: 100%; }
 
 @media (max-width: 380px) {
-  .sr-acc-actions { gap: var(--pw-space-2); }
+  .sr-acc-actions { gap: var(--pw-space-2); margin-top: var(--pw-space-3); }
 }
 
 /* 헤더 우측 액션 — completed && collapsed 상태에서만 노출 ([수정][삭제]) */
@@ -1092,4 +1095,16 @@
   .sr-acc-head { padding: var(--pw-space-4) var(--pw-space-3); }
   .sr-acc-body { padding: var(--pw-space-5) var(--pw-space-3); }
   .sr-app-modal-body { padding: var(--pw-space-3) var(--pw-space-4); }
+  /* 필드 그룹 간격 짧게 — 비고 제거 후 CTA 까지 한 화면에 들어오게 */
+  .sr-acc-body .wifi-field-group { margin-bottom: var(--pw-space-5); }
+  .sr-acc-photo-area.wifi-photo-area { max-height: 160px; }
+}
+
+/* iPhone mini / SE — 본문 더 컴팩트하게 (CTA 까지 1스크롤 이내 목표) */
+@media (max-width: 380px) {
+  .sr-acc-body { padding: var(--pw-space-4) var(--pw-space-3); }
+  .sr-acc-body .wifi-field-group { margin-bottom: var(--pw-space-4); }
+  .sr-acc-photo-area.wifi-photo-area { max-height: 140px; margin-bottom: var(--pw-space-2); }
+  .sr-acc-photo.wifi-photo-actions { gap: var(--pw-space-2); margin-bottom: var(--pw-space-1); }
+  .sr-acc-readonly { padding: var(--pw-space-2) 0; }
 }

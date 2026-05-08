@@ -66,6 +66,8 @@ const calcEndDate = (startStr) => {
 };
 
 // 빈 와이파이 아이템 — status 모델 포함
+// NOTE: memo (설치 관련 메모) 는 사장님 신청 플로우에서는 제거.
+//       향후 설치기사/슈퍼어드민 화면에서 별도 설계.
 const makeEmptyWifi = (idSeed) => ({
   id: idSeed,
   location: '',
@@ -74,7 +76,6 @@ const makeEmptyWifi = (idSeed) => ({
   startDate: '',
   endDate: '',
   contractPeriod: '2_YEAR',
-  memo: '',
   imageUrl: null,
   endDateManual: false,
   status: 'empty', // 'empty' | 'editing' | 'completed' | 'error'
@@ -391,7 +392,6 @@ const ServiceRequest = () => {
         startDate: it.startDate,
         endDate: it.endDate,
         contractPeriod: it.contractPeriod,
-        memo: it.memo,
         imageUrl: it.imageUrl,
         status: it.status,
       })),
@@ -715,20 +715,9 @@ const ServiceRequest = () => {
                             </div>
                           </div>
 
-                          <div className="wifi-field-group">
+                          <div className="wifi-field-group sr-acc-last-field">
                             <label className="wifi-field-label">약정기간</label>
                             <p className="sr-acc-readonly">2년 약정 · 시작일 + 2년 자동 설정 (종료일 직접 수정 가능)</p>
-                          </div>
-
-                          <div className="wifi-field-group">
-                            <label className="wifi-field-label">비고</label>
-                            <textarea
-                              className="wifi-field-textarea"
-                              placeholder="설치 관련 메모 (선택)"
-                              rows={2}
-                              value={item.memo}
-                              onChange={(e) => updateField(idx, 'memo', e.target.value)}
-                            />
                           </div>
 
                           {/* HIG/MD3 우선순위 — Primary: 저장 / Secondary: 재작성 / Destructive(삭제) 는 저장 후 헤더에서만 노출 */}
@@ -773,7 +762,7 @@ const ServiceRequest = () => {
         <ConfirmModal
           isOpen={resetConfirmIdx != null}
           title="입력 내용 초기화"
-          desc={'입력한 와이파이 정보를 초기화하시겠습니까?\n사진 / ID / PW / 위치 / 기간 / 비고가 모두 비워집니다.'}
+          desc={'입력한 와이파이 정보를 초기화하시겠습니까?\n사진 / 위치 / ID / PW / 서비스 기간이 모두 비워집니다.'}
           confirmText="초기화"
           cancelText="취소"
           onConfirm={handleResetConfirmed}
