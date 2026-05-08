@@ -6,21 +6,90 @@ import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
 import StatusBadge from '../components/common/StatusBadge';
+import StatusTimeline from '../components/common/StatusTimeline';
 import './WifiSettings.css';
 
 // status 필드 분리:
 //   applicationStatus — 신청/결제/적용/사용/종료 (공통 enum, StatusBadge 매핑)
 //   deviceStatus      — 운영 디바이스 상태 (정상/배터리부족/연결끊김)
+//
+// workflow 모델 (1단계 — 본 PR):
+//   statusMessage     — 마지막 상태 변경 시 어드민/시스템이 남긴 안내 문구
+//   statusUpdatedAt   — 'YYYY.MM.DD HH:mm' 또는 ISO8601 (StatusTimeline 이 자동 변환)
+//   statusHistory     — 향후 이력 노출용 (현재 UI 미사용, mock 만 보유 — 후속 PR 활용)
+//
 // 공통 enum 키는 components/common/StatusBadge.jsx 의 STATUS_META 와 1:1 일치.
 const MOCK_PROFILES = [
-  { id: 1, name: '로비정문1', message: 'Message', ssid: 'kt5G_1234789', beaconSn: 'BCN-2024-0001', password: 'Ezddd1@3356', date: '2022.03.15', periodEnd: '2024.03.14', image: null, applicationStatus: 'active',   deviceStatus: 'ok',      battery: 90, enabled: true },
-  { id: 2, name: '수영장',   message: 'Message', ssid: 'kt5G_pool01',   beaconSn: 'BCN-2024-0002', password: 'Ezddd1@3356', date: '2022.03.10', periodEnd: '2024.03.09', image: null, applicationStatus: 'active',   deviceStatus: 'ok',      battery: 76, enabled: true },
-  { id: 3, name: '1층카페',   message: 'Message', ssid: 'kt5G_cafe01',   beaconSn: 'BCN-2024-0003', password: 'Ezddd1@3356', date: '2022.02.28', periodEnd: '2024.02.27', image: null, applicationStatus: 'active',   deviceStatus: 'low',     battery: 22, enabled: true },
-  { id: 4, name: '2층뷔페',   message: 'Message', ssid: 'kt5G_buffet',   beaconSn: 'BCN-2024-0004', password: 'Ezddd1@3356', date: '2022.02.20', periodEnd: '2024.02.19', image: null, applicationStatus: 'terminated', deviceStatus: 'ok',     battery: 64, enabled: false },
-  { id: 5, name: '5001호',   message: 'Message', ssid: 'kt5G_5001',     beaconSn: 'BCN-2024-0005', password: 'Ezddd1@3356', date: '2022.01.15', periodEnd: '2024.01.14', image: null, applicationStatus: 'active',   deviceStatus: 'offline', battery: 0,  enabled: true },
-  // 신청 흐름 단계별 데모 — 향후 실 신청건이 합쳐질 위치
-  { id: 6, name: '신관 1층',   message: 'Message', ssid: '',              beaconSn: '',              password: '',           date: '2026.05.08', periodEnd: '',            image: null, applicationStatus: 'review',          deviceStatus: 'ok', battery: 0, enabled: false },
-  { id: 7, name: '신관 2층',   message: 'Message', ssid: '',              beaconSn: '',              password: '',           date: '2026.05.07', periodEnd: '',            image: null, applicationStatus: 'payment_pending', deviceStatus: 'ok', battery: 0, enabled: false },
+  { id: 1, name: '로비정문1', message: 'Message', ssid: 'kt5G_1234789', beaconSn: 'BCN-2024-0001', password: 'Ezddd1@3356', date: '2022.03.15', periodEnd: '2024.03.14', image: null,
+    applicationStatus: 'active',
+    statusMessage: '',
+    statusUpdatedAt: '2024.03.20 10:00',
+    statusHistory: [
+      { status: 'active',               message: '서비스가 활성화되었습니다.',        changedAt: '2024.03.20 10:00', changedBy: 'admin' },
+      { status: 'installed',            message: '설치 완료',                     changedAt: '2024.03.18 16:30', changedBy: 'admin' },
+      { status: 'installation_pending', message: '설치 일정 조율 중',                changedAt: '2024.03.16 09:10', changedBy: 'admin' },
+    ],
+    deviceStatus: 'ok',      battery: 90, enabled: true },
+  { id: 2, name: '수영장',   message: 'Message', ssid: 'kt5G_pool01',   beaconSn: 'BCN-2024-0002', password: 'Ezddd1@3356', date: '2022.03.10', periodEnd: '2024.03.09', image: null,
+    applicationStatus: 'active',
+    statusMessage: '',
+    statusUpdatedAt: '2024.03.15 14:00',
+    statusHistory: [],
+    deviceStatus: 'ok', battery: 76, enabled: true },
+  { id: 3, name: '1층카페', message: 'Message', ssid: 'kt5G_cafe01', beaconSn: 'BCN-2024-0003', password: 'Ezddd1@3356', date: '2022.02.28', periodEnd: '2024.02.27', image: null,
+    applicationStatus: 'active',
+    statusMessage: '',
+    statusUpdatedAt: '2024.03.05 11:20',
+    statusHistory: [],
+    deviceStatus: 'low', battery: 22, enabled: true },
+  { id: 4, name: '2층뷔페', message: 'Message', ssid: 'kt5G_buffet', beaconSn: 'BCN-2024-0004', password: 'Ezddd1@3356', date: '2022.02.20', periodEnd: '2024.02.19', image: null,
+    applicationStatus: 'terminated',
+    statusMessage: '서비스 해지가 완료되었습니다.',
+    statusUpdatedAt: '2024.02.25 17:45',
+    statusHistory: [],
+    deviceStatus: 'ok', battery: 64, enabled: false },
+  { id: 5, name: '5001호', message: 'Message', ssid: 'kt5G_5001', beaconSn: 'BCN-2024-0005', password: 'Ezddd1@3356', date: '2022.01.15', periodEnd: '2024.01.14', image: null,
+    applicationStatus: 'active',
+    statusMessage: '',
+    statusUpdatedAt: '2024.02.01 10:00',
+    statusHistory: [],
+    deviceStatus: 'offline', battery: 0, enabled: true },
+
+  // ── 신청 흐름 데모 (workflow 시각화) ───────────────────────────
+  { id: 6, name: '신관 1층', message: '', ssid: '', beaconSn: '', password: '', date: '2026.05.08', periodEnd: '', image: null,
+    applicationStatus: 'under_review',
+    statusMessage: '검토 중입니다. 사업자등록증 확인 후 결제 안내를 드릴 예정입니다.',
+    statusUpdatedAt: '2026.05.09 14:22',
+    statusHistory: [
+      { status: 'under_review', message: '관리자 검토를 시작했습니다.',  changedAt: '2026.05.09 14:22', changedBy: 'admin' },
+      { status: 'submitted',    message: '신청이 접수되었습니다.',       changedAt: '2026.05.08 18:10', changedBy: 'system' },
+    ],
+    deviceStatus: 'ok', battery: 0, enabled: false },
+
+  { id: 7, name: '신관 2층', message: '', ssid: '', beaconSn: '', password: '', date: '2026.05.07', periodEnd: '', image: null,
+    applicationStatus: 'info_requested',
+    statusMessage: '설치 위치 사진을 등록해주세요. 공유기 뒷면이 보이는 사진 1장이 필요합니다.',
+    statusUpdatedAt: '2026.05.09 11:05',
+    statusHistory: [
+      { status: 'info_requested', message: '설치 위치 사진을 등록해주세요.', changedAt: '2026.05.09 11:05', changedBy: 'admin' },
+      { status: 'under_review',   message: '관리자 검토 시작',              changedAt: '2026.05.08 09:30', changedBy: 'admin' },
+      { status: 'submitted',      message: '신청 접수',                    changedAt: '2026.05.07 17:20', changedBy: 'system' },
+    ],
+    deviceStatus: 'ok', battery: 0, enabled: false },
+
+  { id: 8, name: '별관 1층', message: '', ssid: '', beaconSn: '', password: '', date: '2026.05.05', periodEnd: '', image: null,
+    applicationStatus: 'payment_pending',
+    statusMessage: '신청이 승인되었습니다. 결제 페이지에서 결제를 완료해 주세요.',
+    statusUpdatedAt: '2026.05.06 16:00',
+    statusHistory: [],
+    deviceStatus: 'ok', battery: 0, enabled: false },
+
+  { id: 9, name: '별관 2층', message: '', ssid: '', beaconSn: '', password: '', date: '2026.05.04', periodEnd: '', image: null,
+    applicationStatus: 'rejected',
+    statusMessage: '신청 위치가 운영 가능 지역이 아닙니다. 운영팀에 문의해주세요.',
+    statusUpdatedAt: '2026.05.05 11:30',
+    statusHistory: [],
+    deviceStatus: 'ok', battery: 0, enabled: false },
 ];
 
 // 상태 라벨 + 색상
@@ -122,6 +191,11 @@ const WifiSettings = () => {
   // 안내 모달 확인 시 실제 저장
   const doSave = () => {
     if (view === 'add') {
+      const nowKr = (() => {
+        const d = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      })();
       const newProfile = {
         id: Date.now(),
         name: formData.name,
@@ -129,10 +203,16 @@ const WifiSettings = () => {
         ssid: formData.ssid,
         beaconSn: '',
         password: formData.password,
-        date: new Date().toISOString().slice(0, 10).replace(/-/g, '.'),
+        date: nowKr.slice(0, 10),
         periodEnd: '',
         image: previewUrl,
-        applicationStatus: 'applied', // 신청 직후 — 검토/결제 단계로 진행 예정
+        // 신청 직후: submitted (= 신청접수). 검토/결제 단계로 진행 예정
+        applicationStatus: 'submitted',
+        statusMessage: '신청이 접수되었습니다. 관리자 검토 후 안내드립니다.',
+        statusUpdatedAt: nowKr,
+        statusHistory: [
+          { status: 'submitted', message: '신청이 접수되었습니다.', changedAt: nowKr, changedBy: 'system' },
+        ],
         deviceStatus: 'ok',
         battery: 100,
         enabled: true,
@@ -359,7 +439,7 @@ const WifiSettings = () => {
               onTouchEnd={(e) => handleTouchEnd(e, p.id)}
             >
               <div className={`wifi-item-content ${!p.enabled ? 'is-disabled' : ''}`} onClick={() => openDetail(p)}>
-                {/* 좌측 — 설치위치(Name) + 신청/운영 상태 배지 */}
+                {/* 좌측 — 설치위치(Name) + 신청/운영 상태 배지 + 메타 + 상태 타임라인 */}
                 <div className="wifi-item-name-block">
                   <div className="wifi-item-name-row">
                     <span className="wifi-item-name">{p.name}</span>
@@ -370,6 +450,16 @@ const WifiSettings = () => {
                     {p.beaconSn && <span className="wifi-item-meta-pill">{p.beaconSn}</span>}
                     {p.periodEnd && <span className="wifi-item-meta-pill">~ {p.periodEnd}</span>}
                   </div>
+                  {/* workflow 1단계 — 상태 메시지 + 마지막 업데이트 시각 */}
+                  {(p.statusMessage || p.statusUpdatedAt) && p.applicationStatus !== 'active' && (
+                    <StatusTimeline
+                      status={p.applicationStatus}
+                      statusMessage={p.statusMessage}
+                      statusUpdatedAt={p.statusUpdatedAt}
+                      compact
+                      className="wifi-item-timeline"
+                    />
+                  )}
                 </div>
 
                 {/* 운영 상태 + 배터리 (우측 보조) — 사용중(active) 단계에서만 의미 있음 */}
@@ -388,9 +478,7 @@ const WifiSettings = () => {
                         <span className="wifi-item-battery">(배터리 {p.battery}%)</span>
                       </>
                     )
-                  ) : (
-                    <span className="wifi-item-status off">신청 진행 중</span>
-                  )}
+                  ) : null /* active 외 단계는 좌측 StatusTimeline 으로 표현 */}
                 </div>
 
                 {/* 상세보기 링크 (가장 우측) */}
