@@ -12,48 +12,45 @@ const SERVICE_CATEGORIES = [
     key: 'wifi',
     title: '와이파이 서비스등록',
     bullets: [
-      '와이파이 서비스는 BE 서비스를 이용하는 사용자가 서비스시설에 들어왔을 경우 자동으로 서비스시설에서 제공중인 와이파이에 자동으로 접속하게 해주는 서비스 입니다.',
-      '서비스 시설에 와이파이 제공 중계기가 여러대가 있어도 서비스에 가입하신 후 정보를 입력하시면 서비스 이용자는 한번의 인증으로 서비스 중인 와이파이를 끊김없이 이용할 수 있습니다.',
-      '와이파이 서비스 설치 후 설치 위치별 이벤트 또는 혜택(쿠폰)을 사용자에게 알림 발송할 수 있습니다.',
+      'PathWave WiFi 서비스는 매장 방문 고객이 더욱 쉽고 빠르게 무선 네트워크에 연결할 수 있도록 지원합니다.',
+      '설치 위치에 따라 여러 개의 WiFi 장치가 운영될 수 있습니다.',
+      '서비스 설치 후 위치 기반 혜택 및 이벤트 기능을 사용할 수 있습니다.',
     ],
   },
   {
     key: 'stamp',
     title: '스탬프 서비스이용',
-    sample: 'SAMPLE',
     bullets: [
-      '본 서비스는 와이파이 서비스 이용시 추가로 이용이 가능한 서비스 입니다.',
-      '매장 방문 / 결제 시 사용자에게 스탬프를 적립해 주고, 일정 개수 모이면 쿠폰 / 혜택으로 자동 전환할 수 있습니다.',
-      '스탬프 정책(적립 조건, 만료일, 보상 쿠폰)은 슈퍼어드민에서 매장별로 설정합니다.',
+      'PathWave WiFi 서비스 이용 시 추가로 이용 가능한 서비스입니다.',
+      '매장 방문 / 결제 시 고객에게 스탬프를 적립해 주고, 일정 개수가 모이면 쿠폰 또는 혜택으로 자동 전환됩니다.',
+      '스탬프 정책(적립 조건, 만료일, 보상 쿠폰)은 PathWave 운영자 콘솔에서 매장별로 설정합니다.',
     ],
   },
   {
     key: 'event',
     title: '이벤트 서비스이용',
-    sample: 'SAMPLE',
     bullets: [
-      '본 서비스는 와이파이 서비스 이용시 추가로 이용이 가능한 서비스 입니다.',
-      '서비스 시설에서 특정 위치에 방문하였을 경우 쿠폰 및 혜택을 제공할 수 있는 서비스 입니다.',
-      '서비스 이용시 별도의 알림 비용은 발생하지 않습니다.',
+      'PathWave WiFi 서비스 이용 시 추가로 이용 가능한 서비스입니다.',
+      '매장 내 특정 위치에 방문한 고객에게 쿠폰 또는 혜택을 자동으로 제공할 수 있습니다.',
+      '서비스 이용 시 별도의 알림 비용은 발생하지 않습니다.',
     ],
   },
   {
     key: 'noti',
     title: '알림 서비스이용',
-    sample: 'SAMPLE',
     bullets: [
-      '본 서비스는 와이파이 서비스 이용시 추가로 이용이 가능한 서비스 입니다.',
-      '서비스 시설에서 사용자에게 발송할 수 있는 알림 수로 공지 등 별도의 알림을 받을 경우 이용하실 수 있습니다.',
-      '알림은 100개 단위로 구매가능합니다.',
+      'PathWave WiFi 서비스 이용 시 추가로 이용 가능한 서비스입니다.',
+      '매장 공지 등 별도 알림을 발송할 수 있는 서비스입니다.',
+      '알림은 100개 단위로 구매할 수 있습니다.',
     ],
   },
 ];
 
 const WIFI_NOTICES = [
-  '와이파이 자동접속 서비스 설치 수량을 입력하세요',
-  '특정객실 예약(이용)자에 해당객실 와이파이 비밀번호를 제공 할 경우 1개의 서비스가 필요합니다.',
-  '여러대의 와이파이를 공용으로 제공 할 경우 출입구에만 설치해도 서비스 이용이 가능합니다.\n예) 카페 등 여러층의 와이파이를 사용자가 한번에 이용할 수 있도록 할 경우, 각 층별 출입구에 한개씩 설치 후 서비스 이용가능',
-  '서비스 신청 후 와이파이 정보를 입력해 주세요.',
+  '설치할 WiFi 자동접속 서비스 수량을 입력해 주세요.',
+  '객실별로 별도의 WiFi 비밀번호를 제공하는 경우, 객실당 1개의 서비스가 필요합니다.',
+  '여러 대의 WiFi 를 공용으로 운영하는 경우 출입구에만 설치해도 서비스를 이용할 수 있습니다.\n예) 카페 등 여러 층 공용 WiFi 를 한 번에 연결하려면 각 층 출입구에 1개씩 설치하면 됩니다.',
+  '서비스 신청 후 WiFi 상세 정보를 입력해 주세요.',
 ];
 
 // 시작일 + 2년 → 종료일
@@ -444,12 +441,9 @@ const ServiceRequest = () => {
                 <ChevronRight size={18} className="sr-cat-arrow" />
               </div>
               <div className="sr-cat-body">
-                {cat.sample && <span className="sr-cat-sample">{cat.sample}</span>}
-                {!cat.sample && (
-                  <span className="sr-cat-help">
-                    <HelpCircle size={20} />
-                  </span>
-                )}
+                <span className="sr-cat-help">
+                  <HelpCircle size={20} />
+                </span>
                 <ul className="sr-cat-bullets">
                   {cat.bullets.map((b, i) => <li key={i}>{b}</li>)}
                 </ul>
@@ -815,7 +809,8 @@ const ServiceRequest = () => {
                 <div className="sr-app-summary">
                   <div className="sr-app-summary-row">
                     <span className="sr-app-summary-label">신청 시설</span>
-                    <span className="sr-app-summary-value">호텔H 본점 (Mock)</span>
+                    {/* TODO: 실 매장 정보 연동 — 현재는 mock 표시 */}
+                    <span className="sr-app-summary-value">호텔H 본점</span>
                   </div>
                   <div className="sr-app-summary-row">
                     <span className="sr-app-summary-label">총 신청 수량</span>

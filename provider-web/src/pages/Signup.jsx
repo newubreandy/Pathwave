@@ -64,8 +64,8 @@ const Signup = () => {
       <div className="signup-box">
         <div className="signup-header">
           <div className="logo-icon-large">P</div>
-          <h2>PathWave SB</h2>
-          <p>서비스 제공자 파트너 가입</p>
+          <h2>매장 등록</h2>
+          <p>PathWave 서비스를 운영할 매장을 등록합니다</p>
         </div>
         
         <form onSubmit={handleSignup} className="signup-form">

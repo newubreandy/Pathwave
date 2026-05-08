@@ -397,7 +397,7 @@ const Settings = () => {
           <button className="settings-footer-link">서비스이용약관</button>
         </div>
         <p className="settings-footer-notice">
-          ※ BE서비스는 서비스플랫폼으로 플랫폼내에서 제공되는 정보 및 이벤트, 혜택 등…은 등록 업체에 책임이 있습니다.
+          ※ PathWave는 서비스 플랫폼으로, 플랫폼 내에서 제공되는 정보 및 이벤트, 혜택 등에 대한 책임은 등록 업체에 있습니다.
         </p>
         <div className="settings-footer-company">
           <p style={{ fontWeight: 600, marginBottom: '2px' }}>시원컴퍼니 Copyright 2023, siwon company. All rights reserved.</p>
