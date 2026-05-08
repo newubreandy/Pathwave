@@ -572,8 +572,6 @@ const WifiSettings = () => {
             const profiles = profilesBySection[sectionKey] || [];
             if (profiles.length === 0) return null;
             const def = PROVIDER_SECTIONS[sectionKey];
-          const profiles = profilesBySection[sectionKey] || [];
-          if (profiles.length === 0) return null;
 
           // ── 신청 진행중 — applicationGroupId 그룹핑 + prominent 카드 ──
           if (sectionKey === 'inProgress') {
