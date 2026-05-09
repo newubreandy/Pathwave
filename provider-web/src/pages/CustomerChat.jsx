@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Search, ChevronLeft, Send, Paperclip, MoreVertical, Loader2, Trash2, CheckCheck, X } from 'lucide-react';
+import GroupCard, { GroupCardItem } from '../components/common/GroupCard';
 import './CustomerChat.css';
 
 import { LANG_CONFIG, getPhotoText, getProviderLang, detectLang, getCustomerLang, translateText } from '../services/translation/TranslationService';
@@ -561,16 +562,17 @@ const CustomerChat = () => {
     );
   };
 
-  /* ── 채팅 리스트 아이템 렌더 ── */
+  /* ── 채팅 리스트 아이템 렌더 (GroupCardItem inset row) ── */
   const renderChatItem = (chat) => {
     const langCfg = LANG_CONFIG[chat.customerLang] || {};
     const isDeleting = deletingId === chat.id;
 
     return (
-      <div
+      <GroupCardItem
         key={chat.id}
-        className={`chat-item ${selectedId === chat.id ? 'selected' : ''} ${isDeleting ? 'deleting' : ''}`}
         onClick={() => handleSelect(chat.id)}
+        selected={selectedId === chat.id}
+        className={`chat-item ${isDeleting ? 'deleting' : ''}`}
       >
         <div className={`chat-avatar md ${chat.status}`}>{chat.avatar}</div>
         <div className="chat-item-content">
@@ -597,7 +599,7 @@ const CustomerChat = () => {
         >
           {isDeleting ? '삭제' : <Trash2 size={15} />}
         </button>
-      </div>
+      </GroupCardItem>
     );
   };
 
@@ -642,20 +644,30 @@ const CustomerChat = () => {
             <div className="chat-empty">검색 결과가 없습니다.</div>
           )}
 
-          {/* 오늘 */}
+          {/* 오늘 — GroupCard 컨테이너 (RePlan 스타일) */}
           {todayChats.length > 0 && (
-            <>
-              <div className="date-section-label">오늘</div>
+            <GroupCard
+              variant="container"
+              title="오늘"
+              subtitle={`${todayChats.length}건`}
+              collapsible={false}
+              className="chat-date-group"
+            >
               {todayChats.map(renderChatItem)}
-            </>
+            </GroupCard>
           )}
 
           {/* 어제 */}
           {yesterdayChats.length > 0 && (
-            <>
-              <div className="date-section-label">어제</div>
+            <GroupCard
+              variant="container"
+              title="어제"
+              subtitle={`${yesterdayChats.length}건`}
+              defaultCollapsed={false}
+              className="chat-date-group"
+            >
               {yesterdayChats.map(renderChatItem)}
-            </>
+            </GroupCard>
           )}
         </div>
       </div>

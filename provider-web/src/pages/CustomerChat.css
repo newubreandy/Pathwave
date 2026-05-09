@@ -193,33 +193,44 @@
   border-color: var(--pw-primary);
 }
 
-/* ── 채팅 목록 ── */
+/* ── 채팅 목록 — RePlan 컨테이너 그룹핑 (2026-05-09) ──
+   각 날짜 그룹은 GroupCard variant="container" 로 래핑.
+   각 chat-item 은 GroupCardItem (= .pw-group-item) 안 inset row.
+   그러므로 .chat-item 은 ‘콘텐츠 layout’ 만 담당, bg/padding/hover 는 GroupCardItem 위임. */
 .chat-list {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 0 1.25rem;
+  gap: var(--pw-space-3);
+  padding: 0 1.25rem 1.25rem;
   overflow-y: auto;
 }
 
+/* GroupCardItem 안 chat-item 콘텐츠 layout (bg/padding 은 .pw-group-item) */
 .chat-item {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  padding: 1rem 0;
-  cursor: pointer;
-  transition: background 0.15s;
-  border-bottom: 1px solid var(--border);
+  /* bg/padding/transition/cursor 는 .pw-group-item 에서 상속 */
+}
+/* 채팅 리스트 내부에서는 GroupCardItem 의 default min-height 보장 */
+.chat-date-group .pw-group-item {
+  min-height: 64px;
 }
 
-.chat-item:hover {
-  background: var(--surface-hover);
+/* selected 표시 — .pw-group-item.is-selected 가 이미 accent bg 적용.
+   채팅은 좌측 라인 추가로 더 강하게 표시. */
+.chat-date-group .pw-group-item.is-selected {
+  background: var(--pw-accent-soft);
+  border-color: var(--pw-accent-strong);
+  position: relative;
 }
-
-.chat-item.selected {
-  background: rgba(16, 185, 129, 0.07);
-  border-left: 3px solid var(--primary);
-  padding-left: 0.75rem;
+.chat-date-group .pw-group-item.is-selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--pw-accent);
 }
 
 /* 아바타 + 국기 래퍼 */

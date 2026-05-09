@@ -17,7 +17,7 @@ import StatusBadge, {
 import PageShell from '../components/common/PageShell';
 import SectionTabs from '../components/common/SectionTabs';
 import GlassCard from '../components/common/GlassCard';
-import GroupCard from '../components/common/GroupCard';
+import GroupCard, { GroupCardItem } from '../components/common/GroupCard';
 import MiniInfoPill from '../components/common/MiniInfoPill';
 import StatusMessage from '../components/common/StatusMessage';
 import MetricStrip from '../components/common/MetricStrip';
@@ -538,6 +538,43 @@ const WifiSettings = () => {
       (acc, k) => acc + ((profilesBySection[k] || []).length), 0
     );
 
+    // ── 그룹 컨테이너 안 inset row 렌더 — RePlan 스타일 ──
+    // 단독 카드(GlassCard)보다 가벼운 row. 메시지/송장은 row 안 별도 strip 으로.
+    const renderWifiInsetRow = (p) => {
+      const a = getAvatarForStatus(p.applicationStatus);
+      const AvatarIcon = a.icon;
+      const hasShipping = !!p.shippingTrackingNo;
+      return (
+        <GroupCardItem key={p.id} onClick={() => openDetail(p)}>
+          <CardAvatar variant="accent" size="md">
+            <AvatarIcon strokeWidth={2} />
+          </CardAvatar>
+          <div className="wifi-inset-body">
+            <div className="wifi-inset-head">
+              <span className="wifi-inset-title">{p.name}</span>
+              <StatusBadge status={p.applicationStatus} size="sm" mode="provider" />
+            </div>
+            <div className="pw-pill-row wifi-inset-pills">
+              {p.ssid && <MiniInfoPill label="SSID" mono>{p.ssid}</MiniInfoPill>}
+              {p.beaconSn && <MiniInfoPill mono variant="muted">{p.beaconSn}</MiniInfoPill>}
+            </div>
+            {hasShipping && (
+              <div className="wifi-inset-shipping" role="note">
+                <span className="wifi-inset-shipping-label">송장</span>
+                <span className="wifi-inset-shipping-value">
+                  {p.shippingCarrier && `${p.shippingCarrier} · `}{p.shippingTrackingNo}
+                </span>
+              </div>
+            )}
+            {p.statusMessage && (
+              <p className="wifi-inset-msg">{p.statusMessage}</p>
+            )}
+          </div>
+          <ChevronRight size={16} className="wifi-inset-chevron" aria-hidden="true" />
+        </GroupCardItem>
+      );
+    };
+
     // ── 카드 1장 렌더 — 좌측 아바타 + 본문 + 메시지 + chevron ──
     const renderWifiCard = (p, opts = {}) => {
       const { variant = 'default', section = 'inProgress' } = opts;
@@ -757,18 +794,17 @@ const WifiSettings = () => {
                 return (
                   <GroupCard
                     key={group.groupId}
+                    variant="container"
                     leading={
                       <CardAvatar variant="accent" size="md" ariaLabel="신청 그룹">
                         <ClipboardList strokeWidth={2} />
                       </CardAvatar>
                     }
-                    groupId={group.groupId}
+                    title={group.groupId}
                     paid
                     subtitle={subtitle}
                   >
-                    {group.items.map((p) =>
-                      renderWifiCard(p, { variant: 'default', section: 'inProgress' })
-                    )}
+                    {group.items.map(renderWifiInsetRow)}
                   </GroupCard>
                 );
               })}

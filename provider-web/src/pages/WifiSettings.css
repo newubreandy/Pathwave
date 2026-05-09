@@ -1508,3 +1508,90 @@
   .wifi-card-row { gap: var(--pw-space-2); }
 }
 
+/* ═══════════════════════════════════════════════════
+   Wifi Inset Row — GroupCard container 안 row 스타일.
+   GlassCard 보다 가볍고 조밀. (RePlan 스타일)
+   ═══════════════════════════════════════════════════ */
+
+.wifi-inset-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wifi-inset-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pw-space-2);
+  min-width: 0;
+}
+
+.wifi-inset-title {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--pw-text);
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wifi-inset-pills {
+  /* MiniInfoPill 묶음 — 호출부에서 .pw-pill-row 사용. 추가 마진만. */
+}
+
+.wifi-inset-shipping {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--pw-radius-sm);
+  font-size: 11px;
+  align-self: flex-start;
+}
+.wifi-inset-shipping-label {
+  font-weight: 700;
+  color: var(--pw-text-hint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.wifi-inset-shipping-value {
+  font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+  color: var(--pw-text);
+}
+
+.wifi-inset-msg {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--pw-text-secondary);
+  /* 2줄 clamp — row 높이 통일 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: keep-all;
+}
+
+.wifi-inset-chevron {
+  flex-shrink: 0;
+  color: var(--pw-text-hint);
+  transition:
+    color var(--pw-duration-fast) var(--pw-ease),
+    transform var(--pw-duration-fast) var(--pw-ease);
+}
+.pw-group-item.is-interactive:hover .wifi-inset-chevron {
+  color: var(--pw-text);
+  transform: translateX(2px);
+}
+
+@media (max-width: 480px) {
+  .wifi-inset-title { font-size: 14px; }
+}
+

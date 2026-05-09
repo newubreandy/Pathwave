@@ -1,38 +1,63 @@
 /* ═══════════════════════════════════════════════════
-   GroupCard — 다건 신청 묶음
-   헤더 = 클립보드 아이콘 + 신청번호 + 결제완료 pill + subtitle
-   자식 카드 = 좌측 들여쓰기 + 묶음 line
+   GroupCard — 그룹핑 컨테이너 (RePlan 스타일)
+   외곽 카드(surface-1) + 헤더 + inset row 자식들.
    ═══════════════════════════════════════════════════ */
 
 .pw-group {
   display: flex;
   flex-direction: column;
-  /* 가이드 v1.0 — 헤더와 자식 묶음 사이 16px (space-lg) */
-  gap: var(--pw-space-4);
 }
 
-.pw-group-header {
-  /* 가이드 v1.0 — 헤더는 surface-2 배경, 16px padding, 16px radius.
-     row 자체가 헤더 — head-row wrapper 제거. */
-  display: flex;
-  align-items: center;
-  gap: var(--pw-space-3);
+/* ── variant: container (default) ───────────────────
+   외곽 카드 안에 모든 콘텐츠 (header + items). RePlan 스타일. */
+.pw-group--container {
+  background: var(--pw-surface-1);
+  border: 1px solid var(--pw-surface-line);
+  border-radius: var(--pw-radius-xl);
+  padding: var(--pw-space-4);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.025) inset,
+              0 2px 6px rgba(0, 0, 0, 0.20);
+  transition: border-color var(--pw-duration-fast) var(--pw-ease);
+}
+
+/* ── variant: stacked (legacy) ──────────────────────
+   외곽 카드 없음 — 헤더 카드 + 자식 카드들이 따로. */
+.pw-group--stacked {
+  gap: var(--pw-space-4);
+}
+.pw-group--stacked .pw-group-head {
   background: var(--pw-surface-2);
   border: 1px solid var(--pw-surface-line);
   border-radius: var(--pw-radius-lg);
   padding: var(--pw-space-3) var(--pw-space-4);
+}
+
+/* ── Header (공통) ──────────────────────────────── */
+.pw-group-head {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-3);
   min-width: 0;
-  transition:
-    background-color var(--pw-duration-fast) var(--pw-ease),
-    border-color var(--pw-duration-fast) var(--pw-ease);
 }
-.pw-group-header.is-collapsible {
+
+.pw-group--container .pw-group-head {
+  /* 컨테이너 안에서는 헤더가 자체 배경 없이 콘텐츠로 자연스럽게 정렬 */
+  padding: 4px 4px var(--pw-space-3) 4px;
+}
+
+.pw-group-head.is-interactive {
   cursor: pointer;
+  user-select: none;
+  border-radius: var(--pw-radius-md);
+  transition: background-color var(--pw-duration-fast) var(--pw-ease);
 }
-.pw-group-header.is-collapsible:hover {
+.pw-group--container .pw-group-head.is-interactive:hover {
+  background: var(--pw-surface-1);
+}
+.pw-group--stacked .pw-group-head.is-interactive:hover {
   background: var(--pw-surface-3);
 }
-.pw-group-header:focus-visible {
+.pw-group-head:focus-visible {
   outline: 2px solid var(--pw-accent);
   outline-offset: 2px;
 }
@@ -57,15 +82,20 @@
   min-width: 0;
 }
 
-.pw-group-id {
-  font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
-  font-size: 13px;
+.pw-group-title {
+  font-size: 15px;
   font-weight: 700;
   color: var(--pw-text);
-  letter-spacing: 0.02em;
+  letter-spacing: -0.005em;
+  line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+/* 신청번호 같은 mono 형식은 호출부에서 className 으로 정렬 가능 — 별도 modifier 없이 */
+.pw-group-title.is-mono {
+  font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+  font-size: 13px;
 }
 
 .pw-group-paid {
@@ -102,40 +132,85 @@
   text-overflow: ellipsis;
 }
 
-/* ── Chevron (collapse/expand) ─────────────────── */
 .pw-group-chevron {
   flex-shrink: 0;
   color: var(--pw-text-secondary);
   transition: color var(--pw-duration-fast) var(--pw-ease);
 }
-.pw-group-header:hover .pw-group-chevron {
+.pw-group-head:hover .pw-group-chevron {
   color: var(--pw-text);
 }
 
-/* ── 자식 카드 ──────────────────────────────────
-   가이드 v1.0 — 16px gap (space-lg), 들여쓰기 없음.
-   묶음 표시는 header + 카드 같은 너비로 정렬. */
-.pw-group-children {
+/* ── Body (자식 영역) ──────────────────────────── */
+.pw-group-body {
   display: flex;
   flex-direction: column;
-  gap: var(--pw-space-4);
-  /* expand/collapse 부드럽게 */
+  /* 컨테이너 안 — items 사이 8px (가까이) */
+  gap: var(--pw-space-2);
+  /* expand 애니메이션 */
   animation: pwGroupExpand 200ms var(--pw-ease-out);
-  overflow: hidden;
+}
+
+.pw-group--stacked .pw-group-body {
+  gap: var(--pw-space-3);
 }
 
 @keyframes pwGroupExpand {
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
 @media (prefers-reduced-motion: reduce) {
-  .pw-group-children { animation: none; }
+  .pw-group-body { animation: none; }
+}
+
+/* ═══════════════════════════════════════════════════
+   GroupCardItem — 컨테이너 안 inset row
+   surface-2 배경 + 12px radius. 호출부에서 children 자유 구성.
+   ═══════════════════════════════════════════════════ */
+.pw-group-item {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-3);
+  padding: var(--pw-space-3);
+  background: var(--pw-surface-2);
+  border: 1px solid transparent;
+  border-radius: var(--pw-radius-md);
+  min-width: 0;
+  transition:
+    background-color var(--pw-duration-fast) var(--pw-ease),
+    border-color var(--pw-duration-fast) var(--pw-ease),
+    transform var(--pw-duration-fast) var(--pw-ease);
+}
+
+.pw-group-item.is-interactive {
+  cursor: pointer;
+}
+.pw-group-item.is-interactive:hover {
+  background: var(--pw-surface-3);
+  border-color: var(--pw-surface-line);
+}
+.pw-group-item.is-interactive:active {
+  transform: translateY(1px);
+}
+.pw-group-item:focus-visible {
+  outline: 2px solid var(--pw-accent);
+  outline-offset: 2px;
+}
+
+/* selected — accent 좌측 라인 (강조 필요한 경우만) */
+.pw-group-item.is-selected {
+  background: var(--pw-accent-soft);
+  border-color: var(--pw-accent-strong);
 }
 
 /* ── 모바일 ────────────────────────────────────── */
 @media (max-width: 480px) {
-  .pw-group-children {
-    gap: var(--pw-space-3);
+  .pw-group--container {
+    padding: var(--pw-space-3);
+    border-radius: var(--pw-radius-lg);
+  }
+  .pw-group-item {
+    padding: var(--pw-space-3);
+    gap: var(--pw-space-2);
   }
 }
