@@ -64,7 +64,13 @@ const MOCK_HISTORY = [
   { date: '2022.01.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
   { date: '2021.12.12', store: '상암점', amount: '6,000', type: 'event' },
   { date: '2021.12.12', store: '상암점', amount: '6,000', type: 'event' },
+  // ── 더보기 페이지 (2번째 page) ───────────────────────────
   { date: '2021.12.12', store: '상암점', amount: '6,000', type: 'wifi' },
+  { date: '2021.11.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
+  { date: '2021.10.12', store: '상암점', amount: '6,000', type: 'event' },
+  { date: '2021.09.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
+  { date: '2021.08.12', store: '상암점', amount: '6,000', type: 'noti' },
+  { date: '2021.07.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
 ];
 
 /* ══════════════════════════════════════════
@@ -417,38 +423,57 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
 /* ══════════════════════════════════════════
    결제내역 탭
    ══════════════════════════════════════════ */
-const PaymentHistoryTab = () => (
-  <div className="payment-content">
-    <div className="payment-history-section">
-      <div className="payment-history-note">※ 결제내역은 최대 2년(24개월)기간만 지원합니다.</div>
-      <table className="payment-history-table">
-        <thead>
-          <tr>
-            <th>일시</th>
-            <th>매장명</th>
-            <th>결제금액</th>
-            <th>서비스 구분</th>
-          </tr>
-        </thead>
-        <tbody>
-          {MOCK_HISTORY.length > 0 ? MOCK_HISTORY.map((row, i) => (
-            <tr key={i}>
-              <td>{row.date}</td>
-              <td>{row.store}</td>
-              <td>{row.amount}</td>
-              <td>{SERVICE_TYPE_LABEL[row.type] || row.type}</td>
+const PAGE_SIZE = 10;
+
+const PaymentHistoryTab = () => {
+  // 사용자 요구 (2026-05-10): 10개 단위로 노출. 더 없을 때 버튼 숨김.
+  const [visible, setVisible] = useState(PAGE_SIZE);
+  const items = MOCK_HISTORY.slice(0, visible);
+  const hasMore = visible < MOCK_HISTORY.length;
+
+  return (
+    <div className="payment-content">
+      <div className="payment-history-section">
+        <div className="payment-history-note">※ 결제내역은 최대 2년(24개월)기간만 지원합니다.</div>
+        <table className="payment-history-table">
+          <thead>
+            <tr>
+              <th>일시</th>
+              <th>매장명</th>
+              <th>결제금액</th>
+              <th>서비스 구분</th>
             </tr>
-          )) : (
-            <tr><td colSpan={4} className="payment-history-empty">결제내역이 없습니다.</td></tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {items.length > 0 ? items.map((row, i) => (
+              <tr key={i}>
+                <td>{row.date}</td>
+                <td>{row.store}</td>
+                <td>{row.amount}</td>
+                <td>{SERVICE_TYPE_LABEL[row.type] || row.type}</td>
+              </tr>
+            )) : (
+              <tr><td colSpan={4} className="payment-history-empty">결제내역이 없습니다.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      {/* 더 불러올 항목 있을 때만 버튼 노출. 활성 시 primary 톤. */}
+      {hasMore && (
+        <BottomActionBar>
+          <Button
+            variant="primary"
+            size="large"
+            fullWidth
+            onClick={() => setVisible((v) => v + PAGE_SIZE)}
+          >
+            더보기
+          </Button>
+        </BottomActionBar>
+      )}
     </div>
-    <BottomActionBar>
-      <Button variant="outline" size="large" fullWidth>더보기</Button>
-    </BottomActionBar>
-  </div>
-);
+  );
+};
 
 /* ══════════════════════════════════════════
    Main
