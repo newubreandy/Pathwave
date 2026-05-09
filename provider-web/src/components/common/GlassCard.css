@@ -1,0 +1,145 @@
+/* ═══════════════════════════════════════════════════
+   GlassCard — 운영툴 카드 baseline
+   blur 없음. 명도 차이로만 카드 경계 표현.
+   ═══════════════════════════════════════════════════ */
+
+.pw-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--pw-surface-1);
+  border: 1px solid var(--pw-surface-line);
+  border-radius: var(--pw-radius-lg);
+  padding: var(--pw-space-5);
+  color: var(--pw-text);
+  transition:
+    border-color var(--pw-duration-fast) var(--pw-ease),
+    background-color var(--pw-duration-fast) var(--pw-ease);
+  /* 그림자는 약하게만 — “정보판” 톤 */
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.025) inset,
+              0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* 한 컨테이너 안 카드 높이 통일을 위한 grid stretch */
+.pw-card--uniform {
+  height: 100%;
+}
+
+/* ── interactive (clickable) ─────────────────────── */
+.pw-card--interactive {
+  cursor: pointer;
+}
+.pw-card--interactive:hover {
+  background: var(--pw-surface-2);
+  border-color: var(--pw-border-strong);
+}
+.pw-card--interactive:focus-visible {
+  outline: 2px solid var(--pw-accent);
+  outline-offset: 2px;
+}
+.pw-card--interactive:active {
+  transform: translateY(1px);
+}
+
+/* ── variant: default ─────────────────────────────── */
+/* baseline 그대로 */
+
+/* ── variant: prominent ───────────────────────────── */
+/* 신청 진행중처럼 ‘주목이 필요한’ 카드.
+   배경 한 단계 위 + 좌측에 accent 4px 라인. glow 는 쓰지 않음. */
+.pw-card--prominent {
+  background: var(--pw-surface-2);
+  border-color: var(--pw-surface-line);
+  /* 좌측 accent 라인 — 4px, 카드 전체 높이. */
+  padding-left: calc(var(--pw-space-5) + 4px);
+}
+.pw-card--prominent::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 var(--pw-radius-xs) var(--pw-radius-xs) 0;
+  background: var(--pw-accent);
+  opacity: 0.85;
+}
+
+/* ── variant: compact ─────────────────────────────── */
+/* 운영중 — 가장 조용한 톤. 강조 거의 없음. */
+.pw-card--compact {
+  background: var(--pw-surface-1);
+  border-color: rgba(255, 255, 255, 0.06);
+  padding: var(--pw-space-4) var(--pw-space-5);
+  box-shadow: none;
+}
+.pw-card--compact.pw-card--interactive:hover {
+  background: var(--pw-surface-2);
+  border-color: var(--pw-surface-line);
+}
+
+/* ── variant: warning ─────────────────────────────── */
+/* 일시중지 / 점검 필요. 좌측 amber 라인. */
+.pw-card--warning {
+  background: rgba(245, 158, 11, 0.045);
+  border-color: rgba(245, 158, 11, 0.18);
+  padding-left: calc(var(--pw-space-5) + 4px);
+}
+.pw-card--warning::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 var(--pw-radius-xs) var(--pw-radius-xs) 0;
+  background: var(--pw-warning);
+}
+
+/* ── variant: success ─────────────────────────────── */
+.pw-card--success {
+  background: rgba(34, 197, 94, 0.045);
+  border-color: rgba(34, 197, 94, 0.18);
+  padding-left: calc(var(--pw-space-5) + 4px);
+}
+.pw-card--success::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 var(--pw-radius-xs) var(--pw-radius-xs) 0;
+  background: var(--pw-success);
+}
+
+/* ── variant: danger ──────────────────────────────── */
+.pw-card--danger {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.22);
+  padding-left: calc(var(--pw-space-5) + 4px);
+}
+.pw-card--danger::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 var(--pw-radius-xs) var(--pw-radius-xs) 0;
+  background: var(--pw-error);
+}
+
+/* ── 모바일 ────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .pw-card {
+    padding: var(--pw-space-4);
+    border-radius: var(--pw-radius-md);
+  }
+  .pw-card--prominent,
+  .pw-card--warning,
+  .pw-card--success,
+  .pw-card--danger {
+    padding-left: calc(var(--pw-space-4) + 4px);
+  }
+}

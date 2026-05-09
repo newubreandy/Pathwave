@@ -1226,3 +1226,179 @@
   border-top: 1px solid var(--pw-border);
 }
 
+/* ═══════════════════════════════════════════════════
+   ↓↓↓ NEW LIST VIEW (운영툴 톤 — 2026-05-09 ~)
+   PageShell / SectionTabs / GlassCard / GroupCard / MiniInfoPill /
+   StatusMessage / MetricStrip 으로 재구성된 리스트 화면.
+   위쪽의 .wifi-list-item / .wifi-tabs / .wifi-section / .wifi-group /
+   .wifi-overview / .wifi-summary-bar 는 deprecated — 후속 PR 제거 예정.
+   detail / add / search 뷰의 스타일은 위쪽 섹션 그대로 사용.
+   ═══════════════════════════════════════════════════ */
+
+/* PageShell.actions 안 검색 버튼 — 살짝 바뀐 톤 */
+.pw-page-actions .wifi-search-btn {
+  background: var(--pw-surface-1);
+  border: 1px solid var(--pw-surface-line);
+  color: var(--pw-text);
+}
+.pw-page-actions .wifi-search-btn:hover {
+  background: var(--pw-surface-2);
+  border-color: var(--pw-border-strong);
+}
+
+/* 활성 필터 표시 — 색상만 새 토큰으로 정렬 */
+.wifi-active-filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pw-space-3);
+  padding: var(--pw-space-3) var(--pw-space-4);
+  background: var(--pw-surface-1);
+  border: 1px solid var(--pw-surface-line);
+  border-radius: var(--pw-radius-md);
+}
+.wifi-filter-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.wifi-filter-chip {
+  display: inline-flex; align-items: center;
+  height: 22px; padding: 0 8px;
+  background: var(--pw-accent-soft);
+  color: var(--pw-accent-text);
+  border-radius: var(--pw-radius-full);
+  font-size: 12px; font-weight: 600;
+}
+.wifi-clear-filter {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: none; border: none; color: var(--pw-text-secondary);
+  font-size: 12px; cursor: pointer;
+}
+.wifi-clear-filter:hover { color: var(--pw-text); }
+
+/* 빈 상태 */
+.wifi-tab-empty {
+  padding: var(--pw-space-12) var(--pw-space-6);
+  text-align: center;
+  color: var(--pw-text-hint);
+  white-space: pre-line;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── 리스트 컨테이너 ─────────────────────────────── */
+.wifi-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-3);
+}
+/* 운영중 — 정보판 톤. 가장 여백 적게, 카드 간 gap 줄임. */
+.wifi-list--live { gap: var(--pw-space-2); }
+.wifi-list--maintenance { gap: var(--pw-space-3); }
+
+/* ── 카드 내부 — 모든 탭 공통 baseline ───────────── */
+.wifi-card {
+  /* GlassCard baseline + 페이지별 미세조정 */
+  gap: var(--pw-space-2);
+}
+
+.wifi-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pw-space-3);
+  min-width: 0;
+}
+
+.wifi-card-title {
+  flex: 1;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--pw-text);
+  letter-spacing: -0.005em;
+  /* 1줄 ellipsis — 카드 높이 통일 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wifi-card-pills {
+  /* MiniInfoPill 묶음 — 호출부에서 .pw-pill-row 사용. 추가 마진만. */
+  margin-top: 2px;
+}
+
+/* 운영중 — 디바이스 상태 한 줄 (정보판 row) */
+.wifi-card-device {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--pw-text-secondary);
+}
+.wifi-card-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.wifi-card-dot.ok       { background: var(--pw-success); box-shadow: 0 0 0 2px rgba(34,197,94,0.18); }
+.wifi-card-dot.low      { background: var(--pw-warning); box-shadow: 0 0 0 2px rgba(245,158,11,0.18); }
+.wifi-card-dot.offline  { background: var(--pw-error);   box-shadow: 0 0 0 2px rgba(239,68,68,0.18); }
+.wifi-card-dot.off      { background: var(--pw-text-hint); }
+.wifi-card-device-label { font-weight: 600; color: var(--pw-text); }
+.wifi-card-device-time {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--pw-text-hint);
+}
+
+/* 신청 진행중 — 송장번호 row */
+.wifi-card-shipping {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-2);
+  padding: 6px 10px;
+  background: var(--pw-surface-2);
+  border-radius: var(--pw-radius-sm);
+  font-size: 12px;
+}
+.wifi-card-shipping-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--pw-text-hint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.wifi-card-shipping-value {
+  font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+  color: var(--pw-text);
+  font-weight: 500;
+}
+
+/* 카드 footer — 상세보기 chevron */
+.wifi-card-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 4px;
+}
+.wifi-card-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pw-accent-text);
+}
+.wifi-card--live .wifi-card-detail {
+  color: var(--pw-text-hint); /* 운영중은 더 차분 */
+}
+
+/* 운영중 카드 — 가장 조용하게 */
+.wifi-card--live {
+  /* compact variant 의 padding/strength 그대로. 추가 강조 없음. */
+}
+
+/* 모바일 — 카드 padding 미세조정 */
+@media (max-width: 480px) {
+  .wifi-card-title { font-size: 16px; }
+  .wifi-card-device-time { display: none; } /* 협소 화면 — 디바이스 시각 숨김 */
+}
+

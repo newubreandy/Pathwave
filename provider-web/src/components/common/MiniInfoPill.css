@@ -1,0 +1,53 @@
+/* ═══════════════════════════════════════════════════
+   MiniInfoPill — 카드 안 메타 알약
+   ═══════════════════════════════════════════════════ */
+
+.pw-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--pw-radius-sm);
+  background: var(--pw-surface-3);
+  font-size: 12px;
+  line-height: 1;
+  color: var(--pw-text-secondary);
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pw-pill--muted {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--pw-text-hint);
+}
+
+.pw-pill--mono .pw-pill-value {
+  font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+  letter-spacing: 0.01em;
+}
+
+.pw-pill-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pw-text-hint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pw-pill-value {
+  font-weight: 500;
+  color: var(--pw-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 카드 안에서 pill 묶음용 wrapper 클래스 (호출부 옵션). */
+.pw-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}

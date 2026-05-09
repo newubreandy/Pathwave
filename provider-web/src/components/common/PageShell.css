@@ -1,0 +1,66 @@
+/* ═══════════════════════════════════════════════════
+   PageShell — 페이지 레이아웃 wrapper.
+   배경 그라데이션은 body 에서 처리하므로 여기는 여백/타이틀만 담당.
+   ═══════════════════════════════════════════════════ */
+
+.pw-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-6);
+  width: 100%;
+  margin: 0 auto;
+  /* 하단 BottomActionBar 자리 — 페이지마다 별도 padding-bottom 필요 시 */
+  padding-bottom: var(--pw-space-8);
+}
+
+.pw-page--default { max-width: var(--pw-max-width); }
+.pw-page--narrow  { max-width: 720px; }
+.pw-page--wide    { max-width: none; }
+
+/* ── Header ────────────────────────────────────────── */
+.pw-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--pw-space-4);
+  flex-wrap: wrap;
+}
+
+.pw-page-header-text {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.pw-page-title {
+  font-size: var(--pw-display-size);
+  font-weight: var(--pw-display-weight);
+  line-height: var(--pw-display-leading);
+  letter-spacing: var(--pw-display-tracking);
+  color: var(--pw-text);
+  margin: 0;
+}
+
+.pw-page-subtitle {
+  margin: var(--pw-space-2) 0 0 0;
+  font-size: var(--pw-label-size);
+  font-weight: 400;
+  color: var(--pw-text-hint);
+  line-height: 1.45;
+}
+
+.pw-page-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-2);
+  flex: 0 0 auto;
+}
+
+/* ── 모바일 ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .pw-page {
+    gap: var(--pw-space-4);
+  }
+  .pw-page-title {
+    font-size: var(--pw-headline-size);
+  }
+}

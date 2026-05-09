@@ -1,18 +1,22 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Camera, Plus, X, ChevronLeft, ChevronRight, Trash2, Edit3, Search, Image as ImageIcon, Loader2 } from 'lucide-react';
-import WifiService from '../services/wifi/WifiService';
+import { Camera, Plus, X, ChevronLeft, ChevronRight, Search, Image as ImageIcon, Loader2 } from 'lucide-react';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
 import StatusBadge, {
   PROVIDER_STATUS_GROUPS,
-  PROVIDER_SECTIONS,
   PROVIDER_HIDDEN_STATUSES,
   getProviderGroup,
   getProviderSection,
 } from '../components/common/StatusBadge';
-import StatusTimeline from '../components/common/StatusTimeline';
+import PageShell from '../components/common/PageShell';
+import SectionTabs from '../components/common/SectionTabs';
+import GlassCard from '../components/common/GlassCard';
+import GroupCard from '../components/common/GroupCard';
+import MiniInfoPill from '../components/common/MiniInfoPill';
+import StatusMessage from '../components/common/StatusMessage';
+import MetricStrip from '../components/common/MetricStrip';
 import './WifiSettings.css';
 
 // 워크플로우 정책 (사장님 콘솔):
@@ -139,7 +143,6 @@ const WifiSettings = () => {
   // 리스트 탭 — 사용자 요구: 3개 탭 구조 (신청 진행중 / 운영중 / 점검·해지)
   const [activeTab, setActiveTab] = useState('inProgress'); // 'inProgress' | 'live' | 'maintenance'
   const [selectedProfile, setSelectedProfile] = useState(null);
-  const [swipedId, setSwipedId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedChips, setSelectedChips] = useState(new Set());
   const [activeFilter, setActiveFilter] = useState(null); // filtered name after search
@@ -155,18 +158,17 @@ const WifiSettings = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  const touchStartX = useRef(0);
-  const touchCurrentX = useRef(0);
-
-  // GNB 의 "와이파이" 메뉴를 다시 탭하면 리스트로 복귀 (location.key 변경 감지)
+  // GNB 의 "와이파이" 메뉴를 다시 탭하면 리스트로 복귀 (location.key 변경 감지).
+  // location.key 가 변하면 리스트로 reset 되어야 하므로 effect 안 setState 가 의도된 동작.
+  /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
   useEffect(() => {
     setView('list');
     setSelectedProfile(null);
     setIsEditing(false);
     setSaveConfirmMsg(null);
     setErrorMsg(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.key]);
+  /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 
   // ── List Actions ──
   const openDetail = (profile) => {
@@ -177,17 +179,8 @@ const WifiSettings = () => {
     setView('detail');
   };
 
-  const openAdd = () => {
-    setFormData({ name: '', ssid: '', password: '', image: null });
-    setPreviewUrl(null);
-    setIsEditing(true);
-    setSelectedProfile(null);
-    setView('add');
-  };
-
   const handleDelete = (id) => {
     setProfiles(prev => prev.filter(p => p.id !== id));
-    setSwipedId(null);
     setDeleteConfirm(null);
     if (view !== 'list') setView('list');
   };
@@ -327,20 +320,6 @@ const WifiSettings = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // ── Touch swipe for list items ──
-  const handleTouchStart = (e, id) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = (e, id) => {
-    const diff = touchStartX.current - e.changedTouches[0].clientX;
-    if (diff > 60) {
-      setSwipedId(id);
-    } else if (diff < -60) {
-      setSwipedId(null);
-    }
-  };
-
   // ── Search Actions ──
   const openSearch = () => {
     setSearchQuery('');
@@ -476,31 +455,133 @@ const WifiSettings = () => {
   }
 
   // ═════════════════════════════════════
-  // LIST VIEW — Figma "서비스관리"
+  // LIST VIEW — 운영툴 톤 (Linear / Stripe / Notion 다크 계열)
+  //   탭 3개 (신청 진행중 / 운영중 / 점검·해지) — 각 탭은 카드 변형이 다름.
+  //   - 신청 진행중 : prominent (좌측 accent 라인) + GroupCard 묶음
+  //   - 운영중       : compact (가장 차분, 보기 전용, swipe X)
+  //   - 점검·해지   : warning (일시중지) / 표준 (해지)
+  //   StatusTimeline / 단계 나열 UI 는 list view 에서 사용 안 함 — 상세보기에서만.
   // ═════════════════════════════════════
   if (view === 'list') {
-    return (
-      <div className="wifi-page">
-        <div className="page-header-section" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-          <div style={{ flex: '1 1 200px' }}>
-            <h1 className="page-title">와이파이관리</h1>
-            <p className="sub-title">wifi 서비스 이용내역</p>
-          </div>
-        </div>
+    const inProgressCount  = (profilesBySection.inProgress || []).length;
+    const liveCount        = (profilesBySection.live || []).length;
+    const maintenanceCount = (profilesBySection.paused || []).length + (profilesBySection.terminated || []).length;
 
-        {/* 검색 우측 정렬 */}
-        <div className="wifi-list-meta wifi-list-meta--right">
-          <button className="wifi-search-btn" onClick={openSearch}>
+    const tabDefs = [
+      { key: 'inProgress',  label: '신청 진행중', count: inProgressCount },
+      { key: 'live',        label: '운영중',     count: liveCount },
+      { key: 'maintenance', label: '점검·해지',  count: maintenanceCount },
+    ];
+
+    // 메트릭은 항상 동일한 3개 — 정보판 톤. tone 은 0이 아니면 accent.
+    const metricItems = [
+      { label: '진행', value: inProgressCount,  unit: '건', tone: inProgressCount  > 0 ? 'accent'  : 'default' },
+      { label: '운영', value: liveCount,        unit: '건', tone: liveCount        > 0 ? 'success' : 'default' },
+      { label: '점검·해지', value: maintenanceCount, unit: '건', tone: maintenanceCount > 0 ? 'warning' : 'default' },
+    ];
+
+    // 활성 탭에 보여줄 섹션 키
+    const visibleSections =
+      activeTab === 'inProgress' ? ['inProgress']
+      : activeTab === 'live'      ? ['live']
+      :                             ['paused', 'terminated']; /* maintenance */
+
+    const totalCount = visibleSections.reduce(
+      (acc, k) => acc + ((profilesBySection[k] || []).length), 0
+    );
+
+    // ── 카드 1장 렌더 (상태 메시지 1개 + meta pill 최대 3개) ──
+    const renderWifiCard = (p, opts = {}) => {
+      const { variant = 'default', section = 'inProgress' } = opts;
+      // 메시지 tone — 운영중 active 면 accent, paused 면 warning, 그 외는 info
+      const msgTone =
+        section === 'paused' ? 'warning'
+        : section === 'terminated' ? 'info'
+        : section === 'inProgress' ? 'accent'
+        : 'info';
+
+      // 송장번호 — 배송중일 때만 별도 row 로 강조 (pill 아님)
+      const hasShipping = !!p.shippingTrackingNo;
+
+      return (
+        <GlassCard
+          key={p.id}
+          variant={variant}
+          uniformHeight
+          onClick={() => openDetail(p)}
+          className={`wifi-card wifi-card--${section}`}
+        >
+          <div className="wifi-card-head">
+            <span className="wifi-card-title">{p.name}</span>
+            <StatusBadge status={p.applicationStatus} size="sm" mode="provider" />
+          </div>
+
+          {/* MiniInfoPill 최대 2~3개 */}
+          <div className="pw-pill-row wifi-card-pills">
+            {p.ssid && <MiniInfoPill label="SSID" mono>{p.ssid}</MiniInfoPill>}
+            {p.beaconSn && <MiniInfoPill mono variant="muted">{p.beaconSn}</MiniInfoPill>}
+            {section === 'live' && p.enabled && (
+              <MiniInfoPill variant="muted">배터리 {p.battery}%</MiniInfoPill>
+            )}
+          </div>
+
+          {/* 운영중 — 디바이스 상태 한 줄 (정상/배터리부족/연결끊김/중단) */}
+          {section === 'live' && (
+            <div className="wifi-card-device">
+              <span className={`wifi-card-dot ${p.enabled ? p.deviceStatus : 'off'}`} aria-hidden="true" />
+              <span className="wifi-card-device-label">
+                {p.enabled ? (STATUS_LABEL[p.deviceStatus] || '-') : '중단'}
+              </span>
+              {p.statusUpdatedAt && (
+                <span className="wifi-card-device-time">{p.statusUpdatedAt}</span>
+              )}
+            </div>
+          )}
+
+          {/* 신청 진행중 — 배송중 단계는 송장번호 row */}
+          {hasShipping && section === 'inProgress' && (
+            <div className="wifi-card-shipping" role="note">
+              <span className="wifi-card-shipping-label">송장</span>
+              <span className="wifi-card-shipping-value">
+                {p.shippingCarrier && `${p.shippingCarrier} · `}{p.shippingTrackingNo}
+              </span>
+            </div>
+          )}
+
+          {/* 상태 메시지 — 2줄 clamp */}
+          {p.statusMessage && (
+            <StatusMessage tone={msgTone}>{p.statusMessage}</StatusMessage>
+          )}
+
+          <div className="wifi-card-foot">
+            <span className="wifi-card-detail">
+              상세보기 <ChevronRight size={14} />
+            </span>
+          </div>
+        </GlassCard>
+      );
+    };
+
+    return (
+      <PageShell
+        theme="provider"
+        title="와이파이 관리"
+        subtitle="신청·운영·점검 상태를 한 화면에서"
+        actions={
+          <button className="wifi-search-btn" onClick={openSearch} type="button">
             <Search size={16} />
             검색
           </button>
-        </div>
+        }
+      >
+        {/* 상단 메트릭 — 3초 이해용 정보판 */}
+        <MetricStrip items={metricItems} />
 
-        {/* Active filter indicator */}
+        {/* 검색 필터 활성 표시 */}
         {activeFilter && (
           <div className="wifi-active-filter">
             <div className="wifi-filter-chips">
-              {activeFilter.map(name => (
+              {activeFilter.map((name) => (
                 <span key={name} className="wifi-filter-chip">{name}</span>
               ))}
             </div>
@@ -510,284 +591,87 @@ const WifiSettings = () => {
           </div>
         )}
 
-        {/* ─── 탭 헤더 (sticky) ─── */}
-        {(() => {
-          const inProgressCount  = (profilesBySection.inProgress || []).length;
-          const liveCount        = (profilesBySection.live || []).length;
-          const maintenanceCount = (profilesBySection.paused || []).length + (profilesBySection.terminated || []).length;
-          const tabDefs = [
-            { key: 'inProgress',  label: '신청 진행중', count: inProgressCount },
-            { key: 'live',        label: '운영중',     count: liveCount },
-            { key: 'maintenance', label: '점검/해지',  count: maintenanceCount },
-          ];
+        {/* 탭 — sticky pill */}
+        <SectionTabs
+          tabs={tabDefs}
+          value={activeTab}
+          onChange={(k) => {
+            setActiveTab(k);
+            window.scrollTo({ top: 0, behavior: 'auto' });
+          }}
+          sticky
+          ariaLabel="와이파이 상태 탭"
+        />
+
+        {/* 빈 상태 */}
+        {totalCount === 0 && (
+          <div className="wifi-tab-empty" role="status">
+            <p>
+              {activeTab === 'inProgress' && '현재 진행 중인 신청이 없습니다.\n새 와이파이를 신청해보세요.'}
+              {activeTab === 'live'       && '운영 중인 서비스가 없습니다.\n신청 절차가 끝나면 이곳에 표시됩니다.'}
+              {activeTab === 'maintenance'&& '일시중지 또는 해지된 서비스가 없습니다.'}
+            </p>
+          </div>
+        )}
+
+        {/* ── 신청 진행중 탭 ── */}
+        {activeTab === 'inProgress' && totalCount > 0 && (() => {
+          const groups = buildInProgressGroups(profilesBySection.inProgress || []);
           return (
-            <nav className="wifi-tabs" role="tablist" aria-label="와이파이 상태 탭">
-              {tabDefs.map((t) => (
-                <button
-                  key={t.key}
-                  role="tab"
-                  type="button"
-                  aria-selected={activeTab === t.key}
-                  className={`wifi-tab ${activeTab === t.key ? 'active' : ''} wifi-tab--${t.key}`}
-                  onClick={() => {
-                    if (activeTab === t.key) return;
-                    setActiveTab(t.key);
-                    // 사용자 요구 #5: 탭 전환 시 스크롤 위치 초기화
-                    window.scrollTo({ top: 0, behavior: 'auto' });
-                  }}
-                >
-                  <span className="wifi-tab-label">{t.label}</span>
-                  <span className="wifi-tab-count">{t.count}</span>
-                </button>
-              ))}
-            </nav>
-          );
-        })()}
+            <div className="wifi-list wifi-list--inprogress">
+              {groups.map((group) => {
+                const total = group.items[0]?.applicationGroupTotal || group.items.length;
+                const isMulti = total > 1;
 
-        {/* ─── 활성 탭 내용만 렌더 (기존 세로 4섹션 제거) ─── */}
-        {(() => {
-          // 활성 탭에 보여줄 섹션 키 목록
-          let visibleSections;
-          if (activeTab === 'inProgress')  visibleSections = ['inProgress'];
-          else if (activeTab === 'live')   visibleSections = ['live'];
-          else /* maintenance */            visibleSections = ['paused', 'terminated'];
+                if (!isMulti) {
+                  // 단건 신청 — GroupCard 사용 안 함, 바로 prominent 카드
+                  return renderWifiCard(group.items[0], { variant: 'prominent', section: 'inProgress' });
+                }
 
-          // 빈 상태
-          const totalCount = visibleSections.reduce(
-            (acc, k) => acc + ((profilesBySection[k] || []).length), 0
-          );
-          if (totalCount === 0) {
-            const emptyMsg =
-              activeTab === 'inProgress' ? '현재 진행 중인 신청이 없습니다.\n새 와이파이를 신청해보세요.'
-              : activeTab === 'live'      ? '운영 중인 서비스가 없습니다.\n신청 절차가 끝나면 이곳에 표시됩니다.'
-              :                              '일시중지 또는 해지된 서비스가 없습니다.';
-            return (
-              <div className="wifi-tab-empty" role="status">
-                <p>{emptyMsg}</p>
-              </div>
-            );
-          }
+                // 다건 신청 — GroupCard
+                const summary = Object.entries(group.labelCounts).map(([label, count]) => ({
+                  label,
+                  count,
+                  tone: label === '배송중' ? 'warning' : 'accent',
+                }));
 
-          return visibleSections.map((sectionKey) => {
-            const profiles = profilesBySection[sectionKey] || [];
-            if (profiles.length === 0) return null;
-            const def = PROVIDER_SECTIONS[sectionKey];
-
-          // ── 신청 진행중 — applicationGroupId 그룹핑 + prominent 카드 ──
-          if (sectionKey === 'inProgress') {
-            const groups = buildInProgressGroups(profiles);
-            return (
-              <section key={sectionKey} className="wifi-section wifi-section--inprogress">
-                <header className="wifi-section-header">
-                  <h2 className="wifi-section-title">{def.label}</h2>
-                  <span className="wifi-section-count">{profiles.length}건</span>
-                </header>
-                <div className="wifi-list">
-                  {groups.map((group) => {
-                    const total = group.items[0]?.applicationGroupTotal || group.items.length;
-                    const isMulti = total > 1;
-                    return (
-                      <div key={group.groupId} className={`wifi-group ${isMulti ? 'is-multi' : 'is-single'}`}>
-                        {isMulti && (
-                          <div className="wifi-group-header">
-                            <div className="wifi-group-header-main">
-                              <span className="wifi-group-id">신청번호 {group.groupId}</span>
-                              <span className="wifi-group-meta">
-                                {total}개 와이파이 · ✓결제완료
-                                {group.paidAt && ` · ${group.paidAt}`}
-                              </span>
-                              {Object.keys(group.labelCounts).length > 0 && (
-                                <div className="wifi-group-mini-counts">
-                                  {Object.entries(group.labelCounts).map(([label, cnt]) => (
-                                    <span key={label} className="wifi-group-mini-chip">
-                                      {label} <strong>{cnt}</strong>
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                        {group.items.map((p, idx) => (
-                          <div
-                            key={p.id}
-                            className={`wifi-list-item wifi-list-item--prominent ${swipedId === p.id ? 'swiped' : ''}`}
-                            onTouchStart={(e) => handleTouchStart(e, p.id)}
-                            onTouchEnd={(e) => handleTouchEnd(e, p.id)}
-                          >
-                            <div className="wifi-item-content" onClick={() => openDetail(p)}>
-                              <div className="wifi-item-name-block">
-                                <div className="wifi-item-name-row">
-                                  <span className="wifi-item-name">{p.name}</span>
-                                  <StatusBadge status={p.applicationStatus} size="sm" mode="provider" />
-                                </div>
-                                <div className="wifi-item-meta">
-                                  {p.ssid && <span className="wifi-item-meta-pill">SSID {p.ssid}</span>}
-                                  {p.beaconSn && <span className="wifi-item-meta-pill">{p.beaconSn}</span>}
-                                  {p.periodEnd && <span className="wifi-item-meta-pill">~ {p.periodEnd}</span>}
-                                  {!isMulti && p.applicationGroupId && (
-                                    <span className="wifi-item-meta-pill subtle">신청 {p.applicationGroupId}</span>
-                                  )}
-                                  {isMulti && (
-                                    <span className="wifi-item-meta-pill subtle">{total}개 중 {p.applicationGroupSeq || idx + 1}번째</span>
-                                  )}
-                                </div>
-
-                                {/* 배송중 단계 — 송장번호 영역 강조 */}
-                                {p.shippingTrackingNo && (
-                                  <div className="wifi-shipping-row" role="note">
-                                    <span className="wifi-shipping-icon" aria-hidden="true">📦</span>
-                                    <div className="wifi-shipping-text">
-                                      <span className="wifi-shipping-label">송장번호</span>
-                                      <span className="wifi-shipping-value">
-                                        {p.shippingCarrier && `${p.shippingCarrier} · `}
-                                        {p.shippingTrackingNo}
-                                      </span>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {(p.statusMessage || p.statusUpdatedAt) && (
-                                  <StatusTimeline
-                                    status={p.applicationStatus}
-                                    statusMessage={p.statusMessage}
-                                    statusUpdatedAt={p.statusUpdatedAt}
-                                    compact
-                                    className="wifi-item-timeline"
-                                  />
-                                )}
-                              </div>
-                              <span className="wifi-item-detail-link">
-                                상세보기 <ChevronRight size={16} />
-                              </span>
-                            </div>
-
-                            {/* 신청 진행중도 swipe 액션 유지 (기존 기능 보존) */}
-                            <div className="wifi-swipe-actions">
-                              <button className="swipe-btn delete" onClick={() => setDeleteConfirm(p.id)}>
-                                <Trash2 size={20} />
-                              </button>
-                              <button className="swipe-btn edit" onClick={() => { openDetail(p); setIsEditing(true); }}>
-                                <Edit3 size={20} />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            );
-          }
-
-          // ── 운영중 서비스 — compact 카드 (보기 전용, swipe 제거) ──
-          if (sectionKey === 'live') {
-            return (
-              <section key={sectionKey} className="wifi-section wifi-section--live">
-                <header className="wifi-section-header">
-                  <h2 className="wifi-section-title">{def.label}</h2>
-                  <span className="wifi-section-count">{profiles.length}건</span>
-                </header>
-                <div className="wifi-list">
-                  {profiles.map((p) => (
-                    <div key={p.id} className="wifi-list-item wifi-list-item--compact">
-                      <div className={`wifi-item-content ${!p.enabled ? 'is-disabled' : ''}`} onClick={() => openDetail(p)}>
-                        <div className="wifi-item-name-block">
-                          <div className="wifi-item-name-row">
-                            <span className="wifi-item-name">{p.name}</span>
-                            <StatusBadge status={p.applicationStatus} size="sm" mode="provider" />
-                          </div>
-                          <div className="wifi-item-meta">
-                            {p.ssid && <span className="wifi-item-meta-pill">SSID {p.ssid}</span>}
-                            {p.beaconSn && <span className="wifi-item-meta-pill">{p.beaconSn}</span>}
-                          </div>
-                        </div>
-                        <div className="wifi-item-status-block">
-                          {p.enabled ? (
-                            <>
-                              <span className={`wifi-status-dot ${p.deviceStatus}`} />
-                              <span className="wifi-item-status">{STATUS_LABEL[p.deviceStatus] || '-'}</span>
-                              <span className="wifi-item-battery">({p.battery}%)</span>
-                            </>
-                          ) : (
-                            <>
-                              <span className="wifi-status-dot off-dot" />
-                              <span className="wifi-item-status off">중단</span>
-                              <span className="wifi-item-battery">({p.battery}%)</span>
-                            </>
-                          )}
-                        </div>
-                        <span className="wifi-item-detail-link">
-                          상세보기 <ChevronRight size={16} />
-                        </span>
-                      </div>
-                      {/* swipe 액션 제거 — 운영중은 보기 전용. 수정/해지/일시중지는 상세보기에서 */}
-                    </div>
-                  ))}
-                </div>
-              </section>
-            );
-          }
-
-          // ── 일시중지 / 해지 — 표준 카드 (swipe 액션 유지) ──
-          return (
-            <section key={sectionKey} className={`wifi-section wifi-section--${sectionKey}`}>
-              <header className="wifi-section-header">
-                <h2 className="wifi-section-title">{def.label}</h2>
-                <span className="wifi-section-count">{profiles.length}건</span>
-              </header>
-              <div className="wifi-list">
-                {profiles.map((p) => (
-                  <div
-                    key={p.id}
-                    className={`wifi-list-item ${swipedId === p.id ? 'swiped' : ''}`}
-                    onTouchStart={(e) => handleTouchStart(e, p.id)}
-                    onTouchEnd={(e) => handleTouchEnd(e, p.id)}
+                return (
+                  <GroupCard
+                    key={group.groupId}
+                    groupId={group.groupId}
+                    total={total}
+                    summary={summary}
                   >
-                    <div className="wifi-item-content" onClick={() => openDetail(p)}>
-                      <div className="wifi-item-name-block">
-                        <div className="wifi-item-name-row">
-                          <span className="wifi-item-name">{p.name}</span>
-                          <StatusBadge status={p.applicationStatus} size="sm" mode="provider" />
-                        </div>
-                        <div className="wifi-item-meta">
-                          {p.ssid && <span className="wifi-item-meta-pill">SSID {p.ssid}</span>}
-                          {p.beaconSn && <span className="wifi-item-meta-pill">{p.beaconSn}</span>}
-                          {p.periodEnd && <span className="wifi-item-meta-pill">~ {p.periodEnd}</span>}
-                          {p.applicationGroupId && (
-                            <span className="wifi-item-meta-pill subtle">신청 {p.applicationGroupId}</span>
-                          )}
-                        </div>
-                        {(p.statusMessage || p.statusUpdatedAt) && (
-                          <StatusTimeline
-                            status={p.applicationStatus}
-                            statusMessage={p.statusMessage}
-                            statusUpdatedAt={p.statusUpdatedAt}
-                            compact
-                            className="wifi-item-timeline"
-                          />
-                        )}
-                      </div>
-                      <span className="wifi-item-detail-link">
-                        상세보기 <ChevronRight size={16} />
-                      </span>
-                    </div>
-                    <div className="wifi-swipe-actions">
-                      <button className="swipe-btn delete" onClick={() => setDeleteConfirm(p.id)}>
-                        <Trash2 size={20} />
-                      </button>
-                      <button className="swipe-btn edit" onClick={() => { openDetail(p); setIsEditing(true); }}>
-                        <Edit3 size={20} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+                    {group.items.map((p) =>
+                      renderWifiCard(p, { variant: 'prominent', section: 'inProgress' })
+                    )}
+                  </GroupCard>
+                );
+              })}
+            </div>
           );
-        });
         })()}
+
+        {/* ── 운영중 탭 — 가장 조용한 톤. compact 카드. swipe 없음. ── */}
+        {activeTab === 'live' && totalCount > 0 && (
+          <div className="wifi-list wifi-list--live">
+            {(profilesBySection.live || []).map((p) =>
+              renderWifiCard(p, { variant: 'compact', section: 'live' })
+            )}
+          </div>
+        )}
+
+        {/* ── 점검·해지 탭 — 일시중지(warning) + 해지(default) ── */}
+        {activeTab === 'maintenance' && totalCount > 0 && (
+          <div className="wifi-list wifi-list--maintenance">
+            {(profilesBySection.paused || []).map((p) =>
+              renderWifiCard(p, { variant: 'warning', section: 'paused' })
+            )}
+            {(profilesBySection.terminated || []).map((p) =>
+              renderWifiCard(p, { variant: 'default', section: 'terminated' })
+            )}
+          </div>
+        )}
 
         <BottomActionBar>
           <Button variant="primary" fullWidth icon={<Plus size={18} />} onClick={() => navigate('/dashboard/service-request?type=wifi')}>
@@ -804,7 +688,7 @@ const WifiSettings = () => {
           onConfirm={() => handleDelete(deleteConfirm)}
           onCancel={() => setDeleteConfirm(null)}
         />
-      </div>
+      </PageShell>
     );
   }
 

@@ -1,0 +1,112 @@
+/* ═══════════════════════════════════════════════════
+   GroupCard — 다건 신청 묶음
+   헤더는 단순. 자식 카드는 좌측 들여쓰기로 묶음 표시.
+   ═══════════════════════════════════════════════════ */
+
+.pw-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-2);
+  /* 그룹 자체에는 카드/배경 없음. 자식 카드들이 묶임만 표현. */
+}
+
+.pw-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pw-space-3);
+  padding: var(--pw-space-2) var(--pw-space-3);
+  border-bottom: 1px solid var(--pw-surface-line);
+  flex-wrap: wrap;
+}
+
+.pw-group-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pw-space-2);
+  min-width: 0;
+}
+
+.pw-group-id {
+  font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pw-text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.pw-group-dot {
+  color: var(--pw-text-hint);
+  font-size: 12px;
+}
+
+.pw-group-total {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--pw-text);
+}
+
+.pw-group-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pw-space-1);
+  flex-wrap: wrap;
+}
+
+.pw-group-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--pw-radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--pw-surface-2);
+  color: var(--pw-text-secondary);
+}
+.pw-group-chip strong {
+  font-weight: 700;
+  color: var(--pw-text);
+}
+.pw-group-chip--accent {
+  background: var(--pw-accent-soft);
+  color: var(--pw-accent-text);
+}
+.pw-group-chip--accent strong { color: var(--pw-accent-text); }
+
+.pw-group-chip--warning {
+  background: rgba(245, 158, 11, 0.10);
+  color: #FBBF24;
+}
+.pw-group-chip--warning strong { color: #FBBF24; }
+
+/* ── Children — 좌측 들여쓰기 + 묶음 표시 라인 ────── */
+.pw-group-children {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-2);
+  padding-left: var(--pw-space-3);
+  position: relative;
+}
+.pw-group-children::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 1px;
+  background: var(--pw-surface-line);
+}
+
+/* ── 모바일 ────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .pw-group-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--pw-space-2);
+  }
+  .pw-group-children {
+    padding-left: var(--pw-space-2);
+  }
+}

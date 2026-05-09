@@ -45,12 +45,18 @@ html {
 
 body {
   font-family: var(--pw-font);
-  background-color: var(--pw-bg);
+  /* 단색 fallback — gradient 미지원 환경 대비 */
+  background-color: var(--pw-page-bg-base);
+  /* theme 별 미세 그라데이션 (보라/그린). page 전체에 1회만 그려짐. */
+  background-image: var(--pw-page-bg);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--pw-text);
   line-height: var(--pw-body-leading);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   touch-action: manipulation;
+  min-height: 100vh;
 }
 
 a {
@@ -142,20 +148,22 @@ input, textarea, select, button {
   color: var(--pw-text-hint);
 }
 
-/* ── Card ── */
+/* ── Card (글로벌 baseline) ──
+   GlassCard 컴포넌트가 등장한 뒤로는 신규 UI 에서 .card 직접 사용 비권장.
+   기존 페이지 호환을 위해 유지. ── */
 .card {
   background: var(--pw-surface);
   border: 1px solid var(--pw-border);
   border-radius: var(--pw-radius-md);
   padding: var(--pw-space-6);
   box-shadow: var(--pw-shadow-card);
-  transition: transform var(--pw-duration-normal) var(--pw-ease),
-              box-shadow var(--pw-duration-normal) var(--pw-ease);
+  transition: border-color var(--pw-duration-normal) var(--pw-ease),
+              background-color var(--pw-duration-normal) var(--pw-ease);
 }
 
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--pw-shadow-md);
+  border-color: var(--pw-border-strong);
+  background: var(--pw-surface-hover);
 }
 
 /* ── Legacy Button (for backward compat) ── */
