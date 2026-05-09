@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════
-   SectionTabs — 운영툴 pill 탭
-   blur 없음. 활성 탭은 accent 색 + 채워진 배경.
+   SectionTabs — underline 방식 탭 (사용자 요구 2026-05-09)
+   GNB 탭과 동일 톤. 활성 탭은 accent 색 + 하단 2px 라인.
+   blur / 배경 fill 없음 — 운영툴 톤.
    ═══════════════════════════════════════════════════ */
 
 .pw-tabs {
@@ -12,60 +13,62 @@
   position: sticky;
   /* GNB(112px) 아래에 붙음 */
   top: var(--pw-gnb-total);
-  /* 카드와 시각적으로 분리되도록 배경 추가 (gradient 비치지 않게) */
   background: linear-gradient(
     180deg,
     var(--pw-page-bg-base) 0%,
     var(--pw-page-bg-base) 75%,
     transparent 100%
   );
-  padding: var(--pw-space-2) 0 var(--pw-space-3);
-  margin: 0 calc(-1 * var(--pw-space-2));
 }
 
 .pw-tabs-track {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--pw-space-1);
-  padding: 4px;
-  background: var(--pw-surface-1);
-  border: 1px solid var(--pw-surface-line);
-  border-radius: var(--pw-radius-full);
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  /* underline 베이스 — 비활성 탭의 하단 1px 라인 */
+  border-bottom: 1px solid var(--pw-surface-line);
+  border-radius: 0;
 }
 
 .pw-tab {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--pw-space-2);
-  padding: 8px 16px;
+  padding: 12px 20px;
   border: none;
   background: transparent;
-  border-radius: var(--pw-radius-full);
+  border-radius: 0;
   font-family: inherit;
-  font-size: var(--pw-label-size);
+  font-size: 15px;
   font-weight: 600;
-  color: var(--pw-text-secondary);
+  color: var(--pw-text-hint);
   cursor: pointer;
   transition:
     color var(--pw-duration-fast) var(--pw-ease),
-    background-color var(--pw-duration-fast) var(--pw-ease);
-  min-height: 36px;
+    border-color var(--pw-duration-fast) var(--pw-ease);
   white-space: nowrap;
+  /* 하단 2px 라인 자리 — 비활성은 transparent. 트랙 1px 위로 겹쳐서 활성 시 덮음. */
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
 }
 
 .pw-tab:hover:not(.is-active) {
-  color: var(--pw-text);
-  background: var(--pw-surface-2);
+  color: var(--pw-text-secondary);
 }
 
 .pw-tab.is-active {
-  background: var(--pw-accent);
-  color: #FFFFFF;
+  color: var(--pw-accent);
+  border-bottom-color: var(--pw-accent);
+  background: transparent;
 }
 
 .pw-tab.is-active .pw-tab-count {
-  background: rgba(255, 255, 255, 0.22);
-  color: #FFFFFF;
+  background: var(--pw-accent-soft);
+  color: var(--pw-accent-text);
 }
 
 .pw-tab-count {
@@ -74,30 +77,32 @@
   justify-content: center;
   min-width: 22px;
   height: 20px;
-  padding: 0 6px;
+  padding: 0 7px;
   border-radius: var(--pw-radius-full);
-  background: var(--pw-surface-3);
-  color: var(--pw-text-secondary);
+  background: var(--pw-surface-2);
+  color: var(--pw-text-hint);
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
+  transition:
+    background-color var(--pw-duration-fast) var(--pw-ease),
+    color var(--pw-duration-fast) var(--pw-ease);
 }
 
 .pw-tab:focus-visible {
   outline: 2px solid var(--pw-accent);
   outline-offset: 2px;
+  border-radius: var(--pw-radius-xs);
 }
 
 /* ── 모바일 ────────────────────────────────────────── */
 @media (max-width: 480px) {
   .pw-tabs-track {
-    display: flex;
     width: 100%;
-    overflow: hidden;
   }
   .pw-tab {
     flex: 1 1 0;
-    justify-content: center;
-    padding: 8px 10px;
+    padding: 12px 8px;
+    font-size: 14px;
   }
 }
