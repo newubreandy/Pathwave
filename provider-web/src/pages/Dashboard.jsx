@@ -163,7 +163,9 @@ const Dashboard = () => {
         {/* 와이파이 접속 추이 — Area Chart */}
         <div className="dashboard-chart-card full-width">
           <div className="dashboard-chart-header">
-            <Activity size={18} color="var(--pw-text-secondary)" />
+            <CardAvatar variant="accent" size="sm">
+              <Activity strokeWidth={2} />
+            </CardAvatar>
             <span className="dashboard-chart-title">와이파이 접속 추이</span>
             <span className="dashboard-chart-subtitle">최근 7일</span>
           </div>
@@ -199,7 +201,9 @@ const Dashboard = () => {
         {/* 서비스별 매출 — Bar Chart */}
         <div className="dashboard-chart-card">
           <div className="dashboard-chart-header">
-            <BarChart3 size={18} color="var(--pw-text-secondary)" />
+            <CardAvatar variant="accent" size="sm">
+              <BarChart3 strokeWidth={2} />
+            </CardAvatar>
             <span className="dashboard-chart-title">서비스별 매출</span>
           </div>
           <ResponsiveContainer width="100%" height={220}>
@@ -236,7 +240,9 @@ const Dashboard = () => {
         {/* 쿠폰 사용률 — Donut Chart */}
         <div className="dashboard-chart-card">
           <div className="dashboard-chart-header">
-            <PieChartIcon size={18} color="var(--pw-text-secondary)" />
+            <CardAvatar variant="accent" size="sm">
+              <PieChartIcon strokeWidth={2} />
+            </CardAvatar>
             <span className="dashboard-chart-title">쿠폰 사용률</span>
           </div>
           <div style={{ position: 'relative' }}>
