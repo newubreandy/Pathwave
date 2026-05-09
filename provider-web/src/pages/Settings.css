@@ -198,10 +198,11 @@
   right: auto;
 }
 
-/* ── Sub-items (indented under a parent toggle) ── */
+/* ── Sub-items (indented under a parent toggle) ──
+   다크 톤 정렬 (사용자 요구 2026-05-10): 이전 gray-50 (#F2F3F7) 흰색 → surface tint. */
 .settings-sub-items {
-  background: var(--pw-gray-50);
-  border-top: 1px solid var(--pw-border-light);
+  background: var(--pw-surface-1);
+  border-top: 1px solid var(--pw-surface-line);
 }
 
 .settings-sub-items .settings-row {
