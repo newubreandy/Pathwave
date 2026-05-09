@@ -215,22 +215,11 @@
   min-height: 64px;
 }
 
-/* selected 표시 — .pw-group-item.is-selected 가 이미 accent bg 적용.
-   채팅은 좌측 라인 추가로 더 강하게 표시. */
+/* selected 표시 — 디자인 가이드 v1.0 정렬: 좌측 라인 없음.
+   accent bg + accent border 만으로 강조. */
 .chat-date-group .pw-group-item.is-selected {
   background: var(--pw-accent-soft);
   border-color: var(--pw-accent-strong);
-  position: relative;
-}
-.chat-date-group .pw-group-item.is-selected::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 8px;
-  bottom: 8px;
-  width: 3px;
-  border-radius: 0 2px 2px 0;
-  background: var(--pw-accent);
 }
 
 /* 아바타 + 국기 래퍼 */

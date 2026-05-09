@@ -65,56 +65,23 @@
   border-color: var(--pw-surface-line);
 }
 
-/* ── variant: warning ─────────────────────────────── */
-/* 일시중지 / 점검 필요. 좌측 amber 라인. */
+/* ── variant: warning / success / danger ────────────
+   디자인 가이드 v1.0 — 좌측 라인 없음. tint 배경 + tint border 만으로 구분.
+   상태 강조는 아바타 색 (CardAvatar variant) 으로 충분. */
+
 .pw-card--warning {
   background: rgba(245, 158, 11, 0.045);
   border-color: rgba(245, 158, 11, 0.18);
-  padding-left: calc(var(--pw-space-5) + 4px);
-}
-.pw-card--warning::before {
-  content: '';
-  position: absolute;
-  top: 12px;
-  bottom: 12px;
-  left: 0;
-  width: 3px;
-  border-radius: 0 var(--pw-radius-xs) var(--pw-radius-xs) 0;
-  background: var(--pw-warning);
 }
 
-/* ── variant: success ─────────────────────────────── */
 .pw-card--success {
   background: rgba(34, 197, 94, 0.045);
   border-color: rgba(34, 197, 94, 0.18);
-  padding-left: calc(var(--pw-space-5) + 4px);
-}
-.pw-card--success::before {
-  content: '';
-  position: absolute;
-  top: 12px;
-  bottom: 12px;
-  left: 0;
-  width: 3px;
-  border-radius: 0 var(--pw-radius-xs) var(--pw-radius-xs) 0;
-  background: var(--pw-success);
 }
 
-/* ── variant: danger ──────────────────────────────── */
 .pw-card--danger {
   background: rgba(239, 68, 68, 0.05);
   border-color: rgba(239, 68, 68, 0.22);
-  padding-left: calc(var(--pw-space-5) + 4px);
-}
-.pw-card--danger::before {
-  content: '';
-  position: absolute;
-  top: 12px;
-  bottom: 12px;
-  left: 0;
-  width: 3px;
-  border-radius: 0 var(--pw-radius-xs) var(--pw-radius-xs) 0;
-  background: var(--pw-error);
 }
 
 /* ── 모바일 ────────────────────────────────────────── */
@@ -122,10 +89,5 @@
   .pw-card {
     padding: var(--pw-space-4);
     border-radius: var(--pw-radius-md);
-  }
-  .pw-card--warning,
-  .pw-card--success,
-  .pw-card--danger {
-    padding-left: calc(var(--pw-space-4) + 4px);
   }
 }

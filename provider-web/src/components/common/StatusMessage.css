@@ -43,10 +43,10 @@
   background: var(--pw-surface-2);
 }
 
-/* warning / danger 만 좌측 컬러 라인 유지 — 의미상 강조 필요 */
+/* warning / danger — 디자인 가이드 v1.0 정렬: 좌측 라인 없음.
+   tint 배경 + 텍스트 색상만으로 구분. */
 .pw-statusmsg--warning {
   background: rgba(245, 158, 11, 0.08);
-  border-left: 2px solid var(--pw-warning);
 }
 .pw-statusmsg--warning .pw-statusmsg-text {
   color: #FBBF24;
@@ -54,7 +54,6 @@
 
 .pw-statusmsg--danger {
   background: rgba(239, 68, 68, 0.08);
-  border-left: 2px solid var(--pw-error);
 }
 .pw-statusmsg--danger .pw-statusmsg-text {
   color: #FCA5A5;
