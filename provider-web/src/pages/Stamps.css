@@ -82,15 +82,16 @@
   box-shadow: var(--pw-shadow-sm);
 }
 
-/* ── Icon — CardAvatar dark embossed 톤 정렬 (2026-05-09) ── */
+/* ── Icon — CardAvatar md 동일 사이즈/곡률 정렬 (2026-05-09) ──
+   WiFi 와 동일한 40px / 12px 곡률. 사용자 피드백: "쿠폰/와이파이 곡률 다름". */
 .stamp-icon {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: var(--pw-touch-comfortable);
-  height: var(--pw-touch-comfortable);
-  border-radius: 14px;     /* 둥근 사각형 (CardAvatar lg 와 동일) */
-  margin-right: var(--pw-space-6);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  margin-right: var(--pw-space-4);
   flex-shrink: 0;
   transition: transform var(--pw-duration-normal) var(--pw-ease);
   background:

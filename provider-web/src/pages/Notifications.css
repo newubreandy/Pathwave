@@ -80,16 +80,16 @@
   transform: translateY(0);
 }
 
-/* ── Icon — CardAvatar dark embossed 톤 정렬 (2026-05-09) ── */
+/* ── Icon — CardAvatar md 동일 사이즈/곡률 정렬 (2026-05-09) ──
+   40px / 12px — WiFi/Stamps/Coupons 와 통일. */
 .noti-icon {
-  width: var(--pw-touch-comfortable);
-  height: var(--pw-touch-comfortable);
-  border-radius: 14px;     /* 둥근 사각형 (CardAvatar lg 와 동일) */
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  /* 통일된 dark embossed 베이스 */
   background:
     radial-gradient(ellipse at 50% 18%, rgba(255, 255, 255, 0.10) 0%, transparent 50%),
     linear-gradient(180deg, #2a2a36 0%, #16161e 50%, #08080d 100%);
