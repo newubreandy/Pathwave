@@ -28,11 +28,11 @@ const SERVICE_CATEGORIES = [
   },
   {
     key: 'event',
-    title: '이벤트 서비스이용',
+    title: '쿠폰 서비스이용',
     bullets: [
       'PathWave WiFi 서비스 이용 시 추가로 이용 가능한 서비스입니다.',
       '매장 내 특정 위치에 방문한 고객에게 쿠폰 또는 혜택을 자동으로 제공할 수 있습니다.',
-      '서비스 이용 시 별도의 알림 비용은 발생하지 않습니다.',
+      '쿠폰 발급 시 별도의 알림 비용은 발생하지 않습니다.',
     ],
   },
   {
@@ -861,7 +861,7 @@ const ServiceRequest = () => {
   }
 
   // ═══════════════════════════════════════
-  // STEP 2-B — 스탬프 / 이벤트 / 알림
+  // STEP 2-B — 스탬프 / 쿠폰(event) / 알림
   // ═══════════════════════════════════════
   if (step === 'stamp' || step === 'event' || step === 'noti') {
     const cat = SERVICE_CATEGORIES.find((c) => c.key === step);

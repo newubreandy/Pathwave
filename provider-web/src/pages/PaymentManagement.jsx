@@ -39,12 +39,27 @@ const MOCK_SERVICES = [
   },
 ];
 
+/**
+ * type 코드 → UI 한글 라벨 (사용자 요구 2026-05-10).
+ *   wifi → 와이파이
+ *   event → 쿠폰
+ *   push → 알림
+ *   noti → 알림 (호환)
+ */
+const SERVICE_TYPE_LABEL = {
+  wifi: '와이파이',
+  event: '쿠폰',
+  push: '알림',
+  noti: '알림',
+};
+
 const MOCK_HISTORY = [
   { date: '2022.05.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
   { date: '2022.04.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
   { date: '2022.03.12', store: '상암점', amount: '6,000', type: 'push' },
   { date: '2022.03.12', store: '상암점', amount: '6,000', type: 'event' },
   { date: '2022.03.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
+  { date: '2022.02.12', store: '상암점', amount: '6,000', type: 'noti' },
   { date: '2022.02.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
   { date: '2022.01.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
   { date: '2021.12.12', store: '상암점', amount: '6,000', type: 'event' },
@@ -407,10 +422,22 @@ const PaymentHistoryTab = () => (
     <div className="payment-history-section">
       <div className="payment-history-note">※ 결제내역은 최대 2년(24개월)기간만 지원합니다.</div>
       <table className="payment-history-table">
-        <thead><tr><th>일시</th><th>매장명</th><th>결제금액</th><th>누적</th></tr></thead>
+        <thead>
+          <tr>
+            <th>일시</th>
+            <th>매장명</th>
+            <th>결제금액</th>
+            <th>서비스 구분</th>
+          </tr>
+        </thead>
         <tbody>
           {MOCK_HISTORY.length > 0 ? MOCK_HISTORY.map((row, i) => (
-            <tr key={i}><td>{row.date}</td><td>{row.store}</td><td>{row.amount}</td><td>{row.type}</td></tr>
+            <tr key={i}>
+              <td>{row.date}</td>
+              <td>{row.store}</td>
+              <td>{row.amount}</td>
+              <td>{SERVICE_TYPE_LABEL[row.type] || row.type}</td>
+            </tr>
           )) : (
             <tr><td colSpan={4} className="payment-history-empty">결제내역이 없습니다.</td></tr>
           )}

@@ -61,7 +61,7 @@ const Coupons = () => {
           variant="primary"
           fullWidth
           icon={<Plus size={18} />}
-          onClick={() => navigate('/dashboard/coupons/add')}
+          onClick={() => navigate('/dashboard/service-request?type=event')}
         >
           쿠폰 등록
         </Button>

@@ -36,12 +36,25 @@ const Stamps = () => {
     }
   };
 
-  const hasActiveStamp = stampList.some(s => s.status === 'active');
+  // 스탬프는 매장당 1개만 운영 가능. 정책:
+  //   - active 가 있으면 신규 등록 X (수정 / 정지로 처리)
+  //   - paused 가 있으면 → 신규 시 기존 적립 무효화 알림 후 진행
+  //   - 모두 ended 거나 0건이면 신규 등록 자유롭게
+  const activeStamp = stampList.find(s => s.status === 'active');
+  const pausedStamp = stampList.find(s => s.status === 'paused');
+  const canRegisterNew = !activeStamp; // active 가 없을 때만 등록 버튼 노출
 
   const handleAddClick = () => {
-    if (hasActiveStamp) {
-      alert('현재 진행 중인 스탬프가 있습니다. 매장당 1개의 스탬프만 활성화할 수 있으므로, 기존 스탬프를 정지 또는 종료한 후 다시 시도해 주세요.');
+    if (activeStamp) {
+      // 정상적으로는 버튼이 안 보이지만 만약 클릭되면 안내.
+      alert('현재 진행 중인 스탬프가 있습니다. 매장당 1개의 스탬프만 활성화할 수 있으므로, 기존 스탬프를 정지 후 다시 시도해 주세요.');
       return;
+    }
+    if (pausedStamp) {
+      const ok = window.confirm(
+        '일시정지된 기존 스탬프가 있습니다.\n신규 스탬프를 등록하시면 사용자가 적립한 기존 스탬프는 더 이상 적용되지 않습니다.\n\n계속 진행하시겠어요?'
+      );
+      if (!ok) return;
     }
     navigate('/dashboard/stamps/new');
   };
@@ -153,17 +166,20 @@ const Stamps = () => {
         )}
       </div>
 
-      <BottomActionBar>
-        <Button 
-          variant="primary" 
-          fullWidth 
-          icon={<Plus size={18} />}
-          onClick={handleAddClick} 
-          disabled={hasActiveStamp}
-        >
-          {t('stamp.title_add', '스탬프 등록')}
-        </Button>
-      </BottomActionBar>
+      {/* 등록 버튼 — 신청 진행중인 스탬프 (active) 가 없을 때만 노출.
+          (paused / ended 인 경우 등록 가능, click 시 안내 다이얼로그) */}
+      {canRegisterNew && (
+        <BottomActionBar>
+          <Button
+            variant="primary"
+            fullWidth
+            icon={<Plus size={18} />}
+            onClick={handleAddClick}
+          >
+            {t('stamp.title_add', '스탬프 등록')}
+          </Button>
+        </BottomActionBar>
+      )}
     </div>
   );
 };
