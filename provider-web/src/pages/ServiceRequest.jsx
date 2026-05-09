@@ -472,7 +472,10 @@ const ServiceRequest = () => {
     return (
       <div className="sr-page">
         <header className="sr-header">
-          <h1 className="sr-title">서비스 신청</h1>
+          <button className="sr-back" onClick={handleBack} aria-label="뒤로 가기">
+            <ChevronLeft size={22} />
+          </button>
+          <h1 className="sr-title">와이파이 서비스등록</h1>
         </header>
 
         <div className="sr-body">
@@ -868,7 +871,10 @@ const ServiceRequest = () => {
     return (
       <div className="sr-page">
         <header className="sr-header">
-          <h1 className="sr-title">서비스 신청</h1>
+          <button className="sr-back" onClick={handleBack} aria-label="뒤로 가기">
+            <ChevronLeft size={22} />
+          </button>
+          <h1 className="sr-title">{cat?.title || '서비스 신청'}</h1>
         </header>
 
         <div className="sr-body">
@@ -913,7 +919,10 @@ const ServiceRequest = () => {
     return (
       <div className="sr-page">
         <header className="sr-header">
-          <h1 className="sr-title">서비스 신청</h1>
+          <button className="sr-back" onClick={handleBack} aria-label="뒤로 가기">
+            <ChevronLeft size={22} />
+          </button>
+          <h1 className="sr-title">결제</h1>
         </header>
 
         <div className="sr-body">
