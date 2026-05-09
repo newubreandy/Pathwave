@@ -9,13 +9,12 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  /* 둥근 — 모든 variant 공통 */
-  border-radius: 50%;
+  /* 둥근 사각형 — 사이즈별 radius. 사용자 요구 (2026-05-09): "원형은 아니어도 됨". */
   /* 베이스 dark gradient — 위쪽 살짝 밝고 아래쪽 어둡게 (embossed) */
   background:
     radial-gradient(ellipse at 50% 25%, rgba(255, 255, 255, 0.05) 0%, transparent 55%),
     linear-gradient(135deg, #1c1c26 0%, #0d0d14 100%);
-  /* 1px outer border (검정 톤 — 둥근 형태 강조) */
+  /* 1px outer border (검정 톤) */
   border: 1px solid rgba(0, 0, 0, 0.55);
   /* 안쪽 highlight (위) + 안쪽 shadow (아래) + 밖으로 살짝 떨어지는 소프트 그림자 */
   box-shadow:
@@ -29,10 +28,10 @@
     color var(--pw-duration-fast) var(--pw-ease);
 }
 
-/* 사이즈 — 둥근 형태 (border-radius 50% 유지) */
-.pw-avatar--sm { width: 32px; height: 32px; }
-.pw-avatar--md { width: 40px; height: 40px; }
-.pw-avatar--lg { width: 48px; height: 48px; }
+/* 사이즈 + 둥근 사각형 radius (디자인 가이드 spacing 4/8/12/16/24/32 정렬) */
+.pw-avatar--sm { width: 32px; height: 32px; border-radius: 10px; }
+.pw-avatar--md { width: 40px; height: 40px; border-radius: 12px; }
+.pw-avatar--lg { width: 48px; height: 48px; border-radius: 14px; }
 
 /* 아이콘 크기 — children 으로 받은 lucide 아이콘에 동일 적용. */
 .pw-avatar--sm > svg { width: 16px; height: 16px; }
