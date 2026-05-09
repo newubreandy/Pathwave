@@ -21,29 +21,32 @@
   );
 }
 
+/* track — full width 분할 (사용자 요구 2026-05-10: 결제관리 탭과 동일 스타일) */
 .pw-tabs-track {
   display: flex;
   align-items: stretch;
+  width: 100%;
   gap: 0;
   padding: 0;
   background: transparent;
   border: none;
-  /* underline 베이스 — 비활성 탭의 하단 1px 라인 */
   border-bottom: 1px solid var(--pw-surface-line);
   border-radius: 0;
 }
 
+/* 각 탭 — flex:1 로 균등 분할, 중앙 정렬, payment-tab 과 동일 크기 */
 .pw-tab {
+  flex: 1 1 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--pw-space-2);
-  padding: 12px 20px;
+  padding: var(--pw-space-4);
   border: none;
   background: transparent;
   border-radius: 0;
   font-family: inherit;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--pw-text-hint);
   cursor: pointer;
@@ -51,7 +54,6 @@
     color var(--pw-duration-fast) var(--pw-ease),
     border-color var(--pw-duration-fast) var(--pw-ease);
   white-space: nowrap;
-  /* 하단 2px 라인 자리 — 비활성은 transparent. 트랙 1px 위로 겹쳐서 활성 시 덮음. */
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
 }
@@ -97,12 +99,8 @@
 
 /* ── 모바일 ────────────────────────────────────────── */
 @media (max-width: 480px) {
-  .pw-tabs-track {
-    width: 100%;
-  }
   .pw-tab {
-    flex: 1 1 0;
-    padding: 12px 8px;
+    padding: var(--pw-space-3) var(--pw-space-2);
     font-size: 14px;
   }
 }

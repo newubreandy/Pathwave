@@ -3,36 +3,56 @@
    공통 컴포넌트: Button, ConfirmModal, BottomActionBar
    ═══════════════════════════════════════════════════ */
 
-/* ── Tabs ── */
+/* ── Tabs — SectionTabs (.pw-tab) 과 동일 스타일 (사용자 요구 2026-05-10) ── */
 .payment-tabs {
   display: flex;
   gap: 0;
   margin-top: var(--pw-space-6);
   margin-bottom: var(--pw-space-8);
-  border-bottom: 1px solid var(--pw-border-light);
+  border-bottom: 1px solid var(--pw-surface-line);
   position: sticky;
   top: var(--pw-gnb-total);
-  background: var(--pw-bg-3);
+  /* page-bg gradient 비치도록 sticky 시 fade — sticky 영역만 살짝 어둡게 */
+  background: linear-gradient(
+    180deg,
+    var(--pw-page-bg-base) 0%,
+    var(--pw-page-bg-base) 75%,
+    transparent 100%
+  );
   z-index: 50;
 }
 
 .payment-tab {
-  flex: 1;
+  flex: 1 1 0;
   padding: var(--pw-space-4);
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  font-size: var(--pw-label-size);
-  font-weight: 500;
+  margin-bottom: -1px;
+  font-size: 16px;
+  font-weight: 600;
   font-family: inherit;
   color: var(--pw-text-hint);
   cursor: pointer;
-  transition: all var(--pw-duration-fast);
+  transition:
+    color var(--pw-duration-fast) var(--pw-ease),
+    border-color var(--pw-duration-fast) var(--pw-ease);
   text-align: center;
+  white-space: nowrap;
 }
 
 .payment-tab:hover { color: var(--pw-text-secondary); }
-.payment-tab.active { color: var(--pw-primary); font-weight: 700; border-bottom-color: var(--pw-primary); }
+.payment-tab.active {
+  color: var(--pw-accent);
+  border-bottom-color: var(--pw-accent);
+}
+
+@media (max-width: 480px) {
+  .payment-tab {
+    padding: var(--pw-space-3) var(--pw-space-2);
+    font-size: 14px;
+  }
+}
 
 .payment-content { margin: 0 auto; position: relative; z-index: 1; }
 
