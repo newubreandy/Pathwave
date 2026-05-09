@@ -7,6 +7,45 @@ import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import './Stamps.css';
 
+/**
+ * 스탬프 mock 데이터 — 백엔드 API 미연동 시 화면 검증용.
+ * TODO: StampService.list() 실제 백엔드 연결 후 제거.
+ */
+const MOCK_STAMPS = [
+  {
+    id: 1, name: '호텔H 숙박 스탬프 이벤트',
+    status: 'active',
+    period: '2026.05.01 ~ 2026.07.31',
+    targetCount: 10,
+    benefit: '10회 적립 시 1박 무료 숙박권',
+    minAmount: 50000,
+  },
+  {
+    id: 2, name: '카페 아메리카노 적립',
+    status: 'active',
+    period: '2026.04.01 ~ 2026.12.31',
+    targetCount: 8,
+    benefit: '8잔 적립 시 아메리카노 1잔 무료',
+    minAmount: 4500,
+  },
+  {
+    id: 3, name: '런치 스페셜 스탬프',
+    status: 'paused',
+    period: '2026.03.01 ~ 2026.06.30',
+    targetCount: 5,
+    benefit: '5회 적립 시 다음 식사 30% 할인',
+    minAmount: 12000,
+  },
+  {
+    id: 4, name: '봄맞이 첫 방문 스탬프',
+    status: 'ended',
+    period: '2026.01.15 ~ 2026.02.28',
+    targetCount: 3,
+    benefit: '첫 방문 후 3회 적립 시 디저트 무료',
+    minAmount: 0,
+  },
+];
+
 const Stamps = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -14,8 +53,9 @@ const Stamps = () => {
   const [stampList, setStampList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   // mock — 슈퍼어드민에서 매장별 스탬프 서비스 가입 여부 관리
-  // TODO: 실제 백엔드 GET /api/store/services 응답으로 교체
-  const [isStampServiceActivated] = useState(false);
+  // TODO: 실제 백엔드 GET /api/store/services 응답으로 교체.
+  // 데모용 true (등록된 스탬프 데이터 보이도록).
+  const [isStampServiceActivated] = useState(true);
   useEffect(() => {
     loadStamps();
   }, []);
@@ -23,10 +63,12 @@ const Stamps = () => {
   const loadStamps = async () => {
     setIsLoading(true);
     try {
-      const data = await StampService.getStamps();
-      setStampList(data);
+      // 백엔드 미연동 환경 — mock 사용. 연동 후 StampService.list() 호출 + setStampList 로 교체.
+      await new Promise((r) => setTimeout(r, 200));
+      setStampList(MOCK_STAMPS);
     } catch (error) {
       console.error('Failed to load stamps', error);
+      setStampList(MOCK_STAMPS); // fallback
     } finally {
       setIsLoading(false);
     }

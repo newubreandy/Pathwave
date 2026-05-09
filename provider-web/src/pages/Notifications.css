@@ -178,24 +178,36 @@
   color: var(--pw-white);
 }
 
-/* ── Form View ── */
+/* ── Form View — 매장안내 .display-text 정렬 (22/300/흰색) ──
+   사용자 요구 (2026-05-10): 모든 폼 input 값 통일. */
 .form-input-line {
   width: 100%;
   border: none;
   border-bottom: 1px solid var(--pw-border);
-  padding: var(--pw-space-2) 0;
-  font-size: var(--pw-title-size);
-  font-weight: 600;
+  padding: var(--pw-space-3) 0;
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
   color: var(--pw-text);
   background: transparent;
   outline: none;
   transition: border-color var(--pw-duration-normal) var(--pw-ease);
   min-height: var(--pw-touch-min);
+  line-height: 1.4;
 }
 
 .form-input-line:focus {
-  border-bottom: 2px solid var(--pw-primary);
+  border-bottom: 2px solid var(--pw-accent);
   margin-bottom: -1px;
+}
+
+.form-input-line::placeholder {
+  color: var(--pw-text-hint);
+  font-weight: 300;
+}
+
+@media (max-width: 480px) {
+  .form-input-line { font-size: 20px; }
 }
 
 select.form-input-line {
@@ -223,42 +235,66 @@ select.form-input-line {
   padding-bottom: var(--pw-space-2);
 }
 
+/* 날짜·이미지 row 의 readonly value — input 톤과 동일 */
 .date-value, .image-value {
-  font-size: var(--pw-title-size);
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
   color: var(--pw-text);
   display: flex;
   align-items: center;
   gap: var(--pw-space-2);
 }
+@media (max-width: 480px) {
+  .date-value, .image-value { font-size: 20px; }
+}
 
+/* 메시지 textarea — 다단락 본문이지만 폰트 톤은 동일 (가독성 위해 line-height ↑) */
 textarea.form-textarea {
   width: 100%;
   min-height: 150px;
   padding: var(--pw-space-4);
   border: 1px solid var(--pw-border);
   border-radius: var(--pw-radius-sm);
+  background: var(--pw-surface-1);
   resize: vertical;
-  font-size: var(--pw-body-size);
-  line-height: var(--pw-body-leading);
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
+  line-height: 1.55;
+  color: var(--pw-text);
   outline: none;
   transition: border-color var(--pw-duration-normal);
   font-family: inherit;
 }
-
+textarea.form-textarea::placeholder {
+  color: var(--pw-text-hint);
+  font-weight: 300;
+}
 textarea.form-textarea:focus {
-  border-color: var(--pw-primary);
+  border-color: var(--pw-accent);
+}
+@media (max-width: 480px) {
+  textarea.form-textarea { font-size: 20px; }
 }
 
+/* readonly 메시지 박스 — 다크 톤 surface, 흰색 텍스트 */
 .readonly-message-box {
   width: 100%;
   padding: var(--pw-space-4);
-  background: var(--pw-gray-50);
+  background: var(--pw-surface-1);
+  border: 1px solid var(--pw-surface-line);
   border-radius: var(--pw-radius-sm);
-  font-size: var(--pw-body-size);
-  line-height: var(--pw-body-leading);
-  color: var(--pw-text-secondary);
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
+  line-height: 1.55;
+  color: var(--pw-text);
   white-space: pre-wrap;
   word-break: break-all;
+}
+@media (max-width: 480px) {
+  .readonly-message-box { font-size: 20px; }
 }
 
 .image-preview {
