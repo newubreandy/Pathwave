@@ -186,7 +186,7 @@ const Dashboard = () => {
                 axisLine={false} tickLine={false}
                 tick={{ fontSize: 11, fill: '#8A91A3' }}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)', stroke: 'rgba(255,255,255,0.10)' }} />
               <Area
                 type="monotone" dataKey="접속자"
                 stroke={CHART_COLORS.primary} strokeWidth={2.5}
@@ -218,7 +218,7 @@ const Dashboard = () => {
                 tick={{ fontSize: 11, fill: '#8A91A3' }}
                 tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(0)}K` : v}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)', stroke: 'rgba(255,255,255,0.10)' }} />
               <Bar dataKey="wifi" name="Wifi" fill={CHART_COLORS.primary} radius={[4,4,0,0]} barSize={14} />
               <Bar dataKey="event" name="이벤트" fill={CHART_COLORS.secondary} radius={[4,4,0,0]} barSize={14} />
               <Bar dataKey="push" name="알림" fill={CHART_COLORS.warning} radius={[4,4,0,0]} barSize={14} />
@@ -260,7 +260,7 @@ const Dashboard = () => {
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)', stroke: 'rgba(255,255,255,0.10)' }} />
               </PieChart>
             </ResponsiveContainer>
             {/* 도넛 중앙 라벨 */}
