@@ -300,11 +300,11 @@ const Notifications = () => {
             <div className="form-label">{t('noti.label_image')}</div>
             <div className="form-content">
               {!isReadOnly && !formData.image && (
-                <div 
-                  onClick={() => fileInputRef.current.click()} 
-                  style={{ border: '1px dashed var(--border)', borderRadius: '8px', padding: '2rem', textAlign: 'center', cursor: 'pointer', color: '#94A3B8', background: '#F8FAFC' }}
+                <div
+                  onClick={() => fileInputRef.current.click()}
+                  className="noti-image-dropzone"
                 >
-                  <Upload size={24} style={{ marginBottom: '0.5rem' }} />
+                  <Upload size={24} />
                   <div>{t('noti.no_image')}</div>
                 </div>
               )}
