@@ -135,8 +135,8 @@ const ServiceApplyFlow = ({ onBack, onComplete }) => {
                     className={`pay-service-card ${selectedService === s.id ? 'selected' : ''}`}
                     onClick={() => { setSelectedService(s.id); setSelectedPlan(null); }}
                   >
-                    <div className="pay-service-card-icon" style={{ background: `${s.color}14`, color: s.color }}>
-                      <Icon size={24} />
+                    <div className="pay-service-card-icon">
+                      <Icon size={24} strokeWidth={2} />
                     </div>
                     <div className="pay-service-card-name">{s.name}</div>
                     <div className="pay-service-card-desc">{s.desc}</div>

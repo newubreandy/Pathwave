@@ -5,7 +5,21 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
+import CardAvatar from '../components/common/CardAvatar';
 import './Dashboard.css';
+
+/**
+ * Dashboard KPI 컬러(string hex) → CardAvatar variant 매핑.
+ * 통일된 dark embossed 베이스 + 아이콘 색만 차별화.
+ */
+const colorToVariant = (color) => {
+  if (!color) return 'neutral';
+  const c = color.toLowerCase();
+  if (c.startsWith('#22') || c.startsWith('#10') || c.startsWith('#05')) return 'success';
+  if (c.startsWith('#f5') || c.startsWith('#fb')) return 'warning';
+  if (c.startsWith('#ef') || c.startsWith('#dc')) return 'danger';
+  return 'accent';  /* default = 보라 (provider) */
+};
 
 /* ═══════════════════════════════════════════════════
    Mock Data — 대시보드
@@ -89,9 +103,9 @@ const StatCard = ({ icon: Icon, label, value, color, trend, to }) => {
       onKeyDown={(e) => e.key === 'Enter' && to && navigate(to)}
     >
       <div className="dashboard-stat-top">
-        <div className="dashboard-stat-icon" style={{ background: `${color}14` }}>
-          <Icon size={20} color={color} />
-        </div>
+        <CardAvatar variant={colorToVariant(color)} size="md">
+          <Icon strokeWidth={2} />
+        </CardAvatar>
         {trend != null && (
           <span className={`dashboard-stat-trend ${trend > 0 ? 'up' : 'down'}`}>
             <TrendingUp size={14} style={{ transform: trend > 0 ? 'none' : 'rotate(180deg)' }} />

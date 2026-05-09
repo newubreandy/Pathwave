@@ -80,26 +80,29 @@
   transform: translateY(0);
 }
 
-/* ── Icon ── */
+/* ── Icon — CardAvatar dark embossed 톤 정렬 (2026-05-09) ── */
 .noti-icon {
   width: var(--pw-touch-comfortable);
   height: var(--pw-touch-comfortable);
-  border-radius: 50%;
+  border-radius: 14px;     /* 둥근 사각형 (CardAvatar lg 와 동일) */
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  /* 통일된 dark embossed 베이스 */
+  background:
+    radial-gradient(ellipse at 50% 18%, rgba(255, 255, 255, 0.10) 0%, transparent 50%),
+    linear-gradient(180deg, #2a2a36 0%, #16161e 50%, #08080d 100%);
+  border: 1px solid rgba(0, 0, 0, 0.85);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.75),
+    0 2px 5px rgba(0, 0, 0, 0.55),
+    0 -0.5px 0 rgba(255, 255, 255, 0.04);
 }
 
-.noti-icon.active {
-  background-color: var(--pw-primary-subtle);
-  color: var(--pw-primary);
-}
-
-.noti-icon.sent {
-  background-color: var(--pw-gray-100);
-  color: var(--pw-gray-400);
-}
+.noti-icon.active { color: var(--pw-accent-text); }
+.noti-icon.sent   { color: var(--pw-text-hint); }
 
 .noti-info {
   display: flex;
