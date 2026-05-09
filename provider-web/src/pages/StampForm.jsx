@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, Minus, Plus, X } from 'lucide-react';
 import StampService from '../services/stamp/StampService';
+import { findMockStamp } from '../services/stamp/mockStamps';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
@@ -65,24 +66,22 @@ const StampForm = () => {
     });
   };
 
-  // Mock initial load for edit
+  // 상세/수정 진입 시 데이터 로드.
+  // 백엔드 미연동 환경 — mock 사용. 연동 후 StampService.list() / get(id) 로 교체.
   useEffect(() => {
     const loadStampData = async () => {
       if (action === 'edit' || action === 'view') {
         if (id) {
-          try {
-            const stamp = await StampService.getStampById(id);
-            const [accumStart, accumEnd] = stamp.period.split(' - ');
+          const stamp = findMockStamp(id);
+          if (stamp) {
             setFormData({
               name: stamp.name,
-              accumStart: accumStart || getTodayStr(),
-              accumEnd: accumEnd || '9999-12-31',
-              paymentAmount: 5000,
-              benefits: [
-                { id: 1, count: '10회차', desc: stamp.benefit }
-              ]
+              accumStart: stamp.accumStart,
+              accumEnd: stamp.accumEnd,
+              paymentAmount: stamp.paymentAmount,
+              benefits: stamp.benefits || [{ id: 1, count: '10회차', desc: '' }],
             });
-          } catch (error) {
+          } else {
             showAlert('스탬프 정보를 불러오지 못했습니다.', () => navigate('/dashboard/stamps'));
           }
         }

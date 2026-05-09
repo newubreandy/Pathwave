@@ -1,50 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
-import { Stamp, Plus, ChevronRight, MoreVertical } from 'lucide-react';
+import { Stamp, Plus, ChevronRight } from 'lucide-react';
 import StampService from '../services/stamp/StampService';
+import { MOCK_STAMPS } from '../services/stamp/mockStamps';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import './Stamps.css';
-
-/**
- * 스탬프 mock 데이터 — 백엔드 API 미연동 시 화면 검증용.
- * TODO: StampService.list() 실제 백엔드 연결 후 제거.
- */
-const MOCK_STAMPS = [
-  {
-    id: 1, name: '호텔H 숙박 스탬프 이벤트',
-    status: 'active',
-    period: '2026.05.01 ~ 2026.07.31',
-    targetCount: 10,
-    benefit: '10회 적립 시 1박 무료 숙박권',
-    minAmount: 50000,
-  },
-  {
-    id: 2, name: '카페 아메리카노 적립',
-    status: 'active',
-    period: '2026.04.01 ~ 2026.12.31',
-    targetCount: 8,
-    benefit: '8잔 적립 시 아메리카노 1잔 무료',
-    minAmount: 4500,
-  },
-  {
-    id: 3, name: '런치 스페셜 스탬프',
-    status: 'paused',
-    period: '2026.03.01 ~ 2026.06.30',
-    targetCount: 5,
-    benefit: '5회 적립 시 다음 식사 30% 할인',
-    minAmount: 12000,
-  },
-  {
-    id: 4, name: '봄맞이 첫 방문 스탬프',
-    status: 'ended',
-    period: '2026.01.15 ~ 2026.02.28',
-    targetCount: 3,
-    benefit: '첫 방문 후 3회 적립 시 디저트 무료',
-    minAmount: 0,
-  },
-];
 
 const Stamps = () => {
   const { t } = useTranslation();
@@ -164,46 +126,24 @@ const Stamps = () => {
           </div>
         ) : stampList.length > 0 ? (
           stampList.map((stamp) => (
+            // 사용자 요구 (2026-05-10): MoreVertical 메뉴 제거 + 상태 배지를 제목 우측으로.
+            // 정지/삭제 액션은 상세보기 페이지에서. 사용기간은 유지.
             <Link to={`/dashboard/stamps/view/${stamp.id}`} key={stamp.id} className="stamp-card">
               <div className={`stamp-icon ${stamp.status}`}>
                 <Stamp size={24} />
               </div>
               <div className="stamp-info">
-                <h3 className="stamp-name">{stamp.name}</h3>
-                <div className={`stamp-status ${stamp.status}`}>
-                  {stamp.status === 'active' ? t('stamp.status_active', '스탬프 적립 중') : (stamp.status === 'paused' ? '스탬프 일시정지' : t('stamp.status_ended', '스탬프 적립 종료'))}
+                <div className="stamp-info-head">
+                  <h3 className="stamp-name">{stamp.name}</h3>
+                  <span className={`stamp-status ${stamp.status}`}>
+                    {stamp.status === 'active' ? t('stamp.status_active', '스탬프 적립 중') : (stamp.status === 'paused' ? '스탬프 일시정지' : t('stamp.status_ended', '스탬프 적립 종료'))}
+                  </span>
                 </div>
                 <div className="stamp-details">
                   <div>{t('stamp.label_period', '사용기간')} : {stamp.period}</div>
                 </div>
               </div>
               <ChevronRight className="stamp-arrow" size={20} />
-              
-              <button 
-                className="stamp-menu-btn"
-                onClick={(e) => handleMenuClick(e, stamp.id)}
-              >
-                <MoreVertical size={18} />
-              </button>
-
-              {activeMenuId === stamp.id && (
-                <div className="stamp-context-menu">
-                  {stamp.status !== 'ended' && (
-                    <button 
-                      className="context-menu-item"
-                      onClick={(e) => handlePauseToggle(e, stamp)} 
-                    >
-                      {stamp.status === 'active' ? '정지하기' : '활성화하기'}
-                    </button>
-                  )}
-                  <button 
-                    className="context-menu-item danger"
-                    onClick={(e) => handleDelete(e, stamp.id)} 
-                  >
-                    삭제하기
-                  </button>
-                </div>
-              )}
             </Link>
           ))
         ) : (

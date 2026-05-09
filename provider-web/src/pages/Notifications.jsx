@@ -38,8 +38,12 @@ const Notifications = () => {
   };
 
   useEffect(() => {
-    // 푸시 권한 초기 요청 (PushService 연동)
-    PushService.requestPermission();
+    // 푸시 권한 초기 요청 — 브라우저 Notification API 사용 (PushService 는 토큰 등록만 담당).
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().catch(() => {/* user denied or unavailable */});
+      }
+    }
   }, [view]);
 
   // Mock Data

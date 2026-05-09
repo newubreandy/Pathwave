@@ -75,14 +75,21 @@
   border-radius: var(--pw-radius-sm);
 }
 
+/* 쿠폰 안내 readonly 박스 — 매장안내 .display-text 톤 (22/300/흰색).
+   사용자 요구 (2026-05-10): "쿠폰안내 폰트도 안맞아". */
 .coupon-message-box {
   width: 100%;
-  font-size: var(--pw-body-size);
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
   color: var(--pw-text);
-  line-height: var(--pw-body-leading);
+  line-height: 1.55;
   white-space: pre-wrap;
   border-bottom: 1px solid var(--pw-border);
-  padding-bottom: var(--pw-space-2);
+  padding-bottom: var(--pw-space-3);
+}
+@media (max-width: 480px) {
+  .coupon-message-box { font-size: 20px; }
 }
 
 .coupon-counter-row {
