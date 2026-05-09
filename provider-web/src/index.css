@@ -251,6 +251,72 @@ input, textarea, select, button {
   .info-stack { gap: var(--pw-space-10); /* 40px */ }
 }
 
+/* ═══════════════════════════════════════════════════
+   pw-toggle — 공통 토글 스위치 (사용자 요구 2026-05-10)
+   모든 페이지의 토글이 동일한 모양 + ON/OFF 텍스트 + accent 색.
+   사용:
+     <button class="pw-toggle is-on">
+       <span class="pw-toggle-text">ON</span>
+       <span class="pw-toggle-thumb" />
+     </button>
+   ═══════════════════════════════════════════════════ */
+
+.pw-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 64px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--pw-surface-3);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color var(--pw-duration-normal) var(--pw-ease);
+  font-family: inherit;
+}
+.pw-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pw-toggle.is-on {
+  background: var(--pw-accent);
+}
+
+.pw-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: transform var(--pw-duration-normal) var(--pw-ease);
+}
+.pw-toggle.is-on .pw-toggle-thumb {
+  transform: translateX(32px);
+}
+
+.pw-toggle-text {
+  position: absolute;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.85);
+  /* OFF 텍스트 — 우측 (썸이 좌측에 있으므로) */
+  right: 9px;
+  transition:
+    right var(--pw-duration-normal) var(--pw-ease),
+    left var(--pw-duration-normal) var(--pw-ease);
+}
+.pw-toggle.is-on .pw-toggle-text {
+  /* ON — 좌측 (썸이 우측으로 이동) */
+  right: auto;
+  left: 9px;
+}
+
 /* ── Card (글로벌 baseline) ──
    GlassCard 컴포넌트가 등장한 뒤로는 신규 UI 에서 .card 직접 사용 비권장.
    기존 페이지 호환을 위해 유지. ── */

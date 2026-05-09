@@ -357,44 +357,36 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
           <div className="payment-email-note">※ 결제 및 공지 안내 메일 입니다.</div>
         </div>
 
-        {/* 서비스 이용 내역 */}
-        {services.map(service => (
-          <div key={service.id} className="payment-service-section">
-            <div className="payment-service-header">
-              <span className="payment-service-title">{service.name}{service.items.length > 0 ? ' 이용내역' : ''}</span>
-              <ChevronRight size={20} color="var(--pw-text-hint)" />
-            </div>
-            <div className="payment-service-summary">
-              <span className="payment-service-name">{service.label}</span>
-              <span className="payment-service-count">
-                {service.items.length > 0 ? `${service.items.reduce((s, i) => s + i.quantity, 0)}개 이용중` : '0개 이용중'}
-              </span>
-            </div>
-            {service.items.map(item => (
-              <div key={item.id} className="payment-service-detail">
-                <div className="payment-detail-row">
-                  <span className="payment-detail-label">수량</span>
-                  <div><span className="payment-detail-value">{item.quantity}개</span><span className="payment-detail-date"> {item.appliedAt}</span></div>
-                </div>
-                <div className="payment-detail-row">
-                  <span className="payment-detail-label">결제금액</span>
-                  <div>
-                    <div className="payment-detail-value">{item.price} <span className="payment-detail-sub">({item.priceNote})</span></div>
-                    <div className="payment-detail-sub">{item.billingNote}</div>
-                  </div>
-                </div>
-                <div className="payment-detail-row">
-                  <span className="payment-detail-label">약정기간</span>
-                  <span className="payment-detail-value">{item.period}</span>
-                </div>
-                <div className="payment-service-actions">
-                  <Button variant="outline" size="medium" fullWidth onClick={handleTerminate}>서비스종료</Button>
-                  <Button variant="primary" size="medium" fullWidth onClick={handleExtend}>서비스 연장</Button>
-                </div>
+        {/* 서비스 이용 내역 — 서비스 / 사용량만. 터치 시 해당 서비스 리스트로 이동.
+            사용자 요구 (2026-05-10): 매월 12일 결제 / 신청일 / 약정기간 등 상세 제거 —
+            세부 결제 정보는 카드 결제 단계에서 처리. 결제관리는 "어떤 서비스를 몇개" 만. */}
+        {services.map((service) => {
+          const totalQty = service.items.reduce((s, i) => s + i.quantity, 0);
+          const targetRoute =
+            service.id === 'wifi'  ? '/dashboard/wifi'
+            : service.id === 'event' ? '/dashboard/coupons'
+            : service.id === 'push'  ? '/dashboard/notifications'
+            : null;
+          return (
+            <button
+              key={service.id}
+              type="button"
+              className="payment-service-section payment-service-section--clickable"
+              onClick={() => targetRoute && navigate(targetRoute)}
+            >
+              <div className="payment-service-header">
+                <span className="payment-service-title">{service.name}</span>
+                <ChevronRight size={20} color="var(--pw-text-hint)" />
               </div>
-            ))}
-          </div>
-        ))}
+              <div className="payment-service-summary">
+                <span className="payment-service-name">{service.label}</span>
+                <span className="payment-service-count">
+                  {totalQty > 0 ? `${totalQty}개 이용중` : '0개 이용중'}
+                </span>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       {/* 서비스 신청 CTA */}

@@ -939,13 +939,14 @@ const WifiSettings = () => {
               <div className="wifi-name-toggle">
                 <span className="wifi-name-toggle-label">사용</span>
                 <button
-                  className={`wifi-toggle ${selectedProfile.enabled ? 'on' : 'off'}`}
+                  className={`pw-toggle ${selectedProfile.enabled ? 'is-on' : ''}`}
                   onClick={() => toggleEnabled(selectedProfile.id)}
                   role="switch"
                   aria-checked={selectedProfile.enabled}
                   title={selectedProfile.enabled ? '서비스 ON — 클릭 시 OFF' : '서비스 OFF — 클릭 시 ON'}
                 >
-                  <span className="wifi-toggle-thumb" />
+                  <span className="pw-toggle-text">{selectedProfile.enabled ? 'ON' : 'OFF'}</span>
+                  <span className="pw-toggle-thumb" />
                 </button>
               </div>
             )}

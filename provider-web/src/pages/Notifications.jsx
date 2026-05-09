@@ -369,7 +369,7 @@ const Notifications = () => {
                 <div className="toggle-row" style={{ marginBottom: 0 }}>
                   <label className="toggle-switch">
                     <input type="checkbox" checked={formData.pushLocal} onChange={e => handlePushToggle('pushLocal', e.target.checked)} disabled={isReadOnly} />
-                    <span className="toggle-slider" style={{ backgroundColor: formData.pushLocal ? 'var(--primary)' : '#64748B', opacity: isReadOnly ? 0.6 : 1 }}><span className="toggle-text">{formData.pushLocal ? 'ON' : 'OFF'}</span></span>
+                    <span className="toggle-slider" style={{ backgroundColor: formData.pushLocal ? 'var(--pw-accent)' : '#64748B', opacity: isReadOnly ? 0.6 : 1 }}><span className="toggle-text">{formData.pushLocal ? 'ON' : 'OFF'}</span></span>
                   </label>
                   <span className="toggle-label">{t('noti.label_push_local')}</span>
                 </div>
@@ -379,7 +379,7 @@ const Notifications = () => {
                 <div className="toggle-row" style={{ marginBottom: 0 }}>
                   <label className="toggle-switch">
                     <input type="checkbox" checked={formData.pushGlobal} onChange={e => handlePushToggle('pushGlobal', e.target.checked)} disabled={isReadOnly} />
-                    <span className="toggle-slider" style={{ backgroundColor: formData.pushGlobal ? 'var(--primary)' : '#64748B', opacity: isReadOnly ? 0.6 : 1 }}>
+                    <span className="toggle-slider" style={{ backgroundColor: formData.pushGlobal ? 'var(--pw-accent)' : '#64748B', opacity: isReadOnly ? 0.6 : 1 }}>
                       <span className="toggle-text">{formData.pushGlobal ? 'ON' : 'OFF'}</span>
                     </span>
                   </label>
@@ -553,7 +553,7 @@ const Notifications = () => {
                 </p>
               ) : (
                 <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
-                  현재 발송 가능한 알림은 <strong style={{ color: 'var(--primary)' }}>{stats.available.toLocaleString()}</strong>개 입니다.
+                  현재 발송 가능한 알림은 <strong style={{ color: 'var(--pw-accent)' }}>{stats.available.toLocaleString()}</strong>개 입니다.
                 </p>
               )}
             </div>
