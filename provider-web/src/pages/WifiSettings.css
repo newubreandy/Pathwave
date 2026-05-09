@@ -1525,8 +1525,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--pw-space-2);
+  gap: var(--pw-space-3);
   min-width: 0;
+}
+/* StageProgress 가 inset head 우측에 위치할 때 — 살짝 padding 으로 시각 분리. */
+.wifi-inset-head .pw-stages {
+  flex-shrink: 0;
+  padding-right: 2px;
 }
 
 .wifi-inset-title {
@@ -1593,5 +1598,48 @@
 
 @media (max-width: 480px) {
   .wifi-inset-title { font-size: 14px; }
+}
+
+/* ═══════════════════════════════════════════════════
+   운영중 — 디바이스 상태 별 카드 강조 (사용자 요구 2026-05-09)
+   - offline (연결 끊김) : 빨간색 강조 + 카드 dim
+   - low (배터리 부족) : warning 색조
+   - disabled (중단) : 전체 dim
+   ═══════════════════════════════════════════════════ */
+
+.wifi-card--offline {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+.wifi-card--offline .wifi-card-title {
+  color: var(--pw-text);
+}
+.wifi-card--offline .wifi-card-device-label {
+  color: #FCA5A5;
+  font-weight: 700;
+}
+.wifi-card--offline .wifi-card-pills,
+.wifi-card--offline .wifi-card-detail {
+  opacity: 0.65; /* 다른 정보는 약간 dim — ‘이 와이파이는 작동 안 한다’ 신호 */
+}
+/* offline 아바타 — 더 진한 빨강 + 강한 border */
+.wifi-card--offline .pw-avatar {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(239, 68, 68, 0.55);
+  color: #FCA5A5;
+}
+
+/* low (배터리 부족) — 경미한 warning tint */
+.wifi-card--low .wifi-card-device-label {
+  color: #FBBF24;
+  font-weight: 600;
+}
+
+/* disabled (사용자가 중단 토글) — 전체 dim */
+.wifi-card--disabled .wifi-card-row {
+  opacity: 0.55;
+}
+.wifi-card--disabled .wifi-card-detail {
+  opacity: 0.55;
 }
 

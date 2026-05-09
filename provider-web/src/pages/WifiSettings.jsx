@@ -22,6 +22,8 @@ import MiniInfoPill from '../components/common/MiniInfoPill';
 import StatusMessage from '../components/common/StatusMessage';
 import MetricStrip from '../components/common/MetricStrip';
 import CardAvatar from '../components/common/CardAvatar';
+import StageProgress from '../components/common/StageProgress';
+import { getStageNumber } from '../components/common/stageMapping';
 import { SkeletonCard } from '../components/common/Skeleton';
 import './WifiSettings.css';
 
@@ -166,8 +168,9 @@ const WifiSettings = () => {
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState(MOCK_PROFILES);
   const [view, setView] = useState('list'); // 'list' | 'search' | 'detail' | 'add'
-  // 리스트 탭 — 사용자 요구: 3개 탭 구조 (신청 진행중 / 운영중 / 점검·해지)
-  const [activeTab, setActiveTab] = useState('inProgress'); // 'inProgress' | 'live' | 'maintenance'
+  // 리스트 탭 — 2개 탭 구조 (신청 진행중 / 운영중).
+  // 일시중지·해지 항목은 운영중 탭 최하단에 합쳐서 노출 (해지일 순).
+  const [activeTab, setActiveTab] = useState('inProgress'); // 'inProgress' | 'live'
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedChips, setSelectedChips] = useState(new Set());
@@ -512,38 +515,50 @@ const WifiSettings = () => {
   // ═════════════════════════════════════
   if (view === 'list') {
     const inProgressCount  = (profilesBySection.inProgress || []).length;
-    const liveCount        = (profilesBySection.live || []).length;
-    const maintenanceCount = (profilesBySection.paused || []).length + (profilesBySection.terminated || []).length;
+    const liveActiveCount  = (profilesBySection.live || []).length;
+    const pausedCount      = (profilesBySection.paused || []).length;
+    const terminatedCount  = (profilesBySection.terminated || []).length;
+    // 운영중 탭은 active + paused + terminated 모두 포함 (점검·해지는 별도 탭 없음).
+    const liveCount = liveActiveCount + pausedCount + terminatedCount;
 
     const tabDefs = [
       { key: 'inProgress',  label: '신청 진행중', count: inProgressCount },
       { key: 'live',        label: '운영중',     count: liveCount },
-      { key: 'maintenance', label: '점검·해지',  count: maintenanceCount },
     ];
 
-    // 메트릭은 항상 동일한 3개 — 정보판 톤. tone 은 0이 아니면 accent.
+    // 상단 메트릭 — 진행 / 운영 / 점검·해지 (정보판 용도, 탭과 별개로 carry).
+    const maintenanceCount = pausedCount + terminatedCount;
     const metricItems = [
       { label: '진행', value: inProgressCount,  unit: '건', tone: inProgressCount  > 0 ? 'accent'  : 'default' },
-      { label: '운영', value: liveCount,        unit: '건', tone: liveCount        > 0 ? 'success' : 'default' },
+      { label: '운영', value: liveActiveCount,  unit: '건', tone: liveActiveCount  > 0 ? 'success' : 'default' },
       { label: '점검·해지', value: maintenanceCount, unit: '건', tone: maintenanceCount > 0 ? 'warning' : 'default' },
     ];
 
-    // 활성 탭에 보여줄 섹션 키
-    const visibleSections =
-      activeTab === 'inProgress' ? ['inProgress']
-      : activeTab === 'live'      ? ['live']
-      :                             ['paused', 'terminated']; /* maintenance */
+    // 운영중 탭 — 일시중지/해지 정렬:
+    //   active (운영중) → paused (일시중지) → terminated (해지일 desc)
+    const sortedTerminated = (profilesBySection.terminated || [])
+      .slice()
+      .sort((a, b) => {
+        // statusUpdatedAt 또는 paidAt 기준. ISO 또는 'YYYY.MM.DD HH:mm' 문자열 desc 정렬.
+        const ka = a.statusUpdatedAt || a.paidAt || '';
+        const kb = b.statusUpdatedAt || b.paidAt || '';
+        return kb.localeCompare(ka);
+      });
 
-    const totalCount = visibleSections.reduce(
-      (acc, k) => acc + ((profilesBySection[k] || []).length), 0
-    );
+    // 활성 탭에 보여줄 섹션 키 (운영중은 3개 합쳐서 렌더)
+    const totalCount =
+      activeTab === 'inProgress'
+        ? inProgressCount
+        : liveCount;
 
     // ── 그룹 컨테이너 안 inset row 렌더 — RePlan 스타일 ──
-    // 단독 카드(GlassCard)보다 가벼운 row. 메시지/송장은 row 안 별도 strip 으로.
+    // 사용자 요구 (2026-05-09): 하단 상태 메시지 제거 + 우측에 4단계 스테퍼 플래그.
+    // 슈퍼어드민 (admin-web) 에서는 statusMessage 도 노출 — 이 페이지는 사장님 콘솔.
     const renderWifiInsetRow = (p) => {
       const a = getAvatarForStatus(p.applicationStatus);
       const AvatarIcon = a.icon;
       const hasShipping = !!p.shippingTrackingNo;
+      const stage = getStageNumber(p.applicationStatus);
       return (
         <GroupCardItem key={p.id} onClick={() => openDetail(p)}>
           <CardAvatar variant="accent" size="md">
@@ -552,7 +567,8 @@ const WifiSettings = () => {
           <div className="wifi-inset-body">
             <div className="wifi-inset-head">
               <span className="wifi-inset-title">{p.name}</span>
-              <StatusBadge status={p.applicationStatus} size="sm" mode="provider" />
+              {/* 우측 플래그 — 4단계 스테퍼 (StatusBadge 대체). 텍스트 라벨은 stepper aria 에. */}
+              {stage > 0 && <StageProgress stage={stage} size="sm" />}
             </div>
             <div className="pw-pill-row wifi-inset-pills">
               {p.ssid && <MiniInfoPill label="SSID" mono>{p.ssid}</MiniInfoPill>}
@@ -566,9 +582,8 @@ const WifiSettings = () => {
                 </span>
               </div>
             )}
-            {p.statusMessage && (
-              <p className="wifi-inset-msg">{p.statusMessage}</p>
-            )}
+            {/* statusMessage 제거 — 사장님 콘솔에서는 stepper 만으로 충분.
+                슈퍼어드민에서 같은 컴포넌트 재사용 시 prop 으로 분기 예정. */}
           </div>
           <ChevronRight size={16} className="wifi-inset-chevron" aria-hidden="true" />
         </GroupCardItem>
@@ -613,13 +628,24 @@ const WifiSettings = () => {
         avatarVariant = 'neutral';
       }
 
+      // 운영중 — 디바이스 오프라인 상태 강조 (빨간색 + 카드 딤)
+      const isOffline = section === 'live' && p.enabled && p.deviceStatus === 'offline';
+      const isLowBattery = section === 'live' && p.enabled && p.deviceStatus === 'low';
+      const isDisabled = section === 'live' && !p.enabled;
+
       return (
         <GlassCard
           key={p.id}
           variant={variant}
           uniformHeight
           onClick={() => openDetail(p)}
-          className={`wifi-card wifi-card--${section}`}
+          className={[
+            'wifi-card',
+            `wifi-card--${section}`,
+            isOffline ? 'wifi-card--offline' : '',
+            isLowBattery ? 'wifi-card--low' : '',
+            isDisabled ? 'wifi-card--disabled' : '',
+          ].filter(Boolean).join(' ')}
         >
           {/* 카드 본문 — 좌측 아바타 + 우측 콘텐츠 row */}
           <div className="wifi-card-row">
@@ -630,7 +656,14 @@ const WifiSettings = () => {
             <div className="wifi-card-body">
               <div className="wifi-card-head">
                 <span className="wifi-card-title">{p.name}</span>
-                <StatusBadge status={p.applicationStatus} size="sm" mode="provider" />
+                {/* inProgress 단건 카드는 우측 플래그 = StageProgress (4단계).
+                    운영중 / 일시중지 / 해지 는 텍스트 라벨 (StatusBadge) 유지. */}
+                {section === 'inProgress'
+                  ? (() => {
+                      const stage = getStageNumber(p.applicationStatus);
+                      return stage > 0 ? <StageProgress stage={stage} size="sm" /> : null;
+                    })()
+                  : <StatusBadge status={p.applicationStatus} size="sm" mode="provider" />}
               </div>
 
               {/* MiniInfoPill 최대 2~3개 */}
@@ -668,8 +701,9 @@ const WifiSettings = () => {
             </div>
           </div>
 
-          {/* 상태 메시지 — 카드 footer 위. 2줄 clamp. */}
-          {p.statusMessage && (
+          {/* 상태 메시지 — 사장님 콘솔에서는 inProgress 에서 비노출 (우측 stepper 로 대체).
+              운영중 / 일시중지 / 해지 는 메시지 노출 — 일시중지 사유 등 운영 안내 필요. */}
+          {p.statusMessage && section !== 'inProgress' && (
             <StatusMessage tone={msgTone}>{p.statusMessage}</StatusMessage>
           )}
 
@@ -766,9 +800,6 @@ const WifiSettings = () => {
               {activeTab === 'live'       && (inlineQuery
                 ? `‘${inlineQuery}’ 와 일치하는 운영 항목이 없습니다.`
                 : '운영 중인 서비스가 없습니다.\n신청 절차가 끝나면 이곳에 표시됩니다.')}
-              {activeTab === 'maintenance'&& (inlineQuery
-                ? `‘${inlineQuery}’ 와 일치하는 항목이 없습니다.`
-                : '일시중지 또는 해지된 서비스가 없습니다.')}
             </p>
           </div>
         )}
@@ -812,22 +843,18 @@ const WifiSettings = () => {
           );
         })()}
 
-        {/* ── 운영중 탭 — 가장 조용한 톤. compact 카드. swipe 없음. ── */}
+        {/* ── 운영중 탭 — active(서비스중) + paused(일시중지) + terminated(해지일 desc).
+              사용자 요구 (2026-05-09): 점검·해지를 별도 탭 분리하지 않고,
+              운영중 탭 최하단에 일시중지 → 해지(일자순)으로 노출. ── */}
         {!isLoading && activeTab === 'live' && totalCount > 0 && (
           <div className="wifi-list wifi-list--live">
             {(profilesBySection.live || []).map((p) =>
               renderWifiCard(p, { variant: 'compact', section: 'live' })
             )}
-          </div>
-        )}
-
-        {/* ── 점검·해지 탭 — 일시중지(warning) + 해지(default) ── */}
-        {!isLoading && activeTab === 'maintenance' && totalCount > 0 && (
-          <div className="wifi-list wifi-list--maintenance">
             {(profilesBySection.paused || []).map((p) =>
               renderWifiCard(p, { variant: 'warning', section: 'paused' })
             )}
-            {(profilesBySection.terminated || []).map((p) =>
+            {sortedTerminated.map((p) =>
               renderWifiCard(p, { variant: 'default', section: 'terminated' })
             )}
           </div>
