@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Plus, X, Mail, MoreVertical, Shield, UserCheck, Clock, AlertTriangle } from 'lucide-react';
 import StaffService, { ROLES, ROLE_LABELS, STATUS, STATUS_LABELS, validateEmail } from '../services/staff/StaffService';
+import { MOCK_STAFF } from '../services/staff/mockStaff';
 import ConfirmModal from '../components/common/ConfirmModal';
 import PasswordInput from '../components/common/PasswordInput';
 import './StaffManagement.css';
@@ -446,12 +447,14 @@ const StaffManagement = () => {
   const [confirmModal, setConfirmModal] = useState(null);
 
   const loadStaff = useCallback(async () => {
+    // 백엔드 미연동 환경 — mock 사용. 연동 후 StaffService.list() 로 교체.
     setIsLoading(true);
     try {
-      const list = await StaffService.getStaffList('store_1');
-      setStaffList(list);
+      await new Promise((r) => setTimeout(r, 200));
+      setStaffList(MOCK_STAFF);
     } catch (err) {
       console.error('Failed to load staff', err);
+      setStaffList(MOCK_STAFF); // fallback
     } finally {
       setIsLoading(false);
     }

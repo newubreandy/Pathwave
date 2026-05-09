@@ -90,16 +90,32 @@
   min-width: 0;
 }
 
+/* 회원정보 / 직원관리 — 매장안내 톤 정렬 (사용자 요구 2026-05-10).
+   라벨 14/600/hint, 값 22/300/흰색. */
 .settings-row-label {
-  font-size: var(--pw-label-size);
+  font-size: 14px;
   font-weight: 600;
-  color: var(--pw-text);
+  color: var(--pw-text-hint);
+  letter-spacing: 0;
 }
 
 .settings-row-desc {
-  font-size: var(--pw-caption-size);
-  color: var(--pw-text-hint);
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
+  color: var(--pw-text);
   line-height: 1.4;
+}
+
+@media (max-width: 480px) {
+  .settings-row-desc { font-size: 20px; }
+}
+
+/* profile-section-title 은 섹션 헤더 (회사정보 / 계정정보 등) — display 톤 유지. */
+.settings-row-label.profile-section-title {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: var(--pw-text) !important;
 }
 
 .settings-row-arrow {

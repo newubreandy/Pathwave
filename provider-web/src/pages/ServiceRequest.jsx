@@ -479,24 +479,8 @@ const ServiceRequest = () => {
         </header>
 
         <div className="sr-body">
-          {/* 카테고리 dropdown */}
-          <div className="sr-cat-select" onClick={() => setShowCategoryDropdown((v) => !v)}>
-            <span className="sr-cat-select-title">{selectedCategory?.title}</span>
-            <ChevronDown size={18} className={`sr-cat-select-arrow ${showCategoryDropdown ? 'open' : ''}`} />
-          </div>
-          {showCategoryDropdown && (
-            <div className="sr-cat-dropdown">
-              {SERVICE_CATEGORIES.map((c) => (
-                <button
-                  key={c.key}
-                  className={`sr-cat-dropdown-item ${categoryKey === c.key ? 'active' : ''}`}
-                  onClick={() => { setCategoryKey(c.key); setStep(c.key); setShowCategoryDropdown(false); }}
-                >
-                  {c.title}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* 카테고리 헤더 — 1:1 매핑이므로 dropdown 으로 변경 X.
+              사용자 요구 (2026-05-10): "아코디언에서 서비스 변경하면서 신청하게 안해도 됨". */}
 
           {/* Quantity stepper + 확인 */}
           <div className="sr-qty-row">
@@ -878,23 +862,7 @@ const ServiceRequest = () => {
         </header>
 
         <div className="sr-body">
-          <div className="sr-cat-select" onClick={() => setShowCategoryDropdown((v) => !v)}>
-            <span className="sr-cat-select-title">{cat?.title}</span>
-            <ChevronDown size={18} className={`sr-cat-select-arrow ${showCategoryDropdown ? 'open' : ''}`} />
-          </div>
-          {showCategoryDropdown && (
-            <div className="sr-cat-dropdown">
-              {SERVICE_CATEGORIES.map((c) => (
-                <button
-                  key={c.key}
-                  className={`sr-cat-dropdown-item ${categoryKey === c.key ? 'active' : ''}`}
-                  onClick={() => { setCategoryKey(c.key); setStep(c.key); setShowCategoryDropdown(false); }}
-                >
-                  {c.title}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* 카테고리 dropdown 제거 (2026-05-10): 1:1 매핑 — 진입 시 해당 서비스만 노출. */}
 
           <ul className="sr-notices">
             {cat?.bullets.map((b, i) => <li key={i}>{b}</li>)}
