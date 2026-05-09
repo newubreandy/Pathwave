@@ -1,0 +1,76 @@
+/* ═══════════════════════════════════════════════════
+   CardAvatar — 카드 좌측 상태 아이콘 박스
+   배경 + 1px border + 아이콘 색만 — glow 사용 X (운영툴 톤).
+   ═══════════════════════════════════════════════════ */
+
+.pw-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--pw-radius-md);
+  border: 1px solid transparent;
+  transition:
+    transform var(--pw-duration-fast) var(--pw-ease),
+    background-color var(--pw-duration-fast) var(--pw-ease),
+    border-color var(--pw-duration-fast) var(--pw-ease);
+}
+
+/* 사이즈 — 디자인 가이드 spacing 시스템 (4 / 8 / 12 / 16 / 24 / 32) 정렬 */
+.pw-avatar--sm { width: 32px; height: 32px; border-radius: 10px; }
+.pw-avatar--md { width: 40px; height: 40px; border-radius: 12px; }
+.pw-avatar--lg { width: 48px; height: 48px; border-radius: 14px; }
+
+/* 아이콘 크기 — children 으로 받은 lucide 아이콘에 동일 적용. */
+.pw-avatar--sm > svg { width: 16px; height: 16px; }
+.pw-avatar--md > svg { width: 20px; height: 20px; }
+.pw-avatar--lg > svg { width: 22px; height: 22px; }
+
+/* 호버 시 부모 카드(.pw-card) 가 hover 일 때 아바타도 미세 반응. */
+.pw-card--interactive:hover .pw-avatar { transform: scale(1.04); }
+
+/* ── variant 색조 ──────────────────────────────────
+   각 variant = 배경 (10% tint) + border (18% tint) + icon color.
+   배지/카드 좌측 라인과 같은 톤으로 통일. */
+
+.pw-avatar--accent {
+  background: var(--pw-accent-soft);
+  border-color: var(--pw-accent-strong);
+  color: var(--pw-accent-text);
+}
+
+.pw-avatar--info {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.10);
+  color: var(--pw-text-secondary);
+}
+
+.pw-avatar--success {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.28);
+  color: #86EFAC;
+}
+
+.pw-avatar--warning {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.28);
+  color: #FBBF24;
+}
+
+.pw-avatar--danger {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.28);
+  color: #FCA5A5;
+}
+
+.pw-avatar--neutral {
+  background: var(--pw-surface-2);
+  border-color: var(--pw-surface-line);
+  color: var(--pw-text-hint);
+}
+
+/* 디바이스 상태 (운영중) — dot 방식이 아닌 아바타 색으로 즉시 인식. */
+.pw-avatar--device-ok       { background: rgba(34, 197, 94, 0.10);  border-color: rgba(34, 197, 94, 0.28);  color: #86EFAC; }
+.pw-avatar--device-low      { background: rgba(245, 158, 11, 0.10); border-color: rgba(245, 158, 11, 0.28); color: #FBBF24; }
+.pw-avatar--device-offline  { background: rgba(239, 68, 68, 0.10);  border-color: rgba(239, 68, 68, 0.28);  color: #FCA5A5; }
+.pw-avatar--device-off      { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.08); color: var(--pw-text-hint); }

@@ -1,23 +1,42 @@
 /* ═══════════════════════════════════════════════════
    GroupCard — 다건 신청 묶음
-   헤더는 단순. 자식 카드는 좌측 들여쓰기로 묶음 표시.
+   헤더 = 클립보드 아이콘 + 신청번호 + 결제완료 pill + subtitle
+   자식 카드 = 좌측 들여쓰기 + 묶음 line
    ═══════════════════════════════════════════════════ */
 
 .pw-group {
   display: flex;
   flex-direction: column;
-  gap: var(--pw-space-2);
-  /* 그룹 자체에는 카드/배경 없음. 자식 카드들이 묶임만 표현. */
+  gap: var(--pw-space-3);
 }
 
 .pw-group-header {
+  /* 헤더는 child 카드보다 시각 무게 ↑.
+     surface-1 보다 살짝 진한 surface-2 + accent border-bottom. */
+  background: var(--pw-surface-2);
+  border: 1px solid var(--pw-surface-line);
+  border-radius: var(--pw-radius-md);
+  padding: var(--pw-space-3) var(--pw-space-4);
+}
+
+.pw-group-head-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--pw-space-3);
-  padding: var(--pw-space-2) var(--pw-space-3);
-  border-bottom: 1px solid var(--pw-surface-line);
-  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.pw-group-leading {
+  flex: 0 0 auto;
+  display: inline-flex;
+}
+
+.pw-group-head-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .pw-group-meta {
@@ -29,28 +48,56 @@
 
 .pw-group-id {
   font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--pw-text-secondary);
-  letter-spacing: 0.02em;
-}
-
-.pw-group-dot {
-  color: var(--pw-text-hint);
-  font-size: 12px;
-}
-
-.pw-group-total {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--pw-text);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+.pw-group-paid {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--pw-radius-full);
+  background: var(--pw-accent-soft);
+  color: var(--pw-accent-text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.pw-group-paid::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.8;
+}
+
+.pw-group-subtitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--pw-text-hint);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── 진행률 chip (오른쪽) ──────────────────────── */
 .pw-group-summary {
   display: inline-flex;
   align-items: center;
   gap: var(--pw-space-1);
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .pw-group-chip {
@@ -62,7 +109,7 @@
   border-radius: var(--pw-radius-full);
   font-size: 11px;
   font-weight: 600;
-  background: var(--pw-surface-2);
+  background: var(--pw-surface-3);
   color: var(--pw-text-secondary);
 }
 .pw-group-chip strong {
@@ -76,37 +123,44 @@
 .pw-group-chip--accent strong { color: var(--pw-accent-text); }
 
 .pw-group-chip--warning {
-  background: rgba(245, 158, 11, 0.10);
+  background: rgba(245, 158, 11, 0.12);
   color: #FBBF24;
 }
 .pw-group-chip--warning strong { color: #FBBF24; }
 
-/* ── Children — 좌측 들여쓰기 + 묶음 표시 라인 ────── */
+/* ── 자식 카드 ──────────────────────────────────
+   좌측 들여쓰기 + 묶음 line. */
 .pw-group-children {
   display: flex;
   flex-direction: column;
   gap: var(--pw-space-2);
-  padding-left: var(--pw-space-3);
+  padding-left: var(--pw-space-4);
   position: relative;
 }
 .pw-group-children::before {
   content: '';
   position: absolute;
-  left: 0;
+  left: 16px;
   top: 4px;
   bottom: 4px;
   width: 1px;
   background: var(--pw-surface-line);
 }
 
-/* ── 모바일 ────────────────────────────────────────── */
+/* ── 모바일 ────────────────────────────────────── */
 @media (max-width: 480px) {
-  .pw-group-header {
-    flex-direction: column;
-    align-items: flex-start;
+  .pw-group-head-row {
+    flex-wrap: wrap;
     gap: var(--pw-space-2);
   }
+  .pw-group-summary {
+    width: 100%;
+    margin-top: 4px;
+  }
   .pw-group-children {
-    padding-left: var(--pw-space-2);
+    padding-left: var(--pw-space-3);
+  }
+  .pw-group-children::before {
+    left: 12px;
   }
 }

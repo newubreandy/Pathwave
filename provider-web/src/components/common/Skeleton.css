@@ -1,0 +1,92 @@
+/* ═══════════════════════════════════════════════════
+   Skeleton — 로딩 자리 모양
+   shimmer = 1.5s sweep. reduced-motion 환경은 static.
+   ═══════════════════════════════════════════════════ */
+
+.pw-skel {
+  display: block;
+  background: var(--pw-surface-2);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: pwSkelShimmer 1.5s linear infinite;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.pw-skel--text {
+  height: 14px;
+  width: 100%;
+  border-radius: 4px;
+}
+
+.pw-skel--rect { border-radius: 8px; }
+.pw-skel--circle { border-radius: 50%; }
+.pw-skel--card { height: 80px; border-radius: var(--pw-radius-lg); }
+
+@keyframes pwSkelShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pw-skel {
+    animation: none;
+    background-image: none;
+  }
+}
+
+/* ── SkeletonCard — 와이파이 리스트 형태 ─────────── */
+.pw-skel-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--pw-space-3);
+  padding: var(--pw-space-4);
+  background: var(--pw-surface-1);
+  border: 1px solid var(--pw-surface-line);
+  border-radius: var(--pw-radius-lg);
+}
+
+.pw-skel-card-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--pw-radius-md);
+  flex-shrink: 0;
+}
+
+.pw-skel-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pw-skel-card-title {
+  height: 16px;
+  width: 50%;
+  border-radius: 4px;
+}
+
+.pw-skel-card-pills {
+  display: flex;
+  gap: 6px;
+}
+
+.pw-skel-pill {
+  height: 22px;
+  width: 90px;
+  border-radius: var(--pw-radius-sm);
+}
+.pw-skel-pill--narrow { width: 60px; }
+
+.pw-skel-card-msg {
+  height: 12px;
+  width: 80%;
+  border-radius: 4px;
+}
