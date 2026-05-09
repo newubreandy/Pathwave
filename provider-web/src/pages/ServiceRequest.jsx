@@ -424,8 +424,9 @@ const ServiceRequest = () => {
   if (step === 'category') {
     return (
       <div className="sr-page">
-        <header className="sr-header">
-          <button className="sr-back" onClick={handleBack}><ChevronLeft size={22} /></button>
+        {/* 최상위 단계 — GNB 탭으로 접근 가능하므로 back 버튼 노출 X.
+            내부 단계 (wifi/stamp/event/noti/payment) 에서만 back 사용. */}
+        <header className="sr-header sr-header--top">
           <h1 className="sr-title">서비스 신청</h1>
         </header>
 
@@ -471,7 +472,6 @@ const ServiceRequest = () => {
     return (
       <div className="sr-page">
         <header className="sr-header">
-          <button className="sr-back" onClick={handleBack}><ChevronLeft size={22} /></button>
           <h1 className="sr-title">서비스 신청</h1>
         </header>
 
@@ -868,7 +868,6 @@ const ServiceRequest = () => {
     return (
       <div className="sr-page">
         <header className="sr-header">
-          <button className="sr-back" onClick={handleBack}><ChevronLeft size={22} /></button>
           <h1 className="sr-title">서비스 신청</h1>
         </header>
 
@@ -914,7 +913,6 @@ const ServiceRequest = () => {
     return (
       <div className="sr-page">
         <header className="sr-header">
-          <button className="sr-back" onClick={handleBack}><ChevronLeft size={22} /></button>
           <h1 className="sr-title">서비스 신청</h1>
         </header>
 
