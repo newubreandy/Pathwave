@@ -577,9 +577,7 @@ const WifiSettings = () => {
             {hasShipping && (
               <div className="wifi-inset-shipping" role="note">
                 <span className="wifi-inset-shipping-label">송장</span>
-                <span className="wifi-inset-shipping-value">
-                  {p.shippingCarrier && `${p.shippingCarrier} · `}{p.shippingTrackingNo}
-                </span>
+                <span className="wifi-inset-shipping-value">{p.shippingTrackingNo}</span>
               </div>
             )}
             {/* statusMessage 제거 — 사장님 콘솔에서는 stepper 만으로 충분.
@@ -688,13 +686,11 @@ const WifiSettings = () => {
                 </div>
               )}
 
-              {/* 신청 진행중 — 배송중 단계는 송장번호 row */}
+              {/* 신청 진행중 — 배송중 단계는 송장번호 row (택배사 비노출) */}
               {hasShipping && section === 'inProgress' && (
                 <div className="wifi-card-shipping" role="note">
                   <span className="wifi-card-shipping-label">송장</span>
-                  <span className="wifi-card-shipping-value">
-                    {p.shippingCarrier && `${p.shippingCarrier} · `}{p.shippingTrackingNo}
-                  </span>
+                  <span className="wifi-card-shipping-value">{p.shippingTrackingNo}</span>
                 </div>
               )}
 
