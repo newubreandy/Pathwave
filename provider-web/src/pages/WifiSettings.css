@@ -846,23 +846,31 @@
   margin-bottom: var(--pw-space-3);
 }
 
+/* Field input — 매장안내 .display-text 와 동일 톤 (22px / 300 / 흰색).
+   사용자 피드백 (2026-05-10): "다른거 같은데 공통인지 확인". → 통일. */
 .wifi-field-input {
   width: 100%;
   padding: var(--pw-space-3) 0;
   border: none;
   border-bottom: 1px solid var(--pw-border);
-  font-size: var(--pw-title-size);
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
   color: var(--pw-text);
   background: transparent;
   outline: none;
   transition: border-color var(--pw-duration-normal) var(--pw-ease);
   min-height: var(--pw-touch-min);
+  line-height: 1.4;
 }
 
 .wifi-field-input:focus {
-  border-bottom: 2px solid var(--pw-gray-900);
+  border-bottom: 2px solid var(--pw-accent);
   margin-bottom: -1px;
+}
+
+@media (max-width: 480px) {
+  .wifi-field-input { font-size: 20px; }
 }
 
 .wifi-field-input:disabled {
@@ -873,7 +881,7 @@
 }
 
 .wifi-field-input::placeholder {
-  font-weight: 400;
+  font-weight: 300;
   color: var(--pw-text-hint);
 }
 
