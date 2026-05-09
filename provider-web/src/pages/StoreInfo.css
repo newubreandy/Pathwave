@@ -141,12 +141,18 @@
   margin-bottom: var(--pw-space-3);
 }
 
-/* 매장 소개 — 사용자 요구: 흰색 + 값과 같은 톤 (이전 secondary gray + 1.1rem 제거) */
+/* 매장 소개 — .display-text 와 완전 동일 (사용자 요구 2026-05-10):
+   "다른 페이지도 공통인데 매장소개만 다르다" → 22px / 300 / white 통일.
+   line-height 만 다단락 가독성 위해 살짝 ↑. */
 .display-text.description {
-  font-size: 18px;
-  line-height: 1.65;
-  color: var(--pw-text);          /* 흰색 (이전 secondary 제거) */
-  font-weight: 400;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--pw-text);
+  line-height: 1.55;
+  letter-spacing: -0.015em;
+}
+@media (max-width: 480px) {
+  .display-text.description { font-size: 20px; }
 }
 
 /* Benefits Section */
