@@ -124,12 +124,13 @@
   margin-left: var(--pw-space-3);
 }
 
-/* ── Toggle Switch (공통 가이드: 66px, ON/OFF 텍스트 포함) ── */
+/* ── Toggle Switch — index.css .pw-toggle 와 동일 톤 (사용자 요구 2026-05-10) ── */
 .toggle-switch {
   position: relative;
-  display: block;
+  display: inline-flex;
+  align-items: center;
   flex-shrink: 0;
-  width: 66px;
+  width: 64px;
   height: 32px;
   cursor: pointer;
 }
@@ -145,56 +146,56 @@
   position: absolute;
   cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-color: var(--pw-gray-400);
-  transition: background var(--pw-duration-normal) var(--pw-ease);
-  border-radius: 32px;
+  background: var(--pw-surface-3);
+  transition: background-color var(--pw-duration-normal) var(--pw-ease);
+  border-radius: 999px;
 }
 
 .toggle-switch input:checked + .toggle-track {
-  background-color: var(--pw-primary);
+  background: var(--pw-accent);
 }
 
 .toggle-thumb {
   position: absolute;
-  content: "";
   height: 26px;
   width: 26px;
   left: 3px;
   top: 3px;
-  background: var(--pw-bg-3);
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
   transition: transform var(--pw-duration-normal) var(--pw-ease);
   border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
   z-index: 2;
 }
 
 .toggle-switch input:checked ~ .toggle-thumb {
-  transform: translateX(34px);
+  transform: translateX(32px);
 }
 
 .toggle-text {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  color: white;
-  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.04em;
   z-index: 1;
   pointer-events: none;
   user-select: none;
-  transition: all var(--pw-duration-normal);
+  transition: right var(--pw-duration-normal) var(--pw-ease),
+              left var(--pw-duration-normal) var(--pw-ease);
 }
 
-/* OFF 상태: 텍스트 우측 */
+/* OFF 상태: 텍스트 우측 (썸이 좌측) */
 .toggle-text {
-  right: 10px;
+  right: 9px;
   left: auto;
 }
 
-/* ON 상태: 텍스트 좌측 */
+/* ON 상태: 텍스트 좌측 (썸이 우측) */
 .toggle-switch input:checked ~ .toggle-text {
-  left: 10px;
+  left: 9px;
   right: auto;
 }
 

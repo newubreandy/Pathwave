@@ -365,11 +365,14 @@ const Notifications = () => {
             <div className="form-label">{t('noti.label_push')}</div>
             <div className="form-content">
               
+              {/* 공통 .toggle-switch (Settings 와 동일 구조) — inline style 제거, 공통 톤 사용 */}
               <div style={{ marginBottom: '1rem' }}>
                 <div className="toggle-row" style={{ marginBottom: 0 }}>
                   <label className="toggle-switch">
                     <input type="checkbox" checked={formData.pushLocal} onChange={e => handlePushToggle('pushLocal', e.target.checked)} disabled={isReadOnly} />
-                    <span className="toggle-slider" style={{ backgroundColor: formData.pushLocal ? 'var(--pw-accent)' : '#64748B', opacity: isReadOnly ? 0.6 : 1 }}><span className="toggle-text">{formData.pushLocal ? 'ON' : 'OFF'}</span></span>
+                    <span className="toggle-track" />
+                    <span className="toggle-thumb" />
+                    <span className="toggle-text">{formData.pushLocal ? 'ON' : 'OFF'}</span>
                   </label>
                   <span className="toggle-label">{t('noti.label_push_local')}</span>
                 </div>
@@ -379,9 +382,9 @@ const Notifications = () => {
                 <div className="toggle-row" style={{ marginBottom: 0 }}>
                   <label className="toggle-switch">
                     <input type="checkbox" checked={formData.pushGlobal} onChange={e => handlePushToggle('pushGlobal', e.target.checked)} disabled={isReadOnly} />
-                    <span className="toggle-slider" style={{ backgroundColor: formData.pushGlobal ? 'var(--pw-accent)' : '#64748B', opacity: isReadOnly ? 0.6 : 1 }}>
-                      <span className="toggle-text">{formData.pushGlobal ? 'ON' : 'OFF'}</span>
-                    </span>
+                    <span className="toggle-track" />
+                    <span className="toggle-thumb" />
+                    <span className="toggle-text">{formData.pushGlobal ? 'ON' : 'OFF'}</span>
                   </label>
                   <span className="toggle-label">{t('noti.label_push_global')}</span>
                 </div>

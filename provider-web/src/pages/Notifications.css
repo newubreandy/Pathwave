@@ -314,67 +314,9 @@ textarea.form-textarea:focus {
   margin-bottom: var(--pw-space-4);
 }
 
-.toggle-switch {
-  position: relative;
-  display: block;
-  flex-shrink: 0;
-  width: 66px;
-  height: 32px;
-}
-
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.toggle-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: var(--pw-gray-400);
-  transition: var(--pw-duration-normal);
-  border-radius: 32px;
-}
-
-.toggle-slider:before {
-  position: absolute;
-  content: "";
-  height: 26px;
-  width: 26px;
-  left: 3px;
-  bottom: 3px;
-  background: var(--pw-bg-3);
-  transition: var(--pw-duration-normal);
-  border-radius: 50%;
-  z-index: 2;
-}
-
-input:checked + .toggle-slider {
-  background-color: var(--pw-primary);
-}
-
-input:checked + .toggle-slider:before {
-  transform: translateX(34px);
-}
-
-.toggle-text {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--pw-white);
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  z-index: 1;
-  right: 12px;
-  transition: var(--pw-duration-normal);
-}
-
-input:checked + .toggle-slider .toggle-text {
-  right: auto;
-  left: 12px;
-}
+/* Notifications 토글 스타일 — Settings.css 의 .toggle-switch / .toggle-track /
+   .toggle-thumb / .toggle-text 공통 스타일 사용. 페이지별 자체 정의 제거.
+   여기는 .toggle-label / .toggle-row 페이지 고유 스타일만. */
 
 .toggle-label {
   font-size: var(--pw-label-size);
