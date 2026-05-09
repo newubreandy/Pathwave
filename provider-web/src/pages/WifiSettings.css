@@ -1377,17 +1377,20 @@
 .wifi-list {
   display: flex;
   flex-direction: column;
-  gap: var(--pw-space-3);
+  /* 가이드 v1.0 — 모든 카드형 리스트 간 간격 16px (space-lg) 통일 */
+  gap: var(--pw-space-4);
 }
-/* 운영중 — 정보판 톤. 가장 여백 적게, 카드 간 gap 줄임. */
-.wifi-list--live { gap: var(--pw-space-2); }
-.wifi-list--maintenance { gap: var(--pw-space-3); }
+.wifi-list--live { gap: var(--pw-space-3); } /* 운영중은 살짝 조밀 */
+.wifi-list--maintenance { gap: var(--pw-space-4); }
 
 /* ── 카드 내부 — 모든 탭 공통 baseline ─────────────
-   row 레이아웃: [avatar 40px] [body flex:1] [chevron 18px]
-   모든 카드가 같은 column 정렬 → 시선 흐름 일관됨. */
+   가이드 v1.0 레이아웃:
+     [row]  [avatar 40px] [body flex:1]
+     [statusMessage]  (있을 때)
+     [foot]   하단 우측 "상세보기 >" 링크
+   ───────────────────────────────────────────────── */
 .wifi-card {
-  gap: 0; /* row 안에서 직접 gap 관리 */
+  gap: var(--pw-space-3); /* row / message / foot 사이 12px */
 }
 
 .wifi-card-row {
@@ -1405,16 +1408,29 @@
   min-width: 0;
 }
 
-.wifi-card-chevron {
-  flex-shrink: 0;
-  color: var(--pw-text-hint);
-  margin-top: 8px; /* avatar 와 vertical center 정렬 */
-  transition: transform var(--pw-duration-fast) var(--pw-ease),
-              color var(--pw-duration-fast) var(--pw-ease);
+/* 카드 footer — 우측 정렬 "상세보기 >" 링크 */
+.wifi-card-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -2px;
 }
-.pw-card--interactive:hover .wifi-card-chevron {
+.wifi-card-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--pw-text-secondary);
+  transition:
+    color var(--pw-duration-fast) var(--pw-ease),
+    transform var(--pw-duration-fast) var(--pw-ease);
+}
+.pw-card--interactive:hover .wifi-card-detail {
+  color: var(--pw-text);
   transform: translateX(2px);
+}
+.wifi-card--live .wifi-card-detail {
+  color: var(--pw-text-hint);
 }
 
 .wifi-card-head {

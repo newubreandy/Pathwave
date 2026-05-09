@@ -10,14 +10,15 @@
   background: var(--pw-surface-1);
   border: 1px solid var(--pw-surface-line);
   border-radius: var(--pw-radius-lg);
-  padding: var(--pw-space-5);
+  /* 가이드 v1.0 — padding 16px (space-lg). 모든 카드 공통. */
+  padding: var(--pw-space-4);
   color: var(--pw-text);
   transition:
     border-color var(--pw-duration-fast) var(--pw-ease),
     background-color var(--pw-duration-fast) var(--pw-ease);
-  /* 그림자는 약하게만 — “정보판” 톤 */
+  /* 그림자는 약하게만 — “정보판” 톤 (shadow-sm) */
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.025) inset,
-              0 4px 12px rgba(0, 0, 0, 0.25);
+              0 2px 6px rgba(0, 0, 0, 0.20);
 }
 
 /* 한 컨테이너 안 카드 높이 통일을 위한 grid stretch */
@@ -45,24 +46,10 @@
 /* baseline 그대로 */
 
 /* ── variant: prominent ───────────────────────────── */
-/* 신청 진행중처럼 ‘주목이 필요한’ 카드.
-   배경 한 단계 위 + 좌측에 accent 4px 라인. glow 는 쓰지 않음. */
+/* 디자인 가이드 v1.0 정렬 — 좌측 라인 제거, 배경 한 단계 위만. */
 .pw-card--prominent {
   background: var(--pw-surface-2);
   border-color: var(--pw-surface-line);
-  /* 좌측 accent 라인 — 4px, 카드 전체 높이. */
-  padding-left: calc(var(--pw-space-5) + 4px);
-}
-.pw-card--prominent::before {
-  content: '';
-  position: absolute;
-  top: 12px;
-  bottom: 12px;
-  left: 0;
-  width: 3px;
-  border-radius: 0 var(--pw-radius-xs) var(--pw-radius-xs) 0;
-  background: var(--pw-accent);
-  opacity: 0.85;
 }
 
 /* ── variant: compact ─────────────────────────────── */
@@ -136,7 +123,6 @@
     padding: var(--pw-space-4);
     border-radius: var(--pw-radius-md);
   }
-  .pw-card--prominent,
   .pw-card--warning,
   .pw-card--success,
   .pw-card--danger {

@@ -7,23 +7,34 @@
 .pw-group {
   display: flex;
   flex-direction: column;
-  gap: var(--pw-space-3);
+  /* 가이드 v1.0 — 헤더와 자식 묶음 사이 16px (space-lg) */
+  gap: var(--pw-space-4);
 }
 
 .pw-group-header {
-  /* 헤더는 child 카드보다 시각 무게 ↑.
-     surface-1 보다 살짝 진한 surface-2 + accent border-bottom. */
-  background: var(--pw-surface-2);
-  border: 1px solid var(--pw-surface-line);
-  border-radius: var(--pw-radius-md);
-  padding: var(--pw-space-3) var(--pw-space-4);
-}
-
-.pw-group-head-row {
+  /* 가이드 v1.0 — 헤더는 surface-2 배경, 16px padding, 16px radius.
+     row 자체가 헤더 — head-row wrapper 제거. */
   display: flex;
   align-items: center;
   gap: var(--pw-space-3);
+  background: var(--pw-surface-2);
+  border: 1px solid var(--pw-surface-line);
+  border-radius: var(--pw-radius-lg);
+  padding: var(--pw-space-3) var(--pw-space-4);
   min-width: 0;
+  transition:
+    background-color var(--pw-duration-fast) var(--pw-ease),
+    border-color var(--pw-duration-fast) var(--pw-ease);
+}
+.pw-group-header.is-collapsible {
+  cursor: pointer;
+}
+.pw-group-header.is-collapsible:hover {
+  background: var(--pw-surface-3);
+}
+.pw-group-header:focus-visible {
+  outline: 2px solid var(--pw-accent);
+  outline-offset: 2px;
 }
 
 .pw-group-leading {
@@ -91,76 +102,40 @@
   text-overflow: ellipsis;
 }
 
-/* ── 진행률 chip (오른쪽) ──────────────────────── */
-.pw-group-summary {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--pw-space-1);
-  flex-wrap: wrap;
+/* ── Chevron (collapse/expand) ─────────────────── */
+.pw-group-chevron {
   flex-shrink: 0;
-}
-
-.pw-group-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 22px;
-  padding: 0 8px;
-  border-radius: var(--pw-radius-full);
-  font-size: 11px;
-  font-weight: 600;
-  background: var(--pw-surface-3);
   color: var(--pw-text-secondary);
+  transition: color var(--pw-duration-fast) var(--pw-ease);
 }
-.pw-group-chip strong {
-  font-weight: 700;
+.pw-group-header:hover .pw-group-chevron {
   color: var(--pw-text);
 }
-.pw-group-chip--accent {
-  background: var(--pw-accent-soft);
-  color: var(--pw-accent-text);
-}
-.pw-group-chip--accent strong { color: var(--pw-accent-text); }
-
-.pw-group-chip--warning {
-  background: rgba(245, 158, 11, 0.12);
-  color: #FBBF24;
-}
-.pw-group-chip--warning strong { color: #FBBF24; }
 
 /* ── 자식 카드 ──────────────────────────────────
-   좌측 들여쓰기 + 묶음 line. */
+   가이드 v1.0 — 16px gap (space-lg), 들여쓰기 없음.
+   묶음 표시는 header + 카드 같은 너비로 정렬. */
 .pw-group-children {
   display: flex;
   flex-direction: column;
-  gap: var(--pw-space-2);
-  padding-left: var(--pw-space-4);
-  position: relative;
+  gap: var(--pw-space-4);
+  /* expand/collapse 부드럽게 */
+  animation: pwGroupExpand 200ms var(--pw-ease-out);
+  overflow: hidden;
 }
-.pw-group-children::before {
-  content: '';
-  position: absolute;
-  left: 16px;
-  top: 4px;
-  bottom: 4px;
-  width: 1px;
-  background: var(--pw-surface-line);
+
+@keyframes pwGroupExpand {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pw-group-children { animation: none; }
 }
 
 /* ── 모바일 ────────────────────────────────────── */
 @media (max-width: 480px) {
-  .pw-group-head-row {
-    flex-wrap: wrap;
-    gap: var(--pw-space-2);
-  }
-  .pw-group-summary {
-    width: 100%;
-    margin-top: 4px;
-  }
   .pw-group-children {
-    padding-left: var(--pw-space-3);
-  }
-  .pw-group-children::before {
-    left: 12px;
+    gap: var(--pw-space-3);
   }
 }

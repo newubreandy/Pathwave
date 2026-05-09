@@ -551,7 +551,10 @@ const WifiSettings = () => {
       // 송장번호 — 배송중일 때만 별도 row 로 강조 (pill 아님)
       const hasShipping = !!p.shippingTrackingNo;
 
-      // 좌측 아바타 — 운영중은 디바이스 상태에 따라 색조 변경 (정상=success, 부족=warning, 끊김=danger).
+      // 좌측 아바타 —
+      //   운영중 = 디바이스 상태로 색조 (정상=success / 부족=warning / 끊김=danger)
+      //   신청 진행중 = accent 통일 (가이드 v1.0 — 아이콘 모양으로 단계 구분)
+      //   일시중지 = warning, 해지 = neutral
       let avatarVariant, AvatarIcon;
       if (section === 'live') {
         AvatarIcon = Wifi;
@@ -561,10 +564,16 @@ const WifiSettings = () => {
           : p.deviceStatus === 'low'     ? 'warning'
           : p.deviceStatus === 'offline' ? 'danger'
           : 'neutral';
-      } else {
+      } else if (section === 'inProgress') {
         const a = getAvatarForStatus(p.applicationStatus);
         AvatarIcon = a.icon;
-        avatarVariant = a.variant;
+        avatarVariant = 'accent'; // 그룹 헤더와 톤 통일
+      } else if (section === 'paused') {
+        AvatarIcon = PauseCircle;
+        avatarVariant = 'warning';
+      } else { // terminated
+        AvatarIcon = XCircle;
+        avatarVariant = 'neutral';
       }
 
       return (
@@ -619,13 +628,19 @@ const WifiSettings = () => {
                 </div>
               )}
 
-              {/* 상태 메시지 — 2줄 clamp */}
-              {p.statusMessage && (
-                <StatusMessage tone={msgTone}>{p.statusMessage}</StatusMessage>
-              )}
             </div>
+          </div>
 
-            <ChevronRight size={18} className="wifi-card-chevron" aria-hidden="true" />
+          {/* 상태 메시지 — 카드 footer 위. 2줄 clamp. */}
+          {p.statusMessage && (
+            <StatusMessage tone={msgTone}>{p.statusMessage}</StatusMessage>
+          )}
+
+          {/* 카드 footer — 하단 우측 "상세보기 >" 링크 (가이드 v1.0) */}
+          <div className="wifi-card-foot">
+            <span className="wifi-card-detail">
+              상세보기 <ChevronRight size={14} aria-hidden="true" />
+            </span>
           </div>
         </GlassCard>
       );
@@ -732,16 +747,12 @@ const WifiSettings = () => {
 
                 if (!isMulti) {
                   // 단건 신청 — GroupCard 사용 안 함, 바로 prominent 카드
-                  return renderWifiCard(group.items[0], { variant: 'prominent', section: 'inProgress' });
+                  return renderWifiCard(group.items[0], { variant: 'default', section: 'inProgress' });
                 }
 
-                // 다건 신청 — GroupCard (헤더에 클립보드 아바타 + 결제완료 pill + subtitle)
-                const summary = Object.entries(group.labelCounts).map(([label, count]) => ({
-                  label,
-                  count,
-                  tone: label === '배송중' ? 'warning' : 'accent',
-                }));
-                const subtitle = `${total}개 와이파이${group.paidAt ? ` · ${group.paidAt.slice(0, 10)}` : ''}`;
+                // 다건 신청 — GroupCard (헤더에 클립보드 아바타 + 결제완료 pill + subtitle).
+                // 가이드 v1.0 — 진행률 chip 제거, expand/collapse chevron 으로 단순화.
+                const subtitle = `${total}개 와이파이${group.paidAt ? ` · 결제완료 ${group.paidAt.slice(0, 10)}` : ''}`;
 
                 return (
                   <GroupCard
@@ -752,13 +763,11 @@ const WifiSettings = () => {
                       </CardAvatar>
                     }
                     groupId={group.groupId}
-                    total={total}
                     paid
                     subtitle={subtitle}
-                    summary={summary}
                   >
                     {group.items.map((p) =>
-                      renderWifiCard(p, { variant: 'prominent', section: 'inProgress' })
+                      renderWifiCard(p, { variant: 'default', section: 'inProgress' })
                     )}
                   </GroupCard>
                 );
