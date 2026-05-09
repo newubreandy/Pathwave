@@ -472,16 +472,15 @@
 
 /* 아코디언 본문 — 기존 wifi-field-* 와 같은 호흡 */
 .sr-acc-body {
-  padding: var(--pw-space-6) var(--pw-space-5) var(--pw-space-4);
+  padding: var(--pw-space-6) var(--pw-space-5) var(--pw-space-5);
   border-top: 1px solid var(--pw-border);
   background: var(--pw-bg-2);
 }
 
-/* 본문 내부에서 wifi-field-group 의 큰 마지막 margin 줄임 */
-.sr-acc-body .wifi-field-group { margin-bottom: var(--pw-space-6); }
-.sr-acc-body .wifi-field-group:last-of-type { margin-bottom: var(--pw-space-3); }
-/* 비고 영역 제거에 따라 마지막 필드(약정기간)와 액션 사이 간격 더 타이트 */
-.sr-acc-body .sr-acc-last-field { margin-bottom: var(--pw-space-3); }
+/* form 행 간격 — 매장안내 spacing 톤에 맞춰 살짝 여유 (24px → 32px) */
+.sr-acc-body .wifi-field-group { margin-bottom: var(--pw-space-8); }
+.sr-acc-body .wifi-field-group:last-of-type { margin-bottom: var(--pw-space-4); }
+.sr-acc-body .sr-acc-last-field { margin-bottom: var(--pw-space-4); }
 
 /* 시작일/종료일 2열 */
 .sr-acc-row2 {

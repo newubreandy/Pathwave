@@ -218,7 +218,46 @@ provider-web (시설 관리자)        admin-web (슈퍼어드민)
 **legacy stacked**:
 `variant="stacked"` 로 유지 — 외곽 카드 없이 자식 GlassCard 들이 직접 쌓이는 패턴이 필요한 경우 (단순 묶음, 검색 결과 등).
 
-### 4-4 GroupCard 헤더 단순화 원칙
+### 4-4 Info Section 패턴 (2026-05-09 추가) — 매장안내 표준
+
+페이지 안 "라벨 + 값" 정보 노출의 공통 가이드. **매장안내 (StoreInfo) 가 기준**.
+
+```
+┌─ .info-stack (gap 48px) ─────────────────────┐
+│  .info-row                                    │
+│    .info-label   "전화번호"   14px / 600 / hint│
+│    .info-value   "02-1234-5678" 22px / 300 / 흰색 │
+│                                                │
+│  .info-row                                    │
+│    .info-label   "매장 소개"                   │
+│    .info-body    "크리에이티브..."  18px / 400 / 흰색 │
+│                                                │
+│  .info-row                                    │
+│    .info-label   "진행중인 혜택"                │
+│    .info-list                                  │
+│      .info-list-item  "[혜택] ..."  16px / 600 / 흰색 │
+└──────────────────────────────────────────────┘
+```
+
+**규칙**:
+- 라벨 = 작은 회색 (14px / 600 / hint) — 항상 동일
+- 값 = 크고 가벼운 흰색 (22px / 300) — 한 줄 정보
+- 본문 = 보통 흰색 (18px / 400) — 다단락 설명, **예전 secondary gray 사용 금지**
+- 리스트 1행 = 16px / 600 / 흰색 + surface bg + 12px radius
+- 섹션 간 = 48px (모바일 40px)
+
+**유틸리티 클래스**: [provider-web/src/index.css](../provider-web/src/index.css) 안 `.info-stack / .info-row / .info-label / .info-value / .info-body / .info-list / .info-list-item`. 페이지에서 직접 사용.
+
+**Button 기본 사이즈 정렬** (매장안내 정보수정 버튼 톤):
+- `medium` (default) = **16px font / 48px height / 16·24px padding** — 모든 페이지 default Button
+- `large` = 강조 CTA 용 (17px / 700 / 52px height)
+- `small` = 36px (모바일 44px)
+
+이전 medium 은 14px / 44px 이었는데, 가이드 통일로 1단계 끌어올림. 모든 `<Button>` 호출이 자동으로 더 큰 size 가 됨 — size prop 추가 작업 불필요.
+
+---
+
+### 4-5 GroupCard 헤더 단순화 원칙
 
 - 결제일 / 세부 메타는 노출 안 함 — subtitle 한 줄에 통합 또는 상세보기로
 - 진행률 chip 은 노출 안 함 — child item 의 status badge 로 충분

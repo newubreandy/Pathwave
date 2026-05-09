@@ -837,12 +837,13 @@
   margin-bottom: var(--pw-space-8);
 }
 
+/* Field label — 매장안내 .info-label 톤 정렬 (14px / 600 / hint) */
 .wifi-field-label {
   display: block;
-  font-size: var(--pw-caption-size);
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   color: var(--pw-text-hint);
-  margin-bottom: var(--pw-space-2);
+  margin-bottom: var(--pw-space-3);
 }
 
 .wifi-field-input {

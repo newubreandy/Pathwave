@@ -148,6 +148,109 @@ input, textarea, select, button {
   color: var(--pw-text-hint);
 }
 
+/* ═══════════════════════════════════════════════════
+   Info Section Pattern — 매장안내 (StoreInfo) 기준 공통 가이드
+   사용자 요구 (2026-05-09): 라벨/값/본문/리스트 톤 통일.
+
+   레이아웃:
+     <div class="info-stack">
+       <div class="info-row">
+         <span class="info-label">전화번호</span>
+         <span class="info-value">02-1234-5678</span>
+       </div>
+       <div class="info-row">
+         <span class="info-label">매장 소개</span>
+         <p class="info-body">크리에이티브 전문가...</p>
+       </div>
+       <div class="info-row">
+         <span class="info-label">진행중인 혜택</span>
+         <ul class="info-list">
+           <li class="info-list-item">[혜택] ...</li>
+         </ul>
+       </div>
+     </div>
+   ═══════════════════════════════════════════════════ */
+
+.info-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-12);  /* 48px — 섹션 간 충분한 여백 (사용자 피드백) */
+}
+
+.info-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-3);   /* 12px — 라벨과 값 사이 */
+}
+
+/* 작은 회색 라벨 (매장안내 14px / 600 / hint 정렬) */
+.info-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pw-text-hint);
+  letter-spacing: 0;
+}
+
+/* 큰 흰색 값 (매장안내 24px / 300 light 정렬) — 한 줄 정보 */
+.info-value {
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--pw-text);
+  line-height: 1.4;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+/* 본문 — 사용자 요구: 매장 소개도 흰색, 값과 같은 톤. 단, 다단락은 line-height 1.6.
+   값(.info-value) 보다 살짝 작게 (가독성) — 18px / 400 white. */
+.info-body {
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--pw-text);
+  line-height: 1.65;
+  letter-spacing: -0.005em;
+  margin: 0;
+}
+
+/* 리스트 컨테이너 (혜택, 항목 나열 등) */
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-2);    /* 8px */
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 리스트 1행 — 사용자 요구: 살짝 더 큰 흰색 글자 (16px / 600) */
+.info-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-3);
+  padding: var(--pw-space-4);                    /* 16px */
+  background: var(--pw-surface-1);
+  border: 1px solid var(--pw-surface-line);
+  border-radius: var(--pw-radius-md);            /* 12px */
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--pw-text);
+  text-decoration: none;
+  transition:
+    background-color var(--pw-duration-fast) var(--pw-ease),
+    border-color var(--pw-duration-fast) var(--pw-ease);
+}
+.info-list-item:hover {
+  background: var(--pw-surface-2);
+  border-color: var(--pw-border-strong);
+}
+
+/* 모바일 — 값 글자 살짝 줄임 (24px → 20px) */
+@media (max-width: 480px) {
+  .info-value { font-size: 20px; }
+  .info-body  { font-size: 16px; }
+  .info-stack { gap: var(--pw-space-10); /* 40px */ }
+}
+
 /* ── Card (글로벌 baseline) ──
    GlassCard 컴포넌트가 등장한 뒤로는 신규 UI 에서 .card 직접 사용 비권장.
    기존 페이지 호환을 위해 유지. ── */

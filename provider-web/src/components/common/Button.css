@@ -31,24 +31,28 @@
   transition-duration: 80ms;
 }
 
-/* ── Sizes (all ≥44px touch target) ── */
+/* ── Sizes (디자인 가이드 v1.0 — 매장안내 정보수정 버튼 기준 정렬) ──
+   사용자 피드백: 매장안내 버튼이 가장 좋음 → medium 도 그 수준으로 끌어올림. */
 .btn-small {
   padding: var(--pw-space-2) var(--pw-space-4);
-  font-size: var(--pw-label-size);
+  font-size: var(--pw-label-size);     /* 14px */
   min-height: 36px;
-  /* Touch target padding ensures ≥44px hit area */
 }
 
+/* medium = 기본. 모든 페이지의 default 버튼.
+   16px font + 48px 높이 + 16px·24px padding (mobile/PC 동일). */
 .btn-medium {
-  padding: var(--pw-space-3) var(--pw-space-6);
-  font-size: var(--pw-label-size);
-  min-height: var(--pw-touch-min);
+  padding: var(--pw-space-4) var(--pw-space-6);   /* 16px 24px */
+  font-size: var(--pw-body-size);                  /* 16px */
+  min-height: var(--pw-touch-comfortable);         /* 48px */
 }
 
+/* large = 강조 CTA 용 — medium 보다 한 단계 크게 */
 .btn-large {
-  padding: var(--pw-space-4) var(--pw-space-8);
-  font-size: var(--pw-body-size);
-  min-height: var(--pw-touch-comfortable);
+  padding: var(--pw-space-5) var(--pw-space-8);    /* 20px 32px */
+  font-size: 17px;
+  font-weight: 700;
+  min-height: 52px;
 }
 
 .btn-full-width {
@@ -125,15 +129,10 @@
   to { transform: rotate(360deg); }
 }
 
-/* ── Mobile: ensure comfortable touch targets ── */
+/* ── Mobile: small 만 크기 보정. medium 은 이미 충분히 큼. ── */
 @media (max-width: 768px) {
   .btn-small {
     min-height: var(--pw-touch-min);
     padding: var(--pw-space-3) var(--pw-space-4);
-  }
-  
-  .btn-medium {
-    padding: var(--pw-space-4) var(--pw-space-6);
-    font-size: var(--pw-body-size);
   }
 }
