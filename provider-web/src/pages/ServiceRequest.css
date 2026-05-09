@@ -488,13 +488,17 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--pw-space-4);
+  /* 사용자 요구 (2026-05-09): 약정기간도 같은 타입 → 동일 64px 간격.
+     row2 의 margin-bottom 으로 → 다음 필드(약정기간) 와 64px 간격 보장. */
+  margin-bottom: var(--pw-space-16);
 }
 
 @media (max-width: 480px) {
   .sr-acc-row2 { grid-template-columns: 1fr; gap: 0; }
 }
 
-.sr-acc-row2 .wifi-field-group { margin-bottom: var(--pw-space-6); }
+/* row2 안 field-group 자체는 grid 가 위치 관리 — 별도 마진 0 */
+.sr-acc-row2 .wifi-field-group { margin-bottom: 0; }
 
 /* 약정기간 readonly 안내 — disabled input 처럼 보이지 않게 */
 .sr-acc-readonly {
