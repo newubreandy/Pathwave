@@ -30,16 +30,13 @@
 .pw-card--interactive {
   cursor: pointer;
 }
+/* hover — 차분하게 bg 만 살짝 (border 변경 / transform 없음) */
 .pw-card--interactive:hover {
   background: var(--pw-surface-2);
-  border-color: var(--pw-border-strong);
 }
 .pw-card--interactive:focus-visible {
   outline: 2px solid var(--pw-accent);
   outline-offset: 2px;
-}
-.pw-card--interactive:active {
-  transform: translateY(1px);
 }
 
 /* ── variant: default ─────────────────────────────── */

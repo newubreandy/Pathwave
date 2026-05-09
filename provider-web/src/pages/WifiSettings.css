@@ -1422,13 +1422,10 @@
   font-size: 12px;
   font-weight: 600;
   color: var(--pw-text-secondary);
-  transition:
-    color var(--pw-duration-fast) var(--pw-ease),
-    transform var(--pw-duration-fast) var(--pw-ease);
+  transition: color var(--pw-duration-fast) var(--pw-ease);
 }
 .pw-card--interactive:hover .wifi-card-detail {
   color: var(--pw-text);
-  transform: translateX(2px);
 }
 .wifi-card--live .wifi-card-detail {
   color: var(--pw-text-hint);
@@ -1588,13 +1585,10 @@
 .wifi-inset-chevron {
   flex-shrink: 0;
   color: var(--pw-text-hint);
-  transition:
-    color var(--pw-duration-fast) var(--pw-ease),
-    transform var(--pw-duration-fast) var(--pw-ease);
+  transition: color var(--pw-duration-fast) var(--pw-ease);
 }
 .pw-group-item.is-interactive:hover .wifi-inset-chevron {
   color: var(--pw-text);
-  transform: translateX(2px);
 }
 
 @media (max-width: 480px) {

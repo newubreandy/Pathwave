@@ -178,19 +178,15 @@
   min-width: 0;
   transition:
     background-color var(--pw-duration-fast) var(--pw-ease),
-    border-color var(--pw-duration-fast) var(--pw-ease),
-    transform var(--pw-duration-fast) var(--pw-ease);
+    border-color var(--pw-duration-fast) var(--pw-ease);
 }
 
 .pw-group-item.is-interactive {
   cursor: pointer;
 }
+/* hover — 살짝만 밝아짐 (border 변경 없음, transform 없음) */
 .pw-group-item.is-interactive:hover {
   background: var(--pw-surface-3);
-  border-color: var(--pw-surface-line);
-}
-.pw-group-item.is-interactive:active {
-  transform: translateY(1px);
 }
 .pw-group-item:focus-visible {
   outline: 2px solid var(--pw-accent);

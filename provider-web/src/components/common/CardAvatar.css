@@ -46,9 +46,8 @@
 .pw-avatar--md > svg { width: 20px; height: 20px; }
 .pw-avatar--lg > svg { width: 22px; height: 22px; }
 
-/* 호버 시 부모 카드 hover 면 아바타도 미세 반응. */
-.pw-card--interactive:hover .pw-avatar,
-.pw-group-item.is-interactive:hover .pw-avatar { transform: scale(1.04); }
+/* hover transform 없음 — 사용자 피드백 (2026-05-10): "마우스 오버시 표가 이상해".
+   여러 요소가 동시에 움직이면 어수선 → 호버는 부모 카드의 bg/border 변경만으로. */
 
 /* ── variant — 아이콘 색만 변경 (배경/border 동일) ──
    사용자 요구: "컬러는 유지" — accent/success/warning/danger 색 보존. */
