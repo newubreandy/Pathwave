@@ -419,14 +419,13 @@ const WifiSettings = () => {
     (p) => !PROVIDER_HIDDEN_STATUSES.has(p.applicationStatus)
   );
 
-  // 헤더 인라인 검색 (즉시 필터). chip-search 와 직렬 적용.
+  // 헤더 인라인 검색 — 와이파이 이름(설치 위치) 만 매칭.
+  // SSID 부분 매칭은 의도치 않은 결과 (예: "1" → "kt5G_pool01") 를 만들어
+  // 사장님 직관에 어긋남. SSID 까지 검색하려면 우측 "상세" 버튼의 chip-search 사용.
   const inlineFiltered = inlineQuery.trim()
     ? visibleProfiles.filter((p) => {
         const q = inlineQuery.trim().toLowerCase();
-        return (
-          p.name.toLowerCase().includes(q) ||
-          (p.ssid || '').toLowerCase().includes(q)
-        );
+        return p.name.toLowerCase().includes(q);
       })
     : visibleProfiles;
 
@@ -747,10 +746,10 @@ const WifiSettings = () => {
             <input
               type="search"
               className="wifi-header-search-input"
-              placeholder="이름 또는 SSID 검색"
+              placeholder="와이파이 이름 검색"
               value={inlineQuery}
               onChange={(e) => setInlineQuery(e.target.value)}
-              aria-label="와이파이 검색"
+              aria-label="와이파이 이름 검색"
             />
             {inlineQuery && (
               <button
@@ -814,10 +813,10 @@ const WifiSettings = () => {
           <div className="wifi-tab-empty" role="status">
             <p>
               {activeTab === 'inProgress' && (inlineQuery
-                ? `‘${inlineQuery}’ 와 일치하는 신청이 없습니다.`
+                ? `‘${inlineQuery}’ 이름의 신청을 찾을 수 없습니다.`
                 : '현재 진행 중인 신청이 없습니다.\n새 와이파이를 신청해보세요.')}
               {activeTab === 'live'       && (inlineQuery
-                ? `‘${inlineQuery}’ 와 일치하는 운영 항목이 없습니다.`
+                ? `‘${inlineQuery}’ 이름의 와이파이를 찾을 수 없습니다.`
                 : '운영 중인 서비스가 없습니다.\n신청 절차가 끝나면 이곳에 표시됩니다.')}
             </p>
           </div>
