@@ -494,6 +494,9 @@ textarea.form-textarea:disabled {
   border-bottom-color: var(--pw-border-light);
 }
 
+/* readonly value — 흰색 유지 (값이므로 잘 보여야 함). 입력 underline 만 제거. */
 .disabled-text {
-  color: var(--pw-text-hint) !important;
+  color: var(--pw-text) !important;
+  border-bottom-color: transparent !important;
+  cursor: default;
 }

@@ -74,8 +74,12 @@
 /* ── Email ── */
 .payment-email-row { display: flex; align-items: center; justify-content: space-between; padding: var(--pw-space-3) 0; gap: var(--pw-space-2); }
 .payment-email-left { display: flex; align-items: center; gap: var(--pw-space-4); flex: 1; min-width: 0; }
-.payment-email-label { font-size: var(--pw-caption-size); color: var(--pw-text-hint); white-space: nowrap; }
-.payment-email-value { font-size: var(--pw-label-size); font-weight: 500; color: var(--pw-text); overflow: hidden; text-overflow: ellipsis; }
+/* 라벨/값 공통 톤 정렬 */
+.payment-email-label { font-size: 14px; font-weight: 600; color: var(--pw-text-hint); white-space: nowrap; }
+.payment-email-value { font-size: 22px; font-weight: 300; letter-spacing: -0.015em; color: var(--pw-text); overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 480px) {
+  .payment-email-value { font-size: 20px; }
+}
 .payment-email-input {
   flex: 1; min-width: 0;
   padding: var(--pw-space-2) var(--pw-space-3);
@@ -100,11 +104,35 @@
   padding: var(--pw-space-4) var(--pw-space-5); margin-bottom: var(--pw-space-3);
 }
 
-.payment-detail-row { display: flex; align-items: flex-start; justify-content: space-between; padding: var(--pw-space-3) 0; line-height: var(--pw-label-leading); }
-.payment-detail-label { font-size: var(--pw-label-size); font-weight: var(--pw-label-weight); color: var(--pw-text-secondary); white-space: nowrap; min-width: 60px; }
-.payment-detail-value { font-size: var(--pw-label-size); font-weight: 600; color: var(--pw-text); text-align: right; }
-.payment-detail-sub { font-size: var(--pw-caption-size); color: var(--pw-text-hint); margin-top: 2px; }
-.payment-detail-date { font-size: var(--pw-caption-size); color: var(--pw-text-hint); }
+/* 결제 상세 row — 매장안내 톤 정렬 (label 14/600/hint, value 22/300/흰색) */
+.payment-detail-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--pw-space-3) 0;
+  line-height: 1.4;
+  gap: var(--pw-space-3);
+}
+.payment-detail-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pw-text-hint);
+  white-space: nowrap;
+  min-width: 60px;
+  padding-top: 4px;
+}
+.payment-detail-value {
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
+  color: var(--pw-text);
+  text-align: right;
+}
+.payment-detail-sub { font-size: 12px; color: var(--pw-text-hint); margin-top: 4px; font-weight: 400; }
+.payment-detail-date { font-size: 12px; color: var(--pw-text-hint); margin-left: 4px; }
+@media (max-width: 480px) {
+  .payment-detail-value { font-size: 20px; }
+}
 
 .payment-service-actions { display: flex; gap: var(--pw-space-3); margin-top: var(--pw-space-4); }
 
