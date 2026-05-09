@@ -9,16 +9,12 @@
   z-index: var(--pw-z-sticky);
 }
 
+/* sticky — GNB 아래 고정. 배경 없음 (페이지 gradient 자연스럽게 비치게).
+   사용자 요구 (2026-05-10): "탭바탕색을 없음으로". */
 .pw-tabs--sticky {
   position: sticky;
-  /* GNB(112px) 아래에 붙음 */
   top: var(--pw-gnb-total);
-  background: linear-gradient(
-    180deg,
-    var(--pw-page-bg-base) 0%,
-    var(--pw-page-bg-base) 75%,
-    transparent 100%
-  );
+  background: transparent;
 }
 
 /* track — full width 분할 (사용자 요구 2026-05-10: 결제관리 탭과 동일 스타일) */

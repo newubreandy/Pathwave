@@ -4,6 +4,8 @@
    ═══════════════════════════════════════════════════ */
 
 /* ── Tabs — SectionTabs (.pw-tab) 과 동일 스타일 (사용자 요구 2026-05-10) ── */
+/* tabs — sticky 시 배경 없음 (페이지 gradient 비치게).
+   사용자 요구 (2026-05-10): "탭바탕색을 없음으로". */
 .payment-tabs {
   display: flex;
   gap: 0;
@@ -12,13 +14,7 @@
   border-bottom: 1px solid var(--pw-surface-line);
   position: sticky;
   top: var(--pw-gnb-total);
-  /* page-bg gradient 비치도록 sticky 시 fade — sticky 영역만 살짝 어둡게 */
-  background: linear-gradient(
-    180deg,
-    var(--pw-page-bg-base) 0%,
-    var(--pw-page-bg-base) 75%,
-    transparent 100%
-  );
+  background: transparent;
   z-index: 50;
 }
 

@@ -72,16 +72,18 @@
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
-/* Outline */
+/* Outline — 다크 테마 톤 정렬 (사용자 요구 2026-05-10).
+   surface-line border + secondary 텍스트 — 너무 튀지 않게. */
 .btn-outline {
   background-color: transparent;
-  border-color: var(--pw-gray-300);
-  color: var(--pw-text);
+  border-color: var(--pw-surface-line);
+  color: var(--pw-text-secondary);
 }
 
 .btn-outline:not(:disabled):hover {
-  background-color: var(--pw-surface-hover);
-  border-color: var(--pw-gray-400);
+  background-color: var(--pw-surface-1);
+  border-color: var(--pw-border-strong);
+  color: var(--pw-text);
 }
 
 /* Danger */
