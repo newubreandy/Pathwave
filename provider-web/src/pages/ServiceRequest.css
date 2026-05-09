@@ -477,8 +477,9 @@
   background: var(--pw-bg-2);
 }
 
-/* form 행 간격 — 매장안내 spacing 톤에 맞춰 살짝 여유 (24px → 32px) */
-.sr-acc-body .wifi-field-group { margin-bottom: var(--pw-space-8); }
+/* form 행 간격 — 사용자 요구 (2026-05-09): "ID/PW/시작일 사이 간격 2배"
+   32px → 64px (--pw-space-16) */
+.sr-acc-body .wifi-field-group { margin-bottom: var(--pw-space-16); }
 .sr-acc-body .wifi-field-group:last-of-type { margin-bottom: var(--pw-space-4); }
 .sr-acc-body .sr-acc-last-field { margin-bottom: var(--pw-space-4); }
 
