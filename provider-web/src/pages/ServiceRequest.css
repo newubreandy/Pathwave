@@ -33,12 +33,20 @@
 
 .sr-back:hover { background: var(--pw-bg-hover); }
 
+/* 페이지 타이틀 — .page-title / .pw-page-title 와 동일 (사용자 요구 2026-05-10).
+   28px / 800 / display tracking — 다른 페이지 (와이파이 관리, 결제관리 등) 와 통일. */
 .sr-title {
   flex: 1;
   text-align: left;
-  font-size: var(--pw-title-size);
-  font-weight: 700;
+  font-size: var(--pw-display-size);
+  font-weight: var(--pw-display-weight);
+  line-height: var(--pw-display-leading);
+  letter-spacing: var(--pw-display-tracking);
+  color: var(--pw-text);
   margin: 0;
+}
+@media (max-width: 768px) {
+  .sr-title { font-size: var(--pw-headline-size); }
 }
 
 .sr-body {
