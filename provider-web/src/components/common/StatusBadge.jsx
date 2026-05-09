@@ -72,35 +72,42 @@ export const STATUS_META = {
   sent:                 { label: '발송완료',        variant: 'success'   },
 };
 
-// ── 사장님 콘솔용 6개 그룹 ─────────────────────────────────────
+// ── 사장님 콘솔용 그룹 ─────────────────────────────────────────
 // PROVIDER_STATUS_GROUPS — 그룹 라벨/variant 정의 + 그룹 카운트 표시 순서
 //
-// 정책 매핑 (사용자 요구 #7):
-//   submitted / receiving                                → 신청완료
-//   beacon_setting / shipping_ready / service_ready      → 준비중
-//   shipping / delivered                                 → 배송중
-//   active                                               → 서비스중
-//   paused                                               → 일시중지
-//   terminated                                           → 해지
+// 정책 매핑 (사용자 요구 2026-05-09 update):
+//   submitted / receiving                                → 신청접수      (신청 진행중 탭)
+//   beacon_setting / shipping_ready / service_ready      → 준비중        (신청 진행중 탭)
+//   shipping                                             → 배송중        (신청 진행중 탭)
+//   delivered / installed                                → 서비스대기    ★ 운영중 탭 (이전 진행중)
+//   active                                               → 서비스중      (운영중 탭)
+//   paused                                               → 일시중지      (운영중 탭 최하단)
+//   terminated                                           → 해지          (운영중 탭 최하단)
+//
+// 변경 의도:
+//   "신청완료" 라벨이 "끝났다" 로 오해됨 → "신청접수" 로 명확화.
+//   배송완료(delivered) = 신청 단계 끝 → 운영중 탭으로 이동, 라벨 "서비스대기".
+//   사용자 활성화(active 토글) 전까지 서비스대기 상태로 운영중 탭에 노출.
 export const PROVIDER_STATUS_GROUPS = {
-  applied:    { label: '신청완료', variant: 'info',    keys: ['submitted', 'receiving', 'applied', 'paid', 'review', 'under_review'] },
-  preparing:  { label: '준비중',   variant: 'info',    keys: ['beacon_setting', 'shipping_ready', 'service_ready', 'provisioning', 'installation_pending'] },
-  shipping:   { label: '배송중',   variant: 'info',    keys: ['shipping', 'delivered', 'installed'] },
-  live:       { label: '서비스중', variant: 'success', keys: ['active'] },
-  paused:     { label: '일시중지', variant: 'warning', keys: ['paused'] },
-  terminated: { label: '해지',     variant: 'neutral', keys: ['terminated', 'ended'] },
+  applied:        { label: '신청접수', variant: 'info',    keys: ['submitted', 'receiving', 'applied', 'paid', 'review', 'under_review'] },
+  preparing:      { label: '준비중',   variant: 'info',    keys: ['beacon_setting', 'shipping_ready', 'service_ready', 'provisioning', 'installation_pending'] },
+  shipping:       { label: '배송중',   variant: 'info',    keys: ['shipping'] },
+  serviceWaiting: { label: '서비스대기', variant: 'info',  keys: ['delivered', 'installed'] },
+  live:           { label: '서비스중', variant: 'success', keys: ['active'] },
+  paused:         { label: '일시중지', variant: 'warning', keys: ['paused'] },
+  terminated:     { label: '해지',     variant: 'neutral', keys: ['terminated', 'ended'] },
 };
 
-// ── 4 섹션 ─────────────────────────────────────────────────────
-// 사장님 콘솔 리스트 화면 분리 기준 (강조도 순서대로):
-//   1) 신청 진행중   = 신청완료 + 준비중 + 배송중 (가장 강조)
-//   2) 운영중 서비스 = 서비스중 (compact)
-//   3) 일시중지·점검 = 일시중지
-//   4) 해지         = 해지 (0건 자동 숨김)
+// ── 섹션 (탭) ─────────────────────────────────────────────────
+// 사장님 콘솔 탭 구조 (사용자 요구 2026-05-09 정리):
+//   inProgress = 신청접수 + 준비중 + 배송중  (배송완료 제외)
+//   live       = 서비스대기 + 서비스중 + 일시중지 + 해지 (운영중 탭 = 신청 끝난 모든 항목)
+//
+// paused / terminated 키는 운영중 렌더 정렬용으로 별도 보존 (탭 자체는 분리되지 않음).
 export const PROVIDER_SECTIONS = {
   inProgress: { label: '신청 진행중',   groups: ['applied', 'preparing', 'shipping'] },
-  live:       { label: '운영중 서비스', groups: ['live'] },
-  paused:     { label: '일시중지·점검', groups: ['paused'] },
+  live:       { label: '운영중',        groups: ['serviceWaiting', 'live'] },
+  paused:     { label: '일시중지',      groups: ['paused'] },
   terminated: { label: '해지',          groups: ['terminated'] },
 };
 

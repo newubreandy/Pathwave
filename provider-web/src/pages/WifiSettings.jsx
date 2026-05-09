@@ -4,6 +4,7 @@ import {
   Camera, Plus, X, ChevronLeft, ChevronRight, Search,
   Image as ImageIcon, Loader2,
   Wifi, Package, Truck, FileCheck2, PauseCircle, XCircle, ClipboardList,
+  Clock,
 } from 'lucide-react';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
@@ -29,7 +30,10 @@ import './WifiSettings.css';
 
 /**
  * 상태 → 카드 좌측 아바타 맵핑.
- * provider 라벨 6 그룹과 1:1 정렬.
+ * provider 라벨 그룹과 1:1 정렬.
+ *
+ *   delivered/installed = 서비스대기 (운영중 탭) — Clock 아이콘 + info variant
+ *   active              = 서비스중 (운영중 탭) — Wifi (live 섹션 별도 렌더)
  */
 const STATUS_AVATAR = {
   submitted:        { icon: FileCheck2,  variant: 'info'    },
@@ -38,11 +42,14 @@ const STATUS_AVATAR = {
   shipping_ready:   { icon: Package,     variant: 'accent'  },
   service_ready:    { icon: Package,     variant: 'accent'  },
   shipping:         { icon: Truck,       variant: 'accent'  },
-  delivered:        { icon: Truck,       variant: 'accent'  },
+  delivered:        { icon: Clock,       variant: 'info'    },
+  installed:        { icon: Clock,       variant: 'info'    },
   active:           { icon: Wifi,        variant: 'success' },
   paused:           { icon: PauseCircle, variant: 'warning' },
   terminated:       { icon: XCircle,     variant: 'neutral' },
 };
+
+const isServiceWaiting = (status) => status === 'delivered' || status === 'installed';
 
 const getAvatarForStatus = (status) =>
   STATUS_AVATAR[status] || { icon: Wifi, variant: 'neutral' };
@@ -109,6 +116,16 @@ const MOCK_PROFILES = [
     statusUpdatedAt: '2024.02.25 17:45',
     statusHistory: [],
     deviceStatus: 'ok', battery: 12, enabled: false },
+
+  // ── 서비스대기 — 배송 완료 후 사용자 활성화 대기 (단건) ─────────
+  { id: 11, name: '서관 1층', applicationGroupId: 'PW-20260507-003', applicationGroupSeq: 1, applicationGroupTotal: 1,
+    paidAt: '2026.05.07 11:00',
+    message: '', ssid: 'kt5G_WS_F1', beaconSn: 'BCN-2026-0020', password: 'Ezddd1@8820', date: '2026.05.07', periodEnd: '2028.05.06', image: null,
+    applicationStatus: 'delivered',
+    statusMessage: '배송이 완료되었습니다. 서비스 시작을 기다리는 중입니다.',
+    statusUpdatedAt: '2026.05.09 10:30',
+    statusHistory: [],
+    deviceStatus: 'ok', battery: 100, enabled: false },
 
   // ── 다건 신청 그룹 #1 — 신관 (3개) ────────────────────────────
   // 결제 1회로 3개 wifi 동시 신청. 각 wifiItem 단계 다양함.
@@ -534,8 +551,14 @@ const WifiSettings = () => {
       { label: '점검·해지', value: maintenanceCount, unit: '건', tone: maintenanceCount > 0 ? 'warning' : 'default' },
     ];
 
-    // 운영중 탭 — 일시중지/해지 정렬:
-    //   active (운영중) → paused (일시중지) → terminated (해지일 desc)
+    // 운영중 탭 — 정렬 순서 (위 → 아래):
+    //   1) 서비스대기 (delivered/installed) — 가장 위, 사용자 활성화 액션 필요
+    //   2) 서비스중   (active)
+    //   3) 일시중지   (paused)
+    //   4) 해지       (terminated, 해지일 desc)
+    const liveItems = profilesBySection.live || [];
+    const liveWaiting = liveItems.filter((p) => isServiceWaiting(p.applicationStatus));
+    const liveActive  = liveItems.filter((p) => p.applicationStatus === 'active');
     const sortedTerminated = (profilesBySection.terminated || [])
       .slice()
       .sort((a, b) => {
@@ -600,12 +623,24 @@ const WifiSettings = () => {
       // 송장번호 — 배송중일 때만 별도 row 로 강조 (pill 아님)
       const hasShipping = !!p.shippingTrackingNo;
 
+      // 운영중 탭은 active(서비스중) + delivered(서비스대기) 둘 다 들어옴.
+      const isWaiting    = section === 'live' && isServiceWaiting(p.applicationStatus);
+      const isActiveLive = section === 'live' && p.applicationStatus === 'active';
+      // 서비스중일 때만 디바이스 상태 강조 (서비스대기는 device 정보 무관).
+      const isOffline    = isActiveLive && p.enabled && p.deviceStatus === 'offline';
+      const isLowBattery = isActiveLive && p.enabled && p.deviceStatus === 'low';
+      const isDisabled   = isActiveLive && !p.enabled;
+
       // 좌측 아바타 —
-      //   운영중 = 디바이스 상태로 색조 (정상=success / 부족=warning / 끊김=danger)
-      //   신청 진행중 = accent 통일 (가이드 v1.0 — 아이콘 모양으로 단계 구분)
+      //   서비스대기 (delivered) = Clock + info — "활성화 대기 중"
+      //   서비스중   (active)    = Wifi + 디바이스 상태 색조
+      //   신청 진행중 = accent 통일 (그룹 헤더와 톤 매칭)
       //   일시중지 = warning, 해지 = neutral
       let avatarVariant, AvatarIcon;
-      if (section === 'live') {
+      if (isWaiting) {
+        AvatarIcon = Clock;
+        avatarVariant = 'info';
+      } else if (isActiveLive) {
         AvatarIcon = Wifi;
         avatarVariant =
           !p.enabled ? 'neutral'
@@ -616,7 +651,7 @@ const WifiSettings = () => {
       } else if (section === 'inProgress') {
         const a = getAvatarForStatus(p.applicationStatus);
         AvatarIcon = a.icon;
-        avatarVariant = 'accent'; // 그룹 헤더와 톤 통일
+        avatarVariant = 'accent';
       } else if (section === 'paused') {
         AvatarIcon = PauseCircle;
         avatarVariant = 'warning';
@@ -624,11 +659,6 @@ const WifiSettings = () => {
         AvatarIcon = XCircle;
         avatarVariant = 'neutral';
       }
-
-      // 운영중 — 디바이스 오프라인 상태 강조 (빨간색 + 카드 딤)
-      const isOffline = section === 'live' && p.enabled && p.deviceStatus === 'offline';
-      const isLowBattery = section === 'live' && p.enabled && p.deviceStatus === 'low';
-      const isDisabled = section === 'live' && !p.enabled;
 
       return (
         <GlassCard
@@ -666,9 +696,9 @@ const WifiSettings = () => {
                 )}
               </div>
 
-              {/* 운영중 — 디바이스 상태 한 줄 (정상/배터리부족/연결끊김/중단).
-                  아바타 색이 이미 알리고 있으므로 dot 은 작게. */}
-              {section === 'live' && (
+              {/* 운영중 active — 디바이스 상태 한 줄 (정상/배터리부족/연결끊김/중단).
+                  서비스대기(delivered) 는 device 정보 무관 → 노출 X. */}
+              {isActiveLive && (
                 <div className="wifi-card-device">
                   <span className="wifi-card-device-label">
                     {p.enabled ? (STATUS_LABEL[p.deviceStatus] || '-') : '중단'}
@@ -832,12 +862,14 @@ const WifiSettings = () => {
           );
         })()}
 
-        {/* ── 운영중 탭 — active(서비스중) + paused(일시중지) + terminated(해지일 desc).
-              사용자 요구 (2026-05-09): 점검·해지를 별도 탭 분리하지 않고,
-              운영중 탭 최하단에 일시중지 → 해지(일자순)으로 노출. ── */}
+        {/* ── 운영중 탭 — 사용자 요구 (2026-05-09):
+              서비스대기(delivered) → 서비스중(active) → 일시중지 → 해지(일자순) ── */}
         {!isLoading && activeTab === 'live' && totalCount > 0 && (
           <div className="wifi-list wifi-list--live">
-            {(profilesBySection.live || []).map((p) =>
+            {liveWaiting.map((p) =>
+              renderWifiCard(p, { variant: 'compact', section: 'live' })
+            )}
+            {liveActive.map((p) =>
               renderWifiCard(p, { variant: 'compact', section: 'live' })
             )}
             {(profilesBySection.paused || []).map((p) =>
