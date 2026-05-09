@@ -1,0 +1,50 @@
+/* ═══════════════════════════════════════════════════
+   MetricStrip — 페이지 상단 요약
+   카드 안 아니라 ‘텍스트 라인’ 으로 가볍게.
+   ═══════════════════════════════════════════════════ */
+
+.pw-metricstrip {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--pw-space-2);
+  padding: var(--pw-space-3) 0;
+  font-size: 13px;
+  color: var(--pw-text-secondary);
+}
+
+.pw-metric {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.pw-metric-label {
+  font-weight: 500;
+  color: var(--pw-text-hint);
+}
+
+.pw-metric-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--pw-text);
+  line-height: 1;
+}
+
+.pw-metric-unit {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--pw-text-hint);
+}
+
+.pw-metricstrip-sep {
+  color: var(--pw-text-hint);
+  opacity: 0.5;
+  user-select: none;
+}
+
+/* tone variants — value 색만 살짝 변경 (배지 X) */
+.pw-metric--accent  .pw-metric-value { color: var(--pw-accent-text); }
+.pw-metric--warning .pw-metric-value { color: #FBBF24; }
+.pw-metric--success .pw-metric-value { color: #86EFAC; }
+.pw-metric--danger  .pw-metric-value { color: #FCA5A5; }
