@@ -22,9 +22,9 @@ import MiniInfoPill from '../components/common/MiniInfoPill';
 import StatusMessage from '../components/common/StatusMessage';
 import MetricStrip from '../components/common/MetricStrip';
 import CardAvatar from '../components/common/CardAvatar';
-import StageProgress from '../components/common/StageProgress';
-import { getStageNumber } from '../components/common/stageMapping';
 import { SkeletonCard } from '../components/common/Skeleton';
+// StageProgress / stageMapping 은 list view 에서 제거 (사용자 요구: StatusBadge 텍스트 방식 유지).
+// 슈퍼어드민 / 상세 화면에서 재사용 가능하도록 컴포넌트 자체는 유지.
 import './WifiSettings.css';
 
 /**
@@ -552,13 +552,12 @@ const WifiSettings = () => {
         : liveCount;
 
     // ── 그룹 컨테이너 안 inset row 렌더 — RePlan 스타일 ──
-    // 사용자 요구 (2026-05-09): 하단 상태 메시지 제거 + 우측에 4단계 스테퍼 플래그.
+    // 사용자 요구 (2026-05-09): 하단 상태 메시지 제거. 우측 플래그 = StatusBadge (이전 방식).
     // 슈퍼어드민 (admin-web) 에서는 statusMessage 도 노출 — 이 페이지는 사장님 콘솔.
     const renderWifiInsetRow = (p) => {
       const a = getAvatarForStatus(p.applicationStatus);
       const AvatarIcon = a.icon;
       const hasShipping = !!p.shippingTrackingNo;
-      const stage = getStageNumber(p.applicationStatus);
       return (
         <GroupCardItem key={p.id} onClick={() => openDetail(p)}>
           <CardAvatar variant="accent" size="md">
@@ -567,8 +566,8 @@ const WifiSettings = () => {
           <div className="wifi-inset-body">
             <div className="wifi-inset-head">
               <span className="wifi-inset-title">{p.name}</span>
-              {/* 우측 플래그 — 4단계 스테퍼 (StatusBadge 대체). 텍스트 라벨은 stepper aria 에. */}
-              {stage > 0 && <StageProgress stage={stage} size="sm" />}
+              {/* 우측 플래그 — 텍스트 배지 (준비중 / 배송중 / 신청완료 등) */}
+              <StatusBadge status={p.applicationStatus} size="sm" mode="provider" />
             </div>
             <div className="pw-pill-row wifi-inset-pills">
               {p.ssid && <MiniInfoPill label="SSID" mono>{p.ssid}</MiniInfoPill>}
@@ -654,14 +653,8 @@ const WifiSettings = () => {
             <div className="wifi-card-body">
               <div className="wifi-card-head">
                 <span className="wifi-card-title">{p.name}</span>
-                {/* inProgress 단건 카드는 우측 플래그 = StageProgress (4단계).
-                    운영중 / 일시중지 / 해지 는 텍스트 라벨 (StatusBadge) 유지. */}
-                {section === 'inProgress'
-                  ? (() => {
-                      const stage = getStageNumber(p.applicationStatus);
-                      return stage > 0 ? <StageProgress stage={stage} size="sm" /> : null;
-                    })()
-                  : <StatusBadge status={p.applicationStatus} size="sm" mode="provider" />}
+                {/* 모든 카드 공통 — 텍스트 배지 (준비중 / 배송중 / 신청완료 / 서비스중 / 일시중지 / 해지) */}
+                <StatusBadge status={p.applicationStatus} size="sm" mode="provider" />
               </div>
 
               {/* MiniInfoPill 최대 2~3개 */}
