@@ -43,12 +43,12 @@
   border-left: 1px solid var(--pw-surface-line);
 }
 
+/* 카드 헤더 — 라벨 톤 (14/600/hint) 가이드 (사용자 요구 2026-05-11) */
 .payment-summary-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--pw-text-hint);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
   margin: 0;
 }
 
@@ -94,7 +94,8 @@
 /* 카드 교체 버튼 — 공용 Button(outline,small,fullWidth) 사용 (사용자 요구 2026-05-11).
    기존 .payment-method-change-btn 인라인 톤 제거. */
 
-/* ── 우측 카드 — 다음 결제 요약 ── */
+/* ── 우측 카드 — 다음 결제 요약 ──
+   공통 가이드 (사용자 요구 2026-05-11): 라벨 14/600/hint, 값 22/300/white. */
 .payment-billing-date-row {
   display: flex;
   align-items: baseline;
@@ -119,57 +120,77 @@
   font-weight: 700;
   letter-spacing: 0.02em;
 }
+/* 결제 주기 — 보조 메타. 라벨 톤 (14/600/hint) */
 .payment-billing-cycle {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   color: var(--pw-text-hint);
 }
+/* 청구액 — 가이드 적용: 값 22/300/white + 단위 14/600/hint */
 .payment-billing-amount {
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  justify-content: space-between;
+  gap: var(--pw-space-3);
   padding: var(--pw-space-3) 0;
   border-top: 1px solid var(--pw-surface-line);
   border-bottom: 1px solid var(--pw-surface-line);
 }
+.payment-billing-amount-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pw-text-hint);
+}
+.payment-billing-amount-value-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
 .payment-billing-amount-value {
-  font-size: 30px;
+  font-size: 22px;
   font-weight: 300;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
   color: var(--pw-text);
   font-variant-numeric: tabular-nums;
 }
 .payment-billing-amount-unit {
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--pw-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pw-text-hint);
 }
 
+/* 분해 — 한 행에 라벨/값 쌍. 라벨 14/600/hint, 값 22/300/white. */
 .payment-billing-breakdown {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--pw-space-2);
+  gap: var(--pw-space-3);
 }
 .payment-billing-breakdown li {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--pw-space-3);
-  font-size: 13px;
 }
 .payment-billing-breakdown-label {
-  color: var(--pw-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pw-text-hint);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .payment-billing-breakdown-amount {
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
   color: var(--pw-text);
-  font-weight: 500;
   font-variant-numeric: tabular-nums;
+}
+@media (max-width: 480px) {
+  .payment-billing-breakdown-amount { font-size: 20px; }
 }
 
 /* ── 이메일 블록 — 전체폭 ── */
@@ -188,8 +209,10 @@
     border-left: none;
     border-top: 1px solid var(--pw-surface-line);
   }
-  .payment-billing-amount-value { font-size: 26px; }
-  .payment-billing-date { font-size: 20px; }
+}
+@media (max-width: 480px) {
+  .payment-billing-date,
+  .payment-billing-amount-value { font-size: 20px; }
 }
 
 /* ── Card Display (기존 payment-card 그라데이션 유지) ── */
@@ -246,13 +269,14 @@
 .payment-email-change:hover { color: var(--pw-text-secondary); text-decoration: underline; }
 .payment-email-note { font-size: var(--pw-caption-size); color: var(--pw-text-hint); margin-top: var(--pw-space-1); }
 
-/* ── Service Sections — 단순화 (2026-05-10): 서비스명 + 사용량만. 터치 = 리스트 이동. ── */
+/* ── Service Sections — 한 줄 (사용자 요구 2026-05-11):
+   좌측 서비스명 (라벨), 우측 "N개 이용중" + chevron. ── */
 .payment-service-section {
   width: 100%;
   display: flex;
-  flex-direction: column;
-  gap: var(--pw-space-2);
-  margin-bottom: var(--pw-space-4);
+  align-items: center;
+  gap: var(--pw-space-3);
+  margin-bottom: var(--pw-space-3);
   padding: var(--pw-space-4) var(--pw-space-5);
   background: var(--pw-surface-1);
   border: 1px solid var(--pw-surface-line);
@@ -262,17 +286,31 @@
   color: inherit;
   cursor: default;
   transition: background-color var(--pw-duration-fast) var(--pw-ease);
+  min-height: 56px;
 }
 .payment-service-section--clickable { cursor: pointer; }
 .payment-service-section--clickable:hover { background: var(--pw-surface-2); }
 
-.payment-service-header { display: flex; align-items: center; justify-content: space-between; gap: var(--pw-space-2); }
-.payment-service-title { font-size: var(--pw-title-size); font-weight: 700; color: var(--pw-text); }
-.payment-service-summary { display: flex; align-items: center; justify-content: space-between; gap: var(--pw-space-2); }
-.payment-service-name { font-size: 14px; font-weight: 600; color: var(--pw-text-hint); }
-.payment-service-count { font-size: 22px; font-weight: 300; letter-spacing: -0.015em; color: var(--pw-text); }
+/* 서비스명 — 흰색 한 줄 (값 톤). flex:1 로 좌측 채움. */
+.payment-service-title {
+  flex: 1;
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
+  color: var(--pw-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 우측 카운트 — 라벨 톤 (14/600/hint) */
+.payment-service-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pw-text-hint);
+  white-space: nowrap;
+}
 @media (max-width: 480px) {
-  .payment-service-count { font-size: 20px; }
+  .payment-service-title { font-size: 20px; }
 }
 
 .payment-service-detail {

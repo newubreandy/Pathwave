@@ -613,8 +613,11 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
             </div>
             <div className="payment-billing-cycle">{MOCK_BILLING_NEXT.cycle}</div>
             <div className="payment-billing-amount">
-              <span className="payment-billing-amount-value">{fmt(MOCK_BILLING_NEXT.amount)}</span>
-              <span className="payment-billing-amount-unit">원</span>
+              <span className="payment-billing-amount-label">예상 청구액</span>
+              <span className="payment-billing-amount-value-wrap">
+                <span className="payment-billing-amount-value">{fmt(MOCK_BILLING_NEXT.amount)}</span>
+                <span className="payment-billing-amount-unit">원</span>
+              </span>
             </div>
             <ul className="payment-billing-breakdown">
               {MOCK_BILLING_NEXT.breakdown.map((b) => (
@@ -650,9 +653,8 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
           </div>
         </div>
 
-        {/* 서비스 이용 내역 — 서비스 / 사용량만. 터치 시 해당 서비스 리스트로 이동.
-            사용자 요구 (2026-05-10): 매월 12일 결제 / 신청일 / 약정기간 등 상세 제거 —
-            세부 결제 정보는 카드 결제 단계에서 처리. 결제관리는 "어떤 서비스를 몇개" 만. */}
+        {/* 서비스 이용 내역 — 한 줄 행으로 단순화 (사용자 요구 2026-05-11):
+            "왼쪽 두 개 쓸필요 없고, 위에 흰색 한 줄만 + 우측 N개 이용중 >" */}
         {services.map((service) => {
           const totalQty = service.items.reduce((s, i) => s + i.quantity, 0);
           const targetRoute =
@@ -667,16 +669,9 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
               className="payment-service-section payment-service-section--clickable"
               onClick={() => targetRoute && navigate(targetRoute)}
             >
-              <div className="payment-service-header">
-                <span className="payment-service-title">{service.name}</span>
-                <ChevronRight size={20} color="var(--pw-text-hint)" />
-              </div>
-              <div className="payment-service-summary">
-                <span className="payment-service-name">{service.label}</span>
-                <span className="payment-service-count">
-                  {totalQty > 0 ? `${totalQty}개 이용중` : '0개 이용중'}
-                </span>
-              </div>
+              <span className="payment-service-title">{service.name}</span>
+              <span className="payment-service-count">{totalQty}개 이용중</span>
+              <ChevronRight size={18} color="var(--pw-text-hint)" aria-hidden="true" />
             </button>
           );
         })}
