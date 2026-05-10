@@ -7,6 +7,7 @@ import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import CardAvatar from '../components/common/CardAvatar';
 import GroupCard, { GroupCardItem } from '../components/common/GroupCard';
+import SectionTabs from '../components/common/SectionTabs';
 import { MOCK_INBOX, NOTIFICATION_CATEGORIES } from '../services/notification/mockInbox';
 import './Notifications.css';
 
@@ -501,21 +502,16 @@ const Notifications = () => {
         <p className="sub-title">받은 알림 확인과 알림 발송을 관리하세요.</p>
       </div>
 
-      {/* 탭 — 결제관리 / 와이파이 와 동일 톤 (full-width / 16px / accent) */}
-      <div className="payment-tabs">
-        <button
-          className={`payment-tab ${tab === 'inbox' ? 'active' : ''}`}
-          onClick={() => setTab('inbox')}
-        >
-          알림리스트
-        </button>
-        <button
-          className={`payment-tab ${tab === 'send' ? 'active' : ''}`}
-          onClick={() => setTab('send')}
-        >
-          알림발송관리
-        </button>
-      </div>
+      {/* 탭 — 공통 SectionTabs (사용자 요구 2026-05-10: 와이파이/리포트와 동일 톤) */}
+      <SectionTabs
+        tabs={[
+          { key: 'inbox', label: '알림리스트', count: MOCK_INBOX.filter(n => !n.read_at).length },
+          { key: 'send',  label: '알림발송관리' },
+        ]}
+        value={tab}
+        onChange={setTab}
+        ariaLabel="알림 카테고리"
+      />
 
       {/* ── 알림리스트 (Inbox) — 받은 알림 ── */}
       {tab === 'inbox' && <NotificationInbox />}

@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Plus, Check, Wifi, Bell, Gift, CreditCard, A
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
+import SectionTabs from '../components/common/SectionTabs';
 import './PaymentManagement.css';
 
 /* ── Mock Data ── */
@@ -501,10 +502,15 @@ const PaymentManagement = () => {
         <button className="back-btn d-md-none" onClick={() => navigate('/dashboard')}><ChevronLeft size={24} /></button>
         <h1>결제관리</h1>
       </header>
-      <div className="payment-tabs">
-        <button className={`payment-tab ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>결제정보</button>
-        <button className={`payment-tab ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>결제내역</button>
-      </div>
+      <SectionTabs
+        tabs={[
+          { key: 'info',    label: '결제정보' },
+          { key: 'history', label: '결제내역' },
+        ]}
+        value={activeTab}
+        onChange={setActiveTab}
+        ariaLabel="결제관리 카테고리"
+      />
       {activeTab === 'info' && <PaymentInfoTab card={card} email={email} services={MOCK_SERVICES} onApply={() => setShowApply(true)} />}
       {activeTab === 'history' && <PaymentHistoryTab />}
     </div>

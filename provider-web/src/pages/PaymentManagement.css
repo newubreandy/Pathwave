@@ -3,52 +3,8 @@
    공통 컴포넌트: Button, ConfirmModal, BottomActionBar
    ═══════════════════════════════════════════════════ */
 
-/* ── Tabs — SectionTabs (.pw-tab) 과 동일 스타일 (사용자 요구 2026-05-10) ── */
-/* tabs — sticky 시 배경 없음 (페이지 gradient 비치게).
-   사용자 요구 (2026-05-10): "탭바탕색을 없음으로". */
-.payment-tabs {
-  display: flex;
-  gap: 0;
-  margin-top: var(--pw-space-6);
-  margin-bottom: var(--pw-space-8);
-  border-bottom: 1px solid var(--pw-surface-line);
-  position: sticky;
-  top: var(--pw-gnb-total);
-  background: transparent;
-  z-index: 50;
-}
-
-.payment-tab {
-  flex: 1 1 0;
-  padding: var(--pw-space-4);
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  font-size: 16px;
-  font-weight: 600;
-  font-family: inherit;
-  color: var(--pw-text-hint);
-  cursor: pointer;
-  transition:
-    color var(--pw-duration-fast) var(--pw-ease),
-    border-color var(--pw-duration-fast) var(--pw-ease);
-  text-align: center;
-  white-space: nowrap;
-}
-
-.payment-tab:hover { color: var(--pw-text-secondary); }
-.payment-tab.active {
-  color: var(--pw-accent);
-  border-bottom-color: var(--pw-accent);
-}
-
-@media (max-width: 480px) {
-  .payment-tab {
-    padding: var(--pw-space-3) var(--pw-space-2);
-    font-size: 14px;
-  }
-}
+/* ── Tabs: SectionTabs 컴포넌트로 일원화 (2026-05-10).
+   기존 .payment-tabs / .payment-tab 인라인 스타일 → SectionTabs (.pw-tabs/.pw-tab) 사용. */
 
 .payment-content { margin: 0 auto; position: relative; z-index: 1; }
 
@@ -416,15 +372,6 @@
 
 /* ── Mobile ── */
 @media (max-width: 768px) {
-  .payment-tabs {
-    top: calc(var(--pw-gnb-height) + 77px);
-    margin-top: 0; margin-bottom: var(--pw-space-6);
-    margin-left: calc(-1 * var(--pw-container-pad-m));
-    margin-right: calc(-1 * var(--pw-container-pad-m));
-    padding-left: var(--pw-container-pad-m);
-    padding-right: var(--pw-container-pad-m);
-    background: var(--pw-bg-3); border-top: 1px solid var(--pw-border-light);
-  }
   .payment-card, .payment-card-empty { max-width: 280px; }
   .pay-step-label { font-size: 0.55rem; }
 }
