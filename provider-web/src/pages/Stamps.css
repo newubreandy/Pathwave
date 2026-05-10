@@ -55,31 +55,32 @@
   gap: var(--pw-space-3);
 }
 
+/* GlassCard / GroupCard 와 동일 톤 (사용자 요구 2026-05-10) — surface-1 + surface-line.
+   이전 surface + shadow-card 는 다른 페이지 카드보다 검정이 진해서 톤이 어긋남. */
 .stamp-card {
   position: relative;
   display: flex;
   align-items: center;
   padding: var(--pw-space-6);
   padding-right: var(--pw-space-12);
-  background-color: var(--pw-surface);
-  border-radius: var(--pw-radius-md);
-  box-shadow: var(--pw-shadow-card);
+  background: var(--pw-surface-1);
+  border-radius: var(--pw-radius-lg);
+  border: 1px solid var(--pw-surface-line);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.025) inset,
+              0 2px 6px rgba(0, 0, 0, 0.20);
   cursor: pointer;
-  transition: transform var(--pw-duration-normal) var(--pw-ease),
-              box-shadow var(--pw-duration-normal) var(--pw-ease);
-  border: 1px solid var(--pw-border-light);
+  transition: background-color var(--pw-duration-fast) var(--pw-ease),
+              border-color var(--pw-duration-fast) var(--pw-ease);
   text-decoration: none;
   color: inherit;
 }
 
 .stamp-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--pw-shadow-lg);
+  background: var(--pw-surface-2);
 }
 
 .stamp-card:active {
-  transform: translateY(0);
-  box-shadow: var(--pw-shadow-sm);
+  background: var(--pw-surface-1);
 }
 
 /* ── Icon — CardAvatar md 동일 사이즈/곡률 정렬 (2026-05-09) ──

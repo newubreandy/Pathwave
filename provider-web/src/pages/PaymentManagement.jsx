@@ -511,8 +511,11 @@ const PaymentManagement = () => {
         onChange={setActiveTab}
         ariaLabel="결제관리 카테고리"
       />
-      {activeTab === 'info' && <PaymentInfoTab card={card} email={email} services={MOCK_SERVICES} onApply={() => setShowApply(true)} />}
-      {activeTab === 'history' && <PaymentHistoryTab />}
+      {/* 탭 ↔ 콘텐츠 간격 — 다른 페이지(알림 인박스 등)와 동일 톤 (사용자 요구 2026-05-10) */}
+      <div className="payment-tab-content">
+        {activeTab === 'info' && <PaymentInfoTab card={card} email={email} services={MOCK_SERVICES} onApply={() => setShowApply(true)} />}
+        {activeTab === 'history' && <PaymentHistoryTab />}
+      </div>
     </div>
   );
 };

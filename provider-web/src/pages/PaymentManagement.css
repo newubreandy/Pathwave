@@ -6,6 +6,11 @@
 /* ── Tabs: SectionTabs 컴포넌트로 일원화 (2026-05-10).
    기존 .payment-tabs / .payment-tab 인라인 스타일 → SectionTabs (.pw-tabs/.pw-tab) 사용. */
 
+/* 탭 ↔ 콘텐츠 간격 — 다른 페이지의 페이지 헤더~콘텐츠 간격(space-8)과 동일 톤. */
+.payment-tab-content {
+  margin-top: var(--pw-space-8);
+}
+
 .payment-content { margin: 0 auto; position: relative; z-index: 1; }
 
 /* ── Card Display ── */
