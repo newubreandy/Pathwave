@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════
    StatusMessage — 카드 내부 1~2줄 안내문
+   디자인 가이드 v1.0 정렬 — 좌측 라인 없음, 단순 surface strip.
    타임라인 / 프로세스 시각화 절대 X.
    ═══════════════════════════════════════════════════ */
 
@@ -8,10 +9,8 @@
   align-items: flex-start;
   gap: var(--pw-space-2);
   padding: var(--pw-space-2) var(--pw-space-3);
-  background: var(--pw-surface-1);
-  border-left: 2px solid transparent;
+  background: var(--pw-surface-2);
   border-radius: var(--pw-radius-sm);
-  /* 메시지 좌측에 dot 표시 (색약 사용자도 색이 아닌 형태로 구분) */
 }
 
 .pw-statusmsg-text {
@@ -38,29 +37,23 @@
 }
 
 /* ── tone variants ──────────────────────────────── */
-.pw-statusmsg--info {
-  border-left-color: rgba(255, 255, 255, 0.18);
-}
-
+/* default(info) / accent — 가이드 그대로 surface 배경, 색상 변경 없음 */
+.pw-statusmsg--info,
 .pw-statusmsg--accent {
-  border-left-color: var(--pw-accent);
-  background: var(--pw-accent-soft);
-}
-.pw-statusmsg--accent .pw-statusmsg-text {
-  color: var(--pw-text);
+  background: var(--pw-surface-2);
 }
 
+/* warning / danger — 디자인 가이드 v1.0 정렬: 좌측 라인 없음.
+   tint 배경 + 텍스트 색상만으로 구분. */
 .pw-statusmsg--warning {
-  border-left-color: var(--pw-warning);
-  background: rgba(245, 158, 11, 0.06);
+  background: rgba(245, 158, 11, 0.08);
 }
 .pw-statusmsg--warning .pw-statusmsg-text {
   color: #FBBF24;
 }
 
 .pw-statusmsg--danger {
-  border-left-color: var(--pw-error);
-  background: rgba(239, 68, 68, 0.06);
+  background: rgba(239, 68, 68, 0.08);
 }
 .pw-statusmsg--danger .pw-statusmsg-text {
   color: #FCA5A5;

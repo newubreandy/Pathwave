@@ -119,31 +119,40 @@
   cursor: pointer;
 }
 
-/* Details Section (Image 2/4 Style) */
+/* Details Section (매장안내 — 공통 .info-* 가이드 정렬, 2026-05-09) */
 .modern-details {
   display: flex;
   flex-direction: column;
-  gap: 4rem;
+  gap: var(--pw-space-12);     /* 48px (이전 64px → 가이드 통일) */
 }
 
 .detail-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4rem;
+  gap: var(--pw-space-12);
 }
 
+/* .detail-item label = .info-label 동등 */
 .detail-item label {
   display: block;
-  font-size: 0.875rem;
+  font-size: 14px;
   font-weight: 600;
-  color: #999;
-  margin-bottom: 1rem;
+  color: var(--pw-text-hint);
+  margin-bottom: var(--pw-space-3);
 }
 
+/* 매장 소개 — .display-text 와 완전 동일 (사용자 요구 2026-05-10):
+   "다른 페이지도 공통인데 매장소개만 다르다" → 22px / 300 / white 통일.
+   line-height 만 다단락 가독성 위해 살짝 ↑. */
 .display-text.description {
-  font-size: 1.1rem;
-  line-height: 1.8;
-  color: var(--text-secondary);
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--pw-text);
+  line-height: 1.55;
+  letter-spacing: -0.015em;
+}
+@media (max-width: 480px) {
+  .display-text.description { font-size: 20px; }
 }
 
 /* Benefits Section */
@@ -154,18 +163,22 @@
   margin-top: 0.5rem;
 }
 
+/* 혜택 리스트 — 공통 .info-list-item 정렬 (사용자 요구: 글자 키움 0.9rem → 16px / 600) */
 .benefit-card {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  padding: 1rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  font-size: 0.9rem; /* Reduced to prevent wrapping on Android */
-  font-weight: 500;
-  color: var(--text-main);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  gap: var(--pw-space-3);
+  padding: var(--pw-space-4);
+  background: var(--pw-surface-1);
+  border: 1px solid var(--pw-surface-line);
+  border-radius: var(--pw-radius-md);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--pw-text);
+  text-decoration: none;
+  transition:
+    background-color var(--pw-duration-fast) var(--pw-ease),
+    border-color var(--pw-duration-fast) var(--pw-ease);
 }
 
 .benefit-icon {
@@ -214,11 +227,16 @@
   border: 1px dashed #E2E8F0;
 }
 
+/* 값 표시 — 공통 .info-value 정렬 (22px / 300 / 흰색) */
 .display-text {
-  font-size: 1.5rem;
+  font-size: 22px;
   font-weight: 300;
-  color: var(--text-main);
-  letter-spacing: -0.02em;
+  color: var(--pw-text);
+  letter-spacing: -0.015em;
+  line-height: 1.4;
+}
+@media (max-width: 480px) {
+  .display-text { font-size: 20px; }
 }
 
 .description {

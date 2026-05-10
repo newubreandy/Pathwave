@@ -148,6 +148,175 @@ input, textarea, select, button {
   color: var(--pw-text-hint);
 }
 
+/* ═══════════════════════════════════════════════════
+   Info Section Pattern — 매장안내 (StoreInfo) 기준 공통 가이드
+   사용자 요구 (2026-05-09): 라벨/값/본문/리스트 톤 통일.
+
+   레이아웃:
+     <div class="info-stack">
+       <div class="info-row">
+         <span class="info-label">전화번호</span>
+         <span class="info-value">02-1234-5678</span>
+       </div>
+       <div class="info-row">
+         <span class="info-label">매장 소개</span>
+         <p class="info-body">크리에이티브 전문가...</p>
+       </div>
+       <div class="info-row">
+         <span class="info-label">진행중인 혜택</span>
+         <ul class="info-list">
+           <li class="info-list-item">[혜택] ...</li>
+         </ul>
+       </div>
+     </div>
+   ═══════════════════════════════════════════════════ */
+
+.info-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-12);  /* 48px — 섹션 간 충분한 여백 (사용자 피드백) */
+}
+
+.info-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-3);   /* 12px — 라벨과 값 사이 */
+}
+
+/* 작은 회색 라벨 (매장안내 14px / 600 / hint 정렬) */
+.info-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pw-text-hint);
+  letter-spacing: 0;
+}
+
+/* 큰 흰색 값 (매장안내 24px / 300 light 정렬) — 한 줄 정보 */
+.info-value {
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--pw-text);
+  line-height: 1.4;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+/* 본문 — 사용자 요구 (2026-05-10): "다른 페이지도 공통인데" → 값과 완전 동일 사이즈.
+   .info-value 와 같은 22px / 300 / white. line-height 만 다단락 가독성 위해 ↑. */
+.info-body {
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--pw-text);
+  line-height: 1.55;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+/* 리스트 컨테이너 (혜택, 항목 나열 등) */
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-2);    /* 8px */
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 리스트 1행 — 사용자 요구: 살짝 더 큰 흰색 글자 (16px / 600) */
+.info-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-3);
+  padding: var(--pw-space-4);                    /* 16px */
+  background: var(--pw-surface-1);
+  border: 1px solid var(--pw-surface-line);
+  border-radius: var(--pw-radius-md);            /* 12px */
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--pw-text);
+  text-decoration: none;
+  transition:
+    background-color var(--pw-duration-fast) var(--pw-ease),
+    border-color var(--pw-duration-fast) var(--pw-ease);
+}
+.info-list-item:hover {
+  background: var(--pw-surface-2);
+  border-color: var(--pw-border-strong);
+}
+
+/* 모바일 — 값 / 본문 모두 20px (정렬 유지) */
+@media (max-width: 480px) {
+  .info-value { font-size: 20px; }
+  .info-body  { font-size: 20px; }
+  .info-stack { gap: var(--pw-space-10); /* 40px */ }
+}
+
+/* ═══════════════════════════════════════════════════
+   pw-toggle — 공통 토글 스위치 (사용자 요구 2026-05-10)
+   모든 페이지의 토글이 동일한 모양 + ON/OFF 텍스트 + accent 색.
+   사용:
+     <button class="pw-toggle is-on">
+       <span class="pw-toggle-text">ON</span>
+       <span class="pw-toggle-thumb" />
+     </button>
+   ═══════════════════════════════════════════════════ */
+
+.pw-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 64px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--pw-surface-3);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color var(--pw-duration-normal) var(--pw-ease);
+  font-family: inherit;
+}
+.pw-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pw-toggle.is-on {
+  background: var(--pw-accent);
+}
+
+.pw-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: transform var(--pw-duration-normal) var(--pw-ease);
+}
+.pw-toggle.is-on .pw-toggle-thumb {
+  transform: translateX(32px);
+}
+
+.pw-toggle-text {
+  position: absolute;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.85);
+  /* OFF 텍스트 — 우측 (썸이 좌측에 있으므로) */
+  right: 9px;
+  transition:
+    right var(--pw-duration-normal) var(--pw-ease),
+    left var(--pw-duration-normal) var(--pw-ease);
+}
+.pw-toggle.is-on .pw-toggle-text {
+  /* ON — 좌측 (썸이 우측으로 이동) */
+  right: auto;
+  left: 9px;
+}
+
 /* ── Card (글로벌 baseline) ──
    GlassCard 컴포넌트가 등장한 뒤로는 신규 UI 에서 .card 직접 사용 비권장.
    기존 페이지 호환을 위해 유지. ── */
@@ -286,12 +455,13 @@ input, textarea, select, button {
   border-bottom: none;
 }
 
+/* 폼 라벨 — 매장안내 .info-label / .detail-item label 톤 정렬 (14/600/hint) */
 .form-label {
   flex: 0 0 160px;
   display: block;
-  font-size: var(--pw-label-size);
+  font-size: 14px;
   font-weight: 600;
-  color: var(--pw-text-secondary);
+  color: var(--pw-text-hint);
   margin-bottom: 0;
   padding-top: var(--pw-space-3);
 }
@@ -419,14 +589,16 @@ input, textarea, select, button {
   margin-bottom: var(--pw-space-2);
 }
 
+/* date input — 매장안내 .display-text 톤 정렬 (22/300/흰색) */
 .date-input {
   flex: 0 1 auto;
   min-width: 140px;
   padding: var(--pw-space-3) 0;
   border: none;
   background-color: transparent;
-  font-size: var(--pw-title-size);
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
   color: var(--pw-text);
   outline: none;
   text-align: left;
@@ -439,8 +611,8 @@ input, textarea, select, button {
   }
   .date-input {
     padding: var(--pw-space-2) 0;
-    font-size: var(--pw-body-size);
-    letter-spacing: -0.5px;
+    font-size: 20px;
+    letter-spacing: -0.015em;
   }
 }
 

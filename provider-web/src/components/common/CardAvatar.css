@@ -1,0 +1,66 @@
+/* ═══════════════════════════════════════════════════
+   CardAvatar — 둥근 embossed 다크 버튼 (사용자 요구 2026-05-09)
+   레퍼런스: 다크 neumorphic 아이콘 셋 (둥근 검정 + inset highlight/shadow).
+   배경/border 는 variant 무관 통일. 아이콘 색만 variant 로 구분.
+   ═══════════════════════════════════════════════════ */
+
+.pw-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  /* 베이스 dark gradient — 위는 밝고 아래는 어둡게 (강한 embossed)
+     사용자 피드백 (2026-05-09): 엠보스 효과 강화. */
+  background:
+    /* 위쪽 안쪽 빛 (highlight) */
+    radial-gradient(ellipse at 50% 18%, rgba(255, 255, 255, 0.10) 0%, transparent 50%),
+    /* 베이스 — 더 큰 명도 차이 (#2a → #08, 이전 1c → 0d 대비) */
+    linear-gradient(180deg, #2a2a36 0%, #16161e 50%, #08080d 100%);
+  /* 1px outer border — 더 진한 검정 (윤곽 강조) */
+  border: 1px solid rgba(0, 0, 0, 0.85);
+  /* 그림자 4단:
+     1) 안쪽 위 highlight (1.5px, 더 밝게)
+     2) 안쪽 아래 deep shadow (5px blur, 진하게)
+     3) 바깥 drop shadow (4px blur, 강하게)
+     4) 바깥 위쪽 미세 light ring (1px, 윗변 살짝 빛남) */
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.75),
+    0 2px 5px rgba(0, 0, 0, 0.55),
+    0 -0.5px 0 rgba(255, 255, 255, 0.04);
+  /* 아이콘 색은 variant 별 — children svg 가 currentColor 사용 */
+  color: var(--pw-text-secondary);
+  transition:
+    transform var(--pw-duration-fast) var(--pw-ease),
+    color var(--pw-duration-fast) var(--pw-ease);
+}
+
+/* 사이즈 + 둥근 사각형 radius (디자인 가이드 spacing 4/8/12/16/24/32 정렬) */
+.pw-avatar--sm { width: 32px; height: 32px; border-radius: 10px; }
+.pw-avatar--md { width: 40px; height: 40px; border-radius: 12px; }
+.pw-avatar--lg { width: 48px; height: 48px; border-radius: 14px; }
+
+/* 아이콘 크기 — children 으로 받은 lucide 아이콘에 동일 적용. */
+.pw-avatar--sm > svg { width: 16px; height: 16px; }
+.pw-avatar--md > svg { width: 20px; height: 20px; }
+.pw-avatar--lg > svg { width: 22px; height: 22px; }
+
+/* hover transform 없음 — 사용자 피드백 (2026-05-10): "마우스 오버시 표가 이상해".
+   여러 요소가 동시에 움직이면 어수선 → 호버는 부모 카드의 bg/border 변경만으로. */
+
+/* ── variant — 아이콘 색만 변경 (배경/border 동일) ──
+   사용자 요구: "컬러는 유지" — accent/success/warning/danger 색 보존. */
+
+.pw-avatar--accent  { color: var(--pw-accent-text); }
+.pw-avatar--info    { color: var(--pw-text-secondary); }
+.pw-avatar--success { color: #86EFAC; }
+.pw-avatar--warning { color: #FBBF24; }
+.pw-avatar--danger  { color: #FCA5A5; }
+.pw-avatar--neutral { color: var(--pw-text-hint); }
+
+/* 디바이스 상태 (운영중) — 아이콘 색으로 즉시 인식. */
+.pw-avatar--device-ok       { color: #86EFAC; }
+.pw-avatar--device-low      { color: #FBBF24; }
+.pw-avatar--device-offline  { color: #FCA5A5; }
+.pw-avatar--device-off      { color: var(--pw-text-hint); }

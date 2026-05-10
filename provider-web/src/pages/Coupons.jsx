@@ -35,14 +35,17 @@ const Coupons = () => {
 
       <div className="stamp-list">
         {dummyCoupons.map((coupon) => (
+          // 스탬프 카드와 동일 구조 — 상태 배지를 제목 우측 (사용자 요구 2026-05-10)
           <Link to={`/dashboard/coupons/view/${coupon.id}`} key={coupon.id} className="stamp-card">
             <div className={`stamp-icon ${coupon.status}`}>
               <Ticket size={24} />
             </div>
             <div className="stamp-info">
-              <h3 className="stamp-name">{coupon.name}</h3>
-              <div className={`stamp-status ${coupon.status}`}>
-                {coupon.status === 'active' ? '쿠폰 진행 중' : '쿠폰 진행 종료'}
+              <div className="stamp-info-head">
+                <h3 className="stamp-name">{coupon.name}</h3>
+                <span className={`stamp-status ${coupon.status}`}>
+                  {coupon.status === 'active' ? '쿠폰 진행 중' : '쿠폰 진행 종료'}
+                </span>
               </div>
               <div className="stamp-details">
                 <div>사용기간 : {coupon.period}</div>
@@ -58,7 +61,7 @@ const Coupons = () => {
           variant="primary"
           fullWidth
           icon={<Plus size={18} />}
-          onClick={() => navigate('/dashboard/coupons/add')}
+          onClick={() => navigate('/dashboard/service-request?type=event')}
         >
           쿠폰 등록
         </Button>

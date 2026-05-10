@@ -5,7 +5,21 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
+import CardAvatar from '../components/common/CardAvatar';
 import './Dashboard.css';
+
+/**
+ * Dashboard KPI 컬러(string hex) → CardAvatar variant 매핑.
+ * 통일된 dark embossed 베이스 + 아이콘 색만 차별화.
+ */
+const colorToVariant = (color) => {
+  if (!color) return 'neutral';
+  const c = color.toLowerCase();
+  if (c.startsWith('#22') || c.startsWith('#10') || c.startsWith('#05')) return 'success';
+  if (c.startsWith('#f5') || c.startsWith('#fb')) return 'warning';
+  if (c.startsWith('#ef') || c.startsWith('#dc')) return 'danger';
+  return 'accent';  /* default = 보라 (provider) */
+};
 
 /* ═══════════════════════════════════════════════════
    Mock Data — 대시보드
@@ -89,9 +103,9 @@ const StatCard = ({ icon: Icon, label, value, color, trend, to }) => {
       onKeyDown={(e) => e.key === 'Enter' && to && navigate(to)}
     >
       <div className="dashboard-stat-top">
-        <div className="dashboard-stat-icon" style={{ background: `${color}14` }}>
-          <Icon size={20} color={color} />
-        </div>
+        <CardAvatar variant={colorToVariant(color)} size="md">
+          <Icon strokeWidth={2} />
+        </CardAvatar>
         {trend != null && (
           <span className={`dashboard-stat-trend ${trend > 0 ? 'up' : 'down'}`}>
             <TrendingUp size={14} style={{ transform: trend > 0 ? 'none' : 'rotate(180deg)' }} />
@@ -149,7 +163,9 @@ const Dashboard = () => {
         {/* 와이파이 접속 추이 — Area Chart */}
         <div className="dashboard-chart-card full-width">
           <div className="dashboard-chart-header">
-            <Activity size={18} color="var(--pw-text-secondary)" />
+            <CardAvatar variant="accent" size="sm">
+              <Activity strokeWidth={2} />
+            </CardAvatar>
             <span className="dashboard-chart-title">와이파이 접속 추이</span>
             <span className="dashboard-chart-subtitle">최근 7일</span>
           </div>
@@ -170,7 +186,7 @@ const Dashboard = () => {
                 axisLine={false} tickLine={false}
                 tick={{ fontSize: 11, fill: '#8A91A3' }}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)', stroke: 'rgba(255,255,255,0.10)' }} />
               <Area
                 type="monotone" dataKey="접속자"
                 stroke={CHART_COLORS.primary} strokeWidth={2.5}
@@ -185,7 +201,9 @@ const Dashboard = () => {
         {/* 서비스별 매출 — Bar Chart */}
         <div className="dashboard-chart-card">
           <div className="dashboard-chart-header">
-            <BarChart3 size={18} color="var(--pw-text-secondary)" />
+            <CardAvatar variant="accent" size="sm">
+              <BarChart3 strokeWidth={2} />
+            </CardAvatar>
             <span className="dashboard-chart-title">서비스별 매출</span>
           </div>
           <ResponsiveContainer width="100%" height={220}>
@@ -200,7 +218,7 @@ const Dashboard = () => {
                 tick={{ fontSize: 11, fill: '#8A91A3' }}
                 tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(0)}K` : v}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)', stroke: 'rgba(255,255,255,0.10)' }} />
               <Bar dataKey="wifi" name="Wifi" fill={CHART_COLORS.primary} radius={[4,4,0,0]} barSize={14} />
               <Bar dataKey="event" name="이벤트" fill={CHART_COLORS.secondary} radius={[4,4,0,0]} barSize={14} />
               <Bar dataKey="push" name="알림" fill={CHART_COLORS.warning} radius={[4,4,0,0]} barSize={14} />
@@ -222,7 +240,9 @@ const Dashboard = () => {
         {/* 쿠폰 사용률 — Donut Chart */}
         <div className="dashboard-chart-card">
           <div className="dashboard-chart-header">
-            <PieChartIcon size={18} color="var(--pw-text-secondary)" />
+            <CardAvatar variant="accent" size="sm">
+              <PieChartIcon strokeWidth={2} />
+            </CardAvatar>
             <span className="dashboard-chart-title">쿠폰 사용률</span>
           </div>
           <div style={{ position: 'relative' }}>
@@ -240,7 +260,7 @@ const Dashboard = () => {
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)', stroke: 'rgba(255,255,255,0.10)' }} />
               </PieChart>
             </ResponsiveContainer>
             {/* 도넛 중앙 라벨 */}

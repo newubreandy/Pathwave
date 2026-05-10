@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Plus, X, Mail, MoreVertical, Shield, UserCheck, Clock, AlertTriangle } from 'lucide-react';
 import StaffService, { ROLES, ROLE_LABELS, STATUS, STATUS_LABELS, validateEmail } from '../services/staff/StaffService';
+import { MOCK_STAFF } from '../services/staff/mockStaff';
 import ConfirmModal from '../components/common/ConfirmModal';
 import PasswordInput from '../components/common/PasswordInput';
 import './StaffManagement.css';
@@ -296,41 +297,10 @@ const EditModal = ({ title, fields, onClose, onSave }) => {
 
 /* ── 회원정보 탭 (Settings.jsx와 동일한 디자인 패턴) ── */
 const ProfileTab = () => {
-  const [data, setData] = useState(INITIAL_PROFILE);
-  const [editModal, setEditModal] = useState(null);
-  const [showConfirm, setShowConfirm] = useState(false);
-
-  const editFields = [
-    { key: 'name', label: '상호', value: data.company.name },
-    { key: 'type', label: '사업자 유형', value: data.company.type },
-    { key: 'registrationNumber', label: '사업자등록번호', value: data.company.registrationNumber },
-    { key: 'ceoName', label: '대표자명', value: data.company.ceoName },
-    { key: 'cellularPhone', label: '대표자 연락처', value: data.company.cellularPhone, type: 'tel' },
-    { key: 'officePhone', label: '사무실 전화', value: data.company.officePhone, type: 'tel' },
-    { key: 'address', label: '주소', value: data.company.address },
-    { key: 'accountId', label: '계정 ID', value: data.account.id, disabled: true },
-    { key: 'email', label: '이메일', value: data.account.email, type: 'email' },
-    { key: 'password', label: '비밀번호', value: data.account.password, type: 'password' },
-  ];
-
-  const handleSave = (values) => {
-    const companyKeys = ['name', 'type', 'registrationNumber', 'ceoName', 'cellularPhone', 'officePhone', 'address'];
-    const companyUpdate = {};
-    const accountUpdate = {};
-    Object.entries(values).forEach(([k, v]) => {
-      if (companyKeys.includes(k)) companyUpdate[k] = v;
-      if (k === 'accountId') accountUpdate.id = v;
-      if (k === 'email') accountUpdate.email = v;
-      if (k === 'password') accountUpdate.password = v;
-    });
-    setData(prev => ({
-      ...prev,
-      company: { ...prev.company, ...companyUpdate },
-      account: { ...prev.account, ...accountUpdate },
-    }));
-    setEditModal(null);
-    setShowConfirm(true);
-  };
+  const [data] = useState(INITIAL_PROFILE);
+  // 사용자 요구 (2026-05-10): 회사정보 / 이메일 직접 변경 불가 — 슈퍼어드민 승인 필요.
+  // 변경하기 버튼 클릭 시 EditModal 대신 안내 ConfirmModal 노출.
+  const [showApprovalNotice, setShowApprovalNotice] = useState(false);
 
   return (
     <>
@@ -341,7 +311,7 @@ const ProfileTab = () => {
             <div className="settings-row-left">
               <span className="settings-row-label profile-section-title">회사정보</span>
             </div>
-            <button className="profile-edit-btn" onClick={() => setEditModal(true)}>
+            <button className="profile-edit-btn" onClick={() => setShowApprovalNotice(true)}>
               변경하기
             </button>
           </div>
@@ -400,22 +370,17 @@ const ProfileTab = () => {
         </div>
       </div>
 
-      {editModal && (
-        <EditModal
-          title="회사정보 / 계정정보 변경"
-          fields={editFields}
-          onClose={() => setEditModal(null)}
-          onSave={handleSave}
-        />
-      )}
-
-      {showConfirm && (
+      {/* 변경 요청 안내 — 슈퍼어드민 승인 후 처리 */}
+      {showApprovalNotice && (
         <ConfirmModal
-          title="저장 완료"
-          message="정보가 성공적으로 저장되었습니다."
+          title="정보 변경 요청"
+          desc={
+            '회사정보 및 계정정보 변경은 보안을 위해\n슈퍼어드민 승인이 필요합니다.\n\n고객센터(02-1234-5678) 또는 webmaster@pathwave.com\n으로 변경 요청을 보내주세요.\n\n승인 후 정보가 갱신됩니다.'
+          }
+          singleButton
           confirmText="확인"
-          onConfirm={() => setShowConfirm(false)}
-          onCancel={() => setShowConfirm(false)}
+          onConfirm={() => setShowApprovalNotice(false)}
+          onCancel={() => setShowApprovalNotice(false)}
         />
       )}
     </>
@@ -446,12 +411,14 @@ const StaffManagement = () => {
   const [confirmModal, setConfirmModal] = useState(null);
 
   const loadStaff = useCallback(async () => {
+    // 백엔드 미연동 환경 — mock 사용. 연동 후 StaffService.list() 로 교체.
     setIsLoading(true);
     try {
-      const list = await StaffService.getStaffList('store_1');
-      setStaffList(list);
+      await new Promise((r) => setTimeout(r, 200));
+      setStaffList(MOCK_STAFF);
     } catch (err) {
       console.error('Failed to load staff', err);
+      setStaffList(MOCK_STAFF); // fallback
     } finally {
       setIsLoading(false);
     }

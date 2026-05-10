@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Plus, Check, Wifi, Bell, Gift, CreditCard, A
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
+import SectionTabs from '../components/common/SectionTabs';
 import './PaymentManagement.css';
 
 /* ── Mock Data ── */
@@ -39,17 +40,38 @@ const MOCK_SERVICES = [
   },
 ];
 
+/**
+ * type 코드 → UI 한글 라벨 (사용자 요구 2026-05-10).
+ *   wifi → 와이파이
+ *   event → 쿠폰
+ *   push → 알림
+ *   noti → 알림 (호환)
+ */
+const SERVICE_TYPE_LABEL = {
+  wifi: '와이파이',
+  event: '쿠폰',
+  push: '알림',
+  noti: '알림',
+};
+
 const MOCK_HISTORY = [
   { date: '2022.05.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
   { date: '2022.04.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
   { date: '2022.03.12', store: '상암점', amount: '6,000', type: 'push' },
   { date: '2022.03.12', store: '상암점', amount: '6,000', type: 'event' },
   { date: '2022.03.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
+  { date: '2022.02.12', store: '상암점', amount: '6,000', type: 'noti' },
   { date: '2022.02.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
   { date: '2022.01.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
   { date: '2021.12.12', store: '상암점', amount: '6,000', type: 'event' },
   { date: '2021.12.12', store: '상암점', amount: '6,000', type: 'event' },
+  // ── 더보기 페이지 (2번째 page) ───────────────────────────
   { date: '2021.12.12', store: '상암점', amount: '6,000', type: 'wifi' },
+  { date: '2021.11.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
+  { date: '2021.10.12', store: '상암점', amount: '6,000', type: 'event' },
+  { date: '2021.09.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
+  { date: '2021.08.12', store: '상암점', amount: '6,000', type: 'noti' },
+  { date: '2021.07.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
 ];
 
 /* ══════════════════════════════════════════
@@ -135,8 +157,8 @@ const ServiceApplyFlow = ({ onBack, onComplete }) => {
                     className={`pay-service-card ${selectedService === s.id ? 'selected' : ''}`}
                     onClick={() => { setSelectedService(s.id); setSelectedPlan(null); }}
                   >
-                    <div className="pay-service-card-icon" style={{ background: `${s.color}14`, color: s.color }}>
-                      <Icon size={24} />
+                    <div className="pay-service-card-icon">
+                      <Icon size={24} strokeWidth={2} />
                     </div>
                     <div className="pay-service-card-name">{s.name}</div>
                     <div className="pay-service-card-desc">{s.desc}</div>
@@ -357,44 +379,36 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
           <div className="payment-email-note">※ 결제 및 공지 안내 메일 입니다.</div>
         </div>
 
-        {/* 서비스 이용 내역 */}
-        {services.map(service => (
-          <div key={service.id} className="payment-service-section">
-            <div className="payment-service-header">
-              <span className="payment-service-title">{service.name}{service.items.length > 0 ? ' 이용내역' : ''}</span>
-              <ChevronRight size={20} color="var(--pw-text-hint)" />
-            </div>
-            <div className="payment-service-summary">
-              <span className="payment-service-name">{service.label}</span>
-              <span className="payment-service-count">
-                {service.items.length > 0 ? `${service.items.reduce((s, i) => s + i.quantity, 0)}개 이용중` : '0개 이용중'}
-              </span>
-            </div>
-            {service.items.map(item => (
-              <div key={item.id} className="payment-service-detail">
-                <div className="payment-detail-row">
-                  <span className="payment-detail-label">수량</span>
-                  <div><span className="payment-detail-value">{item.quantity}개</span><span className="payment-detail-date"> {item.appliedAt}</span></div>
-                </div>
-                <div className="payment-detail-row">
-                  <span className="payment-detail-label">결제금액</span>
-                  <div>
-                    <div className="payment-detail-value">{item.price} <span className="payment-detail-sub">({item.priceNote})</span></div>
-                    <div className="payment-detail-sub">{item.billingNote}</div>
-                  </div>
-                </div>
-                <div className="payment-detail-row">
-                  <span className="payment-detail-label">약정기간</span>
-                  <span className="payment-detail-value">{item.period}</span>
-                </div>
-                <div className="payment-service-actions">
-                  <Button variant="outline" size="medium" fullWidth onClick={handleTerminate}>서비스종료</Button>
-                  <Button variant="primary" size="medium" fullWidth onClick={handleExtend}>서비스 연장</Button>
-                </div>
+        {/* 서비스 이용 내역 — 서비스 / 사용량만. 터치 시 해당 서비스 리스트로 이동.
+            사용자 요구 (2026-05-10): 매월 12일 결제 / 신청일 / 약정기간 등 상세 제거 —
+            세부 결제 정보는 카드 결제 단계에서 처리. 결제관리는 "어떤 서비스를 몇개" 만. */}
+        {services.map((service) => {
+          const totalQty = service.items.reduce((s, i) => s + i.quantity, 0);
+          const targetRoute =
+            service.id === 'wifi'  ? '/dashboard/wifi'
+            : service.id === 'event' ? '/dashboard/coupons'
+            : service.id === 'push'  ? '/dashboard/notifications'
+            : null;
+          return (
+            <button
+              key={service.id}
+              type="button"
+              className="payment-service-section payment-service-section--clickable"
+              onClick={() => targetRoute && navigate(targetRoute)}
+            >
+              <div className="payment-service-header">
+                <span className="payment-service-title">{service.name}</span>
+                <ChevronRight size={20} color="var(--pw-text-hint)" />
               </div>
-            ))}
-          </div>
-        ))}
+              <div className="payment-service-summary">
+                <span className="payment-service-name">{service.label}</span>
+                <span className="payment-service-count">
+                  {totalQty > 0 ? `${totalQty}개 이용중` : '0개 이용중'}
+                </span>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       {/* 서비스 신청 CTA */}
@@ -410,26 +424,57 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
 /* ══════════════════════════════════════════
    결제내역 탭
    ══════════════════════════════════════════ */
-const PaymentHistoryTab = () => (
-  <div className="payment-content">
-    <div className="payment-history-section">
-      <div className="payment-history-note">※ 결제내역은 최대 2년(24개월)기간만 지원합니다.</div>
-      <table className="payment-history-table">
-        <thead><tr><th>일시</th><th>매장명</th><th>결제금액</th><th>누적</th></tr></thead>
-        <tbody>
-          {MOCK_HISTORY.length > 0 ? MOCK_HISTORY.map((row, i) => (
-            <tr key={i}><td>{row.date}</td><td>{row.store}</td><td>{row.amount}</td><td>{row.type}</td></tr>
-          )) : (
-            <tr><td colSpan={4} className="payment-history-empty">결제내역이 없습니다.</td></tr>
-          )}
-        </tbody>
-      </table>
+const PAGE_SIZE = 10;
+
+const PaymentHistoryTab = () => {
+  // 사용자 요구 (2026-05-10): 10개 단위로 노출. 더 없을 때 버튼 숨김.
+  const [visible, setVisible] = useState(PAGE_SIZE);
+  const items = MOCK_HISTORY.slice(0, visible);
+  const hasMore = visible < MOCK_HISTORY.length;
+
+  return (
+    <div className="payment-content">
+      <div className="payment-history-section">
+        <div className="payment-history-note">※ 결제내역은 최대 2년(24개월)기간만 지원합니다.</div>
+        <table className="payment-history-table">
+          <thead>
+            <tr>
+              <th>일시</th>
+              <th>매장명</th>
+              <th>결제금액</th>
+              <th>서비스 구분</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.length > 0 ? items.map((row, i) => (
+              <tr key={i}>
+                <td>{row.date}</td>
+                <td>{row.store}</td>
+                <td>{row.amount}</td>
+                <td>{SERVICE_TYPE_LABEL[row.type] || row.type}</td>
+              </tr>
+            )) : (
+              <tr><td colSpan={4} className="payment-history-empty">결제내역이 없습니다.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      {/* 더 불러올 항목 있을 때만 버튼 노출. 활성 시 primary 톤. */}
+      {hasMore && (
+        <BottomActionBar>
+          <Button
+            variant="primary"
+            size="large"
+            fullWidth
+            onClick={() => setVisible((v) => v + PAGE_SIZE)}
+          >
+            더보기
+          </Button>
+        </BottomActionBar>
+      )}
     </div>
-    <BottomActionBar>
-      <Button variant="outline" size="large" fullWidth>더보기</Button>
-    </BottomActionBar>
-  </div>
-);
+  );
+};
 
 /* ══════════════════════════════════════════
    Main
@@ -452,15 +497,20 @@ const PaymentManagement = () => {
   }
 
   return (
-    <div className="common-form-page">
-      <header className="common-form-header" style={{ marginBottom: 0 }}>
-        <button className="back-btn d-md-none" onClick={() => navigate('/dashboard')}><ChevronLeft size={24} /></button>
-        <h1>결제관리</h1>
-      </header>
-      <div className="payment-tabs">
-        <button className={`payment-tab ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>결제정보</button>
-        <button className={`payment-tab ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>결제내역</button>
+    <div className="modern-page">
+      <div className="page-header-section">
+        <h1 className="page-title">결제관리</h1>
+        <p className="sub-title">결제 정보와 결제 내역을 관리합니다.</p>
       </div>
+      <SectionTabs
+        tabs={[
+          { key: 'info',    label: '결제정보' },
+          { key: 'history', label: '결제내역' },
+        ]}
+        value={activeTab}
+        onChange={setActiveTab}
+        ariaLabel="결제관리 카테고리"
+      />
       {activeTab === 'info' && <PaymentInfoTab card={card} email={email} services={MOCK_SERVICES} onApply={() => setShowApply(true)} />}
       {activeTab === 'history' && <PaymentHistoryTab />}
     </div>

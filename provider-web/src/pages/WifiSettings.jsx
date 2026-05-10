@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Camera, Plus, X, ChevronLeft, ChevronRight, Search, Image as ImageIcon, Loader2 } from 'lucide-react';
+import {
+  Camera, Plus, X, ChevronLeft, ChevronRight, Search,
+  Image as ImageIcon, Loader2,
+  Wifi, Package, Truck, FileCheck2, PauseCircle, XCircle, ClipboardList,
+  Clock,
+} from 'lucide-react';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
@@ -13,11 +18,40 @@ import StatusBadge, {
 import PageShell from '../components/common/PageShell';
 import SectionTabs from '../components/common/SectionTabs';
 import GlassCard from '../components/common/GlassCard';
-import GroupCard from '../components/common/GroupCard';
+import GroupCard, { GroupCardItem } from '../components/common/GroupCard';
 import MiniInfoPill from '../components/common/MiniInfoPill';
 import StatusMessage from '../components/common/StatusMessage';
-import MetricStrip from '../components/common/MetricStrip';
+import CardAvatar from '../components/common/CardAvatar';
+import { SkeletonCard } from '../components/common/Skeleton';
+// StageProgress / stageMapping 은 list view 에서 제거 (사용자 요구: StatusBadge 텍스트 방식 유지).
+// 슈퍼어드민 / 상세 화면에서 재사용 가능하도록 컴포넌트 자체는 유지.
 import './WifiSettings.css';
+
+/**
+ * 상태 → 카드 좌측 아바타 맵핑.
+ * provider 라벨 그룹과 1:1 정렬.
+ *
+ *   delivered/installed = 서비스대기 (운영중 탭) — Clock 아이콘 + info variant
+ *   active              = 서비스중 (운영중 탭) — Wifi (live 섹션 별도 렌더)
+ */
+const STATUS_AVATAR = {
+  submitted:        { icon: FileCheck2,  variant: 'info'    },
+  receiving:        { icon: FileCheck2,  variant: 'info'    },
+  beacon_setting:   { icon: Package,     variant: 'accent'  },
+  shipping_ready:   { icon: Package,     variant: 'accent'  },
+  service_ready:    { icon: Package,     variant: 'accent'  },
+  shipping:         { icon: Truck,       variant: 'accent'  },
+  delivered:        { icon: Clock,       variant: 'info'    },
+  installed:        { icon: Clock,       variant: 'info'    },
+  active:           { icon: Wifi,        variant: 'success' },
+  paused:           { icon: PauseCircle, variant: 'warning' },
+  terminated:       { icon: XCircle,     variant: 'neutral' },
+};
+
+const isServiceWaiting = (status) => status === 'delivered' || status === 'installed';
+
+const getAvatarForStatus = (status) =>
+  STATUS_AVATAR[status] || { icon: Wifi, variant: 'neutral' };
 
 // 워크플로우 정책 (사장님 콘솔):
 //   - 결제 성공 후에만 신청건 생성 → 첫 status 는 'submitted'
@@ -82,6 +116,16 @@ const MOCK_PROFILES = [
     statusHistory: [],
     deviceStatus: 'ok', battery: 12, enabled: false },
 
+  // ── 서비스대기 — 배송 완료 후 사용자 활성화 대기 (단건) ─────────
+  { id: 11, name: '서관 1층', applicationGroupId: 'PW-20260507-003', applicationGroupSeq: 1, applicationGroupTotal: 1,
+    paidAt: '2026.05.07 11:00',
+    message: '', ssid: 'kt5G_WS_F1', beaconSn: 'BCN-2026-0020', password: 'Ezddd1@8820', date: '2026.05.07', periodEnd: '2028.05.06', image: null,
+    applicationStatus: 'delivered',
+    statusMessage: '배송이 완료되었습니다. 서비스 시작을 기다리는 중입니다.',
+    statusUpdatedAt: '2026.05.09 10:30',
+    statusHistory: [],
+    deviceStatus: 'ok', battery: 100, enabled: false },
+
   // ── 다건 신청 그룹 #1 — 신관 (3개) ────────────────────────────
   // 결제 1회로 3개 wifi 동시 신청. 각 wifiItem 단계 다양함.
   { id: 6, name: '신관 1층', applicationGroupId: 'PW-20260509-001', applicationGroupSeq: 1, applicationGroupTotal: 3,
@@ -140,12 +184,19 @@ const WifiSettings = () => {
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState(MOCK_PROFILES);
   const [view, setView] = useState('list'); // 'list' | 'search' | 'detail' | 'add'
-  // 리스트 탭 — 사용자 요구: 3개 탭 구조 (신청 진행중 / 운영중 / 점검·해지)
-  const [activeTab, setActiveTab] = useState('inProgress'); // 'inProgress' | 'live' | 'maintenance'
+  // 리스트 탭 — 3개 탭 구조 (사용자 요구 2026-05-09 update):
+  //   신청 진행중  = 신청접수 + 준비중 + 배송중
+  //   운영중       = 서비스대기 + 서비스중 + 일시중지 (재개 가능한 상태)
+  //   해지         = 종결된 서비스 (해지일 desc)
+  const [activeTab, setActiveTab] = useState('inProgress'); // 'inProgress' | 'live' | 'terminated'
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedChips, setSelectedChips] = useState(new Set());
   const [activeFilter, setActiveFilter] = useState(null); // filtered name after search
+  // 헤더 인라인 검색 — 즉시 필터 (별도 view 진입 X). chip-style 고급 검색은 view='search' 로 분리 유지.
+  const [inlineQuery, setInlineQuery] = useState('');
+  // 첫 진입 로딩 — 실 API 연결 시 fetch 후 setIsLoading(false). 현재는 mock data 라 짧게 시뮬레이션.
+  const [isLoading, setIsLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [saveConfirmMsg, setSaveConfirmMsg] = useState(null); // 저장 시 안내 (ID/PW + enabled)
   const [errorMsg, setErrorMsg] = useState(null);             // 검증 실패 모달
@@ -168,6 +219,13 @@ const WifiSettings = () => {
     setSaveConfirmMsg(null);
     setErrorMsg(null);
   }, [location.key]);
+
+  // 첫 진입 시 가짜 로딩 (실 API 연동 시 fetch promise resolve 시점에 setIsLoading(false)).
+  // 350ms 정도면 시각 피드백은 충분하면서 답답하지 않음.
+  useEffect(() => {
+    const t = setTimeout(() => setIsLoading(false), 350);
+    return () => clearTimeout(t);
+  }, []);
   /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 
   // ── List Actions ──
@@ -362,9 +420,19 @@ const WifiSettings = () => {
     (p) => !PROVIDER_HIDDEN_STATUSES.has(p.applicationStatus)
   );
 
-  const displayProfiles = activeFilter
-    ? visibleProfiles.filter((p) => activeFilter.includes(p.name))
+  // 헤더 인라인 검색 — 와이파이 이름(설치 위치) 만 매칭.
+  // SSID 부분 매칭은 의도치 않은 결과 (예: "1" → "kt5G_pool01") 를 만들어
+  // 사장님 직관에 어긋남. SSID 까지 검색하려면 우측 "상세" 버튼의 chip-search 사용.
+  const inlineFiltered = inlineQuery.trim()
+    ? visibleProfiles.filter((p) => {
+        const q = inlineQuery.trim().toLowerCase();
+        return p.name.toLowerCase().includes(q);
+      })
     : visibleProfiles;
+
+  const displayProfiles = activeFilter
+    ? inlineFiltered.filter((p) => activeFilter.includes(p.name))
+    : inlineFiltered;
 
   // 섹션별로 카드 분리 (사장님 콘솔 — 4 섹션)
   const profilesBySection = displayProfiles.reduce((acc, p) => {
@@ -464,33 +532,76 @@ const WifiSettings = () => {
   // ═════════════════════════════════════
   if (view === 'list') {
     const inProgressCount  = (profilesBySection.inProgress || []).length;
-    const liveCount        = (profilesBySection.live || []).length;
-    const maintenanceCount = (profilesBySection.paused || []).length + (profilesBySection.terminated || []).length;
+    const liveItemsAll     = profilesBySection.live || [];
+    const pausedCount      = (profilesBySection.paused || []).length;
+    const terminatedCount  = (profilesBySection.terminated || []).length;
+    // 운영중 탭 = 서비스대기 + 서비스중 + 일시중지 (재개 가능한 상태들).
+    const liveCount = liveItemsAll.length + pausedCount;
 
     const tabDefs = [
       { key: 'inProgress',  label: '신청 진행중', count: inProgressCount },
       { key: 'live',        label: '운영중',     count: liveCount },
-      { key: 'maintenance', label: '점검·해지',  count: maintenanceCount },
+      { key: 'terminated',  label: '해지',       count: terminatedCount },
     ];
 
-    // 메트릭은 항상 동일한 3개 — 정보판 톤. tone 은 0이 아니면 accent.
-    const metricItems = [
-      { label: '진행', value: inProgressCount,  unit: '건', tone: inProgressCount  > 0 ? 'accent'  : 'default' },
-      { label: '운영', value: liveCount,        unit: '건', tone: liveCount        > 0 ? 'success' : 'default' },
-      { label: '점검·해지', value: maintenanceCount, unit: '건', tone: maintenanceCount > 0 ? 'warning' : 'default' },
-    ];
+    // 운영중 탭 — 정렬 순서 (위 → 아래):
+    //   1) 서비스대기 (delivered/installed) — 사용자 활성화 액션 필요
+    //   2) 서비스중   (active)
+    //   3) 일시중지   (paused)
+    const liveWaiting = liveItemsAll.filter((p) => isServiceWaiting(p.applicationStatus));
+    const liveActive  = liveItemsAll.filter((p) => p.applicationStatus === 'active');
+    // 해지 탭 — 해지일 desc 정렬
+    const sortedTerminated = (profilesBySection.terminated || [])
+      .slice()
+      .sort((a, b) => {
+        const ka = a.statusUpdatedAt || a.paidAt || '';
+        const kb = b.statusUpdatedAt || b.paidAt || '';
+        return kb.localeCompare(ka);
+      });
 
     // 활성 탭에 보여줄 섹션 키
-    const visibleSections =
-      activeTab === 'inProgress' ? ['inProgress']
-      : activeTab === 'live'      ? ['live']
-      :                             ['paused', 'terminated']; /* maintenance */
+    const totalCount =
+      activeTab === 'inProgress' ? inProgressCount
+      : activeTab === 'live'      ? liveCount
+      :                             terminatedCount; /* terminated */
 
-    const totalCount = visibleSections.reduce(
-      (acc, k) => acc + ((profilesBySection[k] || []).length), 0
-    );
+    // ── 그룹 컨테이너 안 inset row 렌더 — RePlan 스타일 ──
+    // 사용자 요구 (2026-05-09): 하단 상태 메시지 제거. 우측 플래그 = StatusBadge (이전 방식).
+    // 슈퍼어드민 (admin-web) 에서는 statusMessage 도 노출 — 이 페이지는 사장님 콘솔.
+    const renderWifiInsetRow = (p) => {
+      const a = getAvatarForStatus(p.applicationStatus);
+      const AvatarIcon = a.icon;
+      const hasShipping = !!p.shippingTrackingNo;
+      return (
+        <GroupCardItem key={p.id} onClick={() => openDetail(p)}>
+          <CardAvatar variant="accent" size="md">
+            <AvatarIcon strokeWidth={2} />
+          </CardAvatar>
+          <div className="wifi-inset-body">
+            <div className="wifi-inset-head">
+              <span className="wifi-inset-title">{p.name}</span>
+              {/* 우측 플래그 — 텍스트 배지 (준비중 / 배송중 / 신청완료 등) */}
+              <StatusBadge status={p.applicationStatus} size="sm" mode="provider" />
+            </div>
+            <div className="pw-pill-row wifi-inset-pills">
+              {p.ssid && <MiniInfoPill label="SSID" mono>{p.ssid}</MiniInfoPill>}
+              {p.beaconSn && <MiniInfoPill mono variant="muted">{p.beaconSn}</MiniInfoPill>}
+            </div>
+            {hasShipping && (
+              <div className="wifi-inset-shipping" role="note">
+                <span className="wifi-inset-shipping-label">송장</span>
+                <span className="wifi-inset-shipping-value">{p.shippingTrackingNo}</span>
+              </div>
+            )}
+            {/* statusMessage 제거 — 사장님 콘솔에서는 stepper 만으로 충분.
+                슈퍼어드민에서 같은 컴포넌트 재사용 시 prop 으로 분기 예정. */}
+          </div>
+          <ChevronRight size={16} className="wifi-inset-chevron" aria-hidden="true" />
+        </GroupCardItem>
+      );
+    };
 
-    // ── 카드 1장 렌더 (상태 메시지 1개 + meta pill 최대 3개) ──
+    // ── 카드 1장 렌더 — 좌측 아바타 + 본문 + 메시지 + chevron ──
     const renderWifiCard = (p, opts = {}) => {
       const { variant = 'default', section = 'inProgress' } = opts;
       // 메시지 tone — 운영중 active 면 accent, paused 면 warning, 그 외는 info
@@ -503,59 +614,113 @@ const WifiSettings = () => {
       // 송장번호 — 배송중일 때만 별도 row 로 강조 (pill 아님)
       const hasShipping = !!p.shippingTrackingNo;
 
+      // 운영중 탭은 active(서비스중) + delivered(서비스대기) 둘 다 들어옴.
+      const isWaiting    = section === 'live' && isServiceWaiting(p.applicationStatus);
+      const isActiveLive = section === 'live' && p.applicationStatus === 'active';
+      // 서비스중일 때만 디바이스 상태 강조 (서비스대기는 device 정보 무관).
+      const isOffline    = isActiveLive && p.enabled && p.deviceStatus === 'offline';
+      const isLowBattery = isActiveLive && p.enabled && p.deviceStatus === 'low';
+      const isDisabled   = isActiveLive && !p.enabled;
+
+      // 좌측 아바타 —
+      //   서비스대기 (delivered) = Clock + info — "활성화 대기 중"
+      //   서비스중   (active)    = Wifi + 디바이스 상태 색조
+      //   신청 진행중 = accent 통일 (그룹 헤더와 톤 매칭)
+      //   일시중지 = warning, 해지 = neutral
+      let avatarVariant, AvatarIcon;
+      if (isWaiting) {
+        AvatarIcon = Clock;
+        avatarVariant = 'info';
+      } else if (isActiveLive) {
+        AvatarIcon = Wifi;
+        avatarVariant =
+          !p.enabled ? 'neutral'
+          : p.deviceStatus === 'ok'      ? 'success'
+          : p.deviceStatus === 'low'     ? 'warning'
+          : p.deviceStatus === 'offline' ? 'danger'
+          : 'neutral';
+      } else if (section === 'inProgress') {
+        const a = getAvatarForStatus(p.applicationStatus);
+        AvatarIcon = a.icon;
+        avatarVariant = 'accent';
+      } else if (section === 'paused') {
+        AvatarIcon = PauseCircle;
+        avatarVariant = 'warning';
+      } else { // terminated
+        AvatarIcon = XCircle;
+        avatarVariant = 'neutral';
+      }
+
       return (
         <GlassCard
           key={p.id}
           variant={variant}
           uniformHeight
           onClick={() => openDetail(p)}
-          className={`wifi-card wifi-card--${section}`}
+          className={[
+            'wifi-card',
+            `wifi-card--${section}`,
+            isOffline ? 'wifi-card--offline' : '',
+            isLowBattery ? 'wifi-card--low' : '',
+            isDisabled ? 'wifi-card--disabled' : '',
+          ].filter(Boolean).join(' ')}
         >
-          <div className="wifi-card-head">
-            <span className="wifi-card-title">{p.name}</span>
-            <StatusBadge status={p.applicationStatus} size="sm" mode="provider" />
-          </div>
+          {/* 카드 본문 — 좌측 아바타 + 우측 콘텐츠 row */}
+          <div className="wifi-card-row">
+            <CardAvatar variant={avatarVariant} size="md">
+              <AvatarIcon strokeWidth={2} />
+            </CardAvatar>
 
-          {/* MiniInfoPill 최대 2~3개 */}
-          <div className="pw-pill-row wifi-card-pills">
-            {p.ssid && <MiniInfoPill label="SSID" mono>{p.ssid}</MiniInfoPill>}
-            {p.beaconSn && <MiniInfoPill mono variant="muted">{p.beaconSn}</MiniInfoPill>}
-            {section === 'live' && p.enabled && (
-              <MiniInfoPill variant="muted">배터리 {p.battery}%</MiniInfoPill>
-            )}
-          </div>
+            <div className="wifi-card-body">
+              <div className="wifi-card-head">
+                <span className="wifi-card-title">{p.name}</span>
+                {/* 모든 카드 공통 — 텍스트 배지 (준비중 / 배송중 / 신청완료 / 서비스중 / 일시중지 / 해지) */}
+                <StatusBadge status={p.applicationStatus} size="sm" mode="provider" />
+              </div>
 
-          {/* 운영중 — 디바이스 상태 한 줄 (정상/배터리부족/연결끊김/중단) */}
-          {section === 'live' && (
-            <div className="wifi-card-device">
-              <span className={`wifi-card-dot ${p.enabled ? p.deviceStatus : 'off'}`} aria-hidden="true" />
-              <span className="wifi-card-device-label">
-                {p.enabled ? (STATUS_LABEL[p.deviceStatus] || '-') : '중단'}
-              </span>
-              {p.statusUpdatedAt && (
-                <span className="wifi-card-device-time">{p.statusUpdatedAt}</span>
+              {/* MiniInfoPill 최대 2~3개 */}
+              <div className="pw-pill-row wifi-card-pills">
+                {p.ssid && <MiniInfoPill label="SSID" mono>{p.ssid}</MiniInfoPill>}
+                {p.beaconSn && <MiniInfoPill mono variant="muted">{p.beaconSn}</MiniInfoPill>}
+                {section === 'live' && p.enabled && (
+                  <MiniInfoPill variant="muted">배터리 {p.battery}%</MiniInfoPill>
+                )}
+              </div>
+
+              {/* 운영중 active — 디바이스 상태 한 줄 (정상/배터리부족/연결끊김/중단).
+                  서비스대기(delivered) 는 device 정보 무관 → 노출 X. */}
+              {isActiveLive && (
+                <div className="wifi-card-device">
+                  <span className="wifi-card-device-label">
+                    {p.enabled ? (STATUS_LABEL[p.deviceStatus] || '-') : '중단'}
+                  </span>
+                  {p.statusUpdatedAt && (
+                    <span className="wifi-card-device-time">{p.statusUpdatedAt}</span>
+                  )}
+                </div>
               )}
-            </div>
-          )}
 
-          {/* 신청 진행중 — 배송중 단계는 송장번호 row */}
-          {hasShipping && section === 'inProgress' && (
-            <div className="wifi-card-shipping" role="note">
-              <span className="wifi-card-shipping-label">송장</span>
-              <span className="wifi-card-shipping-value">
-                {p.shippingCarrier && `${p.shippingCarrier} · `}{p.shippingTrackingNo}
-              </span>
-            </div>
-          )}
+              {/* 신청 진행중 — 배송중 단계는 송장번호 row (택배사 비노출) */}
+              {hasShipping && section === 'inProgress' && (
+                <div className="wifi-card-shipping" role="note">
+                  <span className="wifi-card-shipping-label">송장</span>
+                  <span className="wifi-card-shipping-value">{p.shippingTrackingNo}</span>
+                </div>
+              )}
 
-          {/* 상태 메시지 — 2줄 clamp */}
-          {p.statusMessage && (
+            </div>
+          </div>
+
+          {/* 상태 메시지 — 사장님 콘솔에서는 inProgress 에서 비노출 (우측 stepper 로 대체).
+              운영중 / 일시중지 / 해지 는 메시지 노출 — 일시중지 사유 등 운영 안내 필요. */}
+          {p.statusMessage && section !== 'inProgress' && (
             <StatusMessage tone={msgTone}>{p.statusMessage}</StatusMessage>
           )}
 
+          {/* 카드 footer — 하단 우측 "상세보기 >" 링크 (가이드 v1.0) */}
           <div className="wifi-card-foot">
             <span className="wifi-card-detail">
-              상세보기 <ChevronRight size={14} />
+              상세보기 <ChevronRight size={14} aria-hidden="true" />
             </span>
           </div>
         </GlassCard>
@@ -568,16 +733,38 @@ const WifiSettings = () => {
         title="와이파이 관리"
         subtitle="신청·운영·점검 상태를 한 화면에서"
         actions={
-          <button className="wifi-search-btn" onClick={openSearch} type="button">
-            <Search size={16} />
-            검색
-          </button>
+          <div className="wifi-header-search">
+            <Search size={16} className="wifi-header-search-icon" aria-hidden="true" />
+            <input
+              type="search"
+              className="wifi-header-search-input"
+              placeholder="와이파이 이름 검색"
+              value={inlineQuery}
+              onChange={(e) => setInlineQuery(e.target.value)}
+              aria-label="와이파이 이름 검색"
+            />
+            {inlineQuery && (
+              <button
+                type="button"
+                className="wifi-header-search-clear"
+                onClick={() => setInlineQuery('')}
+                aria-label="검색 지우기"
+              >
+                <X size={14} />
+              </button>
+            )}
+            <button
+              type="button"
+              className="wifi-header-search-advanced"
+              onClick={openSearch}
+              aria-label="고급 검색 (chip 선택)"
+            >
+              상세
+            </button>
+          </div>
         }
       >
-        {/* 상단 메트릭 — 3초 이해용 정보판 */}
-        <MetricStrip items={metricItems} />
-
-        {/* 검색 필터 활성 표시 */}
+        {/* 검색 필터 활성 표시 (chip 검색 사용 시) */}
         {activeFilter && (
           <div className="wifi-active-filter">
             <div className="wifi-filter-chips">
@@ -603,19 +790,32 @@ const WifiSettings = () => {
           ariaLabel="와이파이 상태 탭"
         />
 
-        {/* 빈 상태 */}
-        {totalCount === 0 && (
+        {/* 로딩 skeleton — 첫 진입에만 (실 API 도착 전) */}
+        {isLoading && (
+          <div className="wifi-list" role="status" aria-label="와이파이 목록 로딩 중">
+            <SkeletonCard count={3} />
+          </div>
+        )}
+
+        {/* 빈 상태 (로딩 끝났는데도 0건) */}
+        {!isLoading && totalCount === 0 && (
           <div className="wifi-tab-empty" role="status">
             <p>
-              {activeTab === 'inProgress' && '현재 진행 중인 신청이 없습니다.\n새 와이파이를 신청해보세요.'}
-              {activeTab === 'live'       && '운영 중인 서비스가 없습니다.\n신청 절차가 끝나면 이곳에 표시됩니다.'}
-              {activeTab === 'maintenance'&& '일시중지 또는 해지된 서비스가 없습니다.'}
+              {activeTab === 'inProgress' && (inlineQuery
+                ? `‘${inlineQuery}’ 이름의 신청을 찾을 수 없습니다.`
+                : '현재 진행 중인 신청이 없습니다.\n새 와이파이를 신청해보세요.')}
+              {activeTab === 'live'       && (inlineQuery
+                ? `‘${inlineQuery}’ 이름의 와이파이를 찾을 수 없습니다.`
+                : '운영 중인 서비스가 없습니다.\n신청 절차가 끝나면 이곳에 표시됩니다.')}
+              {activeTab === 'terminated' && (inlineQuery
+                ? `‘${inlineQuery}’ 이름의 해지된 와이파이를 찾을 수 없습니다.`
+                : '해지된 서비스가 없습니다.')}
             </p>
           </div>
         )}
 
         {/* ── 신청 진행중 탭 ── */}
-        {activeTab === 'inProgress' && totalCount > 0 && (() => {
+        {!isLoading && activeTab === 'inProgress' && totalCount > 0 && (() => {
           const groups = buildInProgressGroups(profilesBySection.inProgress || []);
           return (
             <div className="wifi-list wifi-list--inprogress">
@@ -625,26 +825,27 @@ const WifiSettings = () => {
 
                 if (!isMulti) {
                   // 단건 신청 — GroupCard 사용 안 함, 바로 prominent 카드
-                  return renderWifiCard(group.items[0], { variant: 'prominent', section: 'inProgress' });
+                  return renderWifiCard(group.items[0], { variant: 'default', section: 'inProgress' });
                 }
 
-                // 다건 신청 — GroupCard
-                const summary = Object.entries(group.labelCounts).map(([label, count]) => ({
-                  label,
-                  count,
-                  tone: label === '배송중' ? 'warning' : 'accent',
-                }));
+                // 다건 신청 — GroupCard (헤더에 클립보드 아바타 + 결제완료 pill + subtitle).
+                // 가이드 v1.0 — 진행률 chip 제거, expand/collapse chevron 으로 단순화.
+                const subtitle = `${total}개 와이파이${group.paidAt ? ` · 결제완료 ${group.paidAt.slice(0, 10)}` : ''}`;
 
                 return (
                   <GroupCard
                     key={group.groupId}
-                    groupId={group.groupId}
-                    total={total}
-                    summary={summary}
+                    variant="container"
+                    leading={
+                      <CardAvatar variant="accent" size="md" ariaLabel="신청 그룹">
+                        <ClipboardList strokeWidth={2} />
+                      </CardAvatar>
+                    }
+                    title={group.groupId}
+                    paid
+                    subtitle={subtitle}
                   >
-                    {group.items.map((p) =>
-                      renderWifiCard(p, { variant: 'prominent', section: 'inProgress' })
-                    )}
+                    {group.items.map(renderWifiInsetRow)}
                   </GroupCard>
                 );
               })}
@@ -652,28 +853,31 @@ const WifiSettings = () => {
           );
         })()}
 
-        {/* ── 운영중 탭 — 가장 조용한 톤. compact 카드. swipe 없음. ── */}
-        {activeTab === 'live' && totalCount > 0 && (
+        {/* ── 운영중 탭 — 서비스대기 → 서비스중 → 일시중지 (해지는 별도 탭). ── */}
+        {!isLoading && activeTab === 'live' && totalCount > 0 && (
           <div className="wifi-list wifi-list--live">
-            {(profilesBySection.live || []).map((p) =>
+            {liveWaiting.map((p) =>
               renderWifiCard(p, { variant: 'compact', section: 'live' })
+            )}
+            {liveActive.map((p) =>
+              renderWifiCard(p, { variant: 'compact', section: 'live' })
+            )}
+            {(profilesBySection.paused || []).map((p) =>
+              renderWifiCard(p, { variant: 'warning', section: 'paused' })
             )}
           </div>
         )}
 
-        {/* ── 점검·해지 탭 — 일시중지(warning) + 해지(default) ── */}
-        {activeTab === 'maintenance' && totalCount > 0 && (
-          <div className="wifi-list wifi-list--maintenance">
-            {(profilesBySection.paused || []).map((p) =>
-              renderWifiCard(p, { variant: 'warning', section: 'paused' })
-            )}
-            {(profilesBySection.terminated || []).map((p) =>
+        {/* ── 해지 탭 — 종결된 서비스 (해지일 desc) ── */}
+        {!isLoading && activeTab === 'terminated' && totalCount > 0 && (
+          <div className="wifi-list wifi-list--terminated">
+            {sortedTerminated.map((p) =>
               renderWifiCard(p, { variant: 'default', section: 'terminated' })
             )}
           </div>
         )}
 
-        <BottomActionBar>
+        <BottomActionBar sticky>
           <Button variant="primary" fullWidth icon={<Plus size={18} />} onClick={() => navigate('/dashboard/service-request?type=wifi')}>
             와이파이 신청하기
           </Button>
@@ -735,13 +939,14 @@ const WifiSettings = () => {
               <div className="wifi-name-toggle">
                 <span className="wifi-name-toggle-label">사용</span>
                 <button
-                  className={`wifi-toggle ${selectedProfile.enabled ? 'on' : 'off'}`}
+                  className={`pw-toggle ${selectedProfile.enabled ? 'is-on' : ''}`}
                   onClick={() => toggleEnabled(selectedProfile.id)}
                   role="switch"
                   aria-checked={selectedProfile.enabled}
                   title={selectedProfile.enabled ? '서비스 ON — 클릭 시 OFF' : '서비스 OFF — 클릭 시 ON'}
                 >
-                  <span className="wifi-toggle-thumb" />
+                  <span className="pw-toggle-text">{selectedProfile.enabled ? 'ON' : 'OFF'}</span>
+                  <span className="pw-toggle-thumb" />
                 </button>
               </div>
             )}

@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════
-   BottomActionBar — PathWave Design System
-   페이지 콘텐츠 하단에 인라인으로 배치
+   BottomActionBar — 페이지 하단 CTA
+   inline (default) + sticky (mobile fixed-bottom) 두 모드.
    ═══════════════════════════════════════════════════ */
 
 .bottom-action-bar-wrapper {
@@ -18,4 +18,40 @@
   margin: 0 auto;
   display: flex;
   gap: var(--pw-space-3);
+}
+
+/* ── Sticky 모드 (모바일 fixed-bottom) ──────────────
+   PC = 그대로 inline. 모바일 = 화면 하단 고정 + safe-area 대응. */
+@media (max-width: 768px) {
+  .bottom-action-bar-wrapper.is-sticky {
+    /* sticky 가 아니라 fixed — 컨테이너 스크롤과 무관하게 항상 화면 하단. */
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--pw-z-sticky);
+
+    margin-top: 0;
+    padding: var(--pw-space-3) var(--pw-container-pad-m)
+             /* 키보드 / 홈인디케이터 대응 — safe-area 우선, 최소 12px */
+             max(env(safe-area-inset-bottom, 0px), 12px)
+             var(--pw-container-pad-m);
+
+    /* gradient 페이드 — 콘텐츠가 비치다가 배경으로 자연스럽게 전환 */
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      var(--pw-page-bg-base) 30%,
+      var(--pw-page-bg-base) 100%
+    );
+    /* fallback 배경 (gradient 미지원 환경) */
+    background-color: var(--pw-page-bg-base);
+    /* 윗선 — 콘텐츠와 분리 */
+    border-top: 1px solid var(--pw-surface-line);
+  }
+
+  /* 페이지 자체에는 sticky CTA 만큼 padding-bottom 추가 — 마지막 카드가 가리지 않게 */
+  .pw-page:has(> .bottom-action-bar-wrapper.is-sticky) {
+    padding-bottom: calc(var(--pw-touch-comfortable) + var(--pw-space-8) + env(safe-area-inset-bottom, 0px));
+  }
 }

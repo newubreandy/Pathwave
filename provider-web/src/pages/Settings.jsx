@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Info } from 'lucide-react';
 import AuthService from '../services/auth/AuthService';
 import ConfirmModal from '../components/common/ConfirmModal';
 import PasswordInput from '../components/common/PasswordInput';
+import StatusBadge from '../components/common/StatusBadge';
 import './Settings.css';
 
 /* ── 기본값 ── */
@@ -13,6 +14,31 @@ const DEFAULT_SETTINGS = {
   benefitNotif: true,
   marketingNotif: false,
   nightAdNotif: true,
+  // 운영 — 영업시간 외 푸시 알림 (OOT)
+  ootPush: false,
+};
+
+/* ── 영업시간 mock — 실제 GET /api/facility/business-hours 로 대체 예정 ── */
+const MOCK_BUSINESS_HOURS = {
+  weekday: '10:00 ~ 22:00',
+  weekend: '10:00 ~ 23:00',
+  holiday: '휴무',
+};
+
+/* ── 승인 워크플로우 mock — 실제 GET 응답으로 대체 예정 ──
+   사업자 정보 변경: status ∈ { null, 'requested', 'reviewing', 'approved', 'rejected' }
+   회원 탈퇴:        status ∈ { null, 'requested', 'reviewing', 'completed', 'grace_period' } */
+const WORKFLOW_BIZ_STATUS = {
+  requested:  { label: '요청중',     badgeStatus: 'submitted' },
+  reviewing:  { label: '검토중',     badgeStatus: 'review' },
+  approved:   { label: '승인완료',   badgeStatus: 'active' },
+  rejected:   { label: '반려',       badgeStatus: 'rejected', mode: 'admin' },
+};
+const WORKFLOW_WITHDRAW_STATUS = {
+  requested:    { label: '탈퇴요청',     badgeStatus: 'submitted' },
+  reviewing:    { label: '검토중',       badgeStatus: 'review' },
+  completed:    { label: '탈퇴완료',     badgeStatus: 'active' },
+  grace_period: { label: '재가입대기',   badgeStatus: 'paused' },
 };
 
 const STORAGE_KEY = 'pathwave_settings';
@@ -232,6 +258,12 @@ const Settings = () => {
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
+  // 워크플로우 mock 상태 — 실서비스에선 GET /api/account/business-info/change-request/latest 등
+  const [bizChangeStatus] = useState(null);     // 'requested' | 'reviewing' | ... | null
+  const [withdrawStatus] = useState(null);      // 'requested' | ... | null
+
+  const businessHours = MOCK_BUSINESS_HOURS;
+
   // 설정 변경 시 localStorage 자동 저장
   useEffect(() => {
     saveSettings(settings);
@@ -286,11 +318,15 @@ const Settings = () => {
 
       <div className="settings-page">
 
-        {/* ── 서비스 설정 ── */}
+        {/* ════════════════════════════════════════════════════
+            계정 (로그인 관련)
+            ════════════════════════════════════════════════════ */}
+        <h2 className="settings-group-title">계정</h2>
         <div className="settings-section">
           <div className="settings-row">
             <div className="settings-row-left">
-              <span className="settings-row-label">자동로그인 설정</span>
+              <span className="settings-row-label">자동로그인</span>
+              <span className="settings-row-desc">다음 접속 시 로그인 정보를 유지합니다.</span>
             </div>
             <ToggleSwitch
               id="auto-login"
@@ -298,14 +334,53 @@ const Settings = () => {
               onChange={() => toggleSetting('autoLogin')}
             />
           </div>
+
+          <div className="settings-row clickable" onClick={() => setShowPasswordModal(true)}>
+            <div className="settings-row-left">
+              <span className="settings-row-label">비밀번호 변경</span>
+            </div>
+            <ChevronRight size={18} className="settings-row-arrow" />
+          </div>
         </div>
 
-        {/* ── 알림 설정 ── */}
+        {/* ════════════════════════════════════════════════════
+            운영 설정 (시설 운영 관련 — 시설관리자 전용)
+            ════════════════════════════════════════════════════ */}
+        <h2 className="settings-group-title">운영 설정</h2>
         <div className="settings-section">
           <div className="settings-row">
             <div className="settings-row-left">
-              <span className="settings-row-label">알림설정</span>
-              <span className="settings-row-desc">※ 시스템 점비 및 긴급알림은 설정과 관련없이 발송 됩니다.</span>
+              <span className="settings-row-label">영업시간</span>
+              <span className="settings-row-desc">
+                평일 {businessHours.weekday}<br/>
+                주말 {businessHours.weekend} · 공휴일 {businessHours.holiday}
+              </span>
+            </div>
+            <ChevronRight size={18} className="settings-row-arrow" />
+          </div>
+
+          <div className="settings-row">
+            <div className="settings-row-left">
+              <span className="settings-row-label">영업시간 외 푸시 알림</span>
+              <span className="settings-row-desc">영업시간이 아닌 시간대에는 고객 푸시 알림이 발송되지 않습니다.</span>
+            </div>
+            <ToggleSwitch
+              id="oot-push"
+              checked={settings.ootPush}
+              onChange={() => toggleSetting('ootPush')}
+            />
+          </div>
+        </div>
+
+        {/* ════════════════════════════════════════════════════
+            알림 설정 (시설관리자가 받는 알림 환경)
+            ════════════════════════════════════════════════════ */}
+        <h2 className="settings-group-title">알림 설정</h2>
+        <div className="settings-section">
+          <div className="settings-row">
+            <div className="settings-row-left">
+              <span className="settings-row-label">알림 수신</span>
+              <span className="settings-row-desc">시스템 점검 및 긴급 알림은 설정과 관계없이 발송됩니다.</span>
             </div>
             <ToggleSwitch
               id="notifications-enabled"
@@ -318,8 +393,8 @@ const Settings = () => {
             <div className="settings-sub-items">
               <div className="settings-row">
                 <div className="settings-row-left">
-                  <span className="settings-row-label">혜택알림</span>
-                  <span className="settings-row-desc">내주변(위치기반)의 혜택알림 받기</span>
+                  <span className="settings-row-label">혜택 알림</span>
+                  <span className="settings-row-desc">내주변(위치기반)의 혜택 알림 받기</span>
                 </div>
                 <ToggleSwitch
                   id="benefit-notif"
@@ -342,8 +417,8 @@ const Settings = () => {
 
               <div className="settings-row">
                 <div className="settings-row-left">
-                  <span className="settings-row-label">야간 광고성 알림 수신</span>
-                  <span className="settings-row-desc">21:00 ~ 08:00 사이까지 알림거부</span>
+                  <span className="settings-row-label">야간 광고성 알림</span>
+                  <span className="settings-row-desc">21:00 ~ 08:00 사이 알림 차단</span>
                 </div>
                 <ToggleSwitch
                   id="night-ad-notif"
@@ -355,31 +430,51 @@ const Settings = () => {
           )}
         </div>
 
-        {/* ── 계정 관리 ── */}
+        {/* ════════════════════════════════════════════════════
+            계정 관리 (사업자 정보 / 탈퇴 — 슈퍼어드민 승인 워크플로)
+            ════════════════════════════════════════════════════ */}
+        <h2 className="settings-group-title">계정 관리</h2>
         <div className="settings-section">
-          <div className="settings-row clickable" onClick={() => setShowPasswordModal(true)}>
-            <div className="settings-row-left">
-              <span className="settings-row-label">비밀번호 변경</span>
-            </div>
-            <ChevronRight size={18} className="settings-row-arrow" />
-          </div>
-
           <div className="settings-row clickable" onClick={() => setShowBusinessModal(true)}>
             <div className="settings-row-left">
               <span className="settings-row-label">사업자 정보 변경</span>
+              <span className="settings-row-desc">슈퍼어드민 승인 후 반영됩니다.</span>
             </div>
-            <ChevronRight size={18} className="settings-row-arrow" />
+            <div className="settings-row-meta">
+              {bizChangeStatus && WORKFLOW_BIZ_STATUS[bizChangeStatus] && (
+                <StatusBadge
+                  status={WORKFLOW_BIZ_STATUS[bizChangeStatus].badgeStatus}
+                  label={WORKFLOW_BIZ_STATUS[bizChangeStatus].label}
+                  mode={WORKFLOW_BIZ_STATUS[bizChangeStatus].mode || 'provider'}
+                  size="sm"
+                />
+              )}
+              <ChevronRight size={18} className="settings-row-arrow" />
+            </div>
           </div>
 
           <div className="settings-row clickable" onClick={() => setShowWithdrawConfirm(true)}>
             <div className="settings-row-left">
-              <span className="settings-row-label">회원탈퇴</span>
+              <span className="settings-row-label">회원 탈퇴</span>
+              <span className="settings-row-desc">탈퇴 요청 후 슈퍼어드민 검토를 거칩니다.</span>
             </div>
-            <ChevronRight size={18} className="settings-row-arrow" />
+            <div className="settings-row-meta">
+              {withdrawStatus && WORKFLOW_WITHDRAW_STATUS[withdrawStatus] && (
+                <StatusBadge
+                  status={WORKFLOW_WITHDRAW_STATUS[withdrawStatus].badgeStatus}
+                  label={WORKFLOW_WITHDRAW_STATUS[withdrawStatus].label}
+                  size="sm"
+                />
+              )}
+              <ChevronRight size={18} className="settings-row-arrow" />
+            </div>
           </div>
         </div>
 
-
+        <div className="settings-workflow-hint">
+          <Info size={14} />
+          <span>사업자 정보 변경 / 회원 탈퇴는 슈퍼어드민 검토 후 처리됩니다. 진행 상태는 알림으로 안내됩니다.</span>
+        </div>
 
         {/* ── 로그아웃 ── */}
         <button className="settings-logout-btn" onClick={() => setShowLogoutConfirm(true)}>

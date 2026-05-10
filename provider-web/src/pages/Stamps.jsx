@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
-import { Stamp, Plus, ChevronRight, MoreVertical } from 'lucide-react';
+import { Stamp, Plus, ChevronRight } from 'lucide-react';
 import StampService from '../services/stamp/StampService';
+import { MOCK_STAMPS } from '../services/stamp/mockStamps';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import './Stamps.css';
@@ -14,8 +15,9 @@ const Stamps = () => {
   const [stampList, setStampList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   // mock — 슈퍼어드민에서 매장별 스탬프 서비스 가입 여부 관리
-  // TODO: 실제 백엔드 GET /api/store/services 응답으로 교체
-  const [isStampServiceActivated] = useState(false);
+  // TODO: 실제 백엔드 GET /api/store/services 응답으로 교체.
+  // 데모용 true (등록된 스탬프 데이터 보이도록).
+  const [isStampServiceActivated] = useState(true);
   useEffect(() => {
     loadStamps();
   }, []);
@@ -23,21 +25,36 @@ const Stamps = () => {
   const loadStamps = async () => {
     setIsLoading(true);
     try {
-      const data = await StampService.getStamps();
-      setStampList(data);
+      // 백엔드 미연동 환경 — mock 사용. 연동 후 StampService.list() 호출 + setStampList 로 교체.
+      await new Promise((r) => setTimeout(r, 200));
+      setStampList(MOCK_STAMPS);
     } catch (error) {
       console.error('Failed to load stamps', error);
+      setStampList(MOCK_STAMPS); // fallback
     } finally {
       setIsLoading(false);
     }
   };
 
-  const hasActiveStamp = stampList.some(s => s.status === 'active');
+  // 스탬프는 매장당 1개만 운영 가능. 정책:
+  //   - active 가 있으면 신규 등록 X (수정 / 정지로 처리)
+  //   - paused 가 있으면 → 신규 시 기존 적립 무효화 알림 후 진행
+  //   - 모두 ended 거나 0건이면 신규 등록 자유롭게
+  const activeStamp = stampList.find(s => s.status === 'active');
+  const pausedStamp = stampList.find(s => s.status === 'paused');
+  const canRegisterNew = !activeStamp; // active 가 없을 때만 등록 버튼 노출
 
   const handleAddClick = () => {
-    if (hasActiveStamp) {
-      alert('현재 진행 중인 스탬프가 있습니다. 매장당 1개의 스탬프만 활성화할 수 있으므로, 기존 스탬프를 정지 또는 종료한 후 다시 시도해 주세요.');
+    if (activeStamp) {
+      // 정상적으로는 버튼이 안 보이지만 만약 클릭되면 안내.
+      alert('현재 진행 중인 스탬프가 있습니다. 매장당 1개의 스탬프만 활성화할 수 있으므로, 기존 스탬프를 정지 후 다시 시도해 주세요.');
       return;
+    }
+    if (pausedStamp) {
+      const ok = window.confirm(
+        '일시정지된 기존 스탬프가 있습니다.\n신규 스탬프를 등록하시면 사용자가 적립한 기존 스탬프는 더 이상 적용되지 않습니다.\n\n계속 진행하시겠어요?'
+      );
+      if (!ok) return;
     }
     navigate('/dashboard/stamps/new');
   };
@@ -122,46 +139,24 @@ const Stamps = () => {
           </div>
         ) : stampList.length > 0 ? (
           stampList.map((stamp) => (
+            // 사용자 요구 (2026-05-10): MoreVertical 메뉴 제거 + 상태 배지를 제목 우측으로.
+            // 정지/삭제 액션은 상세보기 페이지에서. 사용기간은 유지.
             <Link to={`/dashboard/stamps/view/${stamp.id}`} key={stamp.id} className="stamp-card">
               <div className={`stamp-icon ${stamp.status}`}>
                 <Stamp size={24} />
               </div>
               <div className="stamp-info">
-                <h3 className="stamp-name">{stamp.name}</h3>
-                <div className={`stamp-status ${stamp.status}`}>
-                  {stamp.status === 'active' ? t('stamp.status_active', '스탬프 적립 중') : (stamp.status === 'paused' ? '스탬프 일시정지' : t('stamp.status_ended', '스탬프 적립 종료'))}
+                <div className="stamp-info-head">
+                  <h3 className="stamp-name">{stamp.name}</h3>
+                  <span className={`stamp-status ${stamp.status}`}>
+                    {stamp.status === 'active' ? t('stamp.status_active', '스탬프 적립 중') : (stamp.status === 'paused' ? '스탬프 일시정지' : t('stamp.status_ended', '스탬프 적립 종료'))}
+                  </span>
                 </div>
                 <div className="stamp-details">
                   <div>{t('stamp.label_period', '사용기간')} : {stamp.period}</div>
                 </div>
               </div>
               <ChevronRight className="stamp-arrow" size={20} />
-              
-              <button 
-                className="stamp-menu-btn"
-                onClick={(e) => handleMenuClick(e, stamp.id)}
-              >
-                <MoreVertical size={18} />
-              </button>
-
-              {activeMenuId === stamp.id && (
-                <div className="stamp-context-menu">
-                  {stamp.status !== 'ended' && (
-                    <button 
-                      className="context-menu-item"
-                      onClick={(e) => handlePauseToggle(e, stamp)} 
-                    >
-                      {stamp.status === 'active' ? '정지하기' : '활성화하기'}
-                    </button>
-                  )}
-                  <button 
-                    className="context-menu-item danger"
-                    onClick={(e) => handleDelete(e, stamp.id)} 
-                  >
-                    삭제하기
-                  </button>
-                </div>
-              )}
             </Link>
           ))
         ) : (
@@ -171,17 +166,20 @@ const Stamps = () => {
         )}
       </div>
 
-      <BottomActionBar>
-        <Button 
-          variant="primary" 
-          fullWidth 
-          icon={<Plus size={18} />}
-          onClick={handleAddClick} 
-          disabled={hasActiveStamp}
-        >
-          {t('stamp.title_add', '스탬프 등록')}
-        </Button>
-      </BottomActionBar>
+      {/* 등록 버튼 — 신청 진행중인 스탬프 (active) 가 없을 때만 노출.
+          (paused / ended 인 경우 등록 가능, click 시 안내 다이얼로그) */}
+      {canRegisterNew && (
+        <BottomActionBar>
+          <Button
+            variant="primary"
+            fullWidth
+            icon={<Plus size={18} />}
+            onClick={handleAddClick}
+          >
+            {t('stamp.title_add', '스탬프 등록')}
+          </Button>
+        </BottomActionBar>
+      )}
     </div>
   );
 };

@@ -1,0 +1,69 @@
+/* ═══════════════════════════════════════════════════
+   StageProgress — 4단계 스테퍼 (우측 플래그)
+   현재 단계까지 채워지는 dot + connector 라인.
+   ═══════════════════════════════════════════════════ */
+
+.pw-stages {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.pw-stage-dot {
+  position: relative;
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pw-surface-3);
+  transition:
+    background-color var(--pw-duration-fast) var(--pw-ease),
+    transform var(--pw-duration-fast) var(--pw-ease);
+}
+
+/* connector 라인 — 각 dot 사이 */
+.pw-stage-dot + .pw-stage-dot {
+  margin-left: 10px;
+}
+.pw-stage-dot + .pw-stage-dot::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  width: 10px;
+  height: 1px;
+  background: var(--pw-surface-3);
+  transform: translateY(-50%);
+}
+
+/* 완료된 단계 (현재 단계 포함) — accent 색 */
+.pw-stage-dot.is-done {
+  background: var(--pw-accent);
+}
+.pw-stage-dot.is-done + .pw-stage-dot.is-done::before {
+  background: var(--pw-accent);
+}
+
+/* 현재 단계 — 살짝 더 크게 + ring */
+.pw-stage-dot.is-current {
+  transform: scale(1.4);
+  box-shadow: 0 0 0 3px var(--pw-accent-soft);
+}
+
+/* 사이즈 ─────────────────────────────────────────── */
+.pw-stages--sm .pw-stage-dot { width: 6px; height: 6px; }
+.pw-stages--sm .pw-stage-dot + .pw-stage-dot { margin-left: 8px; }
+.pw-stages--sm .pw-stage-dot + .pw-stage-dot::before { left: -8px; width: 8px; }
+
+.pw-stages--md .pw-stage-dot { width: 8px; height: 8px; }
+.pw-stages--md .pw-stage-dot + .pw-stage-dot { margin-left: 12px; }
+.pw-stages--md .pw-stage-dot + .pw-stage-dot::before { left: -12px; width: 12px; }
+
+.pw-stages-label {
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pw-accent-text);
+  letter-spacing: 0.02em;
+}

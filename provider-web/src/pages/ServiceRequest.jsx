@@ -28,11 +28,11 @@ const SERVICE_CATEGORIES = [
   },
   {
     key: 'event',
-    title: '이벤트 서비스이용',
+    title: '쿠폰 서비스이용',
     bullets: [
       'PathWave WiFi 서비스 이용 시 추가로 이용 가능한 서비스입니다.',
       '매장 내 특정 위치에 방문한 고객에게 쿠폰 또는 혜택을 자동으로 제공할 수 있습니다.',
-      '서비스 이용 시 별도의 알림 비용은 발생하지 않습니다.',
+      '쿠폰 발급 시 별도의 알림 비용은 발생하지 않습니다.',
     ],
   },
   {
@@ -424,8 +424,9 @@ const ServiceRequest = () => {
   if (step === 'category') {
     return (
       <div className="sr-page">
-        <header className="sr-header">
-          <button className="sr-back" onClick={handleBack}><ChevronLeft size={22} /></button>
+        {/* 최상위 단계 — GNB 탭으로 접근 가능하므로 back 버튼 노출 X.
+            내부 단계 (wifi/stamp/event/noti/payment) 에서만 back 사용. */}
+        <header className="sr-header sr-header--top">
           <h1 className="sr-title">서비스 신청</h1>
         </header>
 
@@ -471,29 +472,15 @@ const ServiceRequest = () => {
     return (
       <div className="sr-page">
         <header className="sr-header">
-          <button className="sr-back" onClick={handleBack}><ChevronLeft size={22} /></button>
-          <h1 className="sr-title">서비스 신청</h1>
+          <button className="sr-back" onClick={handleBack} aria-label="뒤로 가기">
+            <ChevronLeft size={22} />
+          </button>
+          <h1 className="sr-title">와이파이 서비스등록</h1>
         </header>
 
         <div className="sr-body">
-          {/* 카테고리 dropdown */}
-          <div className="sr-cat-select" onClick={() => setShowCategoryDropdown((v) => !v)}>
-            <span className="sr-cat-select-title">{selectedCategory?.title}</span>
-            <ChevronDown size={18} className={`sr-cat-select-arrow ${showCategoryDropdown ? 'open' : ''}`} />
-          </div>
-          {showCategoryDropdown && (
-            <div className="sr-cat-dropdown">
-              {SERVICE_CATEGORIES.map((c) => (
-                <button
-                  key={c.key}
-                  className={`sr-cat-dropdown-item ${categoryKey === c.key ? 'active' : ''}`}
-                  onClick={() => { setCategoryKey(c.key); setStep(c.key); setShowCategoryDropdown(false); }}
-                >
-                  {c.title}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* 카테고리 헤더 — 1:1 매핑이므로 dropdown 으로 변경 X.
+              사용자 요구 (2026-05-10): "아코디언에서 서비스 변경하면서 신청하게 안해도 됨". */}
 
           {/* Quantity stepper + 확인 */}
           <div className="sr-qty-row">
@@ -861,35 +848,21 @@ const ServiceRequest = () => {
   }
 
   // ═══════════════════════════════════════
-  // STEP 2-B — 스탬프 / 이벤트 / 알림
+  // STEP 2-B — 스탬프 / 쿠폰(event) / 알림
   // ═══════════════════════════════════════
   if (step === 'stamp' || step === 'event' || step === 'noti') {
     const cat = SERVICE_CATEGORIES.find((c) => c.key === step);
     return (
       <div className="sr-page">
         <header className="sr-header">
-          <button className="sr-back" onClick={handleBack}><ChevronLeft size={22} /></button>
-          <h1 className="sr-title">서비스 신청</h1>
+          <button className="sr-back" onClick={handleBack} aria-label="뒤로 가기">
+            <ChevronLeft size={22} />
+          </button>
+          <h1 className="sr-title">{cat?.title || '서비스 신청'}</h1>
         </header>
 
         <div className="sr-body">
-          <div className="sr-cat-select" onClick={() => setShowCategoryDropdown((v) => !v)}>
-            <span className="sr-cat-select-title">{cat?.title}</span>
-            <ChevronDown size={18} className={`sr-cat-select-arrow ${showCategoryDropdown ? 'open' : ''}`} />
-          </div>
-          {showCategoryDropdown && (
-            <div className="sr-cat-dropdown">
-              {SERVICE_CATEGORIES.map((c) => (
-                <button
-                  key={c.key}
-                  className={`sr-cat-dropdown-item ${categoryKey === c.key ? 'active' : ''}`}
-                  onClick={() => { setCategoryKey(c.key); setStep(c.key); setShowCategoryDropdown(false); }}
-                >
-                  {c.title}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* 카테고리 dropdown 제거 (2026-05-10): 1:1 매핑 — 진입 시 해당 서비스만 노출. */}
 
           <ul className="sr-notices">
             {cat?.bullets.map((b, i) => <li key={i}>{b}</li>)}
@@ -914,8 +887,10 @@ const ServiceRequest = () => {
     return (
       <div className="sr-page">
         <header className="sr-header">
-          <button className="sr-back" onClick={handleBack}><ChevronLeft size={22} /></button>
-          <h1 className="sr-title">서비스 신청</h1>
+          <button className="sr-back" onClick={handleBack} aria-label="뒤로 가기">
+            <ChevronLeft size={22} />
+          </button>
+          <h1 className="sr-title">결제</h1>
         </header>
 
         <div className="sr-body">

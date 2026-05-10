@@ -10,14 +10,15 @@
   background: var(--pw-surface-1);
   border: 1px solid var(--pw-surface-line);
   border-radius: var(--pw-radius-lg);
-  padding: var(--pw-space-5);
+  /* 가이드 v1.0 — padding 16px (space-lg). 모든 카드 공통. */
+  padding: var(--pw-space-4);
   color: var(--pw-text);
   transition:
     border-color var(--pw-duration-fast) var(--pw-ease),
     background-color var(--pw-duration-fast) var(--pw-ease);
-  /* 그림자는 약하게만 — “정보판” 톤 */
+  /* 그림자는 약하게만 — “정보판” 톤 (shadow-sm) */
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.025) inset,
-              0 4px 12px rgba(0, 0, 0, 0.25);
+              0 2px 6px rgba(0, 0, 0, 0.20);
 }
 
 /* 한 컨테이너 안 카드 높이 통일을 위한 grid stretch */
@@ -29,40 +30,23 @@
 .pw-card--interactive {
   cursor: pointer;
 }
+/* hover — 차분하게 bg 만 살짝 (border 변경 / transform 없음) */
 .pw-card--interactive:hover {
   background: var(--pw-surface-2);
-  border-color: var(--pw-border-strong);
 }
 .pw-card--interactive:focus-visible {
   outline: 2px solid var(--pw-accent);
   outline-offset: 2px;
-}
-.pw-card--interactive:active {
-  transform: translateY(1px);
 }
 
 /* ── variant: default ─────────────────────────────── */
 /* baseline 그대로 */
 
 /* ── variant: prominent ───────────────────────────── */
-/* 신청 진행중처럼 ‘주목이 필요한’ 카드.
-   배경 한 단계 위 + 좌측에 accent 4px 라인. glow 는 쓰지 않음. */
+/* 디자인 가이드 v1.0 정렬 — 좌측 라인 제거, 배경 한 단계 위만. */
 .pw-card--prominent {
   background: var(--pw-surface-2);
   border-color: var(--pw-surface-line);
-  /* 좌측 accent 라인 — 4px, 카드 전체 높이. */
-  padding-left: calc(var(--pw-space-5) + 4px);
-}
-.pw-card--prominent::before {
-  content: '';
-  position: absolute;
-  top: 12px;
-  bottom: 12px;
-  left: 0;
-  width: 3px;
-  border-radius: 0 var(--pw-radius-xs) var(--pw-radius-xs) 0;
-  background: var(--pw-accent);
-  opacity: 0.85;
 }
 
 /* ── variant: compact ─────────────────────────────── */
@@ -78,56 +62,23 @@
   border-color: var(--pw-surface-line);
 }
 
-/* ── variant: warning ─────────────────────────────── */
-/* 일시중지 / 점검 필요. 좌측 amber 라인. */
+/* ── variant: warning / success / danger ────────────
+   디자인 가이드 v1.0 — 좌측 라인 없음. tint 배경 + tint border 만으로 구분.
+   상태 강조는 아바타 색 (CardAvatar variant) 으로 충분. */
+
 .pw-card--warning {
   background: rgba(245, 158, 11, 0.045);
   border-color: rgba(245, 158, 11, 0.18);
-  padding-left: calc(var(--pw-space-5) + 4px);
-}
-.pw-card--warning::before {
-  content: '';
-  position: absolute;
-  top: 12px;
-  bottom: 12px;
-  left: 0;
-  width: 3px;
-  border-radius: 0 var(--pw-radius-xs) var(--pw-radius-xs) 0;
-  background: var(--pw-warning);
 }
 
-/* ── variant: success ─────────────────────────────── */
 .pw-card--success {
   background: rgba(34, 197, 94, 0.045);
   border-color: rgba(34, 197, 94, 0.18);
-  padding-left: calc(var(--pw-space-5) + 4px);
-}
-.pw-card--success::before {
-  content: '';
-  position: absolute;
-  top: 12px;
-  bottom: 12px;
-  left: 0;
-  width: 3px;
-  border-radius: 0 var(--pw-radius-xs) var(--pw-radius-xs) 0;
-  background: var(--pw-success);
 }
 
-/* ── variant: danger ──────────────────────────────── */
 .pw-card--danger {
   background: rgba(239, 68, 68, 0.05);
   border-color: rgba(239, 68, 68, 0.22);
-  padding-left: calc(var(--pw-space-5) + 4px);
-}
-.pw-card--danger::before {
-  content: '';
-  position: absolute;
-  top: 12px;
-  bottom: 12px;
-  left: 0;
-  width: 3px;
-  border-radius: 0 var(--pw-radius-xs) var(--pw-radius-xs) 0;
-  background: var(--pw-error);
 }
 
 /* ── 모바일 ────────────────────────────────────────── */
@@ -135,11 +86,5 @@
   .pw-card {
     padding: var(--pw-space-4);
     border-radius: var(--pw-radius-md);
-  }
-  .pw-card--prominent,
-  .pw-card--warning,
-  .pw-card--success,
-  .pw-card--danger {
-    padding-left: calc(var(--pw-space-4) + 4px);
   }
 }

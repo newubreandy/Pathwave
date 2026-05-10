@@ -80,26 +80,29 @@
   transform: translateY(0);
 }
 
-/* ── Icon ── */
+/* ── Icon — CardAvatar md 동일 사이즈/곡률 정렬 (2026-05-09) ──
+   40px / 12px — WiFi/Stamps/Coupons 와 통일. */
 .noti-icon {
-  width: var(--pw-touch-comfortable);
-  height: var(--pw-touch-comfortable);
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  background:
+    radial-gradient(ellipse at 50% 18%, rgba(255, 255, 255, 0.10) 0%, transparent 50%),
+    linear-gradient(180deg, #2a2a36 0%, #16161e 50%, #08080d 100%);
+  border: 1px solid rgba(0, 0, 0, 0.85);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.75),
+    0 2px 5px rgba(0, 0, 0, 0.55),
+    0 -0.5px 0 rgba(255, 255, 255, 0.04);
 }
 
-.noti-icon.active {
-  background-color: var(--pw-primary-subtle);
-  color: var(--pw-primary);
-}
-
-.noti-icon.sent {
-  background-color: var(--pw-gray-100);
-  color: var(--pw-gray-400);
-}
+.noti-icon.active { color: var(--pw-accent-text); }
+.noti-icon.sent   { color: var(--pw-text-hint); }
 
 .noti-info {
   display: flex;
@@ -175,24 +178,36 @@
   color: var(--pw-white);
 }
 
-/* ── Form View ── */
+/* ── Form View — 매장안내 .display-text 정렬 (22/300/흰색) ──
+   사용자 요구 (2026-05-10): 모든 폼 input 값 통일. */
 .form-input-line {
   width: 100%;
   border: none;
   border-bottom: 1px solid var(--pw-border);
-  padding: var(--pw-space-2) 0;
-  font-size: var(--pw-title-size);
-  font-weight: 600;
+  padding: var(--pw-space-3) 0;
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
   color: var(--pw-text);
   background: transparent;
   outline: none;
   transition: border-color var(--pw-duration-normal) var(--pw-ease);
   min-height: var(--pw-touch-min);
+  line-height: 1.4;
 }
 
 .form-input-line:focus {
-  border-bottom: 2px solid var(--pw-primary);
+  border-bottom: 2px solid var(--pw-accent);
   margin-bottom: -1px;
+}
+
+.form-input-line::placeholder {
+  color: var(--pw-text-hint);
+  font-weight: 300;
+}
+
+@media (max-width: 480px) {
+  .form-input-line { font-size: 20px; }
 }
 
 select.form-input-line {
@@ -220,42 +235,66 @@ select.form-input-line {
   padding-bottom: var(--pw-space-2);
 }
 
+/* 날짜·이미지 row 의 readonly value — input 톤과 동일 */
 .date-value, .image-value {
-  font-size: var(--pw-title-size);
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
   color: var(--pw-text);
   display: flex;
   align-items: center;
   gap: var(--pw-space-2);
 }
+@media (max-width: 480px) {
+  .date-value, .image-value { font-size: 20px; }
+}
 
+/* 메시지 textarea — 다단락 본문이지만 폰트 톤은 동일 (가독성 위해 line-height ↑) */
 textarea.form-textarea {
   width: 100%;
   min-height: 150px;
   padding: var(--pw-space-4);
   border: 1px solid var(--pw-border);
   border-radius: var(--pw-radius-sm);
+  background: var(--pw-surface-1);
   resize: vertical;
-  font-size: var(--pw-body-size);
-  line-height: var(--pw-body-leading);
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
+  line-height: 1.55;
+  color: var(--pw-text);
   outline: none;
   transition: border-color var(--pw-duration-normal);
   font-family: inherit;
 }
-
+textarea.form-textarea::placeholder {
+  color: var(--pw-text-hint);
+  font-weight: 300;
+}
 textarea.form-textarea:focus {
-  border-color: var(--pw-primary);
+  border-color: var(--pw-accent);
+}
+@media (max-width: 480px) {
+  textarea.form-textarea { font-size: 20px; }
 }
 
+/* readonly 메시지 박스 — 다크 톤 surface, 흰색 텍스트 */
 .readonly-message-box {
   width: 100%;
   padding: var(--pw-space-4);
-  background: var(--pw-gray-50);
+  background: var(--pw-surface-1);
+  border: 1px solid var(--pw-surface-line);
   border-radius: var(--pw-radius-sm);
-  font-size: var(--pw-body-size);
-  line-height: var(--pw-body-leading);
-  color: var(--pw-text-secondary);
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
+  line-height: 1.55;
+  color: var(--pw-text);
   white-space: pre-wrap;
   word-break: break-all;
+}
+@media (max-width: 480px) {
+  .readonly-message-box { font-size: 20px; }
 }
 
 .image-preview {
@@ -275,67 +314,9 @@ textarea.form-textarea:focus {
   margin-bottom: var(--pw-space-4);
 }
 
-.toggle-switch {
-  position: relative;
-  display: block;
-  flex-shrink: 0;
-  width: 66px;
-  height: 32px;
-}
-
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.toggle-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: var(--pw-gray-400);
-  transition: var(--pw-duration-normal);
-  border-radius: 32px;
-}
-
-.toggle-slider:before {
-  position: absolute;
-  content: "";
-  height: 26px;
-  width: 26px;
-  left: 3px;
-  bottom: 3px;
-  background: var(--pw-bg-3);
-  transition: var(--pw-duration-normal);
-  border-radius: 50%;
-  z-index: 2;
-}
-
-input:checked + .toggle-slider {
-  background-color: var(--pw-primary);
-}
-
-input:checked + .toggle-slider:before {
-  transform: translateX(34px);
-}
-
-.toggle-text {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--pw-white);
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  z-index: 1;
-  right: 12px;
-  transition: var(--pw-duration-normal);
-}
-
-input:checked + .toggle-slider .toggle-text {
-  right: auto;
-  left: 12px;
-}
+/* Notifications 토글 스타일 — Settings.css 의 .toggle-switch / .toggle-track /
+   .toggle-thumb / .toggle-text 공통 스타일 사용. 페이지별 자체 정의 제거.
+   여기는 .toggle-label / .toggle-row 페이지 고유 스타일만. */
 
 .toggle-label {
   font-size: var(--pw-label-size);
@@ -455,6 +436,193 @@ textarea.form-textarea:disabled {
   border-bottom-color: var(--pw-border-light);
 }
 
+/* readonly value — 흰색 유지 (값이므로 잘 보여야 함). 입력 underline 만 제거. */
 .disabled-text {
-  color: var(--pw-text-hint) !important;
+  color: var(--pw-text) !important;
+  border-bottom-color: transparent !important;
+  cursor: default;
+}
+
+/* 알림 이미지 드롭존 — 다크 톤 (사용자 요구 2026-05-10).
+   이전 inline #F8FAFC 흰색 배경 → surface-1 다크. */
+.noti-image-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pw-space-2);
+  border: 1px dashed var(--pw-surface-line);
+  border-radius: var(--pw-radius-md);
+  padding: var(--pw-space-10) var(--pw-space-6);
+  text-align: center;
+  cursor: pointer;
+  color: var(--pw-text-hint);
+  background: var(--pw-surface-1);
+  font-size: 14px;
+  transition:
+    background-color var(--pw-duration-fast) var(--pw-ease),
+    border-color var(--pw-duration-fast) var(--pw-ease),
+    color var(--pw-duration-fast) var(--pw-ease);
+}
+.noti-image-dropzone:hover {
+  background: var(--pw-surface-2);
+  border-color: var(--pw-border-strong);
+  color: var(--pw-text-secondary);
+}
+
+/* ══════════════════════════════════════════════
+   NotificationInbox — 받은 알림 (Notification Center)
+   날짜 그룹별 GroupCard + 카테고리별 CardAvatar.
+   ══════════════════════════════════════════════ */
+.noti-inbox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-6);
+  margin-top: var(--pw-space-6);
+}
+
+.noti-inbox-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pw-space-3);
+  padding: 0 var(--pw-space-1);
+}
+
+.noti-inbox-summary {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--pw-text-hint);
+}
+.noti-inbox-summary strong {
+  color: var(--pw-text);
+  font-weight: 600;
+}
+
+.noti-inbox-readall {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--pw-border-strong);
+  color: var(--pw-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--pw-radius-pill);
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background var(--pw-duration-fast) var(--pw-ease),
+              color var(--pw-duration-fast) var(--pw-ease);
+}
+.noti-inbox-readall:hover {
+  background: var(--pw-surface-2);
+  color: var(--pw-text);
+}
+
+.noti-inbox-empty {
+  padding: var(--pw-space-12) var(--pw-space-6);
+  text-align: center;
+  color: var(--pw-text-hint);
+  font-size: 14px;
+  border: 1px dashed var(--pw-surface-line);
+  border-radius: var(--pw-radius-md);
+  background: var(--pw-surface-1);
+}
+
+/* 인박스 행 — GroupCardItem 위에 본문 그리드 */
+.noti-inbox-item {
+  position: relative;
+  align-items: flex-start;
+  gap: var(--pw-space-4);
+}
+.noti-inbox-item.is-unread {
+  background: rgba(139, 92, 246, 0.04);
+}
+
+.noti-inbox-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.noti-inbox-head {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-2);
+  flex-wrap: wrap;
+}
+
+.noti-inbox-cat {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pw-text-hint);
+  letter-spacing: 0.01em;
+}
+
+.noti-inbox-star {
+  color: #F59E0B;
+  fill: #F59E0B;
+}
+
+.noti-inbox-time {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--pw-text-hint);
+}
+
+.noti-inbox-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pw-text);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.noti-inbox-item.is-unread .noti-inbox-title {
+  color: #fff;
+}
+
+.noti-inbox-text {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--pw-text-secondary);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 미확인 도트 — 행 우측 상단 */
+.noti-inbox-dot {
+  position: absolute;
+  top: 18px;
+  right: 16px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pw-accent);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18);
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .noti-inbox-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--pw-space-2);
+  }
+  .noti-inbox-time {
+    margin-left: 0;
+  }
+  .noti-inbox-dot {
+    top: 16px;
+    right: 12px;
+  }
 }

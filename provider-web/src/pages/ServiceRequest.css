@@ -33,12 +33,20 @@
 
 .sr-back:hover { background: var(--pw-bg-hover); }
 
+/* 페이지 타이틀 — .page-title / .pw-page-title 와 동일 (사용자 요구 2026-05-10).
+   28px / 800 / display tracking — 다른 페이지 (와이파이 관리, 결제관리 등) 와 통일. */
 .sr-title {
   flex: 1;
   text-align: left;
-  font-size: var(--pw-title-size);
-  font-weight: 700;
+  font-size: var(--pw-display-size);
+  font-weight: var(--pw-display-weight);
+  line-height: var(--pw-display-leading);
+  letter-spacing: var(--pw-display-tracking);
+  color: var(--pw-text);
   margin: 0;
+}
+@media (max-width: 768px) {
+  .sr-title { font-size: var(--pw-headline-size); }
 }
 
 .sr-body {
@@ -472,29 +480,33 @@
 
 /* 아코디언 본문 — 기존 wifi-field-* 와 같은 호흡 */
 .sr-acc-body {
-  padding: var(--pw-space-6) var(--pw-space-5) var(--pw-space-4);
+  padding: var(--pw-space-6) var(--pw-space-5) var(--pw-space-5);
   border-top: 1px solid var(--pw-border);
   background: var(--pw-bg-2);
 }
 
-/* 본문 내부에서 wifi-field-group 의 큰 마지막 margin 줄임 */
-.sr-acc-body .wifi-field-group { margin-bottom: var(--pw-space-6); }
-.sr-acc-body .wifi-field-group:last-of-type { margin-bottom: var(--pw-space-3); }
-/* 비고 영역 제거에 따라 마지막 필드(약정기간)와 액션 사이 간격 더 타이트 */
-.sr-acc-body .sr-acc-last-field { margin-bottom: var(--pw-space-3); }
+/* form 행 간격 — 사용자 요구 (2026-05-09): "ID/PW/시작일 사이 간격 2배"
+   32px → 64px (--pw-space-16) */
+.sr-acc-body .wifi-field-group { margin-bottom: var(--pw-space-16); }
+.sr-acc-body .wifi-field-group:last-of-type { margin-bottom: var(--pw-space-4); }
+.sr-acc-body .sr-acc-last-field { margin-bottom: var(--pw-space-4); }
 
 /* 시작일/종료일 2열 */
 .sr-acc-row2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--pw-space-4);
+  /* 사용자 요구 (2026-05-09): 약정기간도 같은 타입 → 동일 64px 간격.
+     row2 의 margin-bottom 으로 → 다음 필드(약정기간) 와 64px 간격 보장. */
+  margin-bottom: var(--pw-space-16);
 }
 
 @media (max-width: 480px) {
   .sr-acc-row2 { grid-template-columns: 1fr; gap: 0; }
 }
 
-.sr-acc-row2 .wifi-field-group { margin-bottom: var(--pw-space-6); }
+/* row2 안 field-group 자체는 grid 가 위치 관리 — 별도 마진 0 */
+.sr-acc-row2 .wifi-field-group { margin-bottom: 0; }
 
 /* 약정기간 readonly 안내 — disabled input 처럼 보이지 않게 */
 .sr-acc-readonly {

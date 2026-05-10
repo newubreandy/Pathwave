@@ -1,10 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, X, ChevronLeft, Upload, Bell } from 'lucide-react';
+import { Plus, X, ChevronLeft, Upload, Bell, Check, CheckCheck, Star } from 'lucide-react';
 import PushService from '../services/push/PushService';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
+import CardAvatar from '../components/common/CardAvatar';
+import GroupCard, { GroupCardItem } from '../components/common/GroupCard';
+import SectionTabs from '../components/common/SectionTabs';
+import { MOCK_INBOX, NOTIFICATION_CATEGORIES } from '../services/notification/mockInbox';
 import './Notifications.css';
 
 const Notifications = () => {
@@ -38,8 +42,12 @@ const Notifications = () => {
   };
 
   useEffect(() => {
-    // 푸시 권한 초기 요청 (PushService 연동)
-    PushService.requestPermission();
+    // 푸시 권한 초기 요청 — 브라우저 Notification API 사용 (PushService 는 토큰 등록만 담당).
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().catch(() => {/* user denied or unavailable */});
+      }
+    }
   }, [view]);
 
   // Mock Data
@@ -296,11 +304,11 @@ const Notifications = () => {
             <div className="form-label">{t('noti.label_image')}</div>
             <div className="form-content">
               {!isReadOnly && !formData.image && (
-                <div 
-                  onClick={() => fileInputRef.current.click()} 
-                  style={{ border: '1px dashed var(--border)', borderRadius: '8px', padding: '2rem', textAlign: 'center', cursor: 'pointer', color: '#94A3B8', background: '#F8FAFC' }}
+                <div
+                  onClick={() => fileInputRef.current.click()}
+                  className="noti-image-dropzone"
                 >
-                  <Upload size={24} style={{ marginBottom: '0.5rem' }} />
+                  <Upload size={24} />
                   <div>{t('noti.no_image')}</div>
                 </div>
               )}
@@ -361,11 +369,14 @@ const Notifications = () => {
             <div className="form-label">{t('noti.label_push')}</div>
             <div className="form-content">
               
+              {/* 공통 .toggle-switch (Settings 와 동일 구조) — inline style 제거, 공통 톤 사용 */}
               <div style={{ marginBottom: '1rem' }}>
                 <div className="toggle-row" style={{ marginBottom: 0 }}>
                   <label className="toggle-switch">
                     <input type="checkbox" checked={formData.pushLocal} onChange={e => handlePushToggle('pushLocal', e.target.checked)} disabled={isReadOnly} />
-                    <span className="toggle-slider" style={{ backgroundColor: formData.pushLocal ? 'var(--primary)' : '#64748B', opacity: isReadOnly ? 0.6 : 1 }}><span className="toggle-text">{formData.pushLocal ? 'ON' : 'OFF'}</span></span>
+                    <span className="toggle-track" />
+                    <span className="toggle-thumb" />
+                    <span className="toggle-text">{formData.pushLocal ? 'ON' : 'OFF'}</span>
                   </label>
                   <span className="toggle-label">{t('noti.label_push_local')}</span>
                 </div>
@@ -375,9 +386,9 @@ const Notifications = () => {
                 <div className="toggle-row" style={{ marginBottom: 0 }}>
                   <label className="toggle-switch">
                     <input type="checkbox" checked={formData.pushGlobal} onChange={e => handlePushToggle('pushGlobal', e.target.checked)} disabled={isReadOnly} />
-                    <span className="toggle-slider" style={{ backgroundColor: formData.pushGlobal ? 'var(--primary)' : '#64748B', opacity: isReadOnly ? 0.6 : 1 }}>
-                      <span className="toggle-text">{formData.pushGlobal ? 'ON' : 'OFF'}</span>
-                    </span>
+                    <span className="toggle-track" />
+                    <span className="toggle-thumb" />
+                    <span className="toggle-text">{formData.pushGlobal ? 'ON' : 'OFF'}</span>
                   </label>
                   <span className="toggle-label">{t('noti.label_push_global')}</span>
                 </div>
@@ -474,13 +485,40 @@ const Notifications = () => {
     );
   }
 
-  // List View
+  // List View — 탭 구조 (사용자 요구 2026-05-10):
+  //   inbox  : 알림리스트 (받은 알림 — Notification Center)
+  //   send   : 알림발송관리 (기존 발송 캠페인 관리)
+  const tab = searchParams.get('tab') || 'inbox';
+  const setTab = (newTab) => {
+    if (newTab === 'inbox') searchParams.delete('tab');
+    else searchParams.set('tab', newTab);
+    setSearchParams(searchParams);
+  };
+
   return (
     <div className="notifications-page">
       <div className="page-header-section">
-        <h1 className="page-title">{t('noti.title_list', '알림 발송')}</h1>
-        <p className="sub-title">알림 발송 현황 및 내역을 관리하세요.</p>
+        <h1 className="page-title">알림</h1>
+        <p className="sub-title">받은 알림 확인과 알림 발송을 관리하세요.</p>
       </div>
+
+      {/* 탭 — 공통 SectionTabs (사용자 요구 2026-05-10: 와이파이/리포트와 동일 톤) */}
+      <SectionTabs
+        tabs={[
+          { key: 'inbox', label: '알림리스트', count: MOCK_INBOX.filter(n => !n.read_at).length },
+          { key: 'send',  label: '알림발송관리' },
+        ]}
+        value={tab}
+        onChange={setTab}
+        ariaLabel="알림 카테고리"
+      />
+
+      {/* ── 알림리스트 (Inbox) — 받은 알림 ── */}
+      {tab === 'inbox' && <NotificationInbox />}
+
+      {/* ── 알림발송관리 — 기존 view ── */}
+      {tab === 'send' && (<>
+
 
       {/* Stats Dashboard */}
       <div className="usage-stats-card">
@@ -549,7 +587,7 @@ const Notifications = () => {
                 </p>
               ) : (
                 <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
-                  현재 발송 가능한 알림은 <strong style={{ color: 'var(--primary)' }}>{stats.available.toLocaleString()}</strong>개 입니다.
+                  현재 발송 가능한 알림은 <strong style={{ color: 'var(--pw-accent)' }}>{stats.available.toLocaleString()}</strong>개 입니다.
                 </p>
               )}
             </div>
@@ -597,8 +635,123 @@ const Notifications = () => {
           {t('noti.btn_add')}
         </Button>
       </BottomActionBar>
+      </>)}
     </div>
   );
 };
+
+/* ══════════════════════════════════════════════
+   NotificationInbox — 받은 알림 (Notification Center)
+   날짜 그룹핑 + 카테고리별 아이콘 + 읽음 처리 + important 상단 고정.
+   ══════════════════════════════════════════════ */
+function NotificationInbox() {
+  const [items, setItems] = useState(MOCK_INBOX);
+
+  const unreadCount = items.filter((n) => !n.read_at).length;
+
+  const markAsRead = (id) => {
+    setItems((prev) => prev.map((n) => n.id === id ? { ...n, read_at: new Date().toISOString() } : n));
+  };
+  const markAllAsRead = () => {
+    setItems((prev) => prev.map((n) => n.read_at ? n : { ...n, read_at: new Date().toISOString() }));
+  };
+
+  // 날짜 그룹핑 — 오늘 / 어제 / 이전
+  const today = new Date().toDateString();
+  const yesterday = new Date(Date.now() - 86_400_000).toDateString();
+  const groupOf = (iso) => {
+    const d = new Date(iso).toDateString();
+    if (d === today) return '오늘';
+    if (d === yesterday) return '어제';
+    return '이전';
+  };
+
+  // 정렬: important 우선 → 미확인 우선 → 최신순
+  const sorted = [...items].sort((a, b) => {
+    if (a.important !== b.important) return b.important - a.important;
+    if (!a.read_at && b.read_at) return -1;
+    if (a.read_at && !b.read_at) return 1;
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
+
+  // 그룹핑
+  const groups = sorted.reduce((acc, n) => {
+    const g = groupOf(n.created_at);
+    (acc[g] = acc[g] || []).push(n);
+    return acc;
+  }, {});
+
+  const formatTime = (iso) => {
+    const d = new Date(iso);
+    const diff = (Date.now() - d.getTime()) / 1000;
+    if (diff < 60) return '방금 전';
+    if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+    return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+  };
+
+  return (
+    <div className="noti-inbox">
+      {/* 상단 요약 + 전체 읽음 */}
+      <div className="noti-inbox-header">
+        <div className="noti-inbox-summary">
+          전체 {items.length}건 · <strong>읽지 않음 {unreadCount}건</strong>
+        </div>
+        {unreadCount > 0 && (
+          <button className="noti-inbox-readall" onClick={markAllAsRead}>
+            <CheckCheck size={14} /> 전체 읽음 처리
+          </button>
+        )}
+      </div>
+
+      {/* 빈 상태 */}
+      {items.length === 0 && (
+        <div className="noti-inbox-empty">받은 알림이 없습니다.</div>
+      )}
+
+      {/* 날짜 그룹별 GroupCard */}
+      {['오늘', '어제', '이전'].map((groupName) => {
+        const list = groups[groupName];
+        if (!list?.length) return null;
+        return (
+          <GroupCard
+            key={groupName}
+            variant="container"
+            title={groupName}
+            subtitle={`${list.length}건`}
+            collapsible={groupName !== '오늘'}
+          >
+            {list.map((n) => {
+              const meta = NOTIFICATION_CATEGORIES[n.category] || { icon: Bell, variant: 'neutral', label: n.category };
+              const Icon = meta.icon;
+              const isUnread = !n.read_at;
+              return (
+                <GroupCardItem
+                  key={n.id}
+                  onClick={() => isUnread && markAsRead(n.id)}
+                  className={`noti-inbox-item ${isUnread ? 'is-unread' : ''} ${n.important ? 'is-important' : ''}`}
+                >
+                  <CardAvatar variant={meta.variant} size="md">
+                    <Icon strokeWidth={2} />
+                  </CardAvatar>
+                  <div className="noti-inbox-body">
+                    <div className="noti-inbox-head">
+                      <span className="noti-inbox-cat">{meta.label}</span>
+                      {n.important && <Star size={12} className="noti-inbox-star" />}
+                      <span className="noti-inbox-time">{formatTime(n.created_at)}</span>
+                    </div>
+                    <p className="noti-inbox-title">{n.title}</p>
+                    <p className="noti-inbox-text">{n.body}</p>
+                  </div>
+                  {isUnread && <span className="noti-inbox-dot" aria-label="미확인" />}
+                </GroupCardItem>
+              );
+            })}
+          </GroupCard>
+        );
+      })}
+    </div>
+  );
+}
 
 export default Notifications;

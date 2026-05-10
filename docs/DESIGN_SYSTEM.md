@@ -83,7 +83,10 @@ provider-web (시설 관리자)        admin-web (슈퍼어드민)
 | **PageShell** | [PageShell.jsx](../provider-web/src/components/common/PageShell.jsx) | 페이지 wrapper. theme 적용 + 타이틀/액션 |
 | **SectionTabs** | [SectionTabs.jsx](../provider-web/src/components/common/SectionTabs.jsx) | pill 탭 + count + sticky |
 | **GlassCard** | [GlassCard.jsx](../provider-web/src/components/common/GlassCard.jsx) | 카드 baseline (variant 6종) |
-| **GroupCard** | [GroupCard.jsx](../provider-web/src/components/common/GroupCard.jsx) | 다건 묶음 헤더 + 자식 카드 컨테이너 |
+| **GroupCard** | [GroupCard.jsx](../provider-web/src/components/common/GroupCard.jsx) | 그룹핑 컨테이너. variant: `container` (RePlan 스타일, default) / `stacked` (legacy) |
+| **GroupCardItem** | [GroupCard.jsx](../provider-web/src/components/common/GroupCard.jsx) | 컨테이너 안 inset row. surface-2 배경, 12px radius, 클릭 가능 |
+| **CardAvatar** | [CardAvatar.jsx](../provider-web/src/components/common/CardAvatar.jsx) | 카드 좌측 아이콘 박스. variant 6종 (accent/info/success/warning/danger/neutral) |
+| **Skeleton** | [Skeleton.jsx](../provider-web/src/components/common/Skeleton.jsx) | 로딩 자리 모양. `<SkeletonCard>` = 와이파이 카드 자리 |
 | **MiniInfoPill** | [MiniInfoPill.jsx](../provider-web/src/components/common/MiniInfoPill.jsx) | 카드 안 메타 알약 (SSID 등) |
 | **StatusMessage** | [StatusMessage.jsx](../provider-web/src/components/common/StatusMessage.jsx) | 카드 내부 1~2줄 안내 (좌측 컬러 라인) |
 | **MetricStrip** | [MetricStrip.jsx](../provider-web/src/components/common/MetricStrip.jsx) | 페이지 상단 요약 라인 |
@@ -168,17 +171,98 @@ provider-web (시설 관리자)        admin-web (슈퍼어드민)
 | 비밀번호 | ❌ | ✅ (마스킹) |
 | OCR 사진 | ❌ | ✅ |
 
-### 4-3 GroupCard 헤더 단순화
+### 4-3 GroupCard — RePlan 컨테이너 패턴 (2026-05-09 개정)
+
+**모든 그룹핑은 외곽 컨테이너 카드 안에 inset row 들이 들어가는 nested 구조** 로 통일.
+(레퍼런스: RePlan, Toss 송금 내역 그룹, Linear cycle view)
 
 ```
-신청번호  ·  N건           [준비중 2] [배송중 1]
-─────────────────────────────────────────────
-  └─ child GlassCard
-  └─ child GlassCard
-  └─ child GlassCard
+┌─ 외곽 컨테이너 카드 (surface-1, radius 28px) ──────────┐
+│  [Avatar] Title       [paid pill]      ChevronUp      │  ← header (클릭 = collapse/expand)
+│           subtitle                                     │
+│  ┌─ inset row (surface-2, radius 12px) ──────────┐    │
+│  │ [Avatar] content...                  chevron │    │
+│  └────────────────────────────────────────────────┘    │
+│  ┌─ inset row ───────────────────────────────────┐    │
+│  │ [Avatar] content...                  chevron │    │
+│  └────────────────────────────────────────────────┘    │
+└────────────────────────────────────────────────────────┘
 ```
 
-결제일 / 세부 메타는 **노출 안 함**. 상세보기에서만.
+**핵심 차이 (이전 stacked vs 새 container)**:
+| 측면 | stacked (이전) | container (현재) |
+|---|---|---|
+| 외곽 카드 | 헤더카드 + 자식카드 분리 | **하나의 외곽 카드** 안에 헤더 + 자식 |
+| 자식 스타일 | 풀 GlassCard (border-radius 16-20px) | **inset row** (surface-2, radius 12px) |
+| 시각 그룹화 | gap 으로만 묶음 표현 | 외곽 border 로 명확히 묶음 |
+| 적용처 | (구) 와이파이 다건 신청 | (현) 와이파이 다건 + 채팅 날짜 그룹 |
+
+**사용**:
+```jsx
+<GroupCard
+  variant="container"           // 새 default
+  leading={<CardAvatar><ClipboardList /></CardAvatar>}
+  title="PW-20260509-001"
+  paid
+  subtitle="3개 와이파이 · 결제완료 2026.05.09"
+>
+  {items.map((p) => (
+    <GroupCardItem key={p.id} onClick={() => openDetail(p)}>
+      <CardAvatar variant="accent"><Package /></CardAvatar>
+      <div>...</div>
+    </GroupCardItem>
+  ))}
+</GroupCard>
+```
+
+**legacy stacked**:
+`variant="stacked"` 로 유지 — 외곽 카드 없이 자식 GlassCard 들이 직접 쌓이는 패턴이 필요한 경우 (단순 묶음, 검색 결과 등).
+
+### 4-4 Info Section 패턴 (2026-05-09 추가) — 매장안내 표준
+
+페이지 안 "라벨 + 값" 정보 노출의 공통 가이드. **매장안내 (StoreInfo) 가 기준**.
+
+```
+┌─ .info-stack (gap 48px) ─────────────────────┐
+│  .info-row                                    │
+│    .info-label   "전화번호"   14px / 600 / hint│
+│    .info-value   "02-1234-5678" 22px / 300 / 흰색 │
+│                                                │
+│  .info-row                                    │
+│    .info-label   "매장 소개"                   │
+│    .info-body    "크리에이티브..."  18px / 400 / 흰색 │
+│                                                │
+│  .info-row                                    │
+│    .info-label   "진행중인 혜택"                │
+│    .info-list                                  │
+│      .info-list-item  "[혜택] ..."  16px / 600 / 흰색 │
+└──────────────────────────────────────────────┘
+```
+
+**규칙**:
+- 라벨 = 작은 회색 (14px / 600 / hint) — 항상 동일
+- 값 = 크고 가벼운 흰색 (22px / 300) — 한 줄 정보
+- 본문 = 보통 흰색 (18px / 400) — 다단락 설명, **예전 secondary gray 사용 금지**
+- 리스트 1행 = 16px / 600 / 흰색 + surface bg + 12px radius
+- 섹션 간 = 48px (모바일 40px)
+
+**유틸리티 클래스**: [provider-web/src/index.css](../provider-web/src/index.css) 안 `.info-stack / .info-row / .info-label / .info-value / .info-body / .info-list / .info-list-item`. 페이지에서 직접 사용.
+
+**Button 기본 사이즈 정렬** (매장안내 정보수정 버튼 톤):
+- `medium` (default) = **16px font / 48px height / 16·24px padding** — 모든 페이지 default Button
+- `large` = 강조 CTA 용 (17px / 700 / 52px height)
+- `small` = 36px (모바일 44px)
+
+이전 medium 은 14px / 44px 이었는데, 가이드 통일로 1단계 끌어올림. 모든 `<Button>` 호출이 자동으로 더 큰 size 가 됨 — size prop 추가 작업 불필요.
+
+---
+
+### 4-5 GroupCard 헤더 단순화 원칙
+
+- 결제일 / 세부 메타는 노출 안 함 — subtitle 한 줄에 통합 또는 상세보기로
+- 진행률 chip 은 노출 안 함 — child item 의 status badge 로 충분
+- 헤더 우측에는 chevron 만 (collapse/expand)
+- 헤더 클릭 / Enter / Space 로 자식 영역 토글
 
 ---
 

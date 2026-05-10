@@ -75,14 +75,21 @@
   border-radius: var(--pw-radius-sm);
 }
 
+/* 쿠폰 안내 readonly 박스 — 매장안내 .display-text 톤 (22/300/흰색).
+   사용자 요구 (2026-05-10): "쿠폰안내 폰트도 안맞아". */
 .coupon-message-box {
   width: 100%;
-  font-size: var(--pw-body-size);
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
   color: var(--pw-text);
-  line-height: var(--pw-body-leading);
+  line-height: 1.55;
   white-space: pre-wrap;
   border-bottom: 1px solid var(--pw-border);
-  padding-bottom: var(--pw-space-2);
+  padding-bottom: var(--pw-space-3);
+}
+@media (max-width: 480px) {
+  .coupon-message-box { font-size: 20px; }
 }
 
 .coupon-counter-row {
@@ -162,12 +169,14 @@
   gap: var(--pw-space-4);
 }
 
+/* push-toggle-switch — index.css .pw-toggle / .toggle-switch 와 동일 톤 정렬
+   (사용자 요구 2026-05-10) */
 .push-toggle-switch {
   position: relative;
-  display: block;
+  display: inline-flex;
   flex-shrink: 0;
-  width: 80px;
-  height: 34px;
+  width: 64px;
+  height: 32px;
 }
 
 .push-toggle-switch input {
@@ -180,9 +189,9 @@
   position: absolute;
   cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-color: var(--pw-gray-600);
-  transition: var(--pw-duration-normal);
-  border-radius: 34px;
+  background: var(--pw-surface-3);
+  transition: background-color var(--pw-duration-normal) var(--pw-ease);
+  border-radius: 999px;
 }
 
 .push-slider:before {
@@ -190,38 +199,41 @@
   content: "";
   height: 26px;
   width: 26px;
-  left: 4px;
-  bottom: 4px;
-  background: var(--pw-bg-3);
-  transition: var(--pw-duration-normal);
+  left: 3px;
+  top: 3px;
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: transform var(--pw-duration-normal) var(--pw-ease);
   border-radius: 50%;
   z-index: 2;
 }
 
 input:checked + .push-slider {
-  background-color: var(--pw-primary);
+  background: var(--pw-accent);
 }
 
 input:checked + .push-slider:before {
-  transform: translateX(46px);
+  transform: translateX(32px);
 }
 
 .push-text {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--pw-white);
-  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.04em;
   z-index: 1;
-  right: 12px;
-  transition: var(--pw-duration-normal);
+  right: 9px;
+  pointer-events: none;
+  transition: right var(--pw-duration-normal) var(--pw-ease),
+              left var(--pw-duration-normal) var(--pw-ease);
 }
 
 input:checked + .push-slider .push-text {
   right: auto;
-  left: 12px;
+  left: 9px;
 }
 
 .push-label {

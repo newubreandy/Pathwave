@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Camera, Save, X, Plus, Gift, ChevronRight } from 'lucide-react';
+import CardAvatar from '../components/common/CardAvatar';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -566,9 +567,11 @@ const StoreInfo = () => {
               {dbBenefits.length > 0 ? (
                 dbBenefits.map((benefit, idx) => (
                   <div key={idx} className="benefit-card clickable" onClick={() => navigate(benefit.includes('스탬프') ? '/dashboard/stamps' : '/dashboard/coupons')}>
-                    <span className="benefit-icon"><Gift size={18} strokeWidth={1.5} /></span>
+                    <CardAvatar variant="accent" size="sm">
+                      <Gift strokeWidth={2} />
+                    </CardAvatar>
                     <span className="benefit-text">{benefit}</span>
-                    <ChevronRight size={16} className="benefit-arrow" color="#94A3B8" />
+                    <ChevronRight size={16} className="benefit-arrow" />
                   </div>
                 ))
               ) : (

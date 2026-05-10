@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import DashboardLayout from './layouts/DashboardLayout';
 import RequireAuth from './components/RequireAuth';
+import SectionTabs from './components/common/SectionTabs';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
@@ -29,7 +30,44 @@ const ScrollToTop = () => {
   return null;
 };
 
-const ReportManagement = () => <div className="modern-page"><div className="page-header-section"><h1 className="page-title">리포트</h1><p className="sub-title">매장 방문객 및 매출, 스탬프 사용 통계를 확인합니다.</p></div><div className="card" style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-hint)' }}>차트 데이터가 준비 중입니다.</div></div>;
+/* 리포트 — 다른 운영툴 페이지와 동일 톤 (사용자 요구 2026-05-10):
+   page-header-section + SectionTabs (방문/매출/스탬프 placeholder).
+   실데이터 연동 전까지 안내 카드만 노출. */
+const ReportManagement = () => {
+  const [tab, setTab] = useState('visit');
+  return (
+    <div className="modern-page">
+      <div className="page-header-section">
+        <h1 className="page-title">리포트</h1>
+        <p className="sub-title">매장 방문객 · 매출 · 스탬프 사용 통계를 확인합니다.</p>
+      </div>
+      <SectionTabs
+        tabs={[
+          { key: 'visit',  label: '방문' },
+          { key: 'sales',  label: '매출' },
+          { key: 'stamps', label: '스탬프' },
+        ]}
+        value={tab}
+        onChange={setTab}
+        ariaLabel="리포트 카테고리"
+      />
+      <div
+        style={{
+          marginTop: 'var(--pw-space-6)',
+          padding: 'var(--pw-space-12) var(--pw-space-6)',
+          textAlign: 'center',
+          color: 'var(--pw-text-hint)',
+          fontSize: 14,
+          background: 'var(--pw-surface-1)',
+          border: '1px dashed var(--pw-surface-line)',
+          borderRadius: 'var(--pw-radius-md)',
+        }}
+      >
+        차트 데이터가 준비 중입니다.
+      </div>
+    </div>
+  );
+};
 
 function App() {
   return (

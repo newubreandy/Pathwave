@@ -137,6 +137,7 @@
 }
 
 .gnb-icon-btn {
+  position: relative;
   padding: var(--pw-space-2);
   border-radius: 50%;
   transition: background var(--pw-duration-fast) var(--pw-ease);
@@ -147,6 +148,27 @@
 
 .gnb-icon-btn:hover {
   background: var(--pw-surface-hover);
+}
+
+/* Bell unread badge — Notification Center (2026-05-10) */
+.gnb-bell-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--pw-error);
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  border: 2px solid var(--pw-page-bg-base);
 }
 
 .gnb-icon-btn,

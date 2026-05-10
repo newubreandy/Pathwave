@@ -3,30 +3,37 @@
    Form inputs with Figma-style underline
    ═══════════════════════════════════════════════════ */
 
-/* ── Form Input: Underline Style ── */
+/* ── Form Input: 매장안내 .display-text 정렬 (22/300/흰색) ──
+   사용자 요구 (2026-05-10): 모든 폼 input 값 통일. */
 .form-input {
   width: 100%;
   padding: var(--pw-space-3) 0;
   border: 1px solid transparent;
   background-color: transparent;
   border-bottom: 1px solid var(--pw-border);
-  font-size: var(--pw-title-size);
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
   color: var(--pw-text);
   outline: none;
   transition: border-color var(--pw-duration-normal) var(--pw-ease);
   min-height: var(--pw-touch-min);
+  line-height: 1.4;
 }
 
 .form-input:focus {
-  border-bottom-color: var(--pw-primary);
+  border-bottom-color: var(--pw-accent);
   border-bottom-width: 2px;
   margin-bottom: -1px;
 }
 
 .form-input::placeholder {
   color: var(--pw-text-hint);
-  font-weight: 400;
+  font-weight: 300;
+}
+
+@media (max-width: 480px) {
+  .form-input { font-size: 20px; }
 }
 
 .form-input:disabled {
@@ -287,11 +294,17 @@
   background: var(--pw-surface-hover);
 }
 
+/* counter 값 — input 값과 동일 톤 (22/300) */
 .counter-value {
-  font-size: var(--pw-title-size);
-  font-weight: 500;
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
+  color: var(--pw-text);
   min-width: 40px;
   text-align: left;
+}
+@media (max-width: 480px) {
+  .counter-value { font-size: 20px; }
 }
 
 .counter-actions {

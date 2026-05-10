@@ -1,23 +1,78 @@
 /* ═══════════════════════════════════════════════════
-   GroupCard — 다건 신청 묶음
-   헤더는 단순. 자식 카드는 좌측 들여쓰기로 묶음 표시.
+   GroupCard — 그룹핑 컨테이너 (RePlan 스타일)
+   외곽 카드(surface-1) + 헤더 + inset row 자식들.
    ═══════════════════════════════════════════════════ */
 
 .pw-group {
   display: flex;
   flex-direction: column;
-  gap: var(--pw-space-2);
-  /* 그룹 자체에는 카드/배경 없음. 자식 카드들이 묶임만 표현. */
 }
 
-.pw-group-header {
+/* ── variant: container (default) ───────────────────
+   외곽 카드 안에 모든 콘텐츠 (header + items). RePlan 스타일. */
+.pw-group--container {
+  background: var(--pw-surface-1);
+  border: 1px solid var(--pw-surface-line);
+  border-radius: var(--pw-radius-xl);
+  padding: var(--pw-space-4);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.025) inset,
+              0 2px 6px rgba(0, 0, 0, 0.20);
+  transition: border-color var(--pw-duration-fast) var(--pw-ease);
+}
+
+/* ── variant: stacked (legacy) ──────────────────────
+   외곽 카드 없음 — 헤더 카드 + 자식 카드들이 따로. */
+.pw-group--stacked {
+  gap: var(--pw-space-4);
+}
+.pw-group--stacked .pw-group-head {
+  background: var(--pw-surface-2);
+  border: 1px solid var(--pw-surface-line);
+  border-radius: var(--pw-radius-lg);
+  padding: var(--pw-space-3) var(--pw-space-4);
+}
+
+/* ── Header (공통) ──────────────────────────────── */
+.pw-group-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--pw-space-3);
-  padding: var(--pw-space-2) var(--pw-space-3);
-  border-bottom: 1px solid var(--pw-surface-line);
-  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.pw-group--container .pw-group-head {
+  /* 컨테이너 안에서는 헤더가 자체 배경 없이 콘텐츠로 자연스럽게 정렬 */
+  padding: 4px 4px var(--pw-space-3) 4px;
+}
+
+.pw-group-head.is-interactive {
+  cursor: pointer;
+  user-select: none;
+  border-radius: var(--pw-radius-md);
+  transition: background-color var(--pw-duration-fast) var(--pw-ease);
+}
+.pw-group--container .pw-group-head.is-interactive:hover {
+  background: var(--pw-surface-1);
+}
+.pw-group--stacked .pw-group-head.is-interactive:hover {
+  background: var(--pw-surface-3);
+}
+.pw-group-head:focus-visible {
+  outline: 2px solid var(--pw-accent);
+  outline-offset: 2px;
+}
+
+.pw-group-leading {
+  flex: 0 0 auto;
+  display: inline-flex;
+}
+
+.pw-group-head-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .pw-group-meta {
@@ -27,86 +82,131 @@
   min-width: 0;
 }
 
-.pw-group-id {
-  font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--pw-text-secondary);
-  letter-spacing: 0.02em;
-}
-
-.pw-group-dot {
-  color: var(--pw-text-hint);
-  font-size: 12px;
-}
-
-.pw-group-total {
-  font-size: 12px;
+.pw-group-title {
+  font-size: 15px;
   font-weight: 700;
   color: var(--pw-text);
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 신청번호 같은 mono 형식은 호출부에서 className 으로 정렬 가능 — 별도 modifier 없이 */
+.pw-group-title.is-mono {
+  font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+  font-size: 13px;
 }
 
-.pw-group-summary {
+.pw-group-paid {
   display: inline-flex;
   align-items: center;
-  gap: var(--pw-space-1);
-  flex-wrap: wrap;
-}
-
-.pw-group-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+  gap: 4px;
   height: 22px;
   padding: 0 8px;
   border-radius: var(--pw-radius-full);
-  font-size: 11px;
-  font-weight: 600;
-  background: var(--pw-surface-2);
-  color: var(--pw-text-secondary);
-}
-.pw-group-chip strong {
-  font-weight: 700;
-  color: var(--pw-text);
-}
-.pw-group-chip--accent {
   background: var(--pw-accent-soft);
   color: var(--pw-accent-text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
-.pw-group-chip--accent strong { color: var(--pw-accent-text); }
-
-.pw-group-chip--warning {
-  background: rgba(245, 158, 11, 0.10);
-  color: #FBBF24;
+.pw-group-paid::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.8;
 }
-.pw-group-chip--warning strong { color: #FBBF24; }
 
-/* ── Children — 좌측 들여쓰기 + 묶음 표시 라인 ────── */
-.pw-group-children {
+.pw-group-subtitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--pw-text-hint);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pw-group-chevron {
+  flex-shrink: 0;
+  color: var(--pw-text-secondary);
+  transition: color var(--pw-duration-fast) var(--pw-ease);
+}
+.pw-group-head:hover .pw-group-chevron {
+  color: var(--pw-text);
+}
+
+/* ── Body (자식 영역) ──────────────────────────── */
+.pw-group-body {
   display: flex;
   flex-direction: column;
+  /* 컨테이너 안 — items 사이 8px (가까이) */
   gap: var(--pw-space-2);
-  padding-left: var(--pw-space-3);
-  position: relative;
-}
-.pw-group-children::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 4px;
-  bottom: 4px;
-  width: 1px;
-  background: var(--pw-surface-line);
+  /* expand 애니메이션 */
+  animation: pwGroupExpand 200ms var(--pw-ease-out);
 }
 
-/* ── 모바일 ────────────────────────────────────────── */
+.pw-group--stacked .pw-group-body {
+  gap: var(--pw-space-3);
+}
+
+@keyframes pwGroupExpand {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pw-group-body { animation: none; }
+}
+
+/* ═══════════════════════════════════════════════════
+   GroupCardItem — 컨테이너 안 inset row
+   surface-2 배경 + 12px radius. 호출부에서 children 자유 구성.
+   ═══════════════════════════════════════════════════ */
+.pw-group-item {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-3);
+  padding: var(--pw-space-3);
+  background: var(--pw-surface-2);
+  border: 1px solid transparent;
+  border-radius: var(--pw-radius-md);
+  min-width: 0;
+  transition:
+    background-color var(--pw-duration-fast) var(--pw-ease),
+    border-color var(--pw-duration-fast) var(--pw-ease);
+}
+
+.pw-group-item.is-interactive {
+  cursor: pointer;
+}
+/* hover — 살짝만 밝아짐 (border 변경 없음, transform 없음) */
+.pw-group-item.is-interactive:hover {
+  background: var(--pw-surface-3);
+}
+.pw-group-item:focus-visible {
+  outline: 2px solid var(--pw-accent);
+  outline-offset: 2px;
+}
+
+/* selected — accent 좌측 라인 (강조 필요한 경우만) */
+.pw-group-item.is-selected {
+  background: var(--pw-accent-soft);
+  border-color: var(--pw-accent-strong);
+}
+
+/* ── 모바일 ────────────────────────────────────── */
 @media (max-width: 480px) {
-  .pw-group-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--pw-space-2);
+  .pw-group--container {
+    padding: var(--pw-space-3);
+    border-radius: var(--pw-radius-lg);
   }
-  .pw-group-children {
-    padding-left: var(--pw-space-2);
+  .pw-group-item {
+    padding: var(--pw-space-3);
+    gap: var(--pw-space-2);
   }
 }

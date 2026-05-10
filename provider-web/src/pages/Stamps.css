@@ -82,74 +82,95 @@
   box-shadow: var(--pw-shadow-sm);
 }
 
-/* ── Icon Circle ── */
+/* ── Icon — CardAvatar md 동일 사이즈/곡률 정렬 (2026-05-09) ──
+   WiFi 와 동일한 40px / 12px 곡률. 사용자 피드백: "쿠폰/와이파이 곡률 다름". */
 .stamp-icon {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: var(--pw-touch-comfortable);
-  height: var(--pw-touch-comfortable);
-  border-radius: 50%;
-  margin-right: var(--pw-space-6);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  margin-right: var(--pw-space-4);
   flex-shrink: 0;
   transition: transform var(--pw-duration-normal) var(--pw-ease);
+  background:
+    radial-gradient(ellipse at 50% 18%, rgba(255, 255, 255, 0.10) 0%, transparent 50%),
+    linear-gradient(180deg, #2a2a36 0%, #16161e 50%, #08080d 100%);
+  border: 1px solid rgba(0, 0, 0, 0.85);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.75),
+    0 2px 5px rgba(0, 0, 0, 0.55),
+    0 -0.5px 0 rgba(255, 255, 255, 0.04);
 }
 
 .stamp-card:hover .stamp-icon {
   transform: scale(1.05);
 }
 
-.stamp-icon.active {
-  background-color: var(--pw-primary);
-  color: white;
-}
-
-.stamp-icon.ended {
-  background-color: var(--pw-gray-200);
-  color: var(--pw-gray-500);
-}
+.stamp-icon.active { color: var(--pw-accent-text); }
+.stamp-icon.ended  { color: var(--pw-text-hint); }
 
 /* ── Info ── */
 .stamp-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-2);
+}
+
+/* 제목 + 상태 배지 한 줄 (사용자 요구 2026-05-10) */
+.stamp-info-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pw-space-3);
+  min-width: 0;
 }
 
 .stamp-name {
+  flex: 1;
   font-size: var(--pw-title-size);
   font-weight: 700;
   color: var(--pw-text);
-  margin: 0 0 var(--pw-space-2) 0;
+  margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ── Status Badge ── */
+/* ── Status Badge — 제목 우측 inline pill ── */
 .stamp-status {
+  flex-shrink: 0;
   font-size: var(--pw-caption-size);
   font-weight: 600;
   padding: var(--pw-space-1) var(--pw-space-3);
   border-radius: var(--pw-radius-full);
   display: inline-block;
-  margin-bottom: var(--pw-space-2);
+  white-space: nowrap;
 }
 
 .stamp-status.active {
-  background-color: var(--pw-primary-light);
-  color: var(--pw-primary-hover);
+  background: var(--pw-accent-soft);
+  color: var(--pw-accent-text);
+}
+
+.stamp-status.paused {
+  background: rgba(245, 158, 11, 0.10);
+  color: #FBBF24;
 }
 
 .stamp-status.ended {
-  background-color: var(--pw-gray-100);
-  color: var(--pw-gray-500);
+  background: var(--pw-surface-2);
+  color: var(--pw-text-hint);
 }
 
-/* ── Details & Arrow ── */
+/* ── Details (사용기간) ─────────────────────── */
 .stamp-details {
   font-size: var(--pw-caption-size);
   color: var(--pw-text-secondary);
-  margin-top: var(--pw-space-1);
 }
 
 .stamp-dates {
@@ -185,10 +206,7 @@
   font-size: var(--pw-body-size);
 }
 
-/* ── Page Header (stamps/coupons shared) ── */
-.stamps-page .page-header-section {
-  margin-bottom: var(--pw-space-6);
-}
+/* page-header-section margin 은 글로벌 가이드(.page-header-section) 사용 — 다른 페이지와 통일 (사용자 요구 2026-05-10) */
 
 /* ── Context Menu ── */
 .stamp-menu-btn {
