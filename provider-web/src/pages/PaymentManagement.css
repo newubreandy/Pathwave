@@ -13,25 +13,34 @@
 
 .payment-content { margin: 0 auto; position: relative; z-index: 1; }
 
-/* ── 결제 요약 — 좌(결제수단) / 우(다음결제) 2-column grid (2026-05-10).
-   카드 좌우 빈 공간에 결제 정보 카드를 배치. 모바일에서는 자동 stack. ── */
+/* ── 결제 요약 — 좌(결제수단) / 우(다음결제) 한 카드에 세로 분리선
+   (사용자 요구 2026-05-11: "두개는 붙이고 사이에 세로로 얇은 선으로 구분").
+   wrapper 가 카드 역할(배경/보더/그림자), 내부 두 섹션은 transparent. ── */
 .payment-summary-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--pw-space-5);
-  margin-bottom: var(--pw-space-8);
-}
-
-.payment-summary-card {
   background: var(--pw-surface-1);
   border: 1px solid var(--pw-surface-line);
   border-radius: var(--pw-radius-lg);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.025) inset,
+              0 2px 6px rgba(0, 0, 0, 0.20);
+  margin-bottom: var(--pw-space-8);
+  overflow: hidden;
+}
+
+.payment-summary-card {
+  background: transparent;
+  border: none;
+  border-radius: 0;
   padding: var(--pw-space-6);
   display: flex;
   flex-direction: column;
   gap: var(--pw-space-4);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.025) inset,
-              0 2px 6px rgba(0, 0, 0, 0.20);
+}
+
+/* 두 섹션 사이 얇은 세로 분리선 */
+.payment-summary-card + .payment-summary-card {
+  border-left: 1px solid var(--pw-surface-line);
 }
 
 .payment-summary-title {
@@ -170,11 +179,14 @@
   padding-bottom: var(--pw-space-6);
 }
 
-/* 모바일 — 좌·우 stack */
+/* 모바일 — 좌·우 stack. 세로 분리선 → 가로 분리선 */
 @media (max-width: 768px) {
   .payment-summary-grid {
     grid-template-columns: 1fr;
-    gap: var(--pw-space-4);
+  }
+  .payment-summary-card + .payment-summary-card {
+    border-left: none;
+    border-top: 1px solid var(--pw-surface-line);
   }
   .payment-billing-amount-value { font-size: 26px; }
   .payment-billing-date { font-size: 20px; }
