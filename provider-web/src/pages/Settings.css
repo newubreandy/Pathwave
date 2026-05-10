@@ -153,6 +153,16 @@
   .settings-row-desc { font-size: 20px; }
 }
 
+/* 라벨 아래 작은 안내 — 라벨/값(22/300/white) 톤이 어울리지 않는 안내문용
+   (사용자 요구 2026-05-11). 사업자정보 변경/회원탈퇴 등 액션 행에서 사용. */
+.settings-row-hint {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--pw-text-hint);
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
 /* profile-section-title 은 섹션 헤더 (회사정보 / 계정정보 등) — display 톤 유지. */
 .settings-row-label.profile-section-title {
   font-size: 18px !important;
@@ -599,6 +609,26 @@ body:has(.settings-modal-overlay) .main-viewport {
   font-size: 13px;
   color: var(--pw-text-hint);
   line-height: 1.55;
+}
+
+/* ── CardChangeModal — 유효기간 + CVC 2-column grid ── */
+.card-change-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--pw-space-3);
+}
+.card-change-expiry-row {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-2);
+}
+.card-change-expiry-row .settings-modal-input {
+  text-align: center;
+}
+.card-change-slash {
+  color: var(--pw-text-hint);
+  font-size: 16px;
+  font-weight: 400;
 }
 
 /* ── Mobile ── */

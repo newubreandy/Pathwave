@@ -82,24 +82,8 @@
   .payment-method-meta-value { font-size: 20px; }
 }
 
-.payment-method-change-btn {
-  align-self: stretch;
-  padding: 10px 16px;
-  background: transparent;
-  border: 1px solid var(--pw-border-strong);
-  border-radius: var(--pw-radius-pill);
-  color: var(--pw-text-secondary);
-  font-size: 13px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background var(--pw-duration-fast) var(--pw-ease),
-              color var(--pw-duration-fast) var(--pw-ease);
-}
-.payment-method-change-btn:hover {
-  background: var(--pw-surface-2);
-  color: var(--pw-text);
-}
+/* 카드 교체 버튼 — 공용 Button(outline,small,fullWidth) 사용 (사용자 요구 2026-05-11).
+   기존 .payment-method-change-btn 인라인 톤 제거. */
 
 /* ── 우측 카드 — 다음 결제 요약 ── */
 .payment-billing-date-row {

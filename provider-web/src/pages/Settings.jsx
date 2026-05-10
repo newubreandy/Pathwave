@@ -242,7 +242,7 @@ const Settings = () => {
           <div className="settings-row">
             <div className="settings-row-left">
               <span className="settings-row-label">자동로그인</span>
-              <span className="settings-row-desc">다음 접속 시 로그인 정보를 유지합니다.</span>
+              <span className="settings-row-hint">다음 접속 시 로그인 정보를 유지합니다.</span>
             </div>
             <ToggleSwitch
               id="auto-login"
@@ -278,7 +278,7 @@ const Settings = () => {
           <div className="settings-row">
             <div className="settings-row-left">
               <span className="settings-row-label">영업시간 외 푸시 알림</span>
-              <span className="settings-row-desc">영업시간이 아닌 시간대에는 고객 푸시 알림이 발송되지 않습니다.</span>
+              <span className="settings-row-hint">영업시간이 아닌 시간대에는 고객 푸시 알림이 발송되지 않습니다.</span>
             </div>
             <ToggleSwitch
               id="oot-push"
@@ -296,7 +296,7 @@ const Settings = () => {
           <div className="settings-row">
             <div className="settings-row-left">
               <span className="settings-row-label">알림 수신</span>
-              <span className="settings-row-desc">시스템 점검 및 긴급 알림은 설정과 관계없이 발송됩니다.</span>
+              <span className="settings-row-hint">시스템 점검 및 긴급 알림은 설정과 관계없이 발송됩니다.</span>
             </div>
             <ToggleSwitch
               id="notifications-enabled"
@@ -310,7 +310,7 @@ const Settings = () => {
               <div className="settings-row">
                 <div className="settings-row-left">
                   <span className="settings-row-label">혜택 알림</span>
-                  <span className="settings-row-desc">내주변(위치기반)의 혜택 알림 받기</span>
+                  <span className="settings-row-hint">내주변(위치기반)의 혜택 알림 받기</span>
                 </div>
                 <ToggleSwitch
                   id="benefit-notif"
@@ -322,7 +322,7 @@ const Settings = () => {
               <div className="settings-row">
                 <div className="settings-row-left">
                   <span className="settings-row-label">마케팅 알림</span>
-                  <span className="settings-row-desc">서비스 혜택 등록 시 모든 알림 받기</span>
+                  <span className="settings-row-hint">서비스 혜택 등록 시 모든 알림 받기</span>
                 </div>
                 <ToggleSwitch
                   id="marketing-notif"
@@ -334,7 +334,7 @@ const Settings = () => {
               <div className="settings-row">
                 <div className="settings-row-left">
                   <span className="settings-row-label">야간 광고성 알림</span>
-                  <span className="settings-row-desc">21:00 ~ 08:00 사이 알림 차단</span>
+                  <span className="settings-row-hint">21:00 ~ 08:00 사이 알림 차단</span>
                 </div>
                 <ToggleSwitch
                   id="night-ad-notif"
@@ -354,7 +354,7 @@ const Settings = () => {
           <div className="settings-row clickable" onClick={() => setShowBusinessModal(true)}>
             <div className="settings-row-left">
               <span className="settings-row-label">사업자 정보 변경</span>
-              <span className="settings-row-desc">슈퍼어드민 승인 후 반영됩니다.</span>
+              <span className="settings-row-hint">슈퍼어드민 승인 후 반영됩니다.</span>
             </div>
             <div className="settings-row-meta">
               {bizChangeStatus && WORKFLOW_BIZ_STATUS[bizChangeStatus] && (
@@ -372,7 +372,7 @@ const Settings = () => {
           <div className="settings-row clickable" onClick={() => setShowWithdrawConfirm(true)}>
             <div className="settings-row-left">
               <span className="settings-row-label">회원 탈퇴</span>
-              <span className="settings-row-desc">탈퇴 요청 후 슈퍼어드민 검토를 거칩니다.</span>
+              <span className="settings-row-hint">탈퇴 요청 후 슈퍼어드민 검토를 거칩니다.</span>
             </div>
             <div className="settings-row-meta">
               {withdrawStatus && WORKFLOW_WITHDRAW_STATUS[withdrawStatus] && (

@@ -5,6 +5,7 @@ import StaffService, { ROLES, ROLE_LABELS, STATUS, STATUS_LABELS, validateEmail 
 import { MOCK_STAFF } from '../services/staff/mockStaff';
 import ConfirmModal from '../components/common/ConfirmModal';
 import PasswordInput from '../components/common/PasswordInput';
+import BusinessInfoModal from '../components/common/BusinessInfoModal';
 import './StaffManagement.css';
 
 /* ── 더미 회원 데이터 (MemberProfile 통합) ── */
@@ -298,9 +299,9 @@ const EditModal = ({ title, fields, onClose, onSave }) => {
 /* ── 회원정보 탭 (Settings.jsx와 동일한 디자인 패턴) ── */
 const ProfileTab = () => {
   const [data] = useState(INITIAL_PROFILE);
-  // 사용자 요구 (2026-05-10): 회사정보 / 이메일 직접 변경 불가 — 슈퍼어드민 승인 필요.
-  // 변경하기 버튼 클릭 시 EditModal 대신 안내 ConfirmModal 노출.
-  const [showApprovalNotice, setShowApprovalNotice] = useState(false);
+  // 사용자 요구 (2026-05-11): [변경하기] 클릭 시 BusinessInfoModal(사업자 정보 변경)
+  // 모달 노출 — 슈퍼어드민 승인 큐로 변경 요청 진입. (이전 ConfirmModal 안내 → 정식 모달로)
+  const [showBusinessModal, setShowBusinessModal] = useState(false);
 
   return (
     <>
@@ -311,7 +312,7 @@ const ProfileTab = () => {
             <div className="settings-row-left">
               <span className="settings-row-label profile-section-title">회사정보</span>
             </div>
-            <button className="profile-edit-btn" onClick={() => setShowApprovalNotice(true)}>
+            <button className="profile-edit-btn" onClick={() => setShowBusinessModal(true)}>
               변경하기
             </button>
           </div>
@@ -370,18 +371,10 @@ const ProfileTab = () => {
         </div>
       </div>
 
-      {/* 변경 요청 안내 — 슈퍼어드민 승인 후 처리 */}
-      {showApprovalNotice && (
-        <ConfirmModal
-          title="정보 변경 요청"
-          desc={
-            '회사정보 및 계정정보 변경은 보안을 위해\n슈퍼어드민 승인이 필요합니다.\n\n고객센터(02-1234-5678) 또는 webmaster@pathwave.com\n으로 변경 요청을 보내주세요.\n\n승인 후 정보가 갱신됩니다.'
-          }
-          singleButton
-          confirmText="확인"
-          onConfirm={() => setShowApprovalNotice(false)}
-          onCancel={() => setShowApprovalNotice(false)}
-        />
+      {/* 사업자 정보 변경 모달 — 결제관리 [이메일 변경] 진입점도 이 페이지로 navigate 후
+          [변경하기] 클릭으로 동일 모달 진입. (사용자 요구 2026-05-11) */}
+      {showBusinessModal && (
+        <BusinessInfoModal onClose={() => setShowBusinessModal(false)} />
       )}
     </>
   );
