@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Plus, Check, Wifi, Bell, Gift, CreditCard, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Check, Wifi, Bell, Gift, CreditCard, ArrowLeft, ArrowRight, Loader2, Download } from 'lucide-react';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
@@ -8,8 +8,28 @@ import SectionTabs from '../components/common/SectionTabs';
 import './PaymentManagement.css';
 
 /* ── Mock Data ── */
-const MOCK_CARD = { name: '나라카드', number: '****-****-****-6789' };
+const MOCK_CARD = {
+  name: '나라카드',
+  number: '****-****-****-6789',
+  expiry: '12/27',          // MM/YY
+  autoPay: true,
+};
 const MOCK_EMAIL = 'ceo@hotelh.com';
+
+/* 다음 결제 요약 mock — 실제 GET /api/billing/next 응답으로 대체.
+   - nextDate ISO 문자열
+   - amount 원
+   - cycle: 결제 주기 라벨
+   - breakdown: 서비스별 분해 (라벨 + 금액) */
+const MOCK_BILLING_NEXT = {
+  nextDate: '2026-06-12',
+  amount: 1024100,
+  cycle: '월간 정기결제',
+  breakdown: [
+    { service: 'wifi',  label: 'wifi 132개',     amount: 1016000 },
+    { service: 'push',  label: '알림 발송 270건', amount: 8100 },
+  ],
+};
 
 const MOCK_SERVICES = [
   { id: 'wifi', name: 'wifi 서비스', label: 'Wifi', icon: Wifi, color: '#8B5CF6',
@@ -332,27 +352,76 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
     });
   };
 
+  // 다음 결제 D-day / 표시 문자열
+  const nextDate = new Date(MOCK_BILLING_NEXT.nextDate);
+  const dDay = Math.ceil((nextDate.getTime() - Date.now()) / 86_400_000);
+  const nextDateLabel = `${nextDate.getFullYear()}.${String(nextDate.getMonth() + 1).padStart(2, '0')}.${String(nextDate.getDate()).padStart(2, '0')}`;
+  const fmt = (n) => n.toLocaleString();
+
   return (
     <>
       <div className="payment-content">
-        {/* 카드 정보 */}
-        <div className="payment-card-section">
-          {card ? (
-            <>
-              <div className="payment-card">
-                <div className="payment-card-name">{card.name}</div>
-                <div className="payment-card-number">{card.number}</div>
+        {/* 결제 요약 — 좌(결제수단) / 우(다음 결제) 2-column.
+            모바일에서는 자동으로 세로 stack. (사용자 요구 2026-05-10 — A 안) */}
+        <div className="payment-summary-grid">
+          {/* 좌 — 결제 수단 */}
+          <section className="payment-summary-card payment-method-card" aria-label="결제 수단">
+            <h2 className="payment-summary-title">결제 수단</h2>
+            {card ? (
+              <>
+                <div className="payment-card">
+                  <div className="payment-card-name">{card.name}</div>
+                  <div className="payment-card-number">{card.number}</div>
+                </div>
+                <dl className="payment-method-meta">
+                  <div className="payment-method-meta-row">
+                    <dt>유효기간</dt>
+                    <dd>{card.expiry}</dd>
+                  </div>
+                  <div className="payment-method-meta-row">
+                    <dt>자동결제</dt>
+                    <dd className={card.autoPay ? 'is-on' : 'is-off'}>
+                      {card.autoPay ? 'ON' : 'OFF'}
+                    </dd>
+                  </div>
+                </dl>
+                <button type="button" className="payment-method-change-btn">카드 교체</button>
+              </>
+            ) : (
+              <div className="payment-card-empty" onClick={() => alert('PG사 카드 등록 화면으로 이동합니다.')}>
+                <div className="payment-card-empty-icon"><Plus size={24} /></div>
+                <span className="payment-card-empty-text">결제카드등록</span>
               </div>
-              <div className="payment-card-change">카드교체</div>
-            </>
-          ) : (
-            <div className="payment-card-empty" onClick={() => alert('PG사 카드 등록 화면으로 이동합니다.')}>
-              <div className="payment-card-empty-icon"><Plus size={24} /></div>
-              <span className="payment-card-empty-text">결제카드등록</span>
-            </div>
-          )}
+            )}
+          </section>
 
-          {/* 이메일 */}
+          {/* 우 — 다음 결제 요약 */}
+          <section className="payment-summary-card payment-billing-card" aria-label="다음 결제 요약">
+            <h2 className="payment-summary-title">다음 결제 예정</h2>
+            <div className="payment-billing-date-row">
+              <span className="payment-billing-date">{nextDateLabel}</span>
+              {dDay >= 0 && dDay <= 30 && (
+                <span className="payment-billing-dday">D-{dDay}</span>
+              )}
+            </div>
+            <div className="payment-billing-cycle">{MOCK_BILLING_NEXT.cycle}</div>
+            <div className="payment-billing-amount">
+              <span className="payment-billing-amount-value">{fmt(MOCK_BILLING_NEXT.amount)}</span>
+              <span className="payment-billing-amount-unit">원</span>
+            </div>
+            <ul className="payment-billing-breakdown">
+              {MOCK_BILLING_NEXT.breakdown.map((b) => (
+                <li key={b.service}>
+                  <span className="payment-billing-breakdown-label">{b.label}</span>
+                  <span className="payment-billing-breakdown-amount">{fmt(b.amount)}원</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+
+        {/* 이메일 + 안내문 — 전체폭 별도 블록 */}
+        <div className="payment-email-block">
           <div className="payment-email-row">
             <div className="payment-email-left">
               <span className="payment-email-label">E-Mail</span>
@@ -432,6 +501,11 @@ const PaymentHistoryTab = () => {
   const items = MOCK_HISTORY.slice(0, visible);
   const hasMore = visible < MOCK_HISTORY.length;
 
+  // 영수증 다운로드 — mock. 실서비스에선 GET /api/billing/{id}/receipt PDF.
+  const downloadReceipt = (row) => {
+    alert(`영수증 다운로드 (mock)\n${row.date} · ${row.store} · ${row.amount}원`);
+  };
+
   return (
     <div className="payment-content">
       <div className="payment-history-section">
@@ -443,6 +517,7 @@ const PaymentHistoryTab = () => {
               <th>매장명</th>
               <th>결제금액</th>
               <th>서비스 구분</th>
+              <th className="payment-history-receipt-col">영수증</th>
             </tr>
           </thead>
           <tbody>
@@ -452,9 +527,20 @@ const PaymentHistoryTab = () => {
                 <td>{row.store}</td>
                 <td>{row.amount}</td>
                 <td>{SERVICE_TYPE_LABEL[row.type] || row.type}</td>
+                <td className="payment-history-receipt-col">
+                  <button
+                    type="button"
+                    className="payment-receipt-btn"
+                    onClick={() => downloadReceipt(row)}
+                    aria-label={`${row.date} 영수증 다운로드`}
+                  >
+                    <Download size={14} aria-hidden="true" />
+                    <span>받기</span>
+                  </button>
+                </td>
               </tr>
             )) : (
-              <tr><td colSpan={4} className="payment-history-empty">결제내역이 없습니다.</td></tr>
+              <tr><td colSpan={5} className="payment-history-empty">결제내역이 없습니다.</td></tr>
             )}
           </tbody>
         </table>

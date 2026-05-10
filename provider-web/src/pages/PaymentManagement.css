@@ -13,7 +13,186 @@
 
 .payment-content { margin: 0 auto; position: relative; z-index: 1; }
 
-/* ── Card Display ── */
+/* ── 결제 요약 — 좌(결제수단) / 우(다음결제) 2-column grid (2026-05-10).
+   카드 좌우 빈 공간에 결제 정보 카드를 배치. 모바일에서는 자동 stack. ── */
+.payment-summary-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--pw-space-5);
+  margin-bottom: var(--pw-space-8);
+}
+
+.payment-summary-card {
+  background: var(--pw-surface-1);
+  border: 1px solid var(--pw-surface-line);
+  border-radius: var(--pw-radius-lg);
+  padding: var(--pw-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-4);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.025) inset,
+              0 2px 6px rgba(0, 0, 0, 0.20);
+}
+
+.payment-summary-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pw-text-hint);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* ── 좌측 카드 — 결제 수단 ── */
+.payment-method-card .payment-card {
+  margin: 0 auto;
+}
+
+.payment-method-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-2);
+  margin: 0;
+  padding-top: var(--pw-space-3);
+  border-top: 1px solid var(--pw-surface-line);
+}
+.payment-method-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pw-space-3);
+}
+.payment-method-meta-row dt {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pw-text-hint);
+  margin: 0;
+}
+.payment-method-meta-row dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--pw-text);
+  font-variant-numeric: tabular-nums;
+}
+.payment-method-meta-row dd.is-on  { color: var(--pw-accent); font-weight: 600; }
+.payment-method-meta-row dd.is-off { color: var(--pw-text-hint); }
+
+.payment-method-change-btn {
+  align-self: stretch;
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid var(--pw-border-strong);
+  border-radius: var(--pw-radius-pill);
+  color: var(--pw-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background var(--pw-duration-fast) var(--pw-ease),
+              color var(--pw-duration-fast) var(--pw-ease);
+}
+.payment-method-change-btn:hover {
+  background: var(--pw-surface-2);
+  color: var(--pw-text);
+}
+
+/* ── 우측 카드 — 다음 결제 요약 ── */
+.payment-billing-date-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--pw-space-3);
+}
+.payment-billing-date {
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
+  color: var(--pw-text);
+  font-variant-numeric: tabular-nums;
+}
+.payment-billing-dday {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--pw-radius-pill);
+  background: var(--pw-accent-soft);
+  color: var(--pw-accent-text);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.payment-billing-cycle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--pw-text-hint);
+}
+.payment-billing-amount {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: var(--pw-space-3) 0;
+  border-top: 1px solid var(--pw-surface-line);
+  border-bottom: 1px solid var(--pw-surface-line);
+}
+.payment-billing-amount-value {
+  font-size: 30px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: var(--pw-text);
+  font-variant-numeric: tabular-nums;
+}
+.payment-billing-amount-unit {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--pw-text-secondary);
+}
+
+.payment-billing-breakdown {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-2);
+}
+.payment-billing-breakdown li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pw-space-3);
+  font-size: 13px;
+}
+.payment-billing-breakdown-label {
+  color: var(--pw-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.payment-billing-breakdown-amount {
+  color: var(--pw-text);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 이메일 블록 — 전체폭 ── */
+.payment-email-block {
+  margin-bottom: var(--pw-space-8);
+  border-bottom: 1px solid var(--pw-border-light);
+  padding-bottom: var(--pw-space-6);
+}
+
+/* 모바일 — 좌·우 stack */
+@media (max-width: 768px) {
+  .payment-summary-grid {
+    grid-template-columns: 1fr;
+    gap: var(--pw-space-4);
+  }
+  .payment-billing-amount-value { font-size: 26px; }
+  .payment-billing-date { font-size: 20px; }
+}
+
+/* ── Card Display (기존 payment-card 그라데이션 유지) ── */
 .payment-card-section {
   margin-bottom: var(--pw-space-8);
   border-bottom: 1px solid var(--pw-border-light);
@@ -170,10 +349,37 @@
   font-weight: 500;
 }
 .payment-history-empty { text-align: center; padding: var(--pw-space-10) var(--pw-space-4); color: var(--pw-text-hint); font-size: 14px; }
+
+/* 영수증 컬럼 — 너비 고정 + 가운데 정렬 + 다운로드 칩 버튼 */
+.payment-history-receipt-col { width: 96px; }
+.payment-receipt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid var(--pw-border-strong);
+  border-radius: var(--pw-radius-pill);
+  color: var(--pw-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background var(--pw-duration-fast) var(--pw-ease),
+              color var(--pw-duration-fast) var(--pw-ease);
+}
+.payment-receipt-btn:hover {
+  background: var(--pw-surface-2);
+  color: var(--pw-text);
+}
+
 @media (max-width: 480px) {
   .payment-history-table { font-size: 14px; }
   .payment-history-table thead th,
   .payment-history-table tbody td { padding: var(--pw-space-3) var(--pw-space-2); }
+  .payment-history-receipt-col { width: 72px; }
+  .payment-receipt-btn span { display: none; }
+  .payment-receipt-btn { padding: 6px; }
 }
 
 /* ═══════════════════════════════════════════
