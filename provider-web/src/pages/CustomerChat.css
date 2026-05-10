@@ -884,6 +884,20 @@
   flex: 1;
 }
 
+/* sub-title 안 inline 연결상태 (헤더 가이드 통일 — 사용자 요구 2026-05-10) */
+.conn-status-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: var(--pw-space-3);
+  padding-left: var(--pw-space-3);
+  border-left: 1px solid var(--pw-surface-line);
+}
+.conn-status-inline .conn-dot {
+  width: 6px;
+  height: 6px;
+}
+
 /* ── [데모] 고객 메시지 시뮬레이션 버튼 ── */
 .demo-incoming-btn {
   font-size: 0.68rem;

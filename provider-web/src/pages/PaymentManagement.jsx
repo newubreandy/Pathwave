@@ -497,11 +497,11 @@ const PaymentManagement = () => {
   }
 
   return (
-    <div className="common-form-page">
-      <header className="common-form-header" style={{ marginBottom: 0 }}>
-        <button className="back-btn d-md-none" onClick={() => navigate('/dashboard')}><ChevronLeft size={24} /></button>
-        <h1>결제관리</h1>
-      </header>
+    <div className="modern-page">
+      <div className="page-header-section">
+        <h1 className="page-title">결제관리</h1>
+        <p className="sub-title">결제 정보와 결제 내역을 관리합니다.</p>
+      </div>
       <SectionTabs
         tabs={[
           { key: 'info',    label: '결제정보' },

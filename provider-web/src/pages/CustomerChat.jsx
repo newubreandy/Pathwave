@@ -605,18 +605,23 @@ const CustomerChat = () => {
 
   return (
     <div className={`chat-page-wrapper ${selectedId ? 'is-room-open' : ''}`}>
+      {/* 페이지 헤더 — 다른 페이지(스탬프/쿠폰/알림/결제관리)와 동일 가이드:
+          h1.page-title + p.sub-title. 답변대기 카운트와 동기화 시각은 sub-title 에 통합. */}
       <div className={`page-header-section ${selectedId ? 'hidden-panel' : ''}`}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h1 className="page-title">답변대기 {totalUnread > 0 ? totalUnread : 0}</h1>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--pw-space-4)' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 className="page-title">고객 채팅</h1>
+            <p className="sub-title">
+              답변 대기 <strong style={{ color: 'var(--pw-text)' }}>{totalUnread > 0 ? totalUnread : 0}건</strong>
+              <span className="conn-status-inline">
+                <span className={`conn-dot ${connStatus}`} />
+                {connStatus === 'syncing' ? '동기화 중...' : `업데이트 ${lastUpdated.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`}
+              </span>
+            </p>
+          </div>
           <button className="chat-block-manage-btn" onClick={() => setShowBlockList(true)}>
             차단 관리
           </button>
-        </div>
-        <div className="conn-status-row" style={{ marginTop: 0 }}>
-          <span className={`conn-dot ${connStatus}`} />
-          <span className="conn-label">
-            {connStatus === 'syncing' ? '동기화 중...' : `업데이트 ${lastUpdated.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`}
-          </span>
         </div>
       </div>
 

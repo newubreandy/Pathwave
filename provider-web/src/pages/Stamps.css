@@ -206,10 +206,7 @@
   font-size: var(--pw-body-size);
 }
 
-/* ── Page Header (stamps/coupons shared) ── */
-.stamps-page .page-header-section {
-  margin-bottom: var(--pw-space-6);
-}
+/* page-header-section margin 은 글로벌 가이드(.page-header-section) 사용 — 다른 페이지와 통일 (사용자 요구 2026-05-10) */
 
 /* ── Context Menu ── */
 .stamp-menu-btn {
