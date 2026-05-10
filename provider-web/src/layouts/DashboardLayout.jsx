@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Menu, X, ChevronLeft, ChevronRight, User, Settings } from 'lucide-react';
+import { Menu, X, ChevronLeft, ChevronRight, User, Settings, Bell } from 'lucide-react';
+import { getUnreadCount } from '../services/notification/mockInbox';
 import './DashboardLayout.css';
 
 const DashboardLayout = () => {
@@ -104,6 +105,19 @@ const DashboardLayout = () => {
             <Link to="/dashboard" className="gnb-logo">PathWave</Link>
             
             <div className="gnb-actions">
+              {/* Notification Center 진입점 (사용자 요구 2026-05-10) — Bell + unread badge */}
+              <button
+                className="gnb-icon-btn gnb-bell"
+                onClick={() => { navigate('/dashboard/notifications?tab=inbox'); setIsMenuOpen(false); }}
+                aria-label="알림 (받은 알림)"
+              >
+                <Bell size={20} />
+                {getUnreadCount() > 0 && (
+                  <span className="gnb-bell-badge" aria-label={`읽지 않은 알림 ${getUnreadCount()}개`}>
+                    {getUnreadCount() > 99 ? '99+' : getUnreadCount()}
+                  </span>
+                )}
+              </button>
               {/* PC+모바일 공통: 사람 아이콘 (회원정보/직원관리) + 설정 아이콘 */}
               <button
                 className="gnb-icon-btn"

@@ -1,10 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, X, ChevronLeft, Upload, Bell } from 'lucide-react';
+import { Plus, X, ChevronLeft, Upload, Bell, Check, CheckCheck, Star } from 'lucide-react';
 import PushService from '../services/push/PushService';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
+import CardAvatar from '../components/common/CardAvatar';
+import GroupCard, { GroupCardItem } from '../components/common/GroupCard';
+import { MOCK_INBOX, NOTIFICATION_CATEGORIES } from '../services/notification/mockInbox';
 import './Notifications.css';
 
 const Notifications = () => {
@@ -481,13 +484,45 @@ const Notifications = () => {
     );
   }
 
-  // List View
+  // List View — 탭 구조 (사용자 요구 2026-05-10):
+  //   inbox  : 알림리스트 (받은 알림 — Notification Center)
+  //   send   : 알림발송관리 (기존 발송 캠페인 관리)
+  const tab = searchParams.get('tab') || 'inbox';
+  const setTab = (newTab) => {
+    if (newTab === 'inbox') searchParams.delete('tab');
+    else searchParams.set('tab', newTab);
+    setSearchParams(searchParams);
+  };
+
   return (
     <div className="notifications-page">
       <div className="page-header-section">
-        <h1 className="page-title">{t('noti.title_list', '알림 발송')}</h1>
-        <p className="sub-title">알림 발송 현황 및 내역을 관리하세요.</p>
+        <h1 className="page-title">알림</h1>
+        <p className="sub-title">받은 알림 확인과 알림 발송을 관리하세요.</p>
       </div>
+
+      {/* 탭 — 결제관리 / 와이파이 와 동일 톤 (full-width / 16px / accent) */}
+      <div className="payment-tabs">
+        <button
+          className={`payment-tab ${tab === 'inbox' ? 'active' : ''}`}
+          onClick={() => setTab('inbox')}
+        >
+          알림리스트
+        </button>
+        <button
+          className={`payment-tab ${tab === 'send' ? 'active' : ''}`}
+          onClick={() => setTab('send')}
+        >
+          알림발송관리
+        </button>
+      </div>
+
+      {/* ── 알림리스트 (Inbox) — 받은 알림 ── */}
+      {tab === 'inbox' && <NotificationInbox />}
+
+      {/* ── 알림발송관리 — 기존 view ── */}
+      {tab === 'send' && (<>
+
 
       {/* Stats Dashboard */}
       <div className="usage-stats-card">
@@ -604,8 +639,123 @@ const Notifications = () => {
           {t('noti.btn_add')}
         </Button>
       </BottomActionBar>
+      </>)}
     </div>
   );
 };
+
+/* ══════════════════════════════════════════════
+   NotificationInbox — 받은 알림 (Notification Center)
+   날짜 그룹핑 + 카테고리별 아이콘 + 읽음 처리 + important 상단 고정.
+   ══════════════════════════════════════════════ */
+function NotificationInbox() {
+  const [items, setItems] = useState(MOCK_INBOX);
+
+  const unreadCount = items.filter((n) => !n.read_at).length;
+
+  const markAsRead = (id) => {
+    setItems((prev) => prev.map((n) => n.id === id ? { ...n, read_at: new Date().toISOString() } : n));
+  };
+  const markAllAsRead = () => {
+    setItems((prev) => prev.map((n) => n.read_at ? n : { ...n, read_at: new Date().toISOString() }));
+  };
+
+  // 날짜 그룹핑 — 오늘 / 어제 / 이전
+  const today = new Date().toDateString();
+  const yesterday = new Date(Date.now() - 86_400_000).toDateString();
+  const groupOf = (iso) => {
+    const d = new Date(iso).toDateString();
+    if (d === today) return '오늘';
+    if (d === yesterday) return '어제';
+    return '이전';
+  };
+
+  // 정렬: important 우선 → 미확인 우선 → 최신순
+  const sorted = [...items].sort((a, b) => {
+    if (a.important !== b.important) return b.important - a.important;
+    if (!a.read_at && b.read_at) return -1;
+    if (a.read_at && !b.read_at) return 1;
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
+
+  // 그룹핑
+  const groups = sorted.reduce((acc, n) => {
+    const g = groupOf(n.created_at);
+    (acc[g] = acc[g] || []).push(n);
+    return acc;
+  }, {});
+
+  const formatTime = (iso) => {
+    const d = new Date(iso);
+    const diff = (Date.now() - d.getTime()) / 1000;
+    if (diff < 60) return '방금 전';
+    if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+    return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+  };
+
+  return (
+    <div className="noti-inbox">
+      {/* 상단 요약 + 전체 읽음 */}
+      <div className="noti-inbox-header">
+        <div className="noti-inbox-summary">
+          전체 {items.length}건 · <strong>읽지 않음 {unreadCount}건</strong>
+        </div>
+        {unreadCount > 0 && (
+          <button className="noti-inbox-readall" onClick={markAllAsRead}>
+            <CheckCheck size={14} /> 전체 읽음 처리
+          </button>
+        )}
+      </div>
+
+      {/* 빈 상태 */}
+      {items.length === 0 && (
+        <div className="noti-inbox-empty">받은 알림이 없습니다.</div>
+      )}
+
+      {/* 날짜 그룹별 GroupCard */}
+      {['오늘', '어제', '이전'].map((groupName) => {
+        const list = groups[groupName];
+        if (!list?.length) return null;
+        return (
+          <GroupCard
+            key={groupName}
+            variant="container"
+            title={groupName}
+            subtitle={`${list.length}건`}
+            collapsible={groupName !== '오늘'}
+          >
+            {list.map((n) => {
+              const meta = NOTIFICATION_CATEGORIES[n.category] || { icon: Bell, variant: 'neutral', label: n.category };
+              const Icon = meta.icon;
+              const isUnread = !n.read_at;
+              return (
+                <GroupCardItem
+                  key={n.id}
+                  onClick={() => isUnread && markAsRead(n.id)}
+                  className={`noti-inbox-item ${isUnread ? 'is-unread' : ''} ${n.important ? 'is-important' : ''}`}
+                >
+                  <CardAvatar variant={meta.variant} size="md">
+                    <Icon strokeWidth={2} />
+                  </CardAvatar>
+                  <div className="noti-inbox-body">
+                    <div className="noti-inbox-head">
+                      <span className="noti-inbox-cat">{meta.label}</span>
+                      {n.important && <Star size={12} className="noti-inbox-star" />}
+                      <span className="noti-inbox-time">{formatTime(n.created_at)}</span>
+                    </div>
+                    <p className="noti-inbox-title">{n.title}</p>
+                    <p className="noti-inbox-text">{n.body}</p>
+                  </div>
+                  {isUnread && <span className="noti-inbox-dot" aria-label="미확인" />}
+                </GroupCardItem>
+              );
+            })}
+          </GroupCard>
+        );
+      })}
+    </div>
+  );
+}
 
 export default Notifications;

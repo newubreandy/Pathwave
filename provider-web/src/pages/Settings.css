@@ -36,6 +36,20 @@
   animation: fadeIn var(--pw-duration-slow) var(--pw-ease-out);
 }
 
+/* ── Group Title (운영툴 톤 — 14/600/hint, 위쪽 여백) ── */
+.settings-group-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pw-text-hint);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: var(--pw-space-6) 0 var(--pw-space-2);
+  padding: 0 var(--pw-space-2);
+}
+.settings-group-title:first-child {
+  margin-top: 0;
+}
+
 /* ── Section Card ── */
 .settings-section {
   background: var(--pw-surface);
@@ -44,6 +58,34 @@
   box-shadow: var(--pw-shadow-xs);
   margin-bottom: var(--pw-space-4);
   overflow: hidden;
+}
+
+/* ── Row Meta — 우측 status badge + chevron 묶음 ── */
+.settings-row-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pw-space-2);
+  flex-shrink: 0;
+}
+
+/* ── Workflow Hint — 검토중 안내 (info icon + text) ── */
+.settings-workflow-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--pw-space-2);
+  padding: var(--pw-space-3) var(--pw-space-4);
+  background: var(--pw-surface-1);
+  border: 1px solid var(--pw-surface-line);
+  border-radius: var(--pw-radius-md);
+  color: var(--pw-text-hint);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: var(--pw-space-6);
+}
+.settings-workflow-hint svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--pw-text-hint);
 }
 
 .settings-section-title {

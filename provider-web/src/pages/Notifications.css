@@ -469,3 +469,160 @@ textarea.form-textarea:disabled {
   border-color: var(--pw-border-strong);
   color: var(--pw-text-secondary);
 }
+
+/* ══════════════════════════════════════════════
+   NotificationInbox — 받은 알림 (Notification Center)
+   날짜 그룹별 GroupCard + 카테고리별 CardAvatar.
+   ══════════════════════════════════════════════ */
+.noti-inbox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-6);
+  margin-top: var(--pw-space-6);
+}
+
+.noti-inbox-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pw-space-3);
+  padding: 0 var(--pw-space-1);
+}
+
+.noti-inbox-summary {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--pw-text-hint);
+}
+.noti-inbox-summary strong {
+  color: var(--pw-text);
+  font-weight: 600;
+}
+
+.noti-inbox-readall {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--pw-border-strong);
+  color: var(--pw-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--pw-radius-pill);
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background var(--pw-duration-fast) var(--pw-ease),
+              color var(--pw-duration-fast) var(--pw-ease);
+}
+.noti-inbox-readall:hover {
+  background: var(--pw-surface-2);
+  color: var(--pw-text);
+}
+
+.noti-inbox-empty {
+  padding: var(--pw-space-12) var(--pw-space-6);
+  text-align: center;
+  color: var(--pw-text-hint);
+  font-size: 14px;
+  border: 1px dashed var(--pw-surface-line);
+  border-radius: var(--pw-radius-md);
+  background: var(--pw-surface-1);
+}
+
+/* 인박스 행 — GroupCardItem 위에 본문 그리드 */
+.noti-inbox-item {
+  position: relative;
+  align-items: flex-start;
+  gap: var(--pw-space-4);
+}
+.noti-inbox-item.is-unread {
+  background: rgba(139, 92, 246, 0.04);
+}
+
+.noti-inbox-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.noti-inbox-head {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-2);
+  flex-wrap: wrap;
+}
+
+.noti-inbox-cat {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pw-text-hint);
+  letter-spacing: 0.01em;
+}
+
+.noti-inbox-star {
+  color: #F59E0B;
+  fill: #F59E0B;
+}
+
+.noti-inbox-time {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--pw-text-hint);
+}
+
+.noti-inbox-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pw-text);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.noti-inbox-item.is-unread .noti-inbox-title {
+  color: #fff;
+}
+
+.noti-inbox-text {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--pw-text-secondary);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 미확인 도트 — 행 우측 상단 */
+.noti-inbox-dot {
+  position: absolute;
+  top: 18px;
+  right: 16px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pw-accent);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18);
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .noti-inbox-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--pw-space-2);
+  }
+  .noti-inbox-time {
+    margin-left: 0;
+  }
+  .noti-inbox-dot {
+    top: 16px;
+    right: 12px;
+  }
+}
