@@ -616,14 +616,17 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
               <span className="payment-billing-amount-label">예상 청구액</span>
               <span className="payment-billing-amount-value-wrap">
                 <span className="payment-billing-amount-value">{fmt(MOCK_BILLING_NEXT.amount)}</span>
-                <span className="payment-billing-amount-unit">원</span>
+                <span className="payment-amount-unit">원</span>
               </span>
             </div>
             <ul className="payment-billing-breakdown">
               {MOCK_BILLING_NEXT.breakdown.map((b) => (
                 <li key={b.service}>
                   <span className="payment-billing-breakdown-label">{b.label}</span>
-                  <span className="payment-billing-breakdown-amount">{fmt(b.amount)}원</span>
+                  <span className="payment-billing-breakdown-amount">
+                    {fmt(b.amount)}
+                    <span className="payment-amount-unit">원</span>
+                  </span>
                 </li>
               ))}
             </ul>
@@ -670,7 +673,10 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
               onClick={() => targetRoute && navigate(targetRoute)}
             >
               <span className="payment-service-title">{service.name}</span>
-              <span className="payment-service-count">{totalQty}개 이용중</span>
+              <span className="payment-service-count">
+                {totalQty}
+                <span className="payment-service-count-unit">개 이용중</span>
+              </span>
               <ChevronRight size={18} color="var(--pw-text-hint)" aria-hidden="true" />
             </button>
           );

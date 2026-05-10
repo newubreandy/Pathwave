@@ -126,7 +126,7 @@
   font-weight: 600;
   color: var(--pw-text-hint);
 }
-/* 청구액 — 가이드 적용: 값 22/300/white + 단위 14/600/hint */
+/* 청구액 — 가이드: 값 22/300/white + 단위 14/600/hint (.payment-amount-unit 공통) */
 .payment-billing-amount {
   display: flex;
   align-items: baseline;
@@ -153,7 +153,12 @@
   color: var(--pw-text);
   font-variant-numeric: tabular-nums;
 }
-.payment-billing-amount-unit {
+
+/* 공통 단위 가이드 (사용자 요구 2026-05-11):
+   금액 뒤 "원" / 카운트 뒤 "개 이용중" 등 단위·접미사는
+   값보다 작게(14/600/hint) — 메인 숫자가 강조되도록. */
+.payment-amount-unit {
+  margin-left: 4px;
   font-size: 14px;
   font-weight: 600;
   color: var(--pw-text-hint);
@@ -183,6 +188,8 @@
   white-space: nowrap;
 }
 .payment-billing-breakdown-amount {
+  display: inline-flex;
+  align-items: baseline;
   font-size: 22px;
   font-weight: 300;
   letter-spacing: -0.015em;
@@ -302,15 +309,26 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* 우측 카운트 — 라벨 톤 (14/600/hint) */
+/* 우측 카운트 — 가이드: 값 22/300/white + 단위 14/600/hint (사용자 요구 2026-05-11) */
 .payment-service-count {
+  display: inline-flex;
+  align-items: baseline;
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.015em;
+  color: var(--pw-text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.payment-service-count-unit {
+  margin-left: 4px;
   font-size: 14px;
   font-weight: 600;
   color: var(--pw-text-hint);
-  white-space: nowrap;
 }
 @media (max-width: 480px) {
   .payment-service-title { font-size: 20px; }
+  .payment-service-count { font-size: 20px; }
 }
 
 .payment-service-detail {
