@@ -5,6 +5,7 @@ import AuthService from '../services/auth/AuthService';
 import ConfirmModal from '../components/common/ConfirmModal';
 import PasswordInput from '../components/common/PasswordInput';
 import StatusBadge from '../components/common/StatusBadge';
+import BusinessInfoModal from '../components/common/BusinessInfoModal';
 import './Settings.css';
 
 /* ── 기본값 ── */
@@ -159,93 +160,8 @@ const PasswordModal = ({ onClose }) => {
   );
 };
 
-/* ── Business Info Modal ── */
-const BusinessInfoModal = ({ onClose }) => {
-  const user = AuthService.getCurrentUser();
-  const [formData, setFormData] = useState({
-    name: user?.name || '시원컴퍼니',
-    bizNumber: '123-45-67890',
-    phone: '02-1234-5678',
-    email: user?.email || 'admin@pathwave.com',
-  });
-  const [success, setSuccess] = useState(false);
-
-  const handleSave = () => {
-    // TODO: 실제 API 호출로 사업자 정보 업데이트
-    const updatedUser = { ...user, name: formData.name, email: formData.email };
-    localStorage.setItem('pathwave_user', JSON.stringify(updatedUser));
-    setSuccess(true);
-    setTimeout(() => onClose(), 1500);
-  };
-
-  return (
-    <div className="settings-modal-overlay" onClick={onClose}>
-      <div className="settings-modal" onClick={e => e.stopPropagation()}>
-        <div className="settings-modal-header">
-          <h2 className="settings-modal-title">사업자 정보 변경</h2>
-          <button className="settings-modal-close" onClick={onClose}><X size={20} /></button>
-        </div>
-
-        <div className="settings-modal-body">
-        {success ? (
-          <div style={{ textAlign: 'center', padding: 'var(--pw-space-8) 0', color: 'var(--pw-primary)', fontWeight: 600 }}>
-            ✓ 정보가 저장되었습니다.
-          </div>
-        ) : (
-          <>
-            <div className="settings-modal-field">
-              <label className="settings-modal-label">대표자명</label>
-              <input
-                type="text"
-                className="settings-modal-input"
-                value={formData.name}
-                onChange={e => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
-
-            <div className="settings-modal-field">
-              <label className="settings-modal-label">사업자번호</label>
-              <input
-                type="text"
-                className="settings-modal-input"
-                value={formData.bizNumber}
-                onChange={e => setFormData({ ...formData, bizNumber: e.target.value })}
-                placeholder="000-00-00000"
-              />
-            </div>
-
-            <div className="settings-modal-field">
-              <label className="settings-modal-label">연락처</label>
-              <input
-                type="tel"
-                className="settings-modal-input"
-                value={formData.phone}
-                onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="02-0000-0000"
-              />
-            </div>
-
-            <div className="settings-modal-field">
-              <label className="settings-modal-label">이메일</label>
-              <input
-                type="email"
-                className="settings-modal-input"
-                value={formData.email}
-                onChange={e => setFormData({ ...formData, email: e.target.value })}
-              />
-            </div>
-
-            <div className="settings-modal-actions">
-              <button className="settings-modal-btn cancel" onClick={onClose}>취소</button>
-              <button className="settings-modal-btn confirm" onClick={handleSave}>저장</button>
-            </div>
-          </>
-        )}
-        </div>
-      </div>
-    </div>
-  );
-};
+/* BusinessInfoModal 은 components/common/BusinessInfoModal.jsx 로 추출 (2026-05-10).
+   결제관리에서도 동일 모달을 띄우기 위해 분리. */
 
 /* ═══════════════════════════════════════════════════
    Main Settings Component

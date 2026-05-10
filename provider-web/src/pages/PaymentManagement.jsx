@@ -5,6 +5,7 @@ import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
 import SectionTabs from '../components/common/SectionTabs';
+import BusinessInfoModal from '../components/common/BusinessInfoModal';
 import './PaymentManagement.css';
 
 /* ── Mock Data ── */
@@ -335,8 +336,11 @@ const ServiceApplyFlow = ({ onBack, onComplete }) => {
    ══════════════════════════════════════════ */
 const PaymentInfoTab = ({ card, email, services, onApply }) => {
   const [modal, setModal] = useState({ open: false, title: '', desc: '', onConfirm: null });
-  const [editEmail, setEditEmail] = useState(false);
-  const [emailValue, setEmailValue] = useState(email);
+  // 이메일은 회사정보 변경 모달을 통해서만 변경 가능 (사용자 요구 2026-05-10).
+  // 결제 단계에서 직접 변경 불가 — 슈퍼어드민 승인 후 결제 진행.
+  const [showBusinessModal, setShowBusinessModal] = useState(false);
+  // 자동결제 토글 — 로컬 상태 mock. 실서비스에선 PUT /api/billing/auto-pay.
+  const [autoPay, setAutoPay] = useState(card?.autoPay ?? false);
 
   const closeModal = () => setModal(m => ({ ...m, open: false }));
 
@@ -373,18 +377,26 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
                   <div className="payment-card-name">{card.name}</div>
                   <div className="payment-card-number">{card.number}</div>
                 </div>
-                <dl className="payment-method-meta">
+                <div className="payment-method-meta">
                   <div className="payment-method-meta-row">
-                    <dt>유효기간</dt>
-                    <dd>{card.expiry}</dd>
+                    <span className="payment-method-meta-label">유효기간</span>
+                    <span className="payment-method-meta-value">{card.expiry}</span>
                   </div>
                   <div className="payment-method-meta-row">
-                    <dt>자동결제</dt>
-                    <dd className={card.autoPay ? 'is-on' : 'is-off'}>
-                      {card.autoPay ? 'ON' : 'OFF'}
-                    </dd>
+                    <span className="payment-method-meta-label">자동결제</span>
+                    <label className="toggle-switch" htmlFor="payment-auto-pay">
+                      <input
+                        type="checkbox"
+                        id="payment-auto-pay"
+                        checked={autoPay}
+                        onChange={() => setAutoPay((v) => !v)}
+                      />
+                      <span className="toggle-track" />
+                      <span className="toggle-thumb" />
+                      <span className="toggle-text">{autoPay ? 'ON' : 'OFF'}</span>
+                    </label>
                   </div>
-                </dl>
+                </div>
                 <button type="button" className="payment-method-change-btn">카드 교체</button>
               </>
             ) : (
@@ -420,32 +432,26 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
           </section>
         </div>
 
-        {/* 이메일 + 안내문 — 전체폭 별도 블록 */}
+        {/* 이메일 + 안내문 — 전체폭 별도 블록.
+            이메일은 회사 정보의 일부이므로 inline 수정 불가. [이메일 변경] 클릭 시
+            BusinessInfoModal 노출 → 슈퍼어드민 승인 후 반영. */}
         <div className="payment-email-block">
           <div className="payment-email-row">
             <div className="payment-email-left">
               <span className="payment-email-label">E-Mail</span>
-              {editEmail ? (
-                <input
-                  className="payment-email-input"
-                  type="email" value={emailValue}
-                  onChange={e => setEmailValue(e.target.value)}
-                  autoFocus
-                />
-              ) : (
-                <span className="payment-email-value">{emailValue || '-'}</span>
-              )}
+              <span className="payment-email-value">{email || '-'}</span>
             </div>
-            {editEmail ? (
-              <div style={{ display: 'flex', gap: 4 }}>
-                <Button variant="primary" size="small" onClick={() => setEditEmail(false)}>저장</Button>
-                <Button variant="outline" size="small" onClick={() => { setEmailValue(email); setEditEmail(false); }}>취소</Button>
-              </div>
-            ) : (
-              <button className="payment-email-change" onClick={() => setEditEmail(true)}>이메일 변경</button>
-            )}
+            <button
+              type="button"
+              className="payment-email-change"
+              onClick={() => setShowBusinessModal(true)}
+            >
+              이메일 변경
+            </button>
           </div>
-          <div className="payment-email-note">※ 결제 및 공지 안내 메일 입니다.</div>
+          <div className="payment-email-note">
+            ※ 결제 및 공지 안내 메일입니다. 변경은 회사 정보 수정 후 슈퍼어드민 승인을 거쳐 반영됩니다.
+          </div>
         </div>
 
         {/* 서비스 이용 내역 — 서비스 / 사용량만. 터치 시 해당 서비스 리스트로 이동.
@@ -486,6 +492,9 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
       </BottomActionBar>
 
       <ConfirmModal isOpen={modal.open} title={modal.title} desc={modal.desc} onConfirm={modal.onConfirm} onCancel={closeModal} />
+      {showBusinessModal && (
+        <BusinessInfoModal context="payment" onClose={() => setShowBusinessModal(false)} />
+      )}
     </>
   );
 };
