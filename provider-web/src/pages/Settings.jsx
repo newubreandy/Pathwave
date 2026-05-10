@@ -172,6 +172,7 @@ const Settings = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showBusinessModal, setShowBusinessModal] = useState(false);
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
+  const [showWithdrawSuccess, setShowWithdrawSuccess] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // 워크플로우 mock 상태 — 실서비스에선 GET /api/account/business-info/change-request/latest 등
@@ -210,10 +211,22 @@ const Settings = () => {
     navigate('/login');
   };
 
-  const handleWithdraw = async () => {
-    // TODO: 실제 회원탈퇴 API 호출
-    await AuthService.logout();
-    navigate('/login');
+  // 탈퇴는 슈퍼어드민 승인 후 처리 (사용자 요구 2026-05-11).
+  // 즉시 로그아웃 / 계정 삭제 X. 요청 큐에 등록만 하고 사용자는 페이지 사용 계속 가능.
+  const handleWithdraw = () => {
+    // mock: 슈퍼어드민 audit 큐에 탈퇴 요청 등록.
+    // 실서비스: POST /api/account/withdrawal/request
+    try {
+      const queue = JSON.parse(localStorage.getItem('pathwave_audit_queue') || '[]');
+      queue.push({
+        ts: new Date().toISOString(),
+        action: 'account_withdraw_request',
+        actor: AuthService.getCurrentUser()?.id || AuthService.getCurrentUser()?.email || 'unknown',
+      });
+      localStorage.setItem('pathwave_audit_queue', JSON.stringify(queue));
+    } catch { /* ignore */ }
+    setShowWithdrawConfirm(false);
+    setShowWithdrawSuccess(true);
   };
 
   return (
@@ -435,13 +448,27 @@ const Settings = () => {
         />
       )}
 
+      {/* 탈퇴 요청 — 슈퍼어드민 승인 후 처리 (즉시 로그아웃 X) */}
       {showWithdrawConfirm && (
         <ConfirmModal
           isOpen={true}
-          title="회원탈퇴"
-          desc="정말 탈퇴하시겠습니까? 모든 데이터가 삭제되며 복구할 수 없습니다."
+          title="회원 탈퇴 요청"
+          desc={'회원 탈퇴는 슈퍼어드민 검토를 거쳐 처리됩니다.\n탈퇴 요청을 보내시겠습니까?\n\n※ 미정산 결제건이 있으면 정산 완료 후 처리됩니다.'}
+          confirmText="요청하기"
           onConfirm={handleWithdraw}
           onCancel={() => setShowWithdrawConfirm(false)}
+        />
+      )}
+
+      {showWithdrawSuccess && (
+        <ConfirmModal
+          isOpen={true}
+          singleButton
+          title="탈퇴 요청이 접수되었습니다"
+          desc={'슈퍼어드민 검토 후 결과를 알림으로 안내드립니다.\n검토 중에는 서비스를 그대로 사용하실 수 있습니다.'}
+          confirmText="확인"
+          onConfirm={() => setShowWithdrawSuccess(false)}
+          onCancel={() => setShowWithdrawSuccess(false)}
         />
       )}
     </>
