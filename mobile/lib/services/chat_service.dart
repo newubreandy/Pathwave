@@ -58,7 +58,7 @@ class ChatService {
   /// - 사용: `chatService.streamMessages(roomId).listen((msg) {...})`
   /// - 종료: stream subscription cancel
   Stream<Map<String, dynamic>> streamMessages(int roomId) async* {
-    final token = await _storage.read(key: 'jwt_token');
+    final token = await _storage.read(key: 'pathwave_token');
     final uri = Uri.parse('${ApiConfig.baseUrl}/api/chat/rooms/$roomId/stream');
     final req = http.Request('GET', uri);
     req.headers['Accept'] = 'text/event-stream';

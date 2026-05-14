@@ -7,7 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'services/auth_service.dart';
 import 'services/ble_service.dart';
 import 'utils/app_router.dart';
-import 'utils/app_theme.dart';
+import 'utils/neu_theme.dart';
 import 'widgets/dev_preview_bar.dart';
 
 void main() async {
@@ -19,8 +19,13 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // Firebase 초기화
-  await Firebase.initializeApp();
+  // Firebase 초기화 — GoogleService-Info.plist / google-services.json 미설정 시
+  // dev 모드로 진행 (소셜 로그인은 비활성화되지만 일반 흐름은 정상 동작)
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('[Firebase] 미설정 또는 초기화 실패 — dev 모드 진행: $e');
+  }
 
   runApp(const PathWaveApp());
 }
@@ -46,7 +51,7 @@ class _PathWaveAppState extends State<PathWaveApp> {
       child: MaterialApp.router(
         title: 'PathWave',
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.darkTheme,
+        theme: NeuTheme.themeData,
         routerConfig: _router,
         builder: (context, child) => DevPreviewBar(child: child!),
 

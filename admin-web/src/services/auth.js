@@ -28,6 +28,10 @@ export function isAuthenticated() {
   return !!localStorage.getItem(TOKEN_KEY);
 }
 
+export function getToken() {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
 export async function fetchMe() {
   const data = await apiClient.get('/api/admin/me');
   if (data.admin) localStorage.setItem(USER_KEY, JSON.stringify(data.admin));

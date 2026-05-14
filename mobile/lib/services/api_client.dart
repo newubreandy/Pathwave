@@ -25,7 +25,10 @@ class ApiClient {
   factory ApiClient() => instance;
 
   static const _storage = FlutterSecureStorage();
-  static const _kToken = 'jwt_token';
+  // PR — 3 콘솔 토큰 키 통일 (mobile/provider-web 공통).
+  static const _kToken        = 'pathwave_token';
+  static const _kRefreshToken = 'pathwave_refresh_token';
+  static const _kUser         = 'pathwave_user';
 
   /// PR #60 — 401 발생 시 호출되는 글로벌 콜백.
   /// AuthService 가 등록하면 메모리 토큰/유저를 비우고 notifyListeners() —
@@ -59,6 +62,8 @@ class ApiClient {
     }
     if (r.statusCode == 401) {
       await _storage.delete(key: _kToken);
+      await _storage.delete(key: _kRefreshToken);
+      await _storage.delete(key: _kUser);
       onUnauthorized?.call();
       throw ApiException(401, body['message']?.toString() ?? '인증이 만료되었습니다.');
     }
