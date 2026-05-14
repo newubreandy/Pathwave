@@ -1,22 +1,22 @@
 /* ═══════════════════════════════════════════════════
    PathWave Design Tokens — Provider (시설 관리자)
-   Dark + 보라 (#8B5CF6) 단일 포인트.
-   슈퍼어드민(admin-web) 의 녹색 톤과 시각 구분.
+   Dark + 그린 (#22C55E) 단일 포인트.
+   슈퍼어드민(admin-web) 의 블루 톤과 시각 구분.
    Compliant: Apple HIG + Material Design 3
    ═══════════════════════════════════════════════════ */
 
 :root {
-  /* ── Color: Primary (시설관리자 — 보라 / Violet) ── */
-  --pw-primary:        #8B5CF6;
-  --pw-primary-hover:  #7C3AED;
-  --pw-primary-active: #6D28D9;
-  --pw-primary-light:  rgba(139, 92, 246, 0.18);
-  --pw-primary-subtle: rgba(139, 92, 246, 0.08);
-  --pw-primary-glow:   rgba(139, 92, 246, 0.32);
+  /* ── Color: Primary (시설관리자 — 그린 / Green) ── */
+  --pw-primary:        #22C55E;
+  --pw-primary-hover:  #16A34A;
+  --pw-primary-active: #15803D;
+  --pw-primary-light:  rgba(34, 197, 94, 0.18);
+  --pw-primary-subtle: rgba(34, 197, 94, 0.08);
+  --pw-primary-glow:   rgba(34, 197, 94, 0.32);
 
   /* ── Color: Secondary (보조 — 거의 사용 안 함, 톤 통일) ── */
-  --pw-secondary:       #A78BFA;
-  --pw-secondary-light: rgba(167, 139, 250, 0.16);
+  --pw-secondary:       #4ADE80;
+  --pw-secondary-light: rgba(74, 222, 128, 0.16);
 
   /* ── Color: Neutral (다크 톤) ──
      - gray-950 ~ gray-50 의 의미는 "더 어두움 → 더 밝음" 에서
@@ -42,7 +42,7 @@
   --pw-warning-light:rgba(245, 158, 11, 0.10);
   --pw-success:      #22C55E;
   --pw-success-light:rgba(34, 197, 94, 0.10);
-  --pw-info:         #8B5CF6;            /* primary 와 동일 — 의미 컬러 최소화 */
+  --pw-info:         #22C55E;            /* primary 와 동일 — 의미 컬러 최소화 */
   --pw-info-light:   var(--pw-primary-light);
 
   /* ── Color: Surface & Background (다크 4단계) ──
@@ -82,7 +82,7 @@
 
   /* ── Status badge (admin-web 과 동일 명명) ── */
   --pw-badge-active-bg:   var(--pw-primary-light);
-  --pw-badge-active-fg:   #C4B5FD;          /* violet-300 */
+  --pw-badge-active-fg:   #86EFAC;          /* violet-300 */
   --pw-badge-neutral-bg:  rgba(255,255,255,0.04);
   --pw-badge-neutral-fg:  var(--pw-text-secondary);
   --pw-badge-inactive-bg: var(--pw-error-light);
@@ -208,17 +208,17 @@
    <html data-theme="provider"> 가 없어도 :root 기본값으로 동작. */
 :root,
 [data-theme="provider"] {
-  --pw-accent:           #8B5CF6;
-  --pw-accent-hover:     #7C3AED;
-  --pw-accent-soft:      rgba(139, 92, 246, 0.14);
-  --pw-accent-strong:    rgba(139, 92, 246, 0.42);
-  --pw-accent-text:      #C4B5FD;          /* on-surface text accent */
-  --pw-accent-gradient:  linear-gradient(135deg, #8B5CF6 0%, #6D5DFB 50%, #A855F7 100%);
+  --pw-accent:           #22C55E;
+  --pw-accent-hover:     #16A34A;
+  --pw-accent-soft:      rgba(34, 197, 94, 0.14);
+  --pw-accent-strong:    rgba(34, 197, 94, 0.42);
+  --pw-accent-text:      #86EFAC;          /* on-surface text accent */
+  --pw-accent-gradient:  linear-gradient(135deg, #22C55E 0%, #10B981 50%, #059669 100%);
 
   /* 배경 — 운영툴 톤. radial 1회, 강도 0.18 정도 (요청 0.28 → 톤다운).
      상단 좌측에 은은한 보라 빛만, 나머지는 #07050D → #0B0814. */
   --pw-page-bg:
-    radial-gradient(circle at 18% -8%, rgba(139, 92, 246, 0.18), transparent 36%),
+    radial-gradient(circle at 18% -8%, rgba(34, 197, 94, 0.18), transparent 36%),
     linear-gradient(180deg, #0E0820 0%, #07050D 60%, #07050D 100%);
 }
 

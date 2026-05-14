@@ -333,7 +333,7 @@ textarea.input-modern {
   display: block;
   width: 100%;
   padding: 0.9rem 1rem;
-  background: var(--pw-primary, #8B5CF6);
+  background: var(--pw-primary, #22C55E);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -345,7 +345,7 @@ textarea.input-modern {
 }
 
 .validation-modal-confirm:hover {
-  background: var(--pw-primary-strong, #7C3AED);
+  background: var(--pw-primary-strong, #16A34A);
 }
 
 .validation-modal-confirm:active {
@@ -353,7 +353,7 @@ textarea.input-modern {
 }
 
 .validation-modal-confirm:focus-visible {
-  outline: 2px solid var(--pw-primary, #8B5CF6);
+  outline: 2px solid var(--pw-primary, #22C55E);
   outline-offset: 2px;
 }
 

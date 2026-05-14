@@ -306,8 +306,8 @@
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: rgba(139, 92, 246, 0.12);
-  color: var(--pw-primary, #8B5CF6);
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--pw-primary, #22C55E);
   display: inline-flex;
   align-items: center;
   justify-content: center;

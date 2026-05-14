@@ -19,7 +19,7 @@
   width: 100%; max-width: 320px;
   margin: 0 auto var(--pw-space-4);
   padding: var(--pw-space-6) var(--pw-space-5);
-  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
   border-radius: var(--pw-radius-lg);
   color: white; min-height: 140px;
   display: flex; flex-direction: column; justify-content: space-between;
