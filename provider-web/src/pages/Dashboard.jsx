@@ -140,7 +140,7 @@ const Dashboard = () => {
       <div className="dashboard-stats">
         <StatCard
           icon={Bell} label="미확인 알림" value={`${getUnreadCount()}개`}
-          color="#8B5CF6" trend={null}
+          color={CHART_COLORS.primary} trend={null}
           to="/dashboard/notifications?tab=inbox"
         />
         <StatCard
