@@ -77,7 +77,7 @@ class _NeuButtonState extends State<NeuButton> {
       case NeuButtonVariant.primary:
         return const LinearGradient(
           begin: Alignment.topLeft, end: Alignment.bottomRight,
-          colors: [Color(0xFF8B5CF6), NeuTheme.primary],
+          colors: [NeuTheme.accentLight, NeuTheme.primary],
         );
       case NeuButtonVariant.accent:
         return const LinearGradient(

@@ -25,10 +25,10 @@
   --text-hint:   #5C6170;
 
   /* ── 포인트 컬러 — 녹색만 ───────────────────────────────── */
-  --accent:        #22C55E;
-  --accent-hover:  #16A34A;
-  --accent-soft:   rgba(34,197,94,0.10);
-  --accent-glow:   rgba(34,197,94,0.30);
+  --accent:        #2563EB;
+  --accent-hover:  #1D4ED8;
+  --accent-soft:   rgba(37,99,235,0.10);
+  --accent-glow:   rgba(37,99,235,0.30);
 
   /* ── 상태 (의미 색상은 최소화 — 빨강은 위험에만 한정) ────── */
   --danger:        #EF4444;
@@ -71,10 +71,10 @@
   --pw-accent:         var(--accent);
   --pw-accent-hover:   var(--accent-hover);
   --pw-accent-soft:    var(--accent-soft);
-  --pw-accent-strong:  rgba(34, 197, 94, 0.42);
-  --pw-accent-text:    #86EFAC;             /* on-surface accent text */
+  --pw-accent-strong:  rgba(37, 99, 235, 0.42);
+  --pw-accent-text:    #BFDBFE;             /* on-surface accent text */
   --pw-accent-gradient:
-    linear-gradient(135deg, #22C55E 0%, #10B981 50%, #059669 100%);
+    linear-gradient(135deg, #2563EB 0%, #1D4ED8 50%, #1E40AF 100%);
 
   /* 카드/표면 — admin 은 더 밀도 높게 (반투명 white 살짝 약하게) */
   --pw-surface-1:      rgba(255, 255, 255, 0.035);
@@ -92,7 +92,7 @@
      관제 화면처럼 ‘조용한’ 톤. */
   --pw-page-bg-base:   #06090A;
   --pw-page-bg:
-    radial-gradient(circle at 18% -8%, rgba(34, 197, 94, 0.06), transparent 38%),
+    radial-gradient(circle at 18% -8%, rgba(37, 99, 235, 0.06), transparent 38%),
     linear-gradient(180deg, #08110B 0%, #06090A 60%, #06090A 100%);
 
   /* 시맨틱 */
@@ -107,13 +107,13 @@
    <html data-theme="admin"> 을 쓰도록 내부적으로 동작.
    따라서 명시적으로 attribute 가 붙어도 같은 값으로 풀림. */
 [data-theme="admin"] {
-  --pw-accent:         #22C55E;
-  --pw-accent-soft:    rgba(34, 197, 94, 0.10);
-  --pw-accent-strong:  rgba(34, 197, 94, 0.42);
-  --pw-accent-text:    #86EFAC;
+  --pw-accent:         #2563EB;
+  --pw-accent-soft:    rgba(37, 99, 235, 0.10);
+  --pw-accent-strong:  rgba(37, 99, 235, 0.42);
+  --pw-accent-text:    #BFDBFE;
   --pw-page-bg-base:   #06090A;
   --pw-page-bg:
-    radial-gradient(circle at 18% -8%, rgba(34, 197, 94, 0.06), transparent 38%),
+    radial-gradient(circle at 18% -8%, rgba(37, 99, 235, 0.06), transparent 38%),
     linear-gradient(180deg, #08110B 0%, #06090A 60%, #06090A 100%);
 }
 
@@ -123,7 +123,7 @@ html, body, #root {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+  font-family: 'Noto Sans KR', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
   /* 단색 fallback — 그라데이션 미지원 환경 대비. 기존 색 유지. */
   background-color: var(--bg);
   color: var(--text);
@@ -210,7 +210,7 @@ input:focus, select:focus, textarea:focus {
 }
 .btn:active { transform: scale(0.985); }
 .btn-primary {
-  background: var(--accent); color: #052e15;
+  background: var(--accent); color: #FFFFFF;
   font-weight: 600;
 }
 .btn-primary:hover { background: var(--accent-hover); }

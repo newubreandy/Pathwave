@@ -1,34 +1,37 @@
 import 'package:flutter/material.dart';
 
-/// PR #67 — Neumorphic 디자인 시스템 토큰.
+/// PR #67 / 디자인 1차 통일 — Dark + 보라 (#8B5CF6) 단일 포인트.
 ///
-/// 핵심 색상은 light gray base (`#E6E9EF`) + soft inner/outer shadow.
+/// PathWave 3 콘솔 색 분리:
+/// - mobile (사용자) = 보라 #8B5CF6
+/// - provider-web (시설관리자) = 그린 #22C55E
+/// - admin-web (슈퍼어드민) = 블루 #2563EB
+///
 /// 모든 컴포넌트가 이 토큰만 참조해야 톤 통일 유지.
+/// 1차 단계: 색만 다크 + 보라로 정렬. 구조/네이밍은 유지.
 class NeuTheme {
-  // ── 베이스 ────────────────────────────────────────────────────
-  static const Color background = Color(0xFFE0E5EC);   // 메인 배경
-  static const Color surface    = Color(0xFFE6E9EF);   // 카드 (= base 와 거의 같음)
-  static const Color surfaceLight = Color(0xFFEDF1F7); // 살짝 밝은 카드
-  static const Color border     = Color(0xFFD1D9E6);   // 경계선 (subtle)
+  // ── 베이스 (다크 4단계 — provider/admin 토큰과 정렬) ───────────
+  static const Color background   = Color(0xFF0B0B12);   // 페이지 배경
+  static const Color surface      = Color(0xFF14141C);   // 카드
+  static const Color surfaceLight = Color(0xFF1A1A24);   // 카드 inset / 살짝 밝게
+  static const Color border       = Color(0xFF1F1F2B);   // 경계선 (subtle)
 
   // ── 텍스트 ─────────────────────────────────────────────────────
-  static const Color textPrimary   = Color(0xFF2D3748);   // 진한 회색
-  static const Color textSecondary = Color(0xFF718096);
-  static const Color textHint      = Color(0xFFA0AEC0);
+  static const Color textPrimary   = Color(0xFFF2F3F7);  // 밝은 메인
+  static const Color textSecondary = Color(0xFF8A91A3);
+  static const Color textHint      = Color(0xFF5A6072);
 
-  // ── 액센트 (선택적 컬러 강조) ──────────────────────────────────
-  static const Color accent      = Color(0xFF22C55E);  // 토글 ON / 주요 CTA
-  static const Color accentLight = Color(0xFF4ADE80);
-  static const Color primary     = Color(0xFF7C3AED);  // 보라 (브랜드)
+  // ── 액센트 (mobile = 보라 포인트) ──────────────────────────────
+  static const Color accent      = Color(0xFF8B5CF6);   // 주요 CTA / 토글 ON
+  static const Color accentLight = Color(0xFFA78BFA);
+  static const Color primary     = Color(0xFF8B5CF6);   // 보라 (브랜드) — accent 와 동일 톤
   static const Color error       = Color(0xFFEF4444);
   static const Color warning     = Color(0xFFF59E0B);
 
-  // ── 그림자 (Neumorphism 핵심) ───────────────────────────────────
-  /// 빛이 좌상단에서 들어오는 가정 — 좌상단 밝게, 우하단 어둡게
-  static const Color shadowDark  = Color(0xFFA3B1C6);  // 우하단
-  static const Color shadowLight = Color(0xFFFFFFFF);  // 좌상단
+  // ── 그림자 (Dark Neumorphism — 좌상단 살짝 밝은 회색, 우하단 검정) ─
+  static const Color shadowDark  = Color(0xFF000000);
+  static const Color shadowLight = Color(0xFF2A2A38);
 
-  // 외부로 튀어나온(Convex) 그림자
   static List<BoxShadow> outerShadow({double distance = 6, double blur = 12}) => [
     BoxShadow(
       color: shadowDark,
@@ -42,16 +45,14 @@ class NeuTheme {
     ),
   ];
 
-  // 안으로 들어간(Concave / Pressed) 효과 — Container BoxShadow 로는 inset 직접 표현 불가
-  // → Stack + ClipRRect + 그라디언트로 구현하거나 가벼운 outer shadow 절반만 사용
   static List<BoxShadow> pressedShadow({double distance = 2, double blur = 4}) => [
     BoxShadow(
-      color: shadowDark.withValues(alpha: 0.3),
+      color: shadowDark.withValues(alpha: 0.45),
       offset: Offset(distance, distance),
       blurRadius: blur,
     ),
     BoxShadow(
-      color: shadowLight.withValues(alpha: 0.6),
+      color: shadowLight.withValues(alpha: 0.55),
       offset: Offset(-distance, -distance),
       blurRadius: blur,
     ),
@@ -62,20 +63,22 @@ class NeuTheme {
   static const BorderRadius radiusL  = BorderRadius.all(Radius.circular(28));
   static const BorderRadius radiusXL = BorderRadius.all(Radius.circular(40));
 
-  // ── ThemeData (light) ──────────────────────────────────────────
+  // ── ThemeData (dark) ───────────────────────────────────────────
   static ThemeData get themeData => ThemeData(
     useMaterial3: true,
-    brightness: Brightness.light,
+    brightness: Brightness.dark,
     scaffoldBackgroundColor: background,
-    colorScheme: const ColorScheme.light(
+    colorScheme: const ColorScheme.dark(
       primary: primary,
       secondary: accent,
       surface: surface,
       error: error,
       onPrimary: Colors.white,
+      onSecondary: Colors.white,
       onSurface: textPrimary,
+      onError: Colors.white,
     ),
-    fontFamily: 'Pretendard',
+    fontFamily: 'Noto Sans KR',
     textTheme: const TextTheme(
       displaySmall:    TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: textPrimary),
       headlineSmall:   TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: textPrimary),

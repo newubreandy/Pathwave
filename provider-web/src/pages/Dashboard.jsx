@@ -19,7 +19,7 @@ const colorToVariant = (color) => {
   if (c.startsWith('#22') || c.startsWith('#10') || c.startsWith('#05')) return 'success';
   if (c.startsWith('#f5') || c.startsWith('#fb')) return 'warning';
   if (c.startsWith('#ef') || c.startsWith('#dc')) return 'danger';
-  return 'accent';  /* default = 보라 (provider) */
+  return 'accent';  /* default = 그린 (provider) */
 };
 
 /* ═══════════════════════════════════════════════════
@@ -46,18 +46,18 @@ const REVENUE_DATA = [
   { month: '4월', wifi: 1024, event: 24, push: 12 },
 ];
 
-// 쿠폰 사용률 — 보라(사용) + 무채(미사용/만료) 톤
+// 쿠폰 사용률 — 그린(사용) + 무채(미사용/만료) 톤
 const COUPON_DATA = [
-  { name: '사용',   value: 89, color: '#8B5CF6' },
+  { name: '사용',   value: 89, color: '#22C55E' },
   { name: '미사용', value: 45, color: '#3A3A46' },
   { name: '만료',   value: 22, color: '#5A6072' },
 ];
 
-// 차트 색상 — 다크 + 보라 단일 포인트 톤 (provider 시설관리자)
+// 차트 색상 — 다크 + 그린 단일 포인트 톤 (provider 시설관리자)
 const CHART_COLORS = {
-  primary: '#8B5CF6',          // 보라 (--pw-primary)
-  primaryLight: 'rgba(139,92,246,0.18)',
-  secondary: '#A78BFA',         // 옅은 보라
+  primary: '#22C55E',          // 그린 (--pw-primary)
+  primaryLight: 'rgba(34,197,94,0.18)',
+  secondary: '#4ADE80',         // 옅은 그린
   warning: '#5A6072',           // 무채 (강조 컬러 최소화)
   gray: '#5A6072',
 };

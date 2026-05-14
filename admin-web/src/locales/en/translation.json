@@ -1,0 +1,36 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "close": "Close",
+    "search": "Search",
+    "loading": "Loading…",
+    "empty": "No data.",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "auth": {
+    "login": {
+      "title": "PathWave Operator Console",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "hint": "Super Admin accounts only.",
+      "failed": "Sign-in failed."
+    }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "beacons": "Beacons",
+    "approvals": "Owner approvals",
+    "battery": "Battery",
+    "announcements": "Announcements",
+    "payments": "Payments / Subscriptions",
+    "policies": "Terms / Policies",
+    "logout": "Log out"
+  }
+}
