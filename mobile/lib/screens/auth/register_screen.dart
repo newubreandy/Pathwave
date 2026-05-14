@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/social_login_row.dart';
 import 'consent_screen.dart';
 
 /// 5단계 회원가입: 이메일 → 코드 → 생년 (+미성년자면 부모 초대) → 비번 → 동의 → 가입.
@@ -197,26 +198,80 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  List<Widget> _stepEmail() => [
-    Text('이메일 입력', style: Theme.of(context).textTheme.headlineMedium),
-    const SizedBox(height: 8),
-    const Text('이메일 인증을 통해 계정을 만듭니다.',
-      style: TextStyle(color: AppTheme.textSecondary)),
-    const SizedBox(height: 24),
-    TextField(
-      controller: _emailCtrl,
-      keyboardType: TextInputType.emailAddress,
-      decoration: const InputDecoration(
-        hintText: 'example@email.com',
-        prefixIcon: Icon(Icons.email_outlined),
+  Future<void> _socialRegister(
+      Future<Map<String, dynamic>> Function() fn,
+      String fallbackErr) async {
+    setState(() { _busy = true; _error = null; _info = null; });
+    try {
+      final res = await fn();
+      if (!mounted) return;
+      if (res['success'] == true) {
+        // 소셜 로그인 성공 — 백엔드가 신규/기존 알아서 처리. 바로 홈으로.
+        context.go('/home');
+      } else {
+        setState(() => _error = res['message']?.toString() ?? fallbackErr);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  List<Widget> _stepEmail() {
+    final auth = context.read<AuthService>();
+    return [
+      Text('가입 방법 선택', style: Theme.of(context).textTheme.headlineMedium),
+      const SizedBox(height: 8),
+      const Text('소셜 로그인 또는 이메일로 가입할 수 있습니다.',
+        style: TextStyle(color: AppTheme.textSecondary)),
+      const SizedBox(height: 24),
+
+      // 5종 소셜 가입 (PR #68)
+      SocialLoginRow(
+        busy: _busy,
+        onGoogle: () => _socialRegister(
+          () => auth.signInWithGoogle(), 'Google 가입 실패.'),
+        onApple: () => _socialRegister(
+          () => auth.signInWithApple(), 'Apple 가입 실패.'),
+        onFacebook: () => _socialRegister(
+          () => auth.signInWithFacebook(), 'Facebook 가입 실패.'),
+        onKakao: () => _socialRegister(
+          () => auth.signInWithKakao(), '카카오 가입 실패.'),
+        onNaver: () => _socialRegister(
+          () => auth.signInWithNaver(), '네이버 가입 실패.'),
       ),
-    ),
-    const SizedBox(height: 20),
-    ElevatedButton(
-      onPressed: _busy ? null : _sendCode,
-      child: _busy ? _spinner() : const Text('인증 코드 받기'),
-    ),
-  ];
+
+      const SizedBox(height: 20),
+      const Row(
+        children: [
+          Expanded(child: Divider(color: AppTheme.border)),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            child: Text('또는 이메일로 가입',
+              style: TextStyle(color: AppTheme.textHint, fontSize: 12)),
+          ),
+          Expanded(child: Divider(color: AppTheme.border)),
+        ],
+      ),
+      const SizedBox(height: 20),
+
+      TextField(
+        controller: _emailCtrl,
+        keyboardType: TextInputType.emailAddress,
+        decoration: const InputDecoration(
+          hintText: 'example@email.com',
+          prefixIcon: Icon(Icons.email_outlined),
+        ),
+      ),
+      const SizedBox(height: 16),
+      ElevatedButton(
+        onPressed: _busy ? null : _sendCode,
+        child: _busy ? _spinner() : const Text('인증 코드 받기'),
+      ),
+    ];
+  }
 
   List<Widget> _stepCode() => [
     Text('인증 코드 입력', style: Theme.of(context).textTheme.headlineMedium),

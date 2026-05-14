@@ -12,12 +12,22 @@ class AuthService extends ChangeNotifier {
   static String get _baseUrl => ApiConfig.baseUrl;
   static const _storage = FlutterSecureStorage();
 
+  // 3 콘솔 토큰 키 통일 (provider-web localStorage 와 동일 명명).
+  static const _kToken        = 'pathwave_token';
+  static const _kRefreshToken = 'pathwave_refresh_token';
+  static const _kUser         = 'pathwave_user';
+
   String? _token;
   Map<String, dynamic>? _user;
 
   bool get isLoggedIn => _token != null;
   String? get token => _token;
   Map<String, dynamic>? get user => _user;
+
+  // 3 콘솔 공개 API 시그니처 통일 (provider-web AuthService 와 1:1).
+  String? getToken() => _token;
+  Map<String, dynamic>? getCurrentUser() => _user;
+  bool isAuthenticated() => _token != null;
 
   AuthService() {
     // PR #60 — ApiClient 가 401 을 받으면 메모리 상태 비우고 redirect 트리거
@@ -35,8 +45,13 @@ class AuthService extends ChangeNotifier {
 
   // ── 초기화: 저장된 토큰 로드 ────────────────────────────────────
   Future<void> _loadToken() async {
-    _token = await _storage.read(key: 'jwt_token');
+    _token = await _storage.read(key: _kToken);
     if (_token != null) {
+      // user 캐시 hydrate — provider-web 의 localStorage('pathwave_user') 와 동일 패턴.
+      final cachedUser = await _storage.read(key: _kUser);
+      if (cachedUser != null) {
+        try { _user = jsonDecode(cachedUser) as Map<String, dynamic>; } catch (_) {}
+      }
       await _fetchMe();
     }
     notifyListeners();
@@ -102,7 +117,7 @@ class AuthService extends ChangeNotifier {
     );
     final data = jsonDecode(res.body);
     if (data['success'] == true) {
-      await _saveToken(data['token'], data['user']);
+      await _saveToken(data['token'], data['user'], refreshToken: data['refresh_token']);
     }
     return data;
   }
@@ -116,7 +131,7 @@ class AuthService extends ChangeNotifier {
     );
     final data = jsonDecode(res.body);
     if (data['success'] == true) {
-      await _saveToken(data['token'], data['user']);
+      await _saveToken(data['token'], data['user'], refreshToken: data['refresh_token']);
     }
     return data;
   }
@@ -155,6 +170,51 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  // ── Facebook / Kakao / Naver (PR #68) ───────────────────────────
+  // 운영 활성화 절차 (각 Provider 별):
+  //   Facebook: developers.facebook.com 앱 생성 → flutter_facebook_auth 패키지 추가
+  //             + iOS Info.plist FacebookAppID, Android strings.xml facebook_app_id
+  //   Kakao:    developers.kakao.com 앱 생성 → kakao_flutter_sdk 패키지 추가
+  //             + iOS LSApplicationQueriesSchemes (kakaokompassauth, kakaolink)
+  //             + Android NativeAppKey, AndroidManifest.xml 의 redirect scheme
+  //   Naver:    developers.naver.com 애플리케이션 등록 → flutter_naver_login 패키지 추가
+  //             + iOS Info.plist (CFBundleURLSchemes), Android AndroidManifest.xml
+  // 백엔드는 `/api/auth/social` 의 provider 필드만 키 매칭하면 받음.
+  Future<Map<String, dynamic>> signInWithFacebook() async {
+    return _stubSocialNotice('facebook', 'Facebook');
+  }
+
+  Future<Map<String, dynamic>> signInWithKakao() async {
+    return _stubSocialNotice('kakao', '카카오');
+  }
+
+  Future<Map<String, dynamic>> signInWithNaver() async {
+    return _stubSocialNotice('naver', '네이버');
+  }
+
+  Future<Map<String, dynamic>> _stubSocialNotice(String key, String label) async {
+    return {
+      'success': false,
+      'message': '$label 로그인은 Developer Console 에서 API 키 발급 + '
+                 '네이티브 설정 (Info.plist / AndroidManifest.xml) 후 활성됩니다.\n'
+                 '코드 흐름은 _socialLogin(idToken, "$key") 로 백엔드에 전달.',
+    };
+  }
+
+  // ── 둘러보기 (PR #68) — 로그인 없이 화면 미리보기 ────────────
+  /// 가짜 토큰 + 익명 사용자를 메모리에 주입.
+  /// 실 API 호출은 401 로 실패하지만 UI 네비게이션/렌더링은 가능.
+  Future<void> enterPreviewMode() async {
+    _token = 'preview-mode-token';
+    _user  = {
+      'id': 0,
+      'email': 'preview@dev.local',
+      'name': '둘러보기',
+      'provider': 'preview',
+    };
+    notifyListeners();
+  }
+
   // ── 소셜 로그인 → 백엔드 ─────────────────────────────────────────
   Future<Map<String, dynamic>> _socialLogin(String idToken, String provider) async {
     final res = await http.post(
@@ -164,7 +224,7 @@ class AuthService extends ChangeNotifier {
     );
     final data = jsonDecode(res.body);
     if (data['success'] == true) {
-      await _saveToken(data['token'], data['user']);
+      await _saveToken(data['token'], data['user'], refreshToken: data['refresh_token']);
     }
     return data;
   }
@@ -224,7 +284,9 @@ class AuthService extends ChangeNotifier {
 
   // ── 로그아웃 ────────────────────────────────────────────────────
   Future<void> logout() async {
-    await _storage.delete(key: 'jwt_token');
+    await _storage.delete(key: _kToken);
+    await _storage.delete(key: _kRefreshToken);
+    await _storage.delete(key: _kUser);
     await GoogleSignIn().signOut();
     await FirebaseAuth.instance.signOut();
     _token = null;
@@ -233,10 +295,18 @@ class AuthService extends ChangeNotifier {
   }
 
   // ── 내부 헬퍼 ───────────────────────────────────────────────────
-  Future<void> _saveToken(String token, Map<String, dynamic> user) async {
+  Future<void> _saveToken(
+    String token,
+    Map<String, dynamic> user, {
+    String? refreshToken,
+  }) async {
     _token = token;
     _user  = user;
-    await _storage.write(key: 'jwt_token', value: token);
+    await _storage.write(key: _kToken, value: token);
+    await _storage.write(key: _kUser,  value: jsonEncode(user));
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await _storage.write(key: _kRefreshToken, value: refreshToken);
+    }
     notifyListeners();
   }
 
