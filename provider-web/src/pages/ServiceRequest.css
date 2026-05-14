@@ -139,9 +139,10 @@
   line-height: 1.6;
 }
 
+/* ※ 와 본문 사이 한 칸 띄우기 (사용자 요구 2026-05-11) — padding 으로 공간 확보. */
 .sr-cat-bullets li {
   position: relative;
-  padding-left: var(--pw-space-3);
+  padding-left: var(--pw-space-6);
 }
 
 .sr-cat-bullets li::before {
@@ -294,9 +295,10 @@
   white-space: pre-line;
 }
 
+/* ※ 와 본문 사이 한 칸 띄우기 (사용자 요구 2026-05-11). */
 .sr-notices li {
   position: relative;
-  padding-left: var(--pw-space-3);
+  padding-left: var(--pw-space-6);
 }
 
 .sr-notices li::before {

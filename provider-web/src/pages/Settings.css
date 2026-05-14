@@ -153,6 +153,16 @@
   .settings-row-desc { font-size: 20px; }
 }
 
+/* 라벨 아래 작은 안내 — 라벨/값(22/300/white) 톤이 어울리지 않는 안내문용
+   (사용자 요구 2026-05-11). 사업자정보 변경/회원탈퇴 등 액션 행에서 사용. */
+.settings-row-hint {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--pw-text-hint);
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
 /* profile-section-title 은 섹션 헤더 (회사정보 / 계정정보 등) — display 톤 유지. */
 .settings-row-label.profile-section-title {
   font-size: 18px !important;
@@ -546,6 +556,79 @@ body:has(.settings-modal-overlay) .main-viewport {
 
 .settings-modal-btn.danger:hover {
   opacity: 0.9;
+}
+
+/* ── BusinessInfoModal — 안내 + 성공 화면 ── */
+.biz-modal-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--pw-space-2);
+  padding: var(--pw-space-3) var(--pw-space-3);
+  margin-bottom: var(--pw-space-4);
+  background: var(--pw-surface-1);
+  border: 1px solid var(--pw-surface-line);
+  border-radius: var(--pw-radius-sm);
+  color: var(--pw-text-hint);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.biz-modal-notice svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--pw-text-hint);
+}
+
+.biz-modal-success {
+  text-align: center;
+  padding: var(--pw-space-8) var(--pw-space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--pw-space-3);
+}
+.biz-modal-success-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--pw-accent-soft);
+  color: var(--pw-accent);
+  font-size: 24px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.biz-modal-success-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--pw-text);
+}
+.biz-modal-success-desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--pw-text-hint);
+  line-height: 1.55;
+}
+
+/* ── CardChangeModal — 유효기간 + CVC 2-column grid ── */
+.card-change-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--pw-space-3);
+}
+.card-change-expiry-row {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-2);
+}
+.card-change-expiry-row .settings-modal-input {
+  text-align: center;
+}
+.card-change-slash {
+  color: var(--pw-text-hint);
+  font-size: 16px;
+  font-weight: 400;
 }
 
 /* ── Mobile ── */

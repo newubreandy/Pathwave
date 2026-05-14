@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Plus, Check, Wifi, Bell, Gift, CreditCard, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Check, Wifi, Bell, Gift, CreditCard, ArrowLeft, ArrowRight, Loader2, Download, X, Info } from 'lucide-react';
+import AuthService from '../services/auth/AuthService';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
@@ -8,8 +9,28 @@ import SectionTabs from '../components/common/SectionTabs';
 import './PaymentManagement.css';
 
 /* ── Mock Data ── */
-const MOCK_CARD = { name: '나라카드', number: '****-****-****-6789' };
+const MOCK_CARD = {
+  name: '나라카드',
+  number: '****-****-****-6789',
+  expiry: '12/27',          // MM/YY
+  autoPay: true,
+};
 const MOCK_EMAIL = 'ceo@hotelh.com';
+
+/* 다음 결제 요약 mock — 실제 GET /api/billing/next 응답으로 대체.
+   - nextDate ISO 문자열
+   - amount 원
+   - cycle: 결제 주기 라벨
+   - breakdown: 서비스별 분해 (라벨 + 금액) */
+const MOCK_BILLING_NEXT = {
+  nextDate: '2026-06-12',
+  amount: 1024100,
+  cycle: '월간 정기결제',
+  breakdown: [
+    { service: 'wifi',  label: 'wifi 132개',     amount: 1016000 },
+    { service: 'push',  label: '알림 발송 270건', amount: 8100 },
+  ],
+};
 
 const MOCK_SERVICES = [
   { id: 'wifi', name: 'wifi 서비스', label: 'Wifi', icon: Wifi, color: '#8B5CF6',
@@ -311,12 +332,203 @@ const ServiceApplyFlow = ({ onBack, onComplete }) => {
 };
 
 /* ══════════════════════════════════════════
+   카드 교체 모달 (사용자 요구 2026-05-11)
+   카드 정보 입력 → mock DB 저장 + 슈퍼어드민 변경 이력 저장.
+   실서비스: PG 토큰화 (카드번호/CVC 직접 보관 X) + 백엔드 audit log.
+   ══════════════════════════════════════════ */
+function CardChangeModal({ currentCard, onClose }) {
+  const [form, setForm] = useState({
+    issuer: '',          // 카드사
+    number: '',          // 16자리
+    expMonth: '',        // MM
+    expYear: '',         // YY
+    cvc: '',             // 3자리
+    holder: '',          // 카드 소유자
+  });
+  const [error, setError] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  const onChange = (k) => (e) => {
+    let v = e.target.value;
+    if (k === 'number') v = v.replace(/[^0-9]/g, '').slice(0, 16);
+    else if (k === 'expMonth' || k === 'expYear' || k === 'cvc') v = v.replace(/[^0-9]/g, '');
+    if (k === 'expMonth') v = v.slice(0, 2);
+    if (k === 'expYear')  v = v.slice(0, 2);
+    if (k === 'cvc')      v = v.slice(0, 3);
+    setForm((f) => ({ ...f, [k]: v }));
+  };
+
+  const submit = () => {
+    setError('');
+    if (!form.issuer.trim())                  return setError('카드사를 입력해주세요.');
+    if (form.number.length !== 16)            return setError('카드번호 16자리를 입력해주세요.');
+    if (!/^\d{2}$/.test(form.expMonth) || +form.expMonth < 1 || +form.expMonth > 12)
+                                              return setError('유효한 만료월(MM)을 입력해주세요.');
+    if (!/^\d{2}$/.test(form.expYear))        return setError('만료년(YY) 2자리를 입력해주세요.');
+    if (form.cvc.length !== 3)                return setError('CVC 3자리를 입력해주세요.');
+    if (!form.holder.trim())                  return setError('카드 소유자명을 입력해주세요.');
+
+    // ── mock 저장 ──────────────────────────────────────────
+    // 1) 결제 카드 정보 (요약: 카드사 + 마스킹 번호 + 만료) — localStorage
+    const masked = `****-****-****-${form.number.slice(-4)}`;
+    const newCard = {
+      name: form.issuer,
+      number: masked,
+      expiry: `${form.expMonth}/${form.expYear}`,
+      autoPay: currentCard?.autoPay ?? false,
+    };
+    try {
+      localStorage.setItem('pathwave_payment_card', JSON.stringify(newCard));
+    } catch {/* 저장 실패 무시 — UI 에는 영향 없음 */}
+
+    // 2) 슈퍼어드민 변경 이력 audit log
+    //    실서비스: POST /api/admin/audit/payment-card-change
+    //    여기선 콘솔 + localStorage 큐로 보존 (mock).
+    const user = AuthService.getCurrentUser();
+    const auditEntry = {
+      ts: new Date().toISOString(),
+      actor: user?.id || user?.email || 'unknown',
+      action: 'payment_card_change',
+      before: currentCard ? { name: currentCard.name, number: currentCard.number } : null,
+      after:  { name: newCard.name, number: newCard.number, expiry: newCard.expiry },
+    };
+    try {
+      const queue = JSON.parse(localStorage.getItem('pathwave_audit_queue') || '[]');
+      queue.push(auditEntry);
+      localStorage.setItem('pathwave_audit_queue', JSON.stringify(queue));
+    } catch {/* ignore */}
+    // 디버깅용 — 실서비스 제거
+    console.info('[audit] payment_card_change', auditEntry);
+
+    setSubmitted(true);
+    setTimeout(() => onClose(), 1500);
+  };
+
+  return (
+    <div className="settings-modal-overlay" onClick={onClose}>
+      <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="settings-modal-header">
+          <h2 className="settings-modal-title">카드 교체</h2>
+          <button className="settings-modal-close" onClick={onClose} aria-label="닫기">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="settings-modal-body">
+          {submitted ? (
+            <div className="biz-modal-success">
+              <div className="biz-modal-success-icon">✓</div>
+              <p className="biz-modal-success-title">카드가 변경되었습니다</p>
+              <p className="biz-modal-success-desc">
+                다음 결제부터 새 카드로 청구됩니다. 변경 이력은 슈퍼어드민에 기록됩니다.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="biz-modal-notice">
+                <Info size={14} aria-hidden="true" />
+                <span>카드 정보는 PG사 보안 정책에 따라 토큰화되어 저장되며, 변경 이력은 슈퍼어드민에 기록됩니다.</span>
+              </div>
+
+              <div className="settings-modal-field">
+                <label className="settings-modal-label">카드사</label>
+                <input
+                  type="text"
+                  className="settings-modal-input"
+                  value={form.issuer}
+                  onChange={onChange('issuer')}
+                  placeholder="예: 나라카드"
+                />
+              </div>
+
+              <div className="settings-modal-field">
+                <label className="settings-modal-label">카드 번호</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className="settings-modal-input"
+                  value={form.number}
+                  onChange={onChange('number')}
+                  placeholder="0000000000000000"
+                  maxLength={16}
+                />
+              </div>
+
+              <div className="card-change-grid">
+                <div className="settings-modal-field">
+                  <label className="settings-modal-label">유효기간</label>
+                  <div className="card-change-expiry-row">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className="settings-modal-input"
+                      value={form.expMonth}
+                      onChange={onChange('expMonth')}
+                      placeholder="MM"
+                      maxLength={2}
+                    />
+                    <span className="card-change-slash">/</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className="settings-modal-input"
+                      value={form.expYear}
+                      onChange={onChange('expYear')}
+                      placeholder="YY"
+                      maxLength={2}
+                    />
+                  </div>
+                </div>
+
+                <div className="settings-modal-field">
+                  <label className="settings-modal-label">CVC</label>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    className="settings-modal-input"
+                    value={form.cvc}
+                    onChange={onChange('cvc')}
+                    placeholder="3자리"
+                    maxLength={3}
+                  />
+                </div>
+              </div>
+
+              <div className="settings-modal-field">
+                <label className="settings-modal-label">카드 소유자</label>
+                <input
+                  type="text"
+                  className="settings-modal-input"
+                  value={form.holder}
+                  onChange={onChange('holder')}
+                  placeholder="카드에 표시된 이름"
+                />
+              </div>
+
+              {error && <p className="settings-modal-error">{error}</p>}
+
+              <div className="settings-modal-actions">
+                <button className="settings-modal-btn cancel" onClick={onClose}>취소</button>
+                <button className="settings-modal-btn confirm" onClick={submit}>변경하기</button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════
    결제정보 탭
    ══════════════════════════════════════════ */
 const PaymentInfoTab = ({ card, email, services, onApply }) => {
+  const navigate = useNavigate();
   const [modal, setModal] = useState({ open: false, title: '', desc: '', onConfirm: null });
-  const [editEmail, setEditEmail] = useState(false);
-  const [emailValue, setEmailValue] = useState(email);
+  // 자동결제 토글 — 로컬 상태 mock. 실서비스에선 PUT /api/billing/auto-pay.
+  const [autoPay, setAutoPay] = useState(card?.autoPay ?? false);
+  // 카드 교체 모달 — 카드 정보 입력 후 mock DB 저장 + 슈퍼어드민 이력.
+  const [showCardChange, setShowCardChange] = useState(false);
 
   const closeModal = () => setModal(m => ({ ...m, open: false }));
 
@@ -332,56 +544,120 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
     });
   };
 
+  // 다음 결제 D-day / 표시 문자열
+  const nextDate = new Date(MOCK_BILLING_NEXT.nextDate);
+  const dDay = Math.ceil((nextDate.getTime() - Date.now()) / 86_400_000);
+  const nextDateLabel = `${nextDate.getFullYear()}.${String(nextDate.getMonth() + 1).padStart(2, '0')}.${String(nextDate.getDate()).padStart(2, '0')}`;
+  const fmt = (n) => n.toLocaleString();
+
   return (
     <>
       <div className="payment-content">
-        {/* 카드 정보 */}
-        <div className="payment-card-section">
-          {card ? (
-            <>
-              <div className="payment-card">
-                <div className="payment-card-name">{card.name}</div>
-                <div className="payment-card-number">{card.number}</div>
+        {/* 결제 요약 — 좌(결제수단) / 우(다음 결제) 2-column.
+            모바일에서는 자동으로 세로 stack. (사용자 요구 2026-05-10 — A 안) */}
+        <div className="payment-summary-grid">
+          {/* 좌 — 결제 수단 */}
+          <section className="payment-summary-card payment-method-card" aria-label="결제 수단">
+            <h2 className="payment-summary-title">결제 수단</h2>
+            {card ? (
+              <>
+                <div className="payment-card">
+                  <div className="payment-card-name">{card.name}</div>
+                  <div className="payment-card-number">{card.number}</div>
+                </div>
+                <div className="payment-method-meta">
+                  <div className="payment-method-meta-row">
+                    <span className="payment-method-meta-label">유효기간</span>
+                    <span className="payment-method-meta-value">{card.expiry}</span>
+                  </div>
+                  <div className="payment-method-meta-row">
+                    <span className="payment-method-meta-label">자동결제</span>
+                    <label className="toggle-switch" htmlFor="payment-auto-pay">
+                      <input
+                        type="checkbox"
+                        id="payment-auto-pay"
+                        checked={autoPay}
+                        onChange={() => setAutoPay((v) => !v)}
+                      />
+                      <span className="toggle-track" />
+                      <span className="toggle-thumb" />
+                      <span className="toggle-text">{autoPay ? 'ON' : 'OFF'}</span>
+                    </label>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="small"
+                  fullWidth
+                  onClick={() => setShowCardChange(true)}
+                >
+                  카드 교체
+                </Button>
+              </>
+            ) : (
+              <div className="payment-card-empty" onClick={() => alert('PG사 카드 등록 화면으로 이동합니다.')}>
+                <div className="payment-card-empty-icon"><Plus size={24} /></div>
+                <span className="payment-card-empty-text">결제카드등록</span>
               </div>
-              <div className="payment-card-change">카드교체</div>
-            </>
-          ) : (
-            <div className="payment-card-empty" onClick={() => alert('PG사 카드 등록 화면으로 이동합니다.')}>
-              <div className="payment-card-empty-icon"><Plus size={24} /></div>
-              <span className="payment-card-empty-text">결제카드등록</span>
-            </div>
-          )}
+            )}
+          </section>
 
-          {/* 이메일 */}
+          {/* 우 — 다음 결제 요약 */}
+          <section className="payment-summary-card payment-billing-card" aria-label="다음 결제 요약">
+            <h2 className="payment-summary-title">다음 결제 예정</h2>
+            <div className="payment-billing-date-row">
+              <span className="payment-billing-date">{nextDateLabel}</span>
+              {dDay >= 0 && dDay <= 30 && (
+                <span className="payment-billing-dday">D-{dDay}</span>
+              )}
+            </div>
+            <div className="payment-billing-cycle">{MOCK_BILLING_NEXT.cycle}</div>
+            <div className="payment-billing-amount">
+              <span className="payment-billing-amount-label">예상 청구액</span>
+              <span className="payment-billing-amount-value-wrap">
+                <span className="payment-billing-amount-value">{fmt(MOCK_BILLING_NEXT.amount)}</span>
+                <span className="payment-amount-unit">원</span>
+              </span>
+            </div>
+            <ul className="payment-billing-breakdown">
+              {MOCK_BILLING_NEXT.breakdown.map((b) => (
+                <li key={b.service}>
+                  <span className="payment-billing-breakdown-label">{b.label}</span>
+                  <span className="payment-billing-breakdown-amount">
+                    {fmt(b.amount)}
+                    <span className="payment-amount-unit">원</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+
+        {/* 이메일 + 안내문 — 전체폭 별도 블록.
+            이메일은 회사 정보의 일부. [이메일 변경] 클릭 시 회원정보 페이지(사람 아이콘)
+            로 이동하여 회원정보 탭의 [변경하기] 버튼을 통해 사업자정보 변경 모달 진입.
+            (사용자 요구 2026-05-11) */}
+        <div className="payment-email-block">
           <div className="payment-email-row">
             <div className="payment-email-left">
               <span className="payment-email-label">E-Mail</span>
-              {editEmail ? (
-                <input
-                  className="payment-email-input"
-                  type="email" value={emailValue}
-                  onChange={e => setEmailValue(e.target.value)}
-                  autoFocus
-                />
-              ) : (
-                <span className="payment-email-value">{emailValue || '-'}</span>
-              )}
+              <span className="payment-email-value">{email || '-'}</span>
             </div>
-            {editEmail ? (
-              <div style={{ display: 'flex', gap: 4 }}>
-                <Button variant="primary" size="small" onClick={() => setEditEmail(false)}>저장</Button>
-                <Button variant="outline" size="small" onClick={() => { setEmailValue(email); setEditEmail(false); }}>취소</Button>
-              </div>
-            ) : (
-              <button className="payment-email-change" onClick={() => setEditEmail(true)}>이메일 변경</button>
-            )}
+            <Button
+              variant="outline"
+              size="small"
+              onClick={() => navigate('/dashboard/staff?tab=profile')}
+            >
+              이메일 변경
+            </Button>
           </div>
-          <div className="payment-email-note">※ 결제 및 공지 안내 메일 입니다.</div>
+          <div className="payment-email-note">
+            ※ 결제 및 공지 안내 메일입니다. 변경은 회원정보의 [변경하기] → 슈퍼어드민 승인 절차를 거쳐 반영됩니다.
+          </div>
         </div>
 
-        {/* 서비스 이용 내역 — 서비스 / 사용량만. 터치 시 해당 서비스 리스트로 이동.
-            사용자 요구 (2026-05-10): 매월 12일 결제 / 신청일 / 약정기간 등 상세 제거 —
-            세부 결제 정보는 카드 결제 단계에서 처리. 결제관리는 "어떤 서비스를 몇개" 만. */}
+        {/* 서비스 이용 내역 — 한 줄 행으로 단순화 (사용자 요구 2026-05-11):
+            "왼쪽 두 개 쓸필요 없고, 위에 흰색 한 줄만 + 우측 N개 이용중 >" */}
         {services.map((service) => {
           const totalQty = service.items.reduce((s, i) => s + i.quantity, 0);
           const targetRoute =
@@ -396,16 +672,12 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
               className="payment-service-section payment-service-section--clickable"
               onClick={() => targetRoute && navigate(targetRoute)}
             >
-              <div className="payment-service-header">
-                <span className="payment-service-title">{service.name}</span>
-                <ChevronRight size={20} color="var(--pw-text-hint)" />
-              </div>
-              <div className="payment-service-summary">
-                <span className="payment-service-name">{service.label}</span>
-                <span className="payment-service-count">
-                  {totalQty > 0 ? `${totalQty}개 이용중` : '0개 이용중'}
-                </span>
-              </div>
+              <span className="payment-service-title">{service.name}</span>
+              <span className="payment-service-count">
+                {totalQty}
+                <span className="payment-service-count-unit">개 이용중</span>
+              </span>
+              <ChevronRight size={18} color="var(--pw-text-hint)" aria-hidden="true" />
             </button>
           );
         })}
@@ -417,6 +689,12 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
       </BottomActionBar>
 
       <ConfirmModal isOpen={modal.open} title={modal.title} desc={modal.desc} onConfirm={modal.onConfirm} onCancel={closeModal} />
+      {showCardChange && (
+        <CardChangeModal
+          currentCard={card}
+          onClose={() => setShowCardChange(false)}
+        />
+      )}
     </>
   );
 };
@@ -432,6 +710,11 @@ const PaymentHistoryTab = () => {
   const items = MOCK_HISTORY.slice(0, visible);
   const hasMore = visible < MOCK_HISTORY.length;
 
+  // 영수증 다운로드 — mock. 실서비스에선 GET /api/billing/{id}/receipt PDF.
+  const downloadReceipt = (row) => {
+    alert(`영수증 다운로드 (mock)\n${row.date} · ${row.store} · ${row.amount}원`);
+  };
+
   return (
     <div className="payment-content">
       <div className="payment-history-section">
@@ -443,6 +726,7 @@ const PaymentHistoryTab = () => {
               <th>매장명</th>
               <th>결제금액</th>
               <th>서비스 구분</th>
+              <th className="payment-history-receipt-col">영수증</th>
             </tr>
           </thead>
           <tbody>
@@ -452,9 +736,20 @@ const PaymentHistoryTab = () => {
                 <td>{row.store}</td>
                 <td>{row.amount}</td>
                 <td>{SERVICE_TYPE_LABEL[row.type] || row.type}</td>
+                <td className="payment-history-receipt-col">
+                  <button
+                    type="button"
+                    className="payment-receipt-btn"
+                    onClick={() => downloadReceipt(row)}
+                    aria-label={`${row.date} 영수증 다운로드`}
+                  >
+                    <Download size={14} aria-hidden="true" />
+                    <span>받기</span>
+                  </button>
+                </td>
               </tr>
             )) : (
-              <tr><td colSpan={4} className="payment-history-empty">결제내역이 없습니다.</td></tr>
+              <tr><td colSpan={5} className="payment-history-empty">결제내역이 없습니다.</td></tr>
             )}
           </tbody>
         </table>
@@ -511,8 +806,11 @@ const PaymentManagement = () => {
         onChange={setActiveTab}
         ariaLabel="결제관리 카테고리"
       />
-      {activeTab === 'info' && <PaymentInfoTab card={card} email={email} services={MOCK_SERVICES} onApply={() => setShowApply(true)} />}
-      {activeTab === 'history' && <PaymentHistoryTab />}
+      {/* 탭 ↔ 콘텐츠 간격 — 다른 페이지(알림 인박스 등)와 동일 톤 (사용자 요구 2026-05-10) */}
+      <div className="payment-tab-content">
+        {activeTab === 'info' && <PaymentInfoTab card={card} email={email} services={MOCK_SERVICES} onApply={() => setShowApply(true)} />}
+        {activeTab === 'history' && <PaymentHistoryTab />}
+      </div>
     </div>
   );
 };

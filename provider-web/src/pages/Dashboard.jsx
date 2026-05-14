@@ -1,11 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Store, Wifi, Users, Tag, TrendingUp, BarChart3, PieChart as PieChartIcon, Activity } from 'lucide-react';
+import { Bell, Wifi, Users, Tag, TrendingUp, BarChart3, PieChart as PieChartIcon, Activity } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import CardAvatar from '../components/common/CardAvatar';
+import { getUnreadCount } from '../services/notification/mockInbox';
 import './Dashboard.css';
 
 /**
@@ -130,15 +131,17 @@ const Dashboard = () => {
     <div style={{ animation: 'fadeIn var(--pw-duration-slow) var(--pw-ease-out)' }}>
       <div className="page-header-section">
         <h1 className="page-title">오버뷰</h1>
-        <p className="sub-title">모든 매장의 운영 현황을 확인하세요.</p>
+        <p className="sub-title">매장의 운영 현황을 확인하세요.</p>
       </div>
 
-      {/* ── 통계 카드 ── */}
+      {/* ── 통계 카드 ──
+          PathWave 정책: 1 계정 = 1 매장. 매장 변경은 로그아웃 후 재로그인 시 매장 선택.
+          따라서 첫 카드는 "운영 매장 수" 가 아니라 "미확인 알림" 으로 노출. */}
       <div className="dashboard-stats">
         <StatCard
-          icon={Store} label="운영 중인 매장" value="3개"
-          color="#8A91A3" trend={null}
-          to="/dashboard/store"
+          icon={Bell} label="미확인 알림" value={`${getUnreadCount()}개`}
+          color="#8B5CF6" trend={null}
+          to="/dashboard/notifications?tab=inbox"
         />
         <StatCard
           icon={Wifi} label="활성 비콘" value="12개"

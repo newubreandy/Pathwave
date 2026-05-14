@@ -5,6 +5,7 @@ import AuthService from '../services/auth/AuthService';
 import ConfirmModal from '../components/common/ConfirmModal';
 import PasswordInput from '../components/common/PasswordInput';
 import StatusBadge from '../components/common/StatusBadge';
+import BusinessInfoModal from '../components/common/BusinessInfoModal';
 import './Settings.css';
 
 /* ── 기본값 ── */
@@ -159,93 +160,8 @@ const PasswordModal = ({ onClose }) => {
   );
 };
 
-/* ── Business Info Modal ── */
-const BusinessInfoModal = ({ onClose }) => {
-  const user = AuthService.getCurrentUser();
-  const [formData, setFormData] = useState({
-    name: user?.name || '시원컴퍼니',
-    bizNumber: '123-45-67890',
-    phone: '02-1234-5678',
-    email: user?.email || 'admin@pathwave.com',
-  });
-  const [success, setSuccess] = useState(false);
-
-  const handleSave = () => {
-    // TODO: 실제 API 호출로 사업자 정보 업데이트
-    const updatedUser = { ...user, name: formData.name, email: formData.email };
-    localStorage.setItem('pathwave_user', JSON.stringify(updatedUser));
-    setSuccess(true);
-    setTimeout(() => onClose(), 1500);
-  };
-
-  return (
-    <div className="settings-modal-overlay" onClick={onClose}>
-      <div className="settings-modal" onClick={e => e.stopPropagation()}>
-        <div className="settings-modal-header">
-          <h2 className="settings-modal-title">사업자 정보 변경</h2>
-          <button className="settings-modal-close" onClick={onClose}><X size={20} /></button>
-        </div>
-
-        <div className="settings-modal-body">
-        {success ? (
-          <div style={{ textAlign: 'center', padding: 'var(--pw-space-8) 0', color: 'var(--pw-primary)', fontWeight: 600 }}>
-            ✓ 정보가 저장되었습니다.
-          </div>
-        ) : (
-          <>
-            <div className="settings-modal-field">
-              <label className="settings-modal-label">대표자명</label>
-              <input
-                type="text"
-                className="settings-modal-input"
-                value={formData.name}
-                onChange={e => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
-
-            <div className="settings-modal-field">
-              <label className="settings-modal-label">사업자번호</label>
-              <input
-                type="text"
-                className="settings-modal-input"
-                value={formData.bizNumber}
-                onChange={e => setFormData({ ...formData, bizNumber: e.target.value })}
-                placeholder="000-00-00000"
-              />
-            </div>
-
-            <div className="settings-modal-field">
-              <label className="settings-modal-label">연락처</label>
-              <input
-                type="tel"
-                className="settings-modal-input"
-                value={formData.phone}
-                onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="02-0000-0000"
-              />
-            </div>
-
-            <div className="settings-modal-field">
-              <label className="settings-modal-label">이메일</label>
-              <input
-                type="email"
-                className="settings-modal-input"
-                value={formData.email}
-                onChange={e => setFormData({ ...formData, email: e.target.value })}
-              />
-            </div>
-
-            <div className="settings-modal-actions">
-              <button className="settings-modal-btn cancel" onClick={onClose}>취소</button>
-              <button className="settings-modal-btn confirm" onClick={handleSave}>저장</button>
-            </div>
-          </>
-        )}
-        </div>
-      </div>
-    </div>
-  );
-};
+/* BusinessInfoModal 은 components/common/BusinessInfoModal.jsx 로 추출 (2026-05-10).
+   결제관리에서도 동일 모달을 띄우기 위해 분리. */
 
 /* ═══════════════════════════════════════════════════
    Main Settings Component
@@ -256,6 +172,7 @@ const Settings = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showBusinessModal, setShowBusinessModal] = useState(false);
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
+  const [showWithdrawSuccess, setShowWithdrawSuccess] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // 워크플로우 mock 상태 — 실서비스에선 GET /api/account/business-info/change-request/latest 등
@@ -294,10 +211,22 @@ const Settings = () => {
     navigate('/login');
   };
 
-  const handleWithdraw = async () => {
-    // TODO: 실제 회원탈퇴 API 호출
-    await AuthService.logout();
-    navigate('/login');
+  // 탈퇴는 슈퍼어드민 승인 후 처리 (사용자 요구 2026-05-11).
+  // 즉시 로그아웃 / 계정 삭제 X. 요청 큐에 등록만 하고 사용자는 페이지 사용 계속 가능.
+  const handleWithdraw = () => {
+    // mock: 슈퍼어드민 audit 큐에 탈퇴 요청 등록.
+    // 실서비스: POST /api/account/withdrawal/request
+    try {
+      const queue = JSON.parse(localStorage.getItem('pathwave_audit_queue') || '[]');
+      queue.push({
+        ts: new Date().toISOString(),
+        action: 'account_withdraw_request',
+        actor: AuthService.getCurrentUser()?.id || AuthService.getCurrentUser()?.email || 'unknown',
+      });
+      localStorage.setItem('pathwave_audit_queue', JSON.stringify(queue));
+    } catch { /* ignore */ }
+    setShowWithdrawConfirm(false);
+    setShowWithdrawSuccess(true);
   };
 
   return (
@@ -326,7 +255,7 @@ const Settings = () => {
           <div className="settings-row">
             <div className="settings-row-left">
               <span className="settings-row-label">자동로그인</span>
-              <span className="settings-row-desc">다음 접속 시 로그인 정보를 유지합니다.</span>
+              <span className="settings-row-hint">다음 접속 시 로그인 정보를 유지합니다.</span>
             </div>
             <ToggleSwitch
               id="auto-login"
@@ -362,7 +291,7 @@ const Settings = () => {
           <div className="settings-row">
             <div className="settings-row-left">
               <span className="settings-row-label">영업시간 외 푸시 알림</span>
-              <span className="settings-row-desc">영업시간이 아닌 시간대에는 고객 푸시 알림이 발송되지 않습니다.</span>
+              <span className="settings-row-hint">영업시간이 아닌 시간대에는 고객 푸시 알림이 발송되지 않습니다.</span>
             </div>
             <ToggleSwitch
               id="oot-push"
@@ -380,7 +309,7 @@ const Settings = () => {
           <div className="settings-row">
             <div className="settings-row-left">
               <span className="settings-row-label">알림 수신</span>
-              <span className="settings-row-desc">시스템 점검 및 긴급 알림은 설정과 관계없이 발송됩니다.</span>
+              <span className="settings-row-hint">시스템 점검 및 긴급 알림은 설정과 관계없이 발송됩니다.</span>
             </div>
             <ToggleSwitch
               id="notifications-enabled"
@@ -394,7 +323,7 @@ const Settings = () => {
               <div className="settings-row">
                 <div className="settings-row-left">
                   <span className="settings-row-label">혜택 알림</span>
-                  <span className="settings-row-desc">내주변(위치기반)의 혜택 알림 받기</span>
+                  <span className="settings-row-hint">내주변(위치기반)의 혜택 알림 받기</span>
                 </div>
                 <ToggleSwitch
                   id="benefit-notif"
@@ -406,7 +335,7 @@ const Settings = () => {
               <div className="settings-row">
                 <div className="settings-row-left">
                   <span className="settings-row-label">마케팅 알림</span>
-                  <span className="settings-row-desc">서비스 혜택 등록 시 모든 알림 받기</span>
+                  <span className="settings-row-hint">서비스 혜택 등록 시 모든 알림 받기</span>
                 </div>
                 <ToggleSwitch
                   id="marketing-notif"
@@ -418,7 +347,7 @@ const Settings = () => {
               <div className="settings-row">
                 <div className="settings-row-left">
                   <span className="settings-row-label">야간 광고성 알림</span>
-                  <span className="settings-row-desc">21:00 ~ 08:00 사이 알림 차단</span>
+                  <span className="settings-row-hint">21:00 ~ 08:00 사이 알림 차단</span>
                 </div>
                 <ToggleSwitch
                   id="night-ad-notif"
@@ -438,7 +367,7 @@ const Settings = () => {
           <div className="settings-row clickable" onClick={() => setShowBusinessModal(true)}>
             <div className="settings-row-left">
               <span className="settings-row-label">사업자 정보 변경</span>
-              <span className="settings-row-desc">슈퍼어드민 승인 후 반영됩니다.</span>
+              <span className="settings-row-hint">슈퍼어드민 승인 후 반영됩니다.</span>
             </div>
             <div className="settings-row-meta">
               {bizChangeStatus && WORKFLOW_BIZ_STATUS[bizChangeStatus] && (
@@ -456,7 +385,7 @@ const Settings = () => {
           <div className="settings-row clickable" onClick={() => setShowWithdrawConfirm(true)}>
             <div className="settings-row-left">
               <span className="settings-row-label">회원 탈퇴</span>
-              <span className="settings-row-desc">탈퇴 요청 후 슈퍼어드민 검토를 거칩니다.</span>
+              <span className="settings-row-hint">탈퇴 요청 후 슈퍼어드민 검토를 거칩니다.</span>
             </div>
             <div className="settings-row-meta">
               {withdrawStatus && WORKFLOW_WITHDRAW_STATUS[withdrawStatus] && (
@@ -519,13 +448,27 @@ const Settings = () => {
         />
       )}
 
+      {/* 탈퇴 요청 — 슈퍼어드민 승인 후 처리 (즉시 로그아웃 X) */}
       {showWithdrawConfirm && (
         <ConfirmModal
           isOpen={true}
-          title="회원탈퇴"
-          desc="정말 탈퇴하시겠습니까? 모든 데이터가 삭제되며 복구할 수 없습니다."
+          title="회원 탈퇴 요청"
+          desc={'회원 탈퇴는 슈퍼어드민 검토를 거쳐 처리됩니다.\n탈퇴 요청을 보내시겠습니까?\n\n※ 미정산 결제건이 있으면 정산 완료 후 처리됩니다.'}
+          confirmText="요청하기"
           onConfirm={handleWithdraw}
           onCancel={() => setShowWithdrawConfirm(false)}
+        />
+      )}
+
+      {showWithdrawSuccess && (
+        <ConfirmModal
+          isOpen={true}
+          singleButton
+          title="탈퇴 요청이 접수되었습니다"
+          desc={'슈퍼어드민 검토 후 결과를 알림으로 안내드립니다.\n검토 중에는 서비스를 그대로 사용하실 수 있습니다.'}
+          confirmText="확인"
+          onConfirm={() => setShowWithdrawSuccess(false)}
+          onCancel={() => setShowWithdrawSuccess(false)}
         />
       )}
     </>
