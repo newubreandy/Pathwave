@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../services/i18n_service.dart';
 import '../../services/notification_service.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/empty_state.dart';
@@ -18,6 +19,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   late TabController _tabCtrl;
   late Future<List<Map<String, dynamic>>> _inboxFuture;
   late Future<List<Map<String, dynamic>>> _annFuture;
+
+  final _t = I18nService.instance;
 
   @override
   void initState() {
@@ -40,13 +43,16 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('알림'),
+        title: Text(_t.t('notif.screen_title', defaultValue: '알림')),
         bottom: TabBar(
           controller: _tabCtrl,
           labelColor: AppTheme.primary,
           unselectedLabelColor: AppTheme.textSecondary,
           indicatorColor: AppTheme.primary,
-          tabs: const [Tab(text: '인박스'), Tab(text: '공지')],
+          tabs: [
+            Tab(text: _t.t('notif.tab_inbox', defaultValue: '인박스 (개인)')),
+            Tab(text: _t.t('notif.tab_system', defaultValue: '공지 (시스템)')),
+          ],
         ),
       ),
       body: TabBarView(
@@ -81,12 +87,12 @@ class _InboxTab extends StatelessWidget {
           }
           final list = snap.data ?? [];
           if (list.isEmpty) {
-            return ListView(children: const [
-              SizedBox(height: 100),
+            return ListView(children: [
+              const SizedBox(height: 100),
               EmptyState(
                 icon: Icons.inbox_outlined,
-                title: '받은 알림이 없습니다',
-                subtitle: '스탬프 적립 / 쿠폰 발급 / 채팅 알림이 표시됩니다.',
+                title: I18nService.instance.t('notif.inbox_empty_title', defaultValue: '받은 알림이 없습니다'),
+                subtitle: I18nService.instance.t('notif.inbox_empty_subtitle', defaultValue: '스탬프 적립 / 쿠폰 발급 / 채팅 알림이 표시됩니다.'),
               ),
             ]);
           }
@@ -175,6 +181,21 @@ class _InboxItem extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(at, style: const TextStyle(color: AppTheme.textHint, fontSize: 11)),
                     ],
+                    // 정보통신망법 §50 — 마케팅 알림에 수신 거부 안내 표시
+                    if (kind == 'marketing') ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        I18nService.instance.t(
+                          'notif.marketing_disclaimer',
+                          defaultValue: '마케팅 알림입니다. 수신 거부는 설정 > 알림에서 변경할 수 있습니다.',
+                        ),
+                        style: const TextStyle(
+                          color: AppTheme.textHint,
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -207,11 +228,11 @@ class _AnnouncementsTab extends StatelessWidget {
           }
           final list = snap.data ?? [];
           if (list.isEmpty) {
-            return ListView(children: const [
-              SizedBox(height: 100),
+            return ListView(children: [
+              const SizedBox(height: 100),
               EmptyState(
                 icon: Icons.campaign_outlined,
-                title: '게시된 공지가 없습니다',
+                title: I18nService.instance.t('notif.announcement_empty_title', defaultValue: '게시된 공지가 없습니다'),
               ),
             ]);
           }
