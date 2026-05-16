@@ -20,9 +20,10 @@
   --border-strong: #2A2A38;
 
   /* ── 텍스트 ─────────────────────────────────────────────── */
-  --text:        #F2F3F7;
-  --text-muted:  #9097A3;
-  --text-hint:   #5C6170;
+  --text:           #F2F3F7;
+  --text-secondary: #B3B9CB;   /* WCAG AA on --bg-3 */
+  --text-muted:     #9CA3B5;   /* WCAG AA on --bg-2 */
+  --text-hint:      #5C6170;
 
   /* ── 포인트 컬러 — 녹색만 ───────────────────────────────── */
   --accent:        #2563EB;
@@ -320,6 +321,28 @@ input:focus, select:focus, textarea:focus {
   font-weight: 700;
   margin: 8px 0 0;
   letter-spacing: -0.02em;
+}
+
+/* ── 모달 유틸 ──────────────────────────────────────────── */
+/* 공통 backdrop: fixed overlay, opacity 0.6, z-index 999  */
+.pw-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+/* 모달 콘텐츠는 backdrop 위에 */
+.pw-modal-content {
+  position: relative;
+  z-index: 1000;
+}
+/* body scroll lock — JS 에서 classList.add('pw-modal-open') */
+.pw-modal-open {
+  overflow: hidden;
 }
 
 /* KPI 그리드 */

@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 999;
   padding: 1rem;
   animation: backdrop-in 0.12s ease-out;
 }
@@ -21,6 +21,8 @@
   flex-direction: column;
   max-height: 90vh;
   animation: modal-in 0.15s ease-out;
+  position: relative;
+  z-index: 1000;
 }
 .modal-sm { max-width: 400px; }
 .modal-md { max-width: 560px; }

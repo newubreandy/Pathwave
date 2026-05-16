@@ -176,5 +176,25 @@
     "queue_placeholder": "Report queue (activated after API integration)",
     "queue_desc": "No pending staff reports. The list will appear after integrating the backend /api/admin/staff/reports endpoint.",
     "refresh": "Refresh"
+  },
+  "footer": {
+    "company_name": "[To be filled after company registration]",
+    "ceo_label": "CEO",
+    "ceo": "[To be filled after company registration]",
+    "biz_no_label": "Business Reg. No.",
+    "biz_no": "[To be filled after company registration]",
+    "mail_order_label": "Mail-Order License",
+    "mail_order": "[To be filled after company registration]",
+    "address_label": "Address",
+    "address": "[To be filled after company registration]",
+    "tel_label": "Tel",
+    "tel": "[To be filled after company registration]",
+    "email_label": "Email",
+    "email": "[To be filled after company registration]",
+    "hosting_label": "Hosting",
+    "hosting": "[To be filled after company registration]",
+    "privacy_link": "Privacy Policy",
+    "terms_link": "Terms of Service",
+    "copyright": "© {{year}} PathWave. All rights reserved."
   }
 }
