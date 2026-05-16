@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/coupon_service.dart';
 import '../../services/i18n_service.dart';
@@ -11,6 +12,19 @@ const _statusTabs = ['active', 'used', 'expired'];
 const _statusLabel = {
   'active': '사용 가능', 'used': '사용 완료', 'expired': '만료',
 };
+
+/// 새로 발급된 쿠폰 판별: is_new 플래그 또는 created_at 기준 최근 5분 이내.
+bool _isNewlyIssued(Map<String, dynamic> data) {
+  if (data['is_new'] == true) return true;
+  final createdAt = data['created_at']?.toString();
+  if (createdAt == null) return false;
+  final ts = DateTime.tryParse(createdAt);
+  if (ts == null) return false;
+  return DateTime.now().difference(ts) < const Duration(minutes: 5);
+}
+
+/// SharedPreferences 키: 쿠폰별 환영 카드 노출 여부.
+String _welcomeSeenKey(dynamic couponId) => 'pw.coupon_issue.welcome_seen_$couponId';
 
 class CouponsScreen extends StatefulWidget {
   const CouponsScreen({super.key});
@@ -46,7 +60,7 @@ class _CouponsScreenState extends State<CouponsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_t.t('coupon.screen_title', defaultValue: '내 쿠폰')),
+        title: Text(_t.t('coupon_issue.title', defaultValue: '내 쿠폰')),
         bottom: TabBar(
           controller: _tabCtrl,
           tabs: _statusTabs.map((s) => Tab(text: _statusLabel[s])).toList(),
@@ -68,24 +82,32 @@ class _CouponsScreenState extends State<CouponsScreen>
 }
 
 
-class _CouponList extends StatelessWidget {
+class _CouponList extends StatefulWidget {
   final String status;
   final Future<List<Map<String, dynamic>>> future;
   final Future<void> Function() onRetry;
   const _CouponList({required this.status, required this.future, required this.onRetry});
 
   @override
+  State<_CouponList> createState() => _CouponListState();
+}
+
+class _CouponListState extends State<_CouponList> {
+  /// coupon id → 이 세션에서 환영 카드를 숨겼는지 여부.
+  final Set<dynamic> _dismissed = {};
+
+  @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: onRetry,
+      onRefresh: widget.onRetry,
       child: FutureBuilder<List<Map<String, dynamic>>>(
-        future: future,
+        future: widget.future,
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
           if (snap.hasError) {
-            return ErrorState(message: snap.error.toString(), onRetry: onRetry);
+            return ErrorState(message: snap.error.toString(), onRetry: widget.onRetry);
           }
           final list = snap.data ?? [];
           if (list.isEmpty) {
@@ -94,18 +116,163 @@ class _CouponList extends StatelessWidget {
                 const SizedBox(height: 100),
                 EmptyState(
                   icon: Icons.confirmation_number_outlined,
-                  title: '${_statusLabel[status]} 쿠폰이 없습니다',
+                  title: '${_statusLabel[widget.status]} 쿠폰이 없습니다',
                 ),
               ],
             );
           }
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: list.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (context, i) => _CouponCard(data: list[i], status: status),
+          return _CouponListBody(
+            list: list,
+            status: widget.status,
+            dismissed: _dismissed,
+            onDismiss: (id) => setState(() => _dismissed.add(id)),
           );
         },
+      ),
+    );
+  }
+}
+
+
+class _CouponListBody extends StatefulWidget {
+  final List<Map<String, dynamic>> list;
+  final String status;
+  final Set<dynamic> dismissed;
+  final void Function(dynamic id) onDismiss;
+  const _CouponListBody({
+    required this.list,
+    required this.status,
+    required this.dismissed,
+    required this.onDismiss,
+  });
+
+  @override
+  State<_CouponListBody> createState() => _CouponListBodyState();
+}
+
+class _CouponListBodyState extends State<_CouponListBody> {
+  /// coupon id → SharedPreferences 에서 already-seen 여부 (async 로드).
+  final Map<dynamic, bool> _prefsSeen = {};
+  bool _prefsLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final result = <dynamic, bool>{};
+    for (final item in widget.list) {
+      final id = item['id'];
+      if (id != null && _isNewlyIssued(item)) {
+        result[id] = prefs.getBool(_welcomeSeenKey(id)) ?? false;
+      }
+    }
+    if (mounted) setState(() { _prefsSeen.addAll(result); _prefsLoaded = true; });
+  }
+
+  Future<void> _markSeen(dynamic id) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_welcomeSeenKey(id), true);
+    widget.onDismiss(id);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // 새로 발급된 쿠폰 중 아직 환영 카드를 본 적 없는 것들
+    final newCoupons = widget.list.where((item) {
+      final id = item['id'];
+      if (id == null) return false;
+      if (widget.dismissed.contains(id)) return false;
+      if (!_isNewlyIssued(item)) return false;
+      // prefs 로드 전: 숨기지 않음(기본 노출)
+      if (_prefsLoaded && (_prefsSeen[id] ?? false)) return false;
+      return true;
+    }).toList();
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // 환영 카드 — 새로 발급된 쿠폰 수만큼 표시
+        for (final item in newCoupons)
+          _WelcomeCard(
+            data: item,
+            onDismiss: () => _markSeen(item['id']),
+          ),
+        if (newCoupons.isNotEmpty) const SizedBox(height: 4),
+        // 전체 쿠폰 목록
+        ...List.generate(widget.list.length, (i) {
+          final item = widget.list[i];
+          return Padding(
+            padding: EdgeInsets.only(top: i == 0 ? 0 : 12),
+            child: _CouponCard(data: item, status: widget.status),
+          );
+        }),
+      ],
+    );
+  }
+}
+
+
+/// 발급 직후 환영 안내 카드 (1회 자동 노출).
+class _WelcomeCard extends StatelessWidget {
+  final Map<String, dynamic> data;
+  final VoidCallback onDismiss;
+  const _WelcomeCard({required this.data, required this.onDismiss});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = I18nService.instance;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: PwCard(
+        color: AppTheme.primary.withValues(alpha: 0.12),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.4)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.card_giftcard, color: AppTheme.primary, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    t.t('coupon_issue.received', defaultValue: '발급된 쿠폰이 도착했습니다'),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                ),
+                // info 아이콘: 이미 닫은 경우에도 다시 안내 볼 수 있도록 (dismiss 처리는 X 버튼)
+                GestureDetector(
+                  onTap: onDismiss,
+                  child: const Icon(Icons.close, size: 18, color: AppTheme.textHint),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _TermsBullet(t.t(
+              'coupon_issue.terms_source',
+              defaultValue: '본 쿠폰은 스탬프 적립 보상으로 발급되었습니다.',
+            )),
+            _TermsBullet(t.t(
+              'coupon_issue.terms_facility_only',
+              defaultValue: '발급 매장에서만 사용 가능합니다.',
+            )),
+            _TermsBullet(t.t(
+              'coupon_issue.terms_expiry',
+              defaultValue: '유효기간 내에만 사용 가능하며, 만료 후 소멸됩니다.',
+            )),
+            _TermsBullet(t.t(
+              'coupon_issue.terms_exclusion',
+              defaultValue: '일부 상품·서비스는 쿠폰 적용에서 제외될 수 있습니다.',
+            )),
+          ],
+        ),
       ),
     );
   }
