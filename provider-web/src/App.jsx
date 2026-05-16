@@ -19,6 +19,7 @@ import Settings from './pages/Settings';
 import MemberProfile from './pages/MemberProfile';
 import StaffManagement from './pages/StaffManagement';
 import PaymentManagement from './pages/PaymentManagement';
+import Subscriptions from './pages/Subscriptions';
 import ServiceRequest from './pages/ServiceRequest';
 
 // 페이지 전환 시 스크롤 상단으로 리셋
@@ -93,6 +94,7 @@ function App() {
           <Route path="/dashboard/coupons" element={<Coupons />} />
           <Route path="/dashboard/coupons/:action/:id?" element={<CouponForm />} />
           <Route path="/dashboard/payments" element={<PaymentManagement />} />
+          <Route path="/dashboard/subscriptions" element={<Subscriptions />} />
           <Route path="/dashboard/settings" element={<Settings />} />
           <Route path="/dashboard/profile" element={<Navigate to="/dashboard/staff" replace />} />
           <Route path="/dashboard/chat" element={<CustomerChat />} />

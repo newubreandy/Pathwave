@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Plus, Check, Wifi, Bell, Gift, CreditCard, ArrowLeft, ArrowRight, Loader2, Download, X, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Check, Wifi, Bell, Gift, CreditCard, ArrowLeft, ArrowRight, Loader2, Download, X, Info, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import AuthService from '../services/auth/AuthService';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
@@ -523,6 +524,7 @@ function CardChangeModal({ currentCard, onClose }) {
    결제정보 탭
    ══════════════════════════════════════════ */
 const PaymentInfoTab = ({ card, email, services, onApply }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [modal, setModal] = useState({ open: false, title: '', desc: '', onConfirm: null });
   // 자동결제 토글 — 로컬 상태 mock. 실서비스에선 PUT /api/billing/auto-pay.
@@ -532,17 +534,9 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
 
   const closeModal = () => setModal(m => ({ ...m, open: false }));
 
-  const handleTerminate = () => {
-    setModal({ open: true, title: '서비스 종료', desc: '해당 서비스를 종료하시겠습니까?\n종료 후에는 서비스를 이용할 수 없습니다.',
-      onConfirm: () => { closeModal(); alert('서비스가 종료되었습니다.'); }
-    });
-  };
-
-  const handleExtend = () => {
-    setModal({ open: true, title: '서비스 연장', desc: '해당 서비스를 연장하시겠습니까?',
-      onConfirm: () => { closeModal(); alert('서비스가 연장되었습니다.'); }
-    });
-  };
+  // PG provider label — VITE_PG_PROVIDER env var 또는 fallback
+  const pgProvider = import.meta.env.VITE_PG_PROVIDER || 'sim';
+  const pgLabel = pgProvider === 'toss' ? t('billing.pg_toss') : t('billing.pg_sim');
 
   // 다음 결제 D-day / 표시 문자열
   const nextDate = new Date(MOCK_BILLING_NEXT.nextDate);
@@ -557,8 +551,8 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
             모바일에서는 자동으로 세로 stack. (사용자 요구 2026-05-10 — A 안) */}
         <div className="payment-summary-grid">
           {/* 좌 — 결제 수단 */}
-          <section className="payment-summary-card payment-method-card" aria-label="결제 수단">
-            <h2 className="payment-summary-title">결제 수단</h2>
+          <section className="payment-summary-card payment-method-card" aria-label={t('billing.cards_title')}>
+            <h2 className="payment-summary-title">{t('billing.cards_title')}</h2>
             {card ? (
               <>
                 <div className="payment-card">
@@ -571,7 +565,7 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
                     <span className="payment-method-meta-value">{card.expiry}</span>
                   </div>
                   <div className="payment-method-meta-row">
-                    <span className="payment-method-meta-label">자동결제</span>
+                    <span className="payment-method-meta-label">{t('billing.autopay_consent_title')}</span>
                     <label className="toggle-switch" htmlFor="payment-auto-pay">
                       <input
                         type="checkbox"
@@ -584,6 +578,9 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
                       <span className="toggle-text">{autoPay ? 'ON' : 'OFF'}</span>
                     </label>
                   </div>
+                  {autoPay && (
+                    <p className="pay-autopay-consent-note">{t('billing.autopay_consent_body')}</p>
+                  )}
                 </div>
                 <Button
                   variant="outline"
@@ -597,7 +594,7 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
             ) : (
               <div className="payment-card-empty" onClick={() => alert('PG사 카드 등록 화면으로 이동합니다.')}>
                 <div className="payment-card-empty-icon"><Plus size={24} /></div>
-                <span className="payment-card-empty-text">결제카드등록</span>
+                <span className="payment-card-empty-text">{t('billing.cards_empty')}</span>
               </div>
             )}
           </section>
@@ -633,10 +630,13 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
           </section>
         </div>
 
-        {/* 이메일 + 안내문 — 전체폭 별도 블록.
-            이메일은 회사 정보의 일부. [이메일 변경] 클릭 시 회원정보 페이지(사람 아이콘)
-            로 이동하여 회원정보 탭의 [변경하기] 버튼을 통해 사업자정보 변경 모달 진입.
-            (사용자 요구 2026-05-11) */}
+        {/* 부가세 compliance 경고 박스 */}
+        <div className="pay-compliance-warning">
+          <AlertTriangle size={14} aria-hidden="true" />
+          <span>{t('billing.compliance_warning')}</span>
+        </div>
+
+        {/* 이메일 + 안내문 */}
         <div className="payment-email-block">
           <div className="payment-email-row">
             <div className="payment-email-left">
@@ -656,8 +656,33 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
           </div>
         </div>
 
-        {/* 서비스 이용 내역 — 한 줄 행으로 단순화 (사용자 요구 2026-05-11):
-            "왼쪽 두 개 쓸필요 없고, 위에 흰색 한 줄만 + 우측 N개 이용중 >" */}
+        {/* PG 정보 카드 */}
+        <div className="pay-info-card">
+          <div className="pay-info-card-header">
+            <ShieldCheck size={16} aria-hidden="true" />
+            <h3 className="pay-info-card-title">{t('billing.pg_info_title')}</h3>
+          </div>
+          <p className="pay-info-card-body">{t('billing.pg_info_body')}</p>
+          <div className="pay-info-card-row">
+            <span className="pay-info-card-label">{t('billing.pg_label')}</span>
+            <span className="pay-info-card-value">{pgLabel}</span>
+          </div>
+        </div>
+
+        {/* 환불 정책 카드 */}
+        <div className="pay-info-card">
+          <div className="pay-info-card-header">
+            <Info size={16} aria-hidden="true" />
+            <h3 className="pay-info-card-title">{t('billing.refund_policy_title')}</h3>
+          </div>
+          <ul className="pay-refund-list">
+            <li>{t('billing.refund_policy_1')}</li>
+            <li>{t('billing.refund_policy_2')}</li>
+            <li>{t('billing.refund_policy_3')}</li>
+          </ul>
+        </div>
+
+        {/* 서비스 이용 내역 */}
         {services.map((service) => {
           const totalQty = service.items.reduce((s, i) => s + i.quantity, 0);
           const targetRoute =
@@ -705,6 +730,7 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
 const PAGE_SIZE = 10;
 
 const PaymentHistoryTab = () => {
+  const { t } = useTranslation();
   // 사용자 요구 (2026-05-10): 10개 단위로 노출. 더 없을 때 버튼 숨김.
   const [visible, setVisible] = useState(PAGE_SIZE);
   const items = MOCK_HISTORY.slice(0, visible);
@@ -724,7 +750,7 @@ const PaymentHistoryTab = () => {
             <tr>
               <th>일시</th>
               <th>매장명</th>
-              <th>결제금액</th>
+              <th>{t('billing.amount_label')}</th>
               <th>서비스 구분</th>
               <th className="payment-history-receipt-col">영수증</th>
             </tr>
@@ -749,7 +775,7 @@ const PaymentHistoryTab = () => {
                 </td>
               </tr>
             )) : (
-              <tr><td colSpan={5} className="payment-history-empty">결제내역이 없습니다.</td></tr>
+              <tr><td colSpan={5} className="payment-history-empty">{t('billing.payments_empty')}</td></tr>
             )}
           </tbody>
         </table>
@@ -775,6 +801,7 @@ const PaymentHistoryTab = () => {
    Main
    ══════════════════════════════════════════ */
 const PaymentManagement = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'info';
@@ -794,13 +821,13 @@ const PaymentManagement = () => {
   return (
     <div className="modern-page">
       <div className="page-header-section">
-        <h1 className="page-title">결제관리</h1>
+        <h1 className="page-title">{t('billing.title')}</h1>
         <p className="sub-title">결제 정보와 결제 내역을 관리합니다.</p>
       </div>
       <SectionTabs
         tabs={[
           { key: 'info',    label: '결제정보' },
-          { key: 'history', label: '결제내역' },
+          { key: 'history', label: t('billing.payments_title') },
         ]}
         value={activeTab}
         onChange={setActiveTab}
