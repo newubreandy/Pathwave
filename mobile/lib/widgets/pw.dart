@@ -9,6 +9,7 @@ library;
 
 export 'pw_button.dart';
 export 'pw_card.dart';
+export 'pw_footer.dart';
 export 'pw_icon_button.dart';
 export 'pw_switch.dart';
 export 'pw_text_field.dart';

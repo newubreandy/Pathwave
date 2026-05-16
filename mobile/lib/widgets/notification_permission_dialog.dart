@@ -30,6 +30,7 @@ class NotificationPermissionDialog extends StatefulWidget {
     if (!context.mounted) return;
     await showDialog<void>(
       context: context,
+      barrierColor: const Color(0x99000000),
       barrierDismissible: false,
       builder: (_) => const NotificationPermissionDialog(),
     );

@@ -164,6 +164,8 @@ class _ConsentItem extends StatelessWidget {
     final kind = item['kind']?.toString() ?? '';
     showDialog(
       context: context,
+      barrierColor: const Color(0x99000000),
+      barrierDismissible: true,
       builder: (_) => _PolicyDialog(kind: kind, label: item['label']?.toString() ?? kind),
     );
   }

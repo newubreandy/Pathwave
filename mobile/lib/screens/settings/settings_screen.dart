@@ -80,6 +80,8 @@ class SettingsScreen extends StatelessWidget {
               )),
           ),
           const SizedBox(height: 32),
+          const PwFooter(),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -99,6 +101,8 @@ class SettingsScreen extends StatelessWidget {
   Future<void> _showFaq(BuildContext context) async {
     showDialog(
       context: context,
+      barrierColor: const Color(0x99000000),
+      barrierDismissible: true,
       builder: (_) => AlertDialog(
         title: const Text('자주 묻는 질문'),
         content: const SingleChildScrollView(
@@ -136,6 +140,7 @@ class SettingsScreen extends StatelessWidget {
   Future<void> _showPolicy(BuildContext context, String kind) async {
     showDialog(
       context: context,
+      barrierColor: const Color(0x99000000),
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
@@ -146,6 +151,8 @@ class SettingsScreen extends StatelessWidget {
       await showModalBottomSheet(
         context: context,
         isScrollControlled: true,
+        barrierColor: const Color(0x99000000),
+        isDismissible: true,
         backgroundColor: AppTheme.surface,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
