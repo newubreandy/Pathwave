@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/pw.dart';
 
 /// 회원 탈퇴 화면 (PR #55) — Apple 5.1.1(v) / Google Play 정책.
 class DeleteAccountScreen extends StatefulWidget {
@@ -36,7 +37,6 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       );
       if (!mounted) return;
       if (res['success'] == true) {
-        // 탈퇴 완료 → 로그인 화면으로
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(res['message']?.toString() ?? '회원 탈퇴가 완료되었습니다.'),
@@ -77,15 +77,8 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                 style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 24),
 
-              // 안내 카드
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  border: Border.all(color: AppTheme.border),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Column(
+              const PwCard(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _Bullet('탈퇴 즉시 로그인 / 알림이 차단됩니다.'),
@@ -107,13 +100,11 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                 Text('비밀번호 확인',
                   style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
-                TextField(
+                PwTextField(
                   controller: _passwordCtrl,
+                  hint: '본인 확인을 위해 비밀번호를 입력해 주세요',
+                  prefixIcon: Icons.lock_outline,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    hintText: '본인 확인을 위해 비밀번호를 입력해 주세요',
-                    prefixIcon: Icon(Icons.lock_outline),
-                  ),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -157,19 +148,15 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
 
               const SizedBox(height: 24),
 
-              ElevatedButton(
-                onPressed: _busy ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.error,
-                  foregroundColor: Colors.white,
-                ),
-                child: _busy
-                  ? const SizedBox(width: 20, height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Text('탈퇴하기'),
+              PwButton(
+                variant: PwButtonVariant.danger,
+                onPressed: _submit,
+                loading: _busy,
+                child: const Text('탈퇴하기'),
               ),
               const SizedBox(height: 8),
-              TextButton(
+              PwButton(
+                variant: PwButtonVariant.text,
                 onPressed: _busy ? null : () => context.pop(),
                 child: const Text('취소'),
               ),

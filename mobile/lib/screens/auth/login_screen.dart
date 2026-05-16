@@ -7,6 +7,7 @@ import '../../utils/neu_theme.dart';
 import '../../widgets/neu/neu_button.dart';
 import '../../widgets/neu/neu_card.dart';
 import '../../widgets/neu/neu_text_field.dart';
+import '../../widgets/pw.dart';
 import '../../widgets/social_login_row.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -150,12 +151,16 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  TextButton(
+                  PwButton(
+                    variant: PwButtonVariant.text,
+                    fullWidth: false,
                     onPressed: _busy ? null : () => context.go('/auth/forgot'),
                     child: const Text('비밀번호 찾기',
                       style: TextStyle(color: NeuTheme.textSecondary)),
                   ),
-                  TextButton(
+                  PwButton(
+                    variant: PwButtonVariant.text,
+                    fullWidth: false,
                     onPressed: _busy ? null : () => context.go('/auth/register'),
                     child: const Text('회원가입',
                       style: TextStyle(color: NeuTheme.primary, fontWeight: FontWeight.w600)),

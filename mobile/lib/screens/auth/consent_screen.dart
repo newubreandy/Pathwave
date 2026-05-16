@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../services/policy_service.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/pw.dart';
 
 /// 동의 항목 입력 화면. register_screen 의 마지막 단계로 사용.
 ///
@@ -100,12 +101,10 @@ class _ConsentScreenState extends State<ConsentScreen> {
             ),
 
             const SizedBox(height: 12),
-            ElevatedButton(
+            PwButton(
               onPressed: canSubmit ? () => _submit(items) : null,
-              child: widget.busy
-                ? const SizedBox(width: 20, height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Text('가입 완료'),
+              loading: widget.busy,
+              child: const Text('가입 완료'),
             ),
           ],
         );
@@ -209,7 +208,9 @@ class _ConsentItem extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Expanded(child: Text(label, style: const TextStyle(fontSize: 14))),
-          TextButton(
+          PwButton(
+            variant: PwButtonVariant.text,
+            fullWidth: false,
             onPressed: () => _showPolicy(context),
             child: const Text('보기', style: TextStyle(fontSize: 12)),
           ),
@@ -263,8 +264,8 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                     child: Text(widget.label,
                       style: Theme.of(context).textTheme.headlineSmall),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
+                  PwIconButton(
+                    icon: Icons.close,
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],

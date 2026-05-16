@@ -6,6 +6,7 @@ import '../../services/auth_service.dart';
 import '../../services/ble_service.dart';
 import '../../services/permission_service.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/pw.dart';
 import '../search/search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -114,7 +115,7 @@ class _HomeTab extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Switch(
+                    PwSwitch(
                       value: ble.isScanning,
                       onChanged: (v) async {
                         if (v) {
@@ -210,14 +211,14 @@ class _WifiBanner extends StatelessWidget {
                 child: Text('${facility?['name'] ?? '매장'} WiFi 발견',
                   style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
               ),
-              IconButton(icon: const Icon(Icons.close, size: 18), onPressed: onDismiss),
+              PwIconButton(icon: Icons.close, size: 18, onPressed: onDismiss),
             ],
           ),
           const SizedBox(height: 4),
           Text('SSID: ${wifi?['ssid'] ?? '—'}',
             style: const TextStyle(color: AppTheme.textSecondary)),
           const SizedBox(height: 12),
-          ElevatedButton(
+          PwButton(
             onPressed: onTap,
             child: const Text('자동 연결하기'),
           ),
@@ -278,18 +279,14 @@ class _MyPageTab extends StatelessWidget {
           _MenuTile(icon: Icons.chat_bubble_outline,        title: '매장 채팅', onTap: () => context.go('/chat')),
           _MenuTile(icon: Icons.settings_outlined,          title: '설정', onTap: () => context.go('/settings')),
           const Spacer(),
-          OutlinedButton.icon(
+          PwButton(
+            variant: PwButtonVariant.danger,
+            icon: Icons.logout,
             onPressed: () async {
               await context.read<AuthService>().logout();
               if (context.mounted) context.go('/auth/login');
             },
-            icon: const Icon(Icons.logout, color: AppTheme.error),
-            label: const Text('로그아웃', style: TextStyle(color: AppTheme.error)),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
-              side: const BorderSide(color: AppTheme.error),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
+            child: const Text('로그아웃'),
           ),
         ],
       ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../services/wifi_connector.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/pw.dart';
 
 /// BLE 핸드셰이크에서 받은 WiFi 정보로 OS 자동 가입 요청 (PR #49 native plugin).
 class WifiConnectScreen extends StatefulWidget {
@@ -135,15 +136,14 @@ class _WifiConnectScreenState extends State<WifiConnectScreen> {
               const SizedBox(height: 16),
             ],
             const Spacer(),
-            ElevatedButton(
-              onPressed: _busy ? null : _connect,
-              child: _busy
-                ? const SizedBox(width: 20, height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Text('자동 연결하기'),
+            PwButton(
+              onPressed: _connect,
+              loading: _busy,
+              child: const Text('자동 연결하기'),
             ),
             const SizedBox(height: 8),
-            TextButton(
+            PwButton(
+              variant: PwButtonVariant.text,
               onPressed: _busy ? null : () => context.pop(),
               child: const Text('나중에'),
             ),
