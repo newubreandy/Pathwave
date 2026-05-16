@@ -7,7 +7,11 @@
  *   POST   /api/facilities                   — 매장 생성
  *   PATCH  /api/facilities/<fid>             — 매장 정보 수정
  *   DELETE /api/facilities/<fid>             — 매장 삭제
- *   POST   /api/facilities/<fid>/claim-beacon — 비콘 SN 클레임
+ *   POST   /api/store/<fid>/claim-beacon     — 비콘 SN 클레임 (Phase C)
+ *     body: { serial_no, minor? }
+ *     major 는 백엔드가 facility_id 로 자동 세팅.
+ *     minor 미지정 시 백엔드가 매장 내 다음 순번 자동 할당.
+ *   GET    /api/store/<fid>/beacons          — 비콘 목록 (major, minor 포함)
  */
 import apiClient from '../apiClient';
 
@@ -40,9 +44,27 @@ const StoreService = {
     return apiClient.delete(`/api/facilities/${fid}`);
   },
 
-  /** 비콘 SN 클레임 — 운영자가 발급한 비콘 시리얼을 본인 매장에 연결 */
-  claimBeacon(fid, beaconSn) {
-    return apiClient.post(`/api/facilities/${fid}/claim-beacon`, { sn: beaconSn });
+  /**
+   * 비콘 SN 클레임 (Phase C) — 운영자가 발급한 비콘 시리얼을 본인 매장에 연결.
+   * @param {string} fid        — 매장(시설) ID
+   * @param {string} serialNo   — 비콘 시리얼 번호 (serial_no)
+   * @param {number|null} minor — 비콘 번호(minor). null/undefined 이면 백엔드 자동 할당.
+   */
+  claimBeacon(fid, serialNo, minor) {
+    const body = { serial_no: serialNo };
+    if (minor !== null && minor !== undefined && minor !== '') {
+      body.minor = Number(minor);
+    }
+    return apiClient.post(`/api/store/${fid}/claim-beacon`, body);
+  },
+
+  /**
+   * 매장에 등록된 비콘 목록 조회 (Phase C).
+   * 응답 각 항목에 major, minor 포함.
+   * @param {string} fid — 매장(시설) ID
+   */
+  listBeacons(fid) {
+    return apiClient.get(`/api/store/${fid}/beacons`);
   },
 };
 

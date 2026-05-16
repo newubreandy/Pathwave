@@ -12,6 +12,7 @@ import './StoreInfo.css';
 import { useNavigate } from 'react-router-dom';
 import DaumPostcodeEmbed from 'react-daum-postcode';
 import CategoryService from '../services/store/CategoryService';
+import StoreService from '../services/store/StoreService';
 
 // 커스텀 녹색 마커 (위치 핀 형태 SVG)
 const customGreenMarker = L.divIcon({
@@ -63,6 +64,66 @@ const StoreInfo = () => {
   });
 
   const [categoriesDB, setCategoriesDB] = useState(CategoryService.getCategories());
+
+  // ── 비콘 관리 state ──
+  const [beacons, setBeacons] = useState([]);
+  const [beaconSn, setBeaconSn] = useState('');
+  const [beaconMinor, setBeaconMinor] = useState('');
+  const [beaconLoading, setBeaconLoading] = useState(false);
+  const [beaconToast, setBeaconToast] = useState('');
+  const [beaconError, setBeaconError] = useState('');
+
+  // 비콘 토스트 자동 닫기 (3초)
+  const showBeaconToast = (msg) => {
+    setBeaconToast(msg);
+    setTimeout(() => setBeaconToast(''), 3000);
+  };
+
+  // 비콘 목록 fetch (실제 백엔드 연동 시 fid 를 실 매장 ID 로 교체)
+  const fetchBeacons = async (fid) => {
+    try {
+      const res = await StoreService.listBeacons(fid);
+      setBeacons(res.data?.beacons ?? res.data ?? []);
+    } catch {
+      // 목록 조회 실패는 조용히 무시 (빈 목록 유지)
+    }
+  };
+
+  // 비콘 claim 제출
+  const handleClaimBeacon = async () => {
+    setBeaconError('');
+    const snTrimmed = beaconSn.trim();
+    if (!snTrimmed) {
+      setBeaconError(t('store.beacon_err_sn'));
+      return;
+    }
+    if (beaconMinor !== '' && (!/^\d+$/.test(beaconMinor) || Number(beaconMinor) < 1)) {
+      setBeaconError(t('store.beacon_err_minor'));
+      return;
+    }
+
+    setBeaconLoading(true);
+    try {
+      // TODO: store.fid 를 실 매장 ID (API 응답값) 로 교체
+      const MOCK_FID = 'demo';
+      const res = await StoreService.claimBeacon(MOCK_FID, snTrimmed, beaconMinor || null);
+      const beacon = res.data?.beacon ?? {};
+      setBeacons(prev => [...prev, beacon]);
+      setBeaconSn('');
+      setBeaconMinor('');
+      showBeaconToast(
+        t('store.beacon_claim_success', {
+          major: beacon.major ?? '-',
+          minor: beacon.minor ?? '-',
+        })
+      );
+    } catch (err) {
+      const msg = err?.response?.data?.message ?? err?.message ?? '비콘 등록에 실패했습니다.';
+      setBeaconError(msg);
+    } finally {
+      setBeaconLoading(false);
+    }
+  };
   const WEEKDAYS = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
   const TIME_OPTIONS = Array.from({ length: 49 }, (_, i) => {
     const hours = Math.floor(i / 2).toString().padStart(2, '0');
@@ -580,7 +641,144 @@ const StoreInfo = () => {
             </div>
           </div>
         )}
+        {/* ── 비콘 관리 섹션 ── */}
+        {!isEditing && (
+          <div className="detail-item">
+            <label>{t('store.label_beacons')}</label>
+
+            {/* 비콘 목록 테이블 */}
+            {beacons.length > 0 ? (
+              <div style={{ overflowX: 'auto', marginBottom: '1.5rem' }}>
+                <table style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: '0.9rem',
+                  color: 'var(--pw-text)',
+                }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--pw-border)' }}>
+                      <th style={{ textAlign: 'left', padding: '0.6rem 0.8rem', color: 'var(--pw-text-hint)', fontWeight: 600 }}>
+                        {t('store.beacon_col_sn')}
+                      </th>
+                      <th style={{ textAlign: 'center', padding: '0.6rem 0.8rem', color: 'var(--pw-text-hint)', fontWeight: 600 }}>
+                        {t('store.beacon_col_major')}
+                      </th>
+                      <th style={{ textAlign: 'center', padding: '0.6rem 0.8rem', color: 'var(--pw-text-hint)', fontWeight: 600 }}>
+                        {t('store.beacon_col_minor')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {beacons.map((b, idx) => (
+                      <tr key={b.id ?? idx} style={{ borderBottom: '1px solid var(--pw-surface-line)' }}>
+                        <td style={{ padding: '0.6rem 0.8rem', fontFamily: 'monospace' }}>{b.serial_no ?? b.sn ?? '-'}</td>
+                        <td style={{ padding: '0.6rem 0.8rem', textAlign: 'center' }}>
+                          <span style={{
+                            display: 'inline-block',
+                            background: 'var(--pw-surface-1)',
+                            border: '1px solid var(--pw-surface-line)',
+                            borderRadius: '6px',
+                            padding: '0.2rem 0.6rem',
+                            fontSize: '0.82rem',
+                            fontWeight: 600,
+                          }}>{b.major ?? '-'}</span>
+                        </td>
+                        <td style={{ padding: '0.6rem 0.8rem', textAlign: 'center' }}>
+                          <span style={{
+                            display: 'inline-block',
+                            background: 'rgba(139,92,246,0.12)',
+                            border: '1px solid rgba(139,92,246,0.3)',
+                            borderRadius: '6px',
+                            padding: '0.2rem 0.6rem',
+                            fontSize: '0.82rem',
+                            fontWeight: 600,
+                            color: 'var(--primary)',
+                          }}>{b.minor ?? '-'}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="field-hint" style={{ marginBottom: '1rem' }}>{t('store.beacon_empty')}</p>
+            )}
+
+            {/* claim 입력 폼 */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
+              <div style={{ flex: '2 1 180px' }}>
+                <p className="field-hint" style={{ marginBottom: '0.3rem' }}>{t('store.beacon_claim_sn')}</p>
+                <input
+                  className="input-modern"
+                  style={{ fontSize: '1rem' }}
+                  value={beaconSn}
+                  onChange={e => setBeaconSn(e.target.value)}
+                  placeholder={t('store.beacon_claim_sn_ph')}
+                  disabled={beaconLoading}
+                />
+              </div>
+              <div style={{ flex: '1 1 130px' }}>
+                <p className="field-hint" style={{ marginBottom: '0.3rem' }}>{t('store.beacon_claim_minor')}</p>
+                <input
+                  className="input-modern"
+                  style={{ fontSize: '1rem' }}
+                  type="number"
+                  min="1"
+                  value={beaconMinor}
+                  onChange={e => setBeaconMinor(e.target.value)}
+                  placeholder={t('store.beacon_claim_minor_ph')}
+                  disabled={beaconLoading}
+                />
+              </div>
+              <button
+                type="button"
+                className="btn-search-address"
+                style={{
+                  flexShrink: 0,
+                  background: 'var(--primary)',
+                  color: '#fff',
+                  border: '1px solid var(--primary)',
+                  opacity: beaconLoading ? 0.6 : 1,
+                  cursor: beaconLoading ? 'not-allowed' : 'pointer',
+                }}
+                onClick={handleClaimBeacon}
+                disabled={beaconLoading}
+              >
+                {beaconLoading ? '등록 중…' : t('store.beacon_claim_btn')}
+              </button>
+            </div>
+
+            {/* 인라인 에러 */}
+            {beaconError && (
+              <p className="field-hint warn" style={{ marginTop: '0.5rem' }}>{beaconError}</p>
+            )}
+          </div>
+        )}
       </section>
+
+      {/* 비콘 claim 성공 토스트 */}
+      {beaconToast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '5.5rem',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'var(--primary)',
+          color: '#fff',
+          padding: '0.75rem 1.25rem',
+          borderRadius: '10px',
+          fontSize: '0.9rem',
+          fontWeight: 600,
+          boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+          zIndex: 3000,
+          whiteSpace: 'nowrap',
+          maxWidth: '90vw',
+          textAlign: 'center',
+          animation: 'vmFadeIn 0.2s ease',
+        }}>
+          {beaconToast}
+        </div>
+      )}
 
       <BottomActionBar>
         {!isEditing ? (

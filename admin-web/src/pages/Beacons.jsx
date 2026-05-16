@@ -104,6 +104,8 @@ export default function Beacons() {
               <th>상태</th>
               <th>할당 매장</th>
               <th>배터리</th>
+              <th>Major</th>
+              <th>Minor</th>
               <th>FW</th>
               <th>입고일</th>
               <th></th>
@@ -111,10 +113,10 @@ export default function Beacons() {
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={9} className="row-empty">로딩 중...</td></tr>
+              <tr><td colSpan={11} className="row-empty">로딩 중...</td></tr>
             )}
             {!loading && beacons.length === 0 && (
-              <tr><td colSpan={9} className="row-empty">
+              <tr><td colSpan={11} className="row-empty">
                 비콘이 없습니다. 우측 상단 "입고" 버튼으로 등록하세요.
               </td></tr>
             )}
@@ -134,6 +136,8 @@ export default function Beacons() {
                     : <span className="text-hint">—</span>}
                 </td>
                 <td className="cell-mono">{b.battery_pct != null ? `${b.battery_pct}%` : '—'}</td>
+                <td className="cell-mono">{b.major != null ? b.major : <span className="text-hint">—</span>}</td>
+                <td className="cell-mono">{b.minor != null ? b.minor : <span className="text-hint">—</span>}</td>
                 <td className="cell-mono">{b.firmware_ver || '—'}</td>
                 <td className="cell-mono">{b.created_at?.slice(0, 10) || '—'}</td>
                 <td className="cell-actions">
@@ -179,6 +183,7 @@ export default function Beacons() {
 
 
 // ── 입고 모달 ────────────────────────────────────────────────────────────────
+// Phase C — iBeacon Major/Minor (FSC-BP108B 9개 실물 테스트)
 function ImportModal({ open, onClose, onImported }) {
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
@@ -186,26 +191,65 @@ function ImportModal({ open, onClose, onImported }) {
   const [error, setError] = useState('');
 
   // 파싱 규칙:
-  //   각 줄: SN,UUID[,FW]  또는  SN UUID [FW]
+  //   각 줄: SN,UUID[,FW[,major[,minor]]]  또는 공백 구분
+  //   major/minor — 빈 칸이면 omit, 정수 변환 실패 시 해당 row 건너뜀 (parseWarnings 에 기록)
   function parse(raw) {
-    return raw.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => {
+    const warnings = [];
+    const rows = [];
+    raw.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).forEach((line, idx) => {
+      // CSV 헤더 행 건너뜀
+      if (/^serial_no/i.test(line)) return;
       const parts = line.split(/[,\s]+/).filter(Boolean);
-      const [sn, uuid, fw] = parts;
-      return { serial_no: sn || '', uuid: (uuid || '').toUpperCase(), firmware_ver: fw || undefined };
+      const [sn, uuid, fw, majorRaw, minorRaw] = parts;
+      if (!sn || !uuid) { warnings.push(`${idx + 1}행: SN 또는 UUID 누락 — 건너뜀`); return; }
+
+      const entry = {
+        serial_no: sn,
+        uuid: uuid.toUpperCase(),
+        ...(fw ? { firmware_ver: fw } : {}),
+      };
+
+      if (majorRaw !== undefined && majorRaw !== '') {
+        const v = parseInt(majorRaw, 10);
+        if (isNaN(v) || v < 0 || v > 65535) {
+          warnings.push(`${idx + 1}행 (${sn}): major 값 "${majorRaw}" 이 유효하지 않아 건너뜀`);
+          return;
+        }
+        entry.major = v;
+      }
+      if (minorRaw !== undefined && minorRaw !== '') {
+        const v = parseInt(minorRaw, 10);
+        if (isNaN(v) || v < 0 || v > 65535) {
+          warnings.push(`${idx + 1}행 (${sn}): minor 값 "${minorRaw}" 이 유효하지 않아 건너뜀`);
+          return;
+        }
+        entry.minor = v;
+      }
+      rows.push(entry);
     });
+    return { rows, warnings };
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const items = parse(text);
-    if (items.length === 0) { setError('입고할 비콘 행을 한 줄 이상 입력해 주세요.'); return; }
+    const { rows, warnings } = parse(text);
+    if (rows.length === 0) {
+      setError(
+        warnings.length > 0
+          ? `파싱 오류:\n${warnings.join('\n')}`
+          : '입고할 비콘 행을 한 줄 이상 입력해 주세요.'
+      );
+      return;
+    }
+    if (warnings.length > 0) {
+      setError(`경고 (건너뜀 행 있음):\n${warnings.join('\n')}`);
+    }
     setBusy(true);
-    setError('');
     setResult(null);
     try {
-      const data = await adminApi.importBeacons({ beacons: items });
+      const data = await adminApi.importBeacons({ beacons: rows });
       setResult(data);
-      if ((data.errors || []).length === 0) {
+      if ((data.errors || []).length === 0 && warnings.length === 0) {
         setTimeout(() => { onImported?.(); }, 600);
       }
     } catch (err) {
@@ -239,8 +283,9 @@ function ImportModal({ open, onClose, onImported }) {
       }
     >
       <p className="text-muted" style={{ marginTop: 0, fontSize: '0.875rem' }}>
-        한 줄에 비콘 1개. 형식 — <code>SN,UUID[,FW]</code> 또는 공백 구분.
+        한 줄에 비콘 1개. 형식 — <code>SN,UUID[,FW[,major[,minor]]]</code> 또는 공백 구분.
         UUID는 대소문자 구분 없이 입력 가능 (자동 대문자 변환).
+        Major / Minor 는 0~65535 정수 선택 입력 (빈 칸이면 생략).
       </p>
       <textarea
         value={text}
@@ -248,7 +293,8 @@ function ImportModal({ open, onClose, onImported }) {
         placeholder={`예시)
 B108-0001 12345678-1234-1234-1234-123456789ABC
 B108-0002,11111111-2222-3333-4444-555555555555,1.0.3
-B108-0003 22222222-3333-4444-5555-666666666666 1.0.3`}
+B108-0003,22222222-3333-4444-5555-666666666666,1.0.3,10,1
+B108-0004,33333333-4444-5555-6666-777777777777,,10,2`}
         rows={10}
         className="import-textarea"
         disabled={busy}

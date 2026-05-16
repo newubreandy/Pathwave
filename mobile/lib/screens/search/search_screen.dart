@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../services/favorite_service.dart';
 import '../../services/permission_service.dart';
 import '../../services/store_service.dart';
 import '../../utils/app_theme.dart';
@@ -28,10 +29,13 @@ class _SearchScreenState extends State<SearchScreen> {
   Position? _myPos;
   bool _locationDenied = false;
 
+  Set<int> _favoriteIds = {};
+
   @override
   void initState() {
     super.initState();
     _resolveLocation();
+    _loadFavorites();
   }
 
   @override
@@ -39,6 +43,18 @@ class _SearchScreenState extends State<SearchScreen> {
     _searchCtrl.dispose();
     _debounce?.cancel();
     super.dispose();
+  }
+
+  Future<void> _loadFavorites() async {
+    try {
+      final list = await FavoriteService().list();
+      if (!mounted) return;
+      setState(() {
+        _favoriteIds = list.map((f) => f['id'] as int).toSet();
+      });
+    } catch (_) {
+      // 즐겨찾기 로드 실패는 무시 (검색 기능에 영향 없음)
+    }
   }
 
   Future<void> _resolveLocation() async {
@@ -83,6 +99,30 @@ class _SearchScreenState extends State<SearchScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() { _error = e.toString(); _loading = false; });
+    }
+  }
+
+  Future<void> _toggleFavorite(int facilityId) async {
+    final isFav = _favoriteIds.contains(facilityId);
+    setState(() {
+      if (isFav) {
+        _favoriteIds.remove(facilityId);
+      } else {
+        _favoriteIds.add(facilityId);
+      }
+    });
+    final ok = isFav
+      ? await FavoriteService().remove(facilityId)
+      : await FavoriteService().add(facilityId);
+    if (!ok && mounted) {
+      // 실패 시 롤백
+      setState(() {
+        if (isFav) {
+          _favoriteIds.add(facilityId);
+        } else {
+          _favoriteIds.remove(facilityId);
+        }
+      });
     }
   }
 
@@ -135,7 +175,14 @@ class _SearchScreenState extends State<SearchScreen> {
         padding: const EdgeInsets.only(bottom: 16),
         itemCount: _results.length,
         separatorBuilder: (_, _) => const SizedBox(height: 10),
-        itemBuilder: (context, i) => _ResultCard(data: _results[i]),
+        itemBuilder: (context, i) {
+          final id = _results[i]['id'] as int?;
+          return _ResultCard(
+            data: _results[i],
+            isFavorite: id != null && _favoriteIds.contains(id),
+            onFavoriteToggle: id != null ? () => _toggleFavorite(id) : null,
+          );
+        },
       ),
     );
   }
@@ -144,7 +191,13 @@ class _SearchScreenState extends State<SearchScreen> {
 
 class _ResultCard extends StatelessWidget {
   final Map<String, dynamic> data;
-  const _ResultCard({required this.data});
+  final bool isFavorite;
+  final VoidCallback? onFavoriteToggle;
+  const _ResultCard({
+    required this.data,
+    required this.isFavorite,
+    this.onFavoriteToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -212,7 +265,13 @@ class _ResultCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: AppTheme.textHint),
+            // 즐겨찾기 토글 하트
+            PwIconButton(
+              icon: isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: isFavorite ? AppTheme.primary : AppTheme.textHint,
+              tooltip: isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가',
+              onPressed: onFavoriteToggle,
+            ),
           ],
         ),
       ),

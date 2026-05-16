@@ -582,7 +582,8 @@ def list_facility_beacons(fid):
                         'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
 
     rows = db.execute(
-        """SELECT id, serial_no, uuid, status, battery_pct, firmware_ver, created_at
+        """SELECT id, serial_no, uuid, major, minor,
+                  status, battery_pct, firmware_ver, created_at
            FROM beacons WHERE facility_id=?
            ORDER BY id DESC""",
         (fid,)
@@ -611,6 +612,20 @@ def claim_beacon(fid):
     if not serial_no:
         return jsonify({'success': False, 'message': 'serial_no가 필요합니다.'}), 400
 
+    # Phase C — Major = facility_id 자동 지정 가능. Minor 는 사장이 지정 (1~3 등),
+    # 미지정 시 매장 내 다음 순번 자동 할당.
+    minor_raw = data.get('minor')
+    minor: int | None
+    if minor_raw is None or minor_raw == '':
+        minor = None
+    else:
+        try:
+            minor = int(minor_raw)
+        except (TypeError, ValueError):
+            return jsonify({'success': False, 'message': 'minor 는 정수여야 합니다.'}), 400
+        if not 0 <= minor <= 65535:
+            return jsonify({'success': False, 'message': 'minor 는 0~65535 범위여야 합니다.'}), 400
+
     db = get_db()
     if not _owned_facility(db, fid, account_id):
         db.close()
@@ -633,12 +648,22 @@ def claim_beacon(fid):
         return jsonify({'success': False,
                         'message': f"비콘 상태가 '{beacon['status']}'이어서 claim할 수 없습니다."}), 409
 
+    if minor is None:
+        nxt = db.execute(
+            "SELECT COALESCE(MAX(minor), 0) + 1 AS m FROM beacons WHERE facility_id=?",
+            (fid,)
+        ).fetchone()
+        minor = nxt['m']
+
     db.execute(
-        "UPDATE beacons SET facility_id=?, status='active' WHERE id=?",
-        (fid, beacon['id'])
+        """UPDATE beacons
+           SET facility_id=?, major=?, minor=?, status='active'
+           WHERE id=?""",
+        (fid, fid, minor, beacon['id'])
     )
     new_row = db.execute(
-        """SELECT id, serial_no, uuid, status, battery_pct, firmware_ver, created_at
+        """SELECT id, serial_no, uuid, major, minor,
+                  status, battery_pct, firmware_ver, created_at
            FROM beacons WHERE id=?""", (beacon['id'],)
     ).fetchone()
     db.commit()

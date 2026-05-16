@@ -133,17 +133,24 @@ def admin_refresh():
 
 import re as _re
 
-_UUID_RE = _re.compile(r'^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$')
+# 8-4-4-4-12 대시 포맷, 또는 32자리 대시 없는 포맷 둘 다 허용 (FSC-BP108B 펌웨어 케이스 대비).
+_UUID_RE = _re.compile(
+    r'^([0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}'
+    r'|[0-9A-Fa-f]{32})$'
+)
 _BEACON_STATUSES = {'inventory', 'active', 'inactive', 'lost'}
 
 
 def _row_to_beacon(row) -> dict:
+    keys = row.keys()
     return {
         'id':           row['id'],
         'serial_no':    row['serial_no'],
         'uuid':         row['uuid'],
+        'major':        row['major'] if 'major' in keys else None,
+        'minor':        row['minor'] if 'minor' in keys else None,
         'facility_id':  row['facility_id'],
-        'facility_name': row['facility_name'] if 'facility_name' in row.keys() else None,
+        'facility_name': row['facility_name'] if 'facility_name' in keys else None,
         'status':       row['status'],
         'battery_pct':  row['battery_pct'],
         'firmware_ver': row['firmware_ver'],
@@ -174,17 +181,43 @@ def import_beacons():
         sn   = (item.get('serial_no') or '').strip()
         uuid = (item.get('uuid') or '').strip().upper()
         fw   = (item.get('firmware_ver') or '').strip() or None
+        major = item.get('major')
+        minor = item.get('minor')
+        # Phase C — Major/Minor 는 0~65535 정수 (iBeacon 표준). 인벤토리 단계에서는 선택.
+        for nm, val in (('major', major), ('minor', minor)):
+            if val is None or val == '':
+                continue
+            try:
+                v = int(val)
+            except (TypeError, ValueError):
+                errors.append({'index': idx, 'serial_no': sn, 'uuid': uuid,
+                               'error': f'invalid_{nm}'})
+                val = -1
+            else:
+                if not 0 <= v <= 65535:
+                    errors.append({'index': idx, 'serial_no': sn, 'uuid': uuid,
+                                   'error': f'{nm}_out_of_range'})
+                    val = -1
+                else:
+                    if nm == 'major': major = v
+                    else: minor = v
+        if isinstance(major, str): major = None
+        if isinstance(minor, str): minor = None
         if not sn or not _UUID_RE.match(uuid):
             errors.append({'index': idx, 'serial_no': sn, 'uuid': uuid,
                            'error': 'invalid_format'})
             continue
         try:
             cur = db.execute(
-                """INSERT INTO beacons (serial_no, uuid, firmware_ver, status)
-                   VALUES (?,?,?,'inventory')""",
-                (sn, uuid, fw)
+                """INSERT INTO beacons
+                     (serial_no, uuid, major, minor, firmware_ver, status)
+                   VALUES (?,?,?,?,?,'inventory')""",
+                (sn, uuid, major if isinstance(major, int) else None,
+                 minor if isinstance(minor, int) else None, fw)
             )
-            imported.append({'id': cur.lastrowid, 'serial_no': sn, 'uuid': uuid})
+            imported.append({'id': cur.lastrowid, 'serial_no': sn, 'uuid': uuid,
+                             'major': major if isinstance(major, int) else None,
+                             'minor': minor if isinstance(minor, int) else None})
         except Exception as e:
             errors.append({'index': idx, 'serial_no': sn, 'uuid': uuid,
                            'error': str(e)})
