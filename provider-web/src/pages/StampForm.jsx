@@ -26,6 +26,9 @@ const StampForm = () => {
     accumEnd: '9999-12-31',
     paymentAmount: 5000,
     isDirectInput: false,
+    autoStamp: false,
+    cooldownMinutes: 0,
+    expiresDays: 0,
     benefits: [
       { id: 1, count: '10회차', desc: '5,000원 할인' }
     ]
@@ -187,11 +190,26 @@ const StampForm = () => {
           <ChevronLeft size={24} />
         </button>
         <h1>
-          {action === 'new' && t('stamp.title_add', '스탬프 등록')}
-          {action === 'edit' && '스탬프 수정'}
+          {action === 'new' && t('stamp.policy_title', '스탬프 정책 설정')}
+          {action === 'edit' && t('stamp.policy_title', '스탬프 정책 설정')}
           {action === 'view' && t('stamp.title_view', '스탬프 상세')}
         </h1>
       </div>
+
+      {!isViewMode && (
+        <div style={{
+          backgroundColor: 'rgba(234, 179, 8, 0.15)',
+          border: '1px solid rgba(234, 179, 8, 0.5)',
+          borderRadius: 'var(--pw-radius-sm)',
+          padding: 'var(--pw-space-4)',
+          marginBottom: 'var(--pw-space-6)',
+          fontSize: 'var(--pw-caption-size)',
+          color: '#ca8a04',
+          lineHeight: 'var(--pw-body-leading)',
+        }}>
+          {t('stamp.policy_single_active', '매장당 활성 스탬프 정책은 1개만 유지됩니다. 새 정책을 저장하면 기존 정책이 자동으로 비활성화됩니다.')}
+        </div>
+      )}
 
       <div className="form-group">
         <label className="form-label">스탬프명</label>
@@ -276,6 +294,61 @@ const StampForm = () => {
             {t('stamp.hint_payment2', '※ 스탬프 자동수동은 결제금액을 총 결제금액/단건 나눔 횟수 만큼 적립됩니다.')}<br/>
             {t('stamp.hint_payment3', '예) 5,000원 설정 시 결제금액 4,000원 = 적립 불가\n5,000원 설정 시 결제금액 10,500원 = 2개 적립').split('\n').map((line, i) => <React.Fragment key={i}>{line}<br/></React.Fragment>)}
           </div>
+        </div>
+      </div>
+
+      {/* BLE 자동 적립 토글 */}
+      <div className="form-group">
+        <label className="form-label">{t('stamp.policy_auto_label', 'BLE 비콘 자동 적립')}</label>
+        <div className="form-content">
+          <div className="coupon-push-row">
+            <label className="push-toggle-switch">
+              <input
+                type="checkbox"
+                checked={formData.autoStamp}
+                onChange={() => !isViewMode && setFormData(prev => ({ ...prev, autoStamp: !prev.autoStamp }))}
+                disabled={isViewMode}
+              />
+              <span className="push-slider">
+                <span className="push-text">{formData.autoStamp ? 'ON' : 'OFF'}</span>
+              </span>
+            </label>
+          </div>
+          <div className="form-hint">{t('stamp.policy_auto_hint', '※ 활성화 시 고객이 비콘 범위에 입장하면 자동으로 스탬프가 적립됩니다.')}</div>
+        </div>
+      </div>
+
+      {/* 쿨다운 (분) */}
+      <div className="form-group">
+        <label className="form-label">쿨다운 (분)</label>
+        <div className="form-content">
+          <input
+            type="number"
+            className="form-input"
+            name="cooldownMinutes"
+            value={formData.cooldownMinutes}
+            onChange={handleChange}
+            min="0"
+            disabled={isViewMode}
+          />
+          <div className="form-hint">{t('stamp.policy_cooldown_hint', '※ 동일 고객의 중복 적립을 방지하는 최소 간격(분)입니다. 0 = 제한 없음.')}</div>
+        </div>
+      </div>
+
+      {/* 만료 (일) */}
+      <div className="form-group">
+        <label className="form-label">스탬프 유효기간 (일)</label>
+        <div className="form-content">
+          <input
+            type="number"
+            className="form-input"
+            name="expiresDays"
+            value={formData.expiresDays}
+            onChange={handleChange}
+            min="0"
+            disabled={isViewMode}
+          />
+          <div className="form-hint">{t('stamp.policy_expires_hint', '※ 적립된 스탬프의 유효 기간(일)입니다. 0 = 무기한.')}</div>
         </div>
       </div>
 

@@ -29,7 +29,10 @@ const CouponForm = () => {
     isDirectInput: false,
     location: '',
     pushVisitors: false,
-    pushAll: false
+    pushAll: false,
+    benefit: '',
+    validityDays: '',
+    target: 'single',
   });
 
   const availableCoupons = 5;
@@ -114,7 +117,7 @@ const CouponForm = () => {
         <button className="back-btn" onClick={() => navigate('/dashboard/coupons')}>
           <ChevronLeft size={24} />
         </button>
-        <h1>{isViewMode ? t('coupon.title_view') : t('coupon.title_edit')}</h1>
+        <h1>{isViewMode ? t('coupon.title_view') : t('coupon_issue.form_title', '쿠폰 발급')}</h1>
       </div>
 
       <div className="coupon-desc-text">
@@ -136,6 +139,66 @@ const CouponForm = () => {
               onChange={(e) => setFormData({...formData, title: e.target.value})}
               disabled={isViewMode}
             />
+          </div>
+        </div>
+
+        {/* Benefit */}
+        <div className="form-group">
+          <div className="form-label">{t('coupon_issue.form_benefit_label', '혜택 내용')}</div>
+          <div className="form-content">
+            <input
+              type="text"
+              className="form-input-line"
+              placeholder={t('coupon.ph_presents', '쿠폰 혜택을 입력하세요')}
+              value={formData.benefit}
+              onChange={(e) => setFormData({...formData, benefit: e.target.value})}
+              disabled={isViewMode}
+            />
+          </div>
+        </div>
+
+        {/* Validity */}
+        <div className="form-group">
+          <div className="form-label">{t('coupon_issue.form_validity_label', '유효기간 (일)')}</div>
+          <div className="form-content">
+            <input
+              type="number"
+              className="form-input-line"
+              placeholder="30"
+              value={formData.validityDays}
+              onChange={(e) => setFormData({...formData, validityDays: e.target.value})}
+              disabled={isViewMode}
+              min="0"
+            />
+            <div className="form-hint">{t('coupon_issue.form_validity_hint', '※ 발급일로부터 N일 동안 사용 가능합니다. 비워두면 무기한 — 30~90일 권장.')}</div>
+          </div>
+        </div>
+
+        {/* Target */}
+        <div className="form-group">
+          <div className="form-label">{t('coupon_issue.form_target_label', '발급 대상')}</div>
+          <div className="form-content">
+            <div className="radio-group" style={{ marginTop: 0, flexDirection: 'column', gap: 'var(--pw-space-3)' }}>
+              {[
+                { value: 'single', label: t('coupon_issue.form_target_single', '단건 발급') },
+                { value: 'welcome', label: t('coupon_issue.form_target_welcome', '신규 방문 자동 지급') },
+                { value: 'reward', label: t('coupon_issue.form_target_reward', '적립 보상 쿠폰') },
+              ].map(opt => (
+                <label key={opt.value} className="radio-label" style={{ cursor: isViewMode ? 'default' : 'pointer' }}>
+                  <input
+                    type="radio"
+                    className="radio-input"
+                    name="target"
+                    value={opt.value}
+                    checked={formData.target === opt.value}
+                    onChange={(e) => !isViewMode && setFormData({...formData, target: e.target.value})}
+                    disabled={isViewMode}
+                  />
+                  <span className="radio-custom" />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -361,6 +424,22 @@ const CouponForm = () => {
         </div>
 
       </div>
+
+      {!isViewMode && (
+        <div style={{
+          backgroundColor: 'rgba(234, 179, 8, 0.15)',
+          border: '1px solid rgba(234, 179, 8, 0.5)',
+          borderRadius: 'var(--pw-radius-sm)',
+          padding: 'var(--pw-space-4)',
+          marginTop: 'var(--pw-space-6)',
+          marginBottom: 'var(--pw-space-4)',
+          fontSize: 'var(--pw-caption-size)',
+          color: '#ca8a04',
+          lineHeight: 'var(--pw-body-leading)',
+        }}>
+          {t('coupon_issue.form_compliance', '발급 후 쿠폰의 혜택 조건·유효기간·사용 제한을 변경할 수 없습니다. 조건 변경이 필요한 경우 새 쿠폰을 발급하세요.')}
+        </div>
+      )}
 
       <BottomActionBar>
         {isViewMode ? (

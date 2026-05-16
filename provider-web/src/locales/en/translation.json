@@ -108,6 +108,26 @@
     "ph_send_count": "Enter number",
     "btn_next": "Next"
   },
+  "coupon_issue": {
+    "form_title": "Issue Coupon",
+    "form_title_label": "Coupon Name",
+    "form_benefit_label": "Benefit",
+    "form_validity_label": "Validity (days)",
+    "form_validity_hint": "※ Valid for N days from the issue date. Leave blank for no expiry — 30–90 days recommended.",
+    "form_target_label": "Target Recipients",
+    "form_target_single": "Single Issue",
+    "form_target_welcome": "Auto-issue to New Visitors",
+    "form_target_reward": "Stamp Reward Coupon",
+    "form_compliance": "Benefit terms, validity, and restrictions cannot be changed after issuance. Create a new coupon if changes are required."
+  },
+  "stamp": {
+    "policy_title": "Stamp Policy Settings",
+    "policy_single_active": "Only one stamp policy can be active per store. Saving a new policy will automatically deactivate the existing one.",
+    "policy_auto_label": "BLE Beacon Auto Stamp",
+    "policy_auto_hint": "※ When enabled, stamps are automatically credited when a customer enters the beacon range.",
+    "policy_cooldown_hint": "※ Minimum interval (minutes) to prevent duplicate stamps for the same customer. 0 = no limit.",
+    "policy_expires_hint": "※ Expiry period (days) for collected stamps. 0 = no expiry."
+  },
   "coupon": {
     "title_list": "Coupon Management",
     "title_add": "Register Coupon",
