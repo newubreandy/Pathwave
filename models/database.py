@@ -79,13 +79,16 @@ def init_db():
         CREATE TABLE IF NOT EXISTS beacons (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             serial_no   TEXT    UNIQUE NOT NULL,       -- SN (FSC-BP108B)
-            uuid        TEXT    UNIQUE NOT NULL,       -- 암호화된 UUID
+            uuid        TEXT    UNIQUE NOT NULL,       -- iBeacon UUID (디바이스마다 고유 저장)
+            major       INTEGER,                       -- iBeacon Major (= facility_id)
+            minor       INTEGER,                       -- iBeacon Minor (매장 내 순번)
             facility_id INTEGER,
-            status      TEXT    DEFAULT 'inactive',   -- active / inactive / inventory
+            status      TEXT    DEFAULT 'inactive',   -- active / inactive / inventory / lost
             battery_pct INTEGER DEFAULT 100,
             firmware_ver TEXT,
             created_at  TEXT    DEFAULT (datetime('now'))
         );
+        -- idx_beacons_major_minor 인덱스는 ALTER TABLE ADD COLUMN 이후 별도 생성 (Phase C 마이그레이션).
 
         CREATE TABLE IF NOT EXISTS wifi_profiles (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -399,6 +402,21 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_invitations_inviter     ON invitations(inviter_user_id);
         CREATE INDEX IF NOT EXISTS idx_invitations_facility    ON invitations(inviter_facility_id);
 
+        -- 사용자 즐겨찾기 (Phase C) — 사용자가 매장을 즐겨찾기에 담는다.
+        CREATE TABLE IF NOT EXISTS user_favorites (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id     INTEGER NOT NULL,
+            facility_id INTEGER NOT NULL,
+            created_at  TEXT    DEFAULT (datetime('now')),
+            UNIQUE (user_id, facility_id),
+            FOREIGN KEY (user_id)     REFERENCES users(id),
+            FOREIGN KEY (facility_id) REFERENCES facilities(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_user_favorites_user
+            ON user_favorites(user_id);
+        CREATE INDEX IF NOT EXISTS idx_user_favorites_facility
+            ON user_favorites(facility_id);
+
         -- 시스템 공지 (PR #33) — 운영자가 사용자/사장/직원에게 일괄 공지
         CREATE TABLE IF NOT EXISTS announcements (
             id                   INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -488,6 +506,14 @@ def init_db():
     _add_column_if_missing(db, 'beacons', 'battery_updated_at', 'battery_updated_at TEXT')
     _add_column_if_missing(db, 'beacons', 'battery_voltage_mv', 'battery_voltage_mv INTEGER')
     _add_column_if_missing(db, 'beacons', 'last_seen_at',       'last_seen_at TEXT')
+
+    # beacons: iBeacon Major/Minor (Phase C — FSC-BP108B 9개 실물 테스트 대응)
+    # Major = 매장 ID, Minor = 매장 내 비콘 순번. UUID 는 PathWave 전체 통일.
+    _add_column_if_missing(db, 'beacons', 'major', 'major INTEGER')
+    _add_column_if_missing(db, 'beacons', 'minor', 'minor INTEGER')
+    db.execute(
+        "CREATE INDEX IF NOT EXISTS idx_beacons_major_minor ON beacons(major, minor)"
+    )
 
     # 비콘 배터리 시계열 (PR #34)
     db.executescript("""

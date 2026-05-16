@@ -27,7 +27,20 @@
     "placeholder_category_search": "추가할 업종을 검색하세요",
     "placeholder_category_empty": "업종을 검색하여 선택하세요",
     "empty_category_result": "검색 결과가 없습니다",
-    "add_photo": "사진 추가 (최대 5장)"
+    "add_photo": "사진 추가 (최대 5장)",
+    "label_beacons": "비콘 관리",
+    "beacon_empty": "등록된 비콘이 없습니다.",
+    "beacon_claim_sn": "비콘 시리얼 번호",
+    "beacon_claim_sn_ph": "시리얼 번호를 입력하세요",
+    "beacon_claim_minor": "비콘 번호 (minor, 선택)",
+    "beacon_claim_minor_ph": "비워두면 자동 할당",
+    "beacon_claim_btn": "비콘 등록",
+    "beacon_claim_success": "비콘이 매장에 할당되었습니다. (Major {{major}} / Minor {{minor}})",
+    "beacon_col_sn": "시리얼",
+    "beacon_col_major": "Major",
+    "beacon_col_minor": "Minor",
+    "beacon_err_sn": "시리얼 번호를 입력해주세요.",
+    "beacon_err_minor": "비콘 번호는 1 이상의 정수를 입력해주세요."
   },
   "noti": {
     "title_list": "알림발송",

@@ -27,7 +27,20 @@
     "placeholder_category_search": "Search for categories to add",
     "placeholder_category_empty": "Search and select a category",
     "empty_category_result": "No results found",
-    "add_photo": "Add Photo (Max 5)"
+    "add_photo": "Add Photo (Max 5)",
+    "label_beacons": "Beacon Management",
+    "beacon_empty": "No beacons registered.",
+    "beacon_claim_sn": "Beacon Serial No.",
+    "beacon_claim_sn_ph": "Enter serial number",
+    "beacon_claim_minor": "Beacon No. (minor, optional)",
+    "beacon_claim_minor_ph": "Leave blank for auto-assign",
+    "beacon_claim_btn": "Register Beacon",
+    "beacon_claim_success": "Beacon assigned to store. (Major {{major}} / Minor {{minor}})",
+    "beacon_col_sn": "Serial",
+    "beacon_col_major": "Major",
+    "beacon_col_minor": "Minor",
+    "beacon_err_sn": "Please enter a serial number.",
+    "beacon_err_minor": "Beacon number must be a positive integer."
   },
   "noti": {
     "title_list": "Notifications",

@@ -27,16 +27,32 @@ def handshake():
     uuid = (data.get('uuid') or '').strip()
     rssi = data.get('rssi')       # 수신 신호 강도 (참고용 로깅)
     user_id = data.get('user_id') # 로그인된 사용자
+    # Phase C — iBeacon Major/Minor (선택). 같은 UUID 가 여러 매장에 깔린 경우
+    # major(=facility_id) 까지 일치하는 비콘을 우선 선택.
+    major = data.get('major')
+    minor = data.get('minor')
+    try:
+        major = int(major) if major is not None and major != '' else None
+        minor = int(minor) if minor is not None and minor != '' else None
+    except (TypeError, ValueError):
+        major = minor = None
 
     if not uuid:
         return jsonify({'success': False, 'message': 'UUID가 필요합니다.'}), 400
 
     db = get_db()
 
-    # 비콘 조회
-    beacon = db.execute(
-        "SELECT id, facility_id, status FROM beacons WHERE uuid=?", (uuid,)
-    ).fetchone()
+    # 비콘 조회 — major/minor 가 같이 온 경우 우선, 없으면 uuid 단독.
+    beacon = None
+    if major is not None and minor is not None:
+        beacon = db.execute(
+            "SELECT id, facility_id, status FROM beacons WHERE uuid=? AND major=? AND minor=?",
+            (uuid, major, minor)
+        ).fetchone()
+    if beacon is None:
+        beacon = db.execute(
+            "SELECT id, facility_id, status FROM beacons WHERE uuid=?", (uuid,)
+        ).fetchone()
 
     if not beacon:
         db.close()

@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../services/favorite_service.dart';
 import '../../services/store_service.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/empty_state.dart';
@@ -21,12 +22,16 @@ class _FacilityScreenState extends State<FacilityScreen> {
   late Future<Map<String, dynamic>> _detail;
   late Future<List<Map<String, dynamic>>> _images;
 
+  bool _isFavorite = false;
+  bool _favLoading = false;
+
   int get _id => int.tryParse(widget.facilityId) ?? 0;
 
   @override
   void initState() {
     super.initState();
     _reload();
+    _loadFavoriteState();
   }
 
   void _reload() {
@@ -37,6 +42,32 @@ class _FacilityScreenState extends State<FacilityScreen> {
   Future<void> _refresh() async {
     setState(() { _reload(); });
     await Future.wait([_detail, _images]);
+  }
+
+  Future<void> _loadFavoriteState() async {
+    try {
+      final list = await FavoriteService().list();
+      if (!mounted) return;
+      setState(() {
+        _isFavorite = list.any((f) => f['id'] == _id);
+      });
+    } catch (_) {
+      // 즐겨찾기 상태 로드 실패는 무시
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (_favLoading) return;
+    setState(() => _favLoading = true);
+    final wasFav = _isFavorite;
+    setState(() => _isFavorite = !wasFav);
+    final ok = wasFav
+      ? await FavoriteService().remove(_id)
+      : await FavoriteService().add(_id);
+    if (!ok && mounted) {
+      setState(() => _isFavorite = wasFav); // 실패 시 롤백
+    }
+    if (mounted) setState(() => _favLoading = false);
   }
 
   @override
@@ -79,6 +110,14 @@ class _FacilityScreenState extends State<FacilityScreen> {
     return SliverAppBar(
       expandedHeight: 220,
       pinned: true,
+      actions: [
+        PwIconButton(
+          icon: _isFavorite ? Icons.favorite : Icons.favorite_border,
+          color: _isFavorite ? AppTheme.primary : AppTheme.textPrimary,
+          tooltip: _isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가',
+          onPressed: _favLoading ? null : _toggleFavorite,
+        ),
+      ],
       flexibleSpace: FlexibleSpaceBar(
         background: imageUrl != null && imageUrl.isNotEmpty
           ? CachedNetworkImage(
