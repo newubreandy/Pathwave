@@ -75,7 +75,8 @@
 
   /* ── Color: Text ── */
   --pw-text:           var(--pw-gray-50);     /* #F2F3F7 */
-  --pw-text-secondary: var(--pw-gray-300);    /* #8A91A3 */
+  --pw-text-secondary: #B3B9CB;               /* WCAG AA — 이전 #8A91A3 → 밝게 */
+  --pw-text-muted:     #9CA3B5;               /* 중간 뮤트 텍스트 */
   --pw-text-hint:      var(--pw-gray-400);    /* #5A6072 */
   --pw-text-disabled:  var(--pw-gray-500);
   --pw-text-inverse:   var(--pw-gray-900);

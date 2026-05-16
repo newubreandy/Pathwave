@@ -1,0 +1,104 @@
+/* ═══════════════════════════════════════════════════
+   PwFooter — 법인 정보 placeholder 푸터
+   다크 + 보라(#8B5CF6) 톤. 디자인 토큰 사용.
+   ═══════════════════════════════════════════════════ */
+
+.pw-footer {
+  width: 100%;
+  background: var(--pw-bg-2, #0F0F17);
+  border-top: 1px solid var(--pw-border, #1F1F2B);
+  margin-top: var(--pw-space-16);
+  padding: var(--pw-space-10) 0 var(--pw-space-8);
+}
+
+.pw-footer-inner {
+  max-width: var(--pw-max-width, 1200px);
+  margin: 0 auto;
+  padding: 0 var(--pw-container-pad, 2.5rem);
+}
+
+/* 법인 정보 dl */
+.pw-footer-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-2);
+  margin: 0 0 var(--pw-space-6);
+}
+
+.pw-footer-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--pw-space-3);
+  flex-wrap: wrap;
+}
+
+.pw-footer-row dt {
+  flex: 0 0 120px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pw-text-hint, #5A6072);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.pw-footer-row dd {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--pw-text-muted, #9CA3B5);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* 약관 링크 */
+.pw-footer-links {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--pw-space-4);
+}
+
+.pw-footer-link {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--pw-text-secondary, #B3B9CB);
+  text-decoration: none;
+  transition: color var(--pw-duration-fast, 150ms) var(--pw-ease);
+}
+
+.pw-footer-link:hover {
+  color: var(--pw-text, #F2F3F7);
+}
+
+/* 개인정보처리방침은 굵게 (법적 강조) */
+.pw-footer-link--bold {
+  font-weight: 700;
+  color: var(--pw-text-secondary, #B3B9CB);
+}
+
+.pw-footer-sep {
+  display: inline-block;
+  width: 1px;
+  height: 11px;
+  background: var(--pw-border-strong, #2A2A38);
+  flex-shrink: 0;
+}
+
+/* 저작권 */
+.pw-footer-copy {
+  font-size: 11px;
+  color: var(--pw-text-hint, #5A6072);
+  margin: 0;
+}
+
+/* 모바일 */
+@media (max-width: 768px) {
+  .pw-footer-inner {
+    padding: 0 var(--pw-container-pad-m, 1.5rem);
+  }
+
+  .pw-footer-row dt {
+    flex: 0 0 100px;
+  }
+}

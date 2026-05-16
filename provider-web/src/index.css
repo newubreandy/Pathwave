@@ -620,3 +620,33 @@ input, textarea, select, button {
   color: var(--pw-text-hint);
   font-weight: 700;
 }
+
+/* ═══════════════════════════════════════════════════
+   Modal 표준 유틸리티 클래스
+   모든 모달은 이 클래스를 기반으로 사용한다.
+   backdrop: rgba(0,0,0,0.6) / z-index 999 / pointer-events 차단
+   content:  z-index 1000 / pointer-events 수신
+   body scroll lock: .pw-modal-open (overflow:hidden)
+   ═══════════════════════════════════════════════════ */
+
+/* body 스크롤 잠금 — 모달 열릴 때 JS 에서 classList.add('pw-modal-open') */
+body.pw-modal-open {
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* 백드롭 — 페이지 콘텐츠 위 고정, 터치/클릭 완전 차단 */
+.pw-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 999;
+  pointer-events: all;
+}
+
+/* 모달 컨텐츠 래퍼 — 백드롭 위, 터치/클릭 수신 */
+.pw-modal-content {
+  position: relative;
+  z-index: 1000;
+  pointer-events: all;
+}
