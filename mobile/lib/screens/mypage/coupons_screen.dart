@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../services/coupon_service.dart';
+import '../../services/i18n_service.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/pw.dart';
 
 const _statusTabs = ['active', 'used', 'expired'];
 const _statusLabel = {
@@ -19,6 +22,8 @@ class _CouponsScreenState extends State<CouponsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabCtrl;
   final Map<String, Future<List<Map<String, dynamic>>>> _futures = {};
+
+  final _t = I18nService.instance;
 
   @override
   void initState() {
@@ -41,7 +46,7 @@ class _CouponsScreenState extends State<CouponsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('내 쿠폰'),
+        title: Text(_t.t('coupon.screen_title', defaultValue: '내 쿠폰')),
         bottom: TabBar(
           controller: _tabCtrl,
           tabs: _statusTabs.map((s) => Tab(text: _statusLabel[s])).toList(),
@@ -123,13 +128,8 @@ class _CouponCard extends StatelessWidget {
     final isUsable = status == 'active';
     final color = isUsable ? AppTheme.primary : AppTheme.textHint;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isUsable ? AppTheme.primary.withValues(alpha: 0.5) : AppTheme.border),
-      ),
-      padding: const EdgeInsets.all(16),
+    return PwCard(
+      onTap: () => _showDetailDialog(context, data, isUsable),
       child: Row(
         children: [
           Container(
@@ -147,8 +147,10 @@ class _CouponCard extends StatelessWidget {
               children: [
                 Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
-                Text(facilityName,
-                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                Text(
+                  '${I18nService.instance.t('coupon.facility_label', defaultValue: '사용 가능 매장')}: $facilityName',
+                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
@@ -157,12 +159,200 @@ class _CouponCard extends StatelessWidget {
                         style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 13)),
                     if (expiresAt != null) ...[
                       if (discount != null) const Text(' · ', style: TextStyle(color: AppTheme.textHint)),
-                      Text('~${expiresAt.split('T').first}',
-                        style: const TextStyle(color: AppTheme.textHint, fontSize: 12)),
+                      Text(
+                        '${I18nService.instance.t('coupon.expires_label', defaultValue: '유효기간')}: ~${expiresAt.split('T').first}',
+                        style: const TextStyle(color: AppTheme.textHint, fontSize: 12),
+                      ),
                     ],
                   ],
                 ),
               ],
+            ),
+          ),
+          const Icon(Icons.chevron_right, size: 18, color: AppTheme.textHint),
+        ],
+      ),
+    );
+  }
+
+  void _showDetailDialog(BuildContext context, Map<String, dynamic> data, bool isUsable) {
+    final t = I18nService.instance;
+    final title = data['title']?.toString() ?? '쿠폰';
+    final facilityName = data['facility_name']?.toString() ?? '매장';
+    final expiresAt = data['expires_at']?.toString();
+
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 기본 정보
+              _DetailRow(
+                label: t.t('coupon.facility_label', defaultValue: '사용 가능 매장'),
+                value: facilityName,
+              ),
+              if (expiresAt != null) ...[
+                const SizedBox(height: 4),
+                _DetailRow(
+                  label: t.t('coupon.expires_label', defaultValue: '유효기간'),
+                  value: '~${expiresAt.split('T').first}',
+                ),
+              ],
+              const SizedBox(height: 16),
+
+              // 쿠폰 사용 안내 (전자상거래법/소비자보호법 필수 고지)
+              PwCard(
+                padding: const EdgeInsets.all(14),
+                color: AppTheme.background,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.t('coupon.terms_title', defaultValue: '쿠폰 사용 안내'),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _TermsBullet(t.t(
+                      'coupon.terms_condition',
+                      defaultValue: '본 쿠폰은 발급 매장에서만 사용 가능합니다.',
+                    )),
+                    _TermsBullet(t.t(
+                      'coupon.terms_expiry',
+                      defaultValue: '유효기간 내에만 사용 가능하며, 만료 후 소멸됩니다.',
+                    )),
+                    _TermsBullet(t.t(
+                      'coupon.terms_exclusion',
+                      defaultValue: '일부 상품·서비스는 쿠폰 적용에서 제외될 수 있습니다.',
+                    )),
+                    _TermsBullet(t.t(
+                      'coupon.terms_transfer',
+                      defaultValue: '본 쿠폰은 타인에게 양도하거나 현금으로 교환할 수 없습니다.',
+                    )),
+                    _TermsBullet(t.t(
+                      'coupon.terms_dispute',
+                      defaultValue: '쿠폰 관련 분쟁은 발급 매장 사업자가 책임을 부담하며, PathWave 는 중개 플랫폼으로 책임을 지지 않습니다.',
+                    )),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          PwButton(
+            variant: PwButtonVariant.text,
+            fullWidth: false,
+            onPressed: () => ctx.pop(),
+            child: const Text('닫기'),
+          ),
+          if (isUsable)
+            PwButton(
+              fullWidth: false,
+              onPressed: () {
+                ctx.pop();
+                _showUseConfirm(context, data);
+              },
+              child: Text(t.t('coupon.use_btn', defaultValue: '쿠폰 사용')),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showUseConfirm(BuildContext context, Map<String, dynamic> data) {
+    final t = I18nService.instance;
+    final title = data['title']?.toString() ?? '쿠폰';
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(t.t('coupon.use_confirm_title', defaultValue: '쿠폰 사용 확인')),
+        content: Text(
+          t.t(
+            'coupon.use_confirm',
+            defaultValue: '"$title" 쿠폰을 지금 사용하시겠습니까?\n사용 후에는 취소할 수 없습니다.',
+          ).replaceFirst('\$title', title),
+          style: const TextStyle(height: 1.5),
+        ),
+        actions: [
+          PwButton(
+            variant: PwButtonVariant.text,
+            fullWidth: false,
+            onPressed: () => ctx.pop(),
+            child: const Text('취소'),
+          ),
+          PwButton(
+            fullWidth: false,
+            onPressed: () async {
+              ctx.pop();
+              final id = data['id'] as int?;
+              if (id != null) {
+                try {
+                  await CouponService().useCoupon(id);
+                } catch (_) {}
+              }
+            },
+            child: Text(t.t('coupon.use_btn', defaultValue: '사용하기')),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+class _DetailRow extends StatelessWidget {
+  final String label;
+  final String value;
+  const _DetailRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(value, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
+        ),
+      ],
+    );
+  }
+}
+
+
+class _TermsBullet extends StatelessWidget {
+  final String text;
+  const _TermsBullet(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('• ', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 13,
+                height: 1.45,
+              ),
             ),
           ),
         ],

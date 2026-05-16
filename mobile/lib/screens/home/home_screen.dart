@@ -7,6 +7,7 @@ import '../../services/ble_service.dart';
 import '../../services/i18n_service.dart';
 import '../../services/permission_service.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/notification_permission_dialog.dart';
 import '../../widgets/pw.dart';
 import '../search/search_screen.dart';
 
@@ -33,6 +34,10 @@ class _HomeScreenState extends State<HomeScreen> {
       final granted = await PermissionService.instance.ensureBluetoothScan(context);
       if (!granted || !mounted) return;
       await ble.startScan(userId: auth.user?['id']?.toString());
+
+      // 정보통신망법 §50 — 푸시 알림 수신 동의 (마케팅 분리). BLE 흐름 완료 후 1회.
+      if (!mounted) return;
+      await NotificationPermissionDialog.showIfNeeded(context);
     });
   }
 

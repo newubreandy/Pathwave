@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/chat_service.dart';
+import '../../services/i18n_service.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/pw.dart';
@@ -32,12 +34,70 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   StreamSubscription? _sseSub;
   bool _sending = false;
 
+  final _t = I18nService.instance;
+
   int get _facilityIdInt => int.tryParse(widget.facilityId) ?? 0;
 
   @override
   void initState() {
     super.initState();
     _bootstrap();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowGuideline());
+  }
+
+  /// 채팅방 첫 진입 시 이용 안내 모달 1회 자동 표시.
+  /// SharedPreferences `pw.chat.guideline_seen` 으로 체크.
+  Future<void> _maybeShowGuideline() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool('pw.chat.guideline_seen') == true) return;
+    if (!mounted) return;
+    await _showGuidelineModal();
+    await prefs.setBool('pw.chat.guideline_seen', true);
+  }
+
+  Future<void> _showGuidelineModal() {
+    return showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          _t.t('chat.guideline_title', defaultValue: '채팅 이용 안내'),
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _GuidelineBullet(_t.t(
+                'chat.guideline_business_hours',
+                defaultValue: '운영자 응대 시간: 평일 09:00~18:00 (주말·공휴일 제외). 그 외 시간에는 응답이 지연될 수 있습니다.',
+              )),
+              _GuidelineBullet(_t.t(
+                'chat.guideline_no_spam',
+                defaultValue: '욕설, 스팸, 광고성 메시지는 금지되며, 반복 위반 시 채팅 이용이 제한될 수 있습니다.',
+              )),
+              _GuidelineBullet(_t.t(
+                'chat.guideline_privacy',
+                defaultValue: '채팅 내용은 서비스 개선 및 분쟁 해결 목적으로 보관됩니다(개인정보처리방침 적용).',
+              )),
+              _GuidelineBullet(_t.t(
+                'chat.guideline_dispute',
+                defaultValue: '채팅을 통한 결제·환불 요청은 매장 사업자가 처리하며, PathWave 는 중개 플랫폼으로 분쟁에 직접 개입하지 않습니다.',
+              )),
+            ],
+          ),
+        ),
+        actions: [
+          PwButton(
+            fullWidth: false,
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(_t.t('chat.guideline_confirm_btn', defaultValue: '확인')),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -147,6 +207,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           icon: Icons.arrow_back,
           onPressed: () => context.pop(),
         ),
+        actions: [
+          PwIconButton(
+            icon: Icons.info_outline,
+            tooltip: _t.t('chat.guideline_title', defaultValue: '채팅 이용 안내'),
+            onPressed: _showGuidelineModal,
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -208,6 +275,35 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2))
               : const Icon(Icons.send, color: AppTheme.primary),
             onPressed: _sending ? null : _send,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+class _GuidelineBullet extends StatelessWidget {
+  final String text;
+  const _GuidelineBullet(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('• ', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
           ),
         ],
       ),

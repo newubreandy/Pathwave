@@ -107,5 +107,31 @@
     "label_send_count": "Estimated Send Quantity",
     "ph_send_count": "Enter number",
     "btn_next": "Next"
+  },
+  "coupon": {
+    "title_list": "Coupon Management",
+    "title_add": "Register Coupon",
+    "title_view": "Coupon Details",
+    "title_edit": "Edit Coupon",
+    "staff_use_btn": "Mark as Used",
+    "staff_use_title": "Mark Coupon as Used",
+    "staff_use_warning": "Only proceed after the benefit has been provided in-store. This action cannot be undone.",
+    "staff_use_done": "Coupon has been marked as used.",
+    "used_label": "Used",
+    "status_active": "Active",
+    "status_ended": "Ended"
+  },
+  "notif": {
+    "send_title": "Notification Type",
+    "send_kind_general": "General",
+    "send_kind_marketing": "Marketing",
+    "send_kind_warning": "Marketing notifications require a [AD] prefix in the title and an opt-out footer per Korean telecommunications law. Only sent to users who have opted in."
+  },
+  "chat": {
+    "guideline_title": "Chat Guidelines",
+    "guideline_business_hours": "We will respond as quickly as possible during business hours. Responses may be delayed on nights and holidays.",
+    "guideline_no_spam": "Abusive language, spam, or advertising messages may be subject to restrictions under the Korean Information and Communications Network Act.",
+    "guideline_privacy": "Do not share personal information (phone numbers, ID numbers, etc.) in chat.",
+    "guideline_dispute": "Chat records may be used as evidence in case of disputes."
   }
 }

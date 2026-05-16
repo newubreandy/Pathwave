@@ -20,4 +20,9 @@ class CouponService {
     final data = await _api.get('/api/coupons/$couponId');
     return (data['coupon'] as Map?)?.cast<String, dynamic>() ?? {};
   }
+
+  /// 쿠폰 사용 처리 (전자상거래법: 소비자 확인 후 사용 확정).
+  Future<void> useCoupon(int couponId) async {
+    await _api.post('/api/coupons/$couponId/use', {});
+  }
 }

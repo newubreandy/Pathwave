@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Search, ChevronLeft, Send, Paperclip, MoreVertical, Loader2, Trash2, CheckCheck, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Search, ChevronLeft, Send, Paperclip, MoreVertical, Loader2, Trash2, CheckCheck, X, Info } from 'lucide-react';
 import GroupCard, { GroupCardItem } from '../components/common/GroupCard';
 import './CustomerChat.css';
 
@@ -83,6 +84,7 @@ const DUMMY_CHATS = [
 
 /* ── 채팅방 ── */
 const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeaveChat, onBlockUser }) => {
+  const { t } = useTranslation();
   const [input, setInput] = useState('');
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const [replyingTo, setReplyingTo] = useState(null);
@@ -90,6 +92,7 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
   const [activeMsgId, setActiveMsgId] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showAttachSheet, setShowAttachSheet] = useState(false);
+  const [showGuideline, setShowGuideline] = useState(false);
 
   const bottomRef = useRef(null);
   const listRef = useRef(null);
@@ -166,7 +169,15 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
             <p className="chatroom-status">{chat.status === 'online' ? '온라인' : '오프라인'}</p>
           </div>
         </div>
-        <div style={{ position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <button
+            className="icon-btn-sm"
+            onClick={() => setShowGuideline(true)}
+            aria-label={t('chat.guideline_title', '채팅 운영 안내')}
+            title={t('chat.guideline_title', '채팅 운영 안내')}
+          >
+            <Info size={18} />
+          </button>
           <button className="icon-btn-sm" onClick={() => setShowMenu(!showMenu)}><MoreVertical size={18} /></button>
           {showMenu && (
             <>
@@ -179,6 +190,47 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
           )}
         </div>
       </div>
+
+      {/* 운영 안내 가이드라인 모달 */}
+      {showGuideline && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 'var(--pw-z-modal)' }}
+          onClick={() => setShowGuideline(false)}
+        >
+          <div
+            style={{ background: 'var(--pw-surface)', borderRadius: 'var(--pw-radius-lg)', width: '90%', maxWidth: '380px', overflow: 'hidden', boxShadow: 'var(--pw-shadow-xl)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ padding: '1.25rem 1.5rem 0.75rem', borderBottom: '1px solid var(--pw-border)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Info size={16} color="var(--pw-accent)" />
+              <h2 style={{ margin: 0, fontSize: 'var(--pw-label-size)', fontWeight: 700, color: 'var(--pw-text)' }}>
+                {t('chat.guideline_title', '채팅 운영 안내')}
+              </h2>
+            </div>
+            <ul style={{ margin: 0, padding: '1rem 1.5rem', listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {[
+                t('chat.guideline_business_hours', '운영 시간 내 최대한 빠르게 답변 드리겠습니다. 야간·공휴일은 응답이 지연될 수 있습니다.'),
+                t('chat.guideline_no_spam', '욕설, 광고성 메시지, 도배 등은 정보통신망법에 따라 제재될 수 있습니다.'),
+                t('chat.guideline_privacy', '개인정보(전화번호, 주민번호 등)는 채팅에 입력하지 마세요.'),
+                t('chat.guideline_dispute', '분쟁 발생 시 채팅 기록이 증거로 활용될 수 있습니다.'),
+              ].map((text, i) => (
+                <li key={i} style={{ display: 'flex', gap: '0.5rem', fontSize: 'var(--pw-caption-size)', color: 'var(--pw-text-secondary)', lineHeight: '1.6' }}>
+                  <span style={{ color: 'var(--pw-accent)', fontWeight: 700, flexShrink: 0 }}>·</span>
+                  <span>{text}</span>
+                </li>
+              ))}
+            </ul>
+            <div style={{ borderTop: '1px solid var(--pw-border)', display: 'flex' }}>
+              <button
+                onClick={() => setShowGuideline(false)}
+                style={{ flex: 1, padding: 'var(--pw-space-4)', background: 'none', border: 'none', color: 'var(--pw-primary)', fontWeight: 600, fontSize: 'var(--pw-body-size)', cursor: 'pointer', minHeight: 'var(--pw-touch-comfortable)' }}
+              >
+                {t('noti.btn_confirm', '확인')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="message-list" ref={listRef} onScroll={handleScroll}>
         {showScrollBtn && (
