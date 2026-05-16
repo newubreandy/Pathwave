@@ -12,6 +12,8 @@ import Announcements from './pages/Announcements.jsx';
 import Payments from './pages/Payments.jsx';
 import Policies from './pages/Policies.jsx';
 import Translations from './pages/Translations.jsx';
+import CouponStats from './pages/CouponStats.jsx';
+import ChatMonitor from './pages/ChatMonitor.jsx';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -36,6 +38,8 @@ export default function App() {
           <Route path="/dashboard/announcements" element={<Announcements />} />
           <Route path="/dashboard/payments" element={<Payments />} />
           <Route path="/dashboard/policies" element={<Policies />} />
+          <Route path="/dashboard/coupon-stats" element={<CouponStats />} />
+          <Route path="/dashboard/chat-monitor" element={<ChatMonitor />} />
           <Route path="/dashboard/i18n" element={<Translations />} />
         </Route>
 

@@ -2,26 +2,30 @@ import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Radio, UserCheck, Battery, Megaphone, CreditCard,
-  FileText, LogOut, Search, Languages,
+  FileText, LogOut, Search, Languages, Ticket, MessageSquare,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { adminLogout, getCurrentAdmin } from '../services/auth.js';
 import './DashboardLayout.css';
 
-const NAV_PRIMARY = [
-  { to: '/dashboard',                icon: LayoutDashboard, label: '대시보드',     end: true },
-  { to: '/dashboard/beacons',        icon: Radio,           label: '비콘 인벤토리'  },
-  { to: '/dashboard/approvals',      icon: UserCheck,       label: '사장 가입 승인', badge: 3 },
+const NAV_PRIMARY_DEFS = [
+  { to: '/dashboard',                icon: LayoutDashboard, labelKey: 'nav.dashboard',  end: true },
+  { to: '/dashboard/beacons',        icon: Radio,           labelKey: 'nav.beacons'               },
+  { to: '/dashboard/approvals',      icon: UserCheck,       labelKey: 'nav.approvals',  badge: 3  },
 ];
 
-const NAV_OPS = [
-  { to: '/dashboard/battery',        icon: Battery,         label: '배터리 모니터링' },
-  { to: '/dashboard/announcements',  icon: Megaphone,       label: '시스템 공지'    },
-  { to: '/dashboard/payments',       icon: CreditCard,      label: '결제 / 구독'    },
-  { to: '/dashboard/policies',       icon: FileText,        label: '약관 / 정책'    },
-  { to: '/dashboard/i18n',           icon: Languages,       label: 'i18n 관리'      },
+const NAV_OPS_DEFS = [
+  { to: '/dashboard/battery',        icon: Battery,         labelKey: 'nav.battery'        },
+  { to: '/dashboard/announcements',  icon: Megaphone,       labelKey: 'nav.announcements'  },
+  { to: '/dashboard/payments',       icon: CreditCard,      labelKey: 'nav.payments'       },
+  { to: '/dashboard/policies',       icon: FileText,        labelKey: 'nav.policies'       },
+  { to: '/dashboard/coupon-stats',   icon: Ticket,          labelKey: 'nav.coupon_stats'   },
+  { to: '/dashboard/chat-monitor',   icon: MessageSquare,   labelKey: 'nav.chat_monitor'   },
+  { to: '/dashboard/i18n',           icon: Languages,       labelKey: 'nav.i18n'           },
 ];
 
 export default function DashboardLayout() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const admin = getCurrentAdmin();
   const initial = (admin?.name?.[0] || admin?.email?.[0] || 'A').toUpperCase();
@@ -31,14 +35,14 @@ export default function DashboardLayout() {
     navigate('/login', { replace: true });
   }
 
-  function renderNavLink({ to, icon: Icon, label, end, badge }) {
+  function renderNavLink({ to, icon: Icon, labelKey, end, badge }) {
     return (
       <NavLink
         key={to} to={to} end={end}
         className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
       >
         <Icon size={17} strokeWidth={2} />
-        <span>{label}</span>
+        <span>{t(labelKey)}</span>
         {badge != null && badge > 0 && <span className="nav-badge">{badge}</span>}
       </NavLink>
     );
@@ -62,10 +66,10 @@ export default function DashboardLayout() {
         </div>
 
         <div className="sidebar-section">메인</div>
-        <nav className="sidebar-nav">{NAV_PRIMARY.map(renderNavLink)}</nav>
+        <nav className="sidebar-nav">{NAV_PRIMARY_DEFS.map(renderNavLink)}</nav>
 
         <div className="sidebar-section">운영</div>
-        <nav className="sidebar-nav">{NAV_OPS.map(renderNavLink)}</nav>
+        <nav className="sidebar-nav">{NAV_OPS_DEFS.map(renderNavLink)}</nav>
 
         <div className="sidebar-footer">
           {admin && (
@@ -79,7 +83,7 @@ export default function DashboardLayout() {
           )}
           <button className="logout-btn" onClick={handleLogout}>
             <LogOut size={14} />
-            <span>로그아웃</span>
+            <span>{t('nav.logout')}</span>
           </button>
         </div>
       </aside>

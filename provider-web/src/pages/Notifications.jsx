@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, X, ChevronLeft, Upload, Bell, Check, CheckCheck, Star } from 'lucide-react';
+import { Plus, X, ChevronLeft, Upload, Bell, Check, CheckCheck, Star, Info } from 'lucide-react';
 import PushService from '../services/push/PushService';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
@@ -62,6 +62,8 @@ const Notifications = () => {
     { id: 2, type: "이벤트", title: "여름맞이 전품목 10% 할인", date: "2026.08.01 09:00", status: "pending", message: "이벤트 내용입니다.", pushLocal: true, pushGlobal: false }
   ]);
 
+  const [notifKind, setNotifKind] = useState('general'); // 'general' | 'marketing'
+
   const [formData, setFormData] = useState({
     id: null,
     division: '',
@@ -121,6 +123,7 @@ const Notifications = () => {
     setFormData({
       id: null, division: '', title: '', date: '', image: null, message: '', pushLocal: false, pushGlobal: false
     });
+    setNotifKind('general');
     setIsReadOnly(false);
     setIsLocked(false);
     setView('form');
@@ -200,17 +203,25 @@ const Notifications = () => {
 
   const confirmSave = async () => {
     setShowConfirmModal(false);
-    
+
+    // 정보통신망법 준수: 마케팅 알림이면 본문 앞 [광고] prefix + 수신거부 footer 자동 추가
+    let finalTitle = formData.title;
+    let finalBody = formData.message;
+    if (notifKind === 'marketing') {
+      finalTitle = `[광고] ${formData.title}`;
+      finalBody = `${formData.message}\n\n수신 거부: 설정 > 알림 동의`;
+    }
+
     // 1차 백엔드 모듈 연동: 푸시 알림 발송 (Mock)
     if (formData.pushGlobal) {
       await PushService.sendBulkNotification(['user1', 'user2', 'user3'], {
-        title: formData.title,
-        body: formData.message
+        title: finalTitle,
+        body: finalBody
       });
     } else if (formData.pushLocal) {
       await PushService.sendNotification('local_user', {
-        title: formData.title,
-        body: formData.message
+        title: finalTitle,
+        body: finalBody
       });
     }
 
@@ -241,6 +252,58 @@ const Notifications = () => {
           <p className="sub-title" style={{ marginBottom: '2rem', whiteSpace: 'pre-line', textAlign: 'center' }}>
             {isReadOnly ? t('noti.desc_readonly') : t('noti.desc_form')}
           </p>
+
+          {/* 알림 종류 — 일반 / 마케팅 (정보통신망법 구분) */}
+          <div className="form-group">
+            <div className="form-label">{t('notif.send_title')}</div>
+            <div className="form-content">
+              <div style={{ display: 'flex', gap: 'var(--pw-space-6)', marginTop: 'var(--pw-space-2)' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--pw-space-2)', cursor: isReadOnly ? 'default' : 'pointer', color: 'var(--pw-text)', fontSize: 'var(--pw-body-size)' }}>
+                  <input
+                    type="radio"
+                    name="notifKind"
+                    value="general"
+                    checked={notifKind === 'general'}
+                    onChange={() => setNotifKind('general')}
+                    disabled={isReadOnly}
+                    style={{ accentColor: 'var(--pw-accent)', width: '18px', height: '18px' }}
+                  />
+                  {t('notif.send_kind_general')}
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--pw-space-2)', cursor: isReadOnly ? 'default' : 'pointer', color: 'var(--pw-text)', fontSize: 'var(--pw-body-size)' }}>
+                  <input
+                    type="radio"
+                    name="notifKind"
+                    value="marketing"
+                    checked={notifKind === 'marketing'}
+                    onChange={() => setNotifKind('marketing')}
+                    disabled={isReadOnly}
+                    style={{ accentColor: 'var(--pw-accent)', width: '18px', height: '18px' }}
+                  />
+                  {t('notif.send_kind_marketing')}
+                </label>
+              </div>
+              {notifKind === 'marketing' && (
+                <div style={{
+                  marginTop: 'var(--pw-space-3)',
+                  padding: 'var(--pw-space-3) var(--pw-space-4)',
+                  background: 'rgba(245, 158, 11, 0.10)',
+                  border: '1px solid rgba(245, 158, 11, 0.35)',
+                  borderRadius: 'var(--pw-radius-sm)',
+                  color: '#F59E0B',
+                  fontSize: 'var(--pw-caption-size)',
+                  lineHeight: '1.6',
+                  display: 'flex',
+                  gap: 'var(--pw-space-2)',
+                  alignItems: 'flex-start'
+                }}>
+                  <Info size={14} style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <span>{t('notif.send_kind_warning')}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Division */}
           <div className="form-group">
             <div className="form-label">{t('noti.label_division')}</div>
