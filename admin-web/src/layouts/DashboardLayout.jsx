@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { adminLogout, getCurrentAdmin } from '../services/auth.js';
+import PwFooter from '../components/common/PwFooter.jsx';
 import './DashboardLayout.css';
 
 const NAV_PRIMARY_DEFS = [
@@ -91,6 +92,7 @@ export default function DashboardLayout() {
 
       <main className="admin-main">
         <Outlet />
+        <PwFooter />
       </main>
     </div>
   );

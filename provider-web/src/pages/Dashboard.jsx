@@ -6,6 +6,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import CardAvatar from '../components/common/CardAvatar';
+import PwFooter from '../components/common/PwFooter';
 import { getUnreadCount } from '../services/notification/mockInbox';
 import './Dashboard.css';
 
@@ -285,6 +286,8 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      <PwFooter />
     </div>
   );
 };

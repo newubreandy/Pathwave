@@ -118,6 +118,8 @@ class PermissionService {
       {required String title, required String message}) async {
     final result = await showDialog<bool>(
       context: context,
+      barrierColor: const Color(0x99000000),
+      barrierDismissible: true,
       builder: (ctx) => AlertDialog(
         title: Text(title),
         content: Text(message, style: const TextStyle(height: 1.5)),
@@ -141,6 +143,8 @@ class PermissionService {
     if (!context.mounted) return false;
     final result = await showDialog<bool>(
       context: context,
+      barrierColor: const Color(0x99000000),
+      barrierDismissible: true,
       builder: (ctx) => AlertDialog(
         title: Text(title),
         content: Text(message, style: const TextStyle(height: 1.5)),

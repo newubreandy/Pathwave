@@ -350,6 +350,8 @@ class _CouponCard extends StatelessWidget {
 
     showDialog<void>(
       context: context,
+      barrierColor: const Color(0x99000000),
+      barrierDismissible: true,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -441,6 +443,8 @@ class _CouponCard extends StatelessWidget {
     final title = data['title']?.toString() ?? '쿠폰';
     showDialog<void>(
       context: context,
+      barrierColor: const Color(0x99000000),
+      barrierDismissible: true,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

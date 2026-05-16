@@ -176,5 +176,25 @@
     "chat_monitor": "채팅 모니터링",
     "i18n": "i18n 관리",
     "logout": "로그아웃"
+  },
+  "footer": {
+    "company_name": "[법인 등록 후 채워질 예정]",
+    "ceo_label": "대표",
+    "ceo": "[법인 등록 후 채워질 예정]",
+    "biz_no_label": "사업자등록번호",
+    "biz_no": "[법인 등록 후 채워질 예정]",
+    "mail_order_label": "통신판매업신고",
+    "mail_order": "[법인 등록 후 채워질 예정]",
+    "address_label": "주소",
+    "address": "[법인 등록 후 채워질 예정]",
+    "tel_label": "전화",
+    "tel": "[법인 등록 후 채워질 예정]",
+    "email_label": "이메일",
+    "email": "[법인 등록 후 채워질 예정]",
+    "hosting_label": "호스팅",
+    "hosting": "[법인 등록 후 채워질 예정]",
+    "privacy_link": "개인정보처리방침",
+    "terms_link": "이용약관",
+    "copyright": "© {{year}} PathWave. All rights reserved."
   }
 }

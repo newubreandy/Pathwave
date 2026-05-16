@@ -271,6 +271,8 @@ class _AnnouncementCard extends StatelessWidget {
         if (!context.mounted) return;
         showDialog(
           context: context,
+          barrierColor: const Color(0x99000000),
+          barrierDismissible: true,
           builder: (_) => AlertDialog(
             backgroundColor: AppTheme.surface,
             title: Text(title),

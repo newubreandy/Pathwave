@@ -4,6 +4,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
+import 'package:flutter_naver_login/flutter_naver_login.dart';
 
 import '../utils/api_config.dart';
 import 'api_client.dart';
@@ -185,11 +187,40 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<Map<String, dynamic>> signInWithKakao() async {
-    return _stubSocialNotice('kakao', '카카오');
+    // KAKAO_NATIVE_APP_KEY 가 주입되면 native SDK 로 authorization_code 획득,
+    // 없으면 (dev/CI) 백엔드 stub 흐름으로만 검증.
+    const kakaoKey = String.fromEnvironment('KAKAO_NATIVE_APP_KEY', defaultValue: '');
+    if (kakaoKey.isEmpty) {
+      return _stubSocialNotice('kakao', '카카오');
+    }
+    try {
+      kakao.KakaoSdk.init(nativeAppKey: kakaoKey);
+      final token = await kakao.UserApi.instance.loginWithKakaoAccount();
+      return await _socialExchange(token.accessToken, 'kakao');
+    } catch (e) {
+      return {'success': false, 'message': '카카오 로그인 실패: $e'};
+    }
   }
 
   Future<Map<String, dynamic>> signInWithNaver() async {
-    return _stubSocialNotice('naver', '네이버');
+    // NAVER_CONSUMER_KEY 가 주입되면 native SDK 로 access token 획득,
+    // 없으면 (dev/CI) 백엔드 stub 흐름으로만 검증.
+    const naverKey = String.fromEnvironment('NAVER_CONSUMER_KEY', defaultValue: '');
+    if (naverKey.isEmpty) {
+      return _stubSocialNotice('naver', '네이버');
+    }
+    try {
+      final result = await FlutterNaverLogin.logIn();
+      // flutter_naver_login 응답 형태는 버전에 따라 다름 — accessToken.accessToken
+      // 또는 account.accessToken. 두 케이스 모두 안전하게 시도.
+      final token = result.accessToken?.accessToken ?? '';
+      if (token.isEmpty) {
+        return {'success': false, 'message': '네이버 로그인 취소 또는 실패'};
+      }
+      return await _socialExchange(token, 'naver');
+    } catch (e) {
+      return {'success': false, 'message': '네이버 로그인 실패: $e'};
+    }
   }
 
   Future<Map<String, dynamic>> _stubSocialNotice(String key, String label) async {
@@ -197,8 +228,24 @@ class AuthService extends ChangeNotifier {
       'success': false,
       'message': '$label 로그인은 Developer Console 에서 API 키 발급 + '
                  '네이티브 설정 (Info.plist / AndroidManifest.xml) 후 활성됩니다.\n'
-                 '코드 흐름은 _socialLogin(idToken, "$key") 로 백엔드에 전달.',
+                 '코드 흐름은 _socialExchange(accessToken, "$key") 로 백엔드에 전달.',
     };
+  }
+
+  // ── 카카오/네이버 authorization_code → 백엔드 exchange ─────────
+  Future<Map<String, dynamic>> _socialExchange(
+      String accessToken, String provider) async {
+    final res = await http.post(
+      Uri.parse('$_baseUrl/api/social/$provider/exchange'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'access_token': accessToken, 'provider': provider}),
+    );
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    if (data['success'] == true) {
+      await _saveToken(data['token'], data['user'],
+          refreshToken: data['refresh_token']);
+    }
+    return data;
   }
 
   // ── 둘러보기 (PR #68) — 로그인 없이 화면 미리보기 ────────────
