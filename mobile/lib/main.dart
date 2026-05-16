@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'services/auth_service.dart';
+import 'services/i18n_service.dart';
 import 'services/ble_service.dart';
 import 'utils/app_router.dart';
 import 'utils/neu_theme.dart';
@@ -26,6 +27,9 @@ void main() async {
   } catch (e) {
     debugPrint('[Firebase] 미설정 또는 초기화 실패 — dev 모드 진행: $e');
   }
+
+  // i18n 초기화 — 디바이스 언어 자동 감지 → fetch → 24h 캐싱
+  await I18nService.instance.init();
 
   runApp(const PathWaveApp());
 }

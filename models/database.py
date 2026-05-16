@@ -417,6 +417,27 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_user_favorites_facility
             ON user_favorites(facility_id);
 
+        -- Phase D — i18n DB 기반 번역 저장소 (글로벌 i18n 전략 메모리).
+        -- 키 하나에 23개 언어가 행으로 펼쳐진다. (key, lang) UNIQUE.
+        -- DeepL/수동 입력 모두 이 테이블 한 곳에 모인다.
+        CREATE TABLE IF NOT EXISTS translations (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            key         TEXT    NOT NULL,                   -- 예: 'mypage.title'
+            lang        TEXT    NOT NULL,                   -- ISO 코드 (ko / en / ja / zh-CN / ...)
+            value       TEXT    NOT NULL,
+            verified    INTEGER DEFAULT 0,                  -- 0=자동 번역, 1=사람 검수 완료
+            source      TEXT    DEFAULT 'manual',           -- 'manual' | 'deepl' | 'seed'
+            created_at  TEXT    DEFAULT (datetime('now')),
+            updated_at  TEXT    DEFAULT (datetime('now')),
+            UNIQUE (key, lang)
+        );
+        CREATE INDEX IF NOT EXISTS idx_translations_lang
+            ON translations(lang);
+        CREATE INDEX IF NOT EXISTS idx_translations_updated
+            ON translations(updated_at);
+        CREATE INDEX IF NOT EXISTS idx_translations_key
+            ON translations(key);
+
         -- 시스템 공지 (PR #33) — 운영자가 사용자/사장/직원에게 일괄 공지
         CREATE TABLE IF NOT EXISTS announcements (
             id                   INTEGER PRIMARY KEY AUTOINCREMENT,

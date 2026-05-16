@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Radio, UserCheck, Battery, Megaphone, CreditCard,
-  FileText, LogOut, Search,
+  FileText, LogOut, Search, Languages,
 } from 'lucide-react';
 import { adminLogout, getCurrentAdmin } from '../services/auth.js';
 import './DashboardLayout.css';
@@ -18,6 +18,7 @@ const NAV_OPS = [
   { to: '/dashboard/announcements',  icon: Megaphone,       label: '시스템 공지'    },
   { to: '/dashboard/payments',       icon: CreditCard,      label: '결제 / 구독'    },
   { to: '/dashboard/policies',       icon: FileText,        label: '약관 / 정책'    },
+  { to: '/dashboard/i18n',           icon: Languages,       label: 'i18n 관리'      },
 ];
 
 export default function DashboardLayout() {

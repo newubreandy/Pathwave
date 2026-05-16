@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
 import '../../services/ble_service.dart';
+import '../../services/i18n_service.dart';
 import '../../services/permission_service.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/pw.dart';
@@ -51,11 +52,11 @@ class _HomeScreenState extends State<HomeScreen> {
         onDestinationSelected: (i) => setState(() => _tab = i),
         backgroundColor: AppTheme.surface,
         indicatorColor: AppTheme.primary.withValues(alpha: 0.2),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: '홈'),
-          NavigationDestination(icon: Icon(Icons.search), selectedIcon: Icon(Icons.search), label: '검색'),
-          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: '마이'),
-          NavigationDestination(icon: Icon(Icons.notifications_outlined), selectedIcon: Icon(Icons.notifications), label: '알림'),
+        destinations: [
+          NavigationDestination(icon: const Icon(Icons.home_outlined), selectedIcon: const Icon(Icons.home), label: I18nService.instance.t('nav.home', defaultValue: '홈')),
+          NavigationDestination(icon: const Icon(Icons.search), selectedIcon: const Icon(Icons.search), label: I18nService.instance.t('nav.search', defaultValue: '검색')),
+          NavigationDestination(icon: const Icon(Icons.person_outline), selectedIcon: const Icon(Icons.person), label: '마이'),
+          NavigationDestination(icon: const Icon(Icons.notifications_outlined), selectedIcon: const Icon(Icons.notifications), label: '알림'),
         ],
       ),
     );
