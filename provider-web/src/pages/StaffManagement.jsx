@@ -607,7 +607,7 @@ const StaffManagement = () => {
                 </ul>
               </div>
               <div className="staff-perm-col">
-                <div className="staff-perm-role"><RoleBadge role={ROLES.MANAGER} /> 관리자</div>
+                <div className="staff-perm-role"><RoleBadge role={ROLES.MANAGER} /> {t('staff_mgmt.role_admin')}</div>
                 <ul>
                   <li>매장안내/채팅/스탬프/쿠폰 제어</li>
                   <li>와이파이/알림/리포트/설정 조회</li>
@@ -615,7 +615,7 @@ const StaffManagement = () => {
                 </ul>
               </div>
               <div className="staff-perm-col">
-                <div className="staff-perm-role"><RoleBadge role={ROLES.STAFF} /> 직원</div>
+                <div className="staff-perm-role"><RoleBadge role={ROLES.STAFF} /> {t('staff_mgmt.role_staff')}</div>
                 <ul>
                   <li>매장안내/채팅/스탬프/쿠폰 제어</li>
                   <li>와이파이/알림/리포트/설정 조회</li>
@@ -623,6 +623,19 @@ const StaffManagement = () => {
                 </ul>
               </div>
             </div>
+          </div>
+
+          {/* 법적 안내 compliance 카드 */}
+          <div className="staff-compliance-card">
+            <div className="staff-compliance-header">
+              <ShieldAlert size={16} aria-hidden="true" />
+              <h3 className="staff-compliance-title">{t('staff_mgmt.compliance_title')}</h3>
+            </div>
+            <ul className="staff-compliance-list">
+              <li>{t('staff_mgmt.compliance_1')}</li>
+              <li>{t('staff_mgmt.compliance_2')}</li>
+              <li>{t('staff_mgmt.compliance_3')}</li>
+            </ul>
           </div>
         </div>
       )}
