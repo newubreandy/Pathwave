@@ -1,28 +1,17 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  RefreshCw, Search, Receipt, RotateCcw, CreditCard, Calendar,
+  RefreshCw, Receipt, RotateCcw, CreditCard, Calendar, AlertTriangle,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import Modal from '../components/Modal.jsx';
 import { adminApi } from '../services/admin.js';
 import './Beacons.css';
 
-const PAYMENT_STATUS = {
-  paid:     { label: '결제 완료', tone: 'active' },
-  pending:  { label: '대기',     tone: 'neutral' },
-  failed:   { label: '실패',     tone: 'inactive' },
-  refunded: { label: '환불됨',   tone: 'neutral' },
-  cancelled:{ label: '취소',     tone: 'neutral' },
-};
-const SUBSCRIPTION_STATUS = {
-  active:    { label: '구독 중', tone: 'active' },
-  expired:   { label: '만료',    tone: 'neutral' },
-  cancelled: { label: '해지',    tone: 'inactive' },
-};
-
 const PAYMENT_FILTERS = ['all', 'paid', 'pending', 'failed', 'refunded'];
-const SUB_FILTERS = ['all', 'active', 'expired', 'cancelled'];
+const SUB_FILTERS     = ['all', 'active', 'expired', 'cancelled'];
 
 export default function Payments() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState('payments');
 
   return (
@@ -30,8 +19,8 @@ export default function Payments() {
       <div className="page-header-section">
         <div className="page-header-row">
           <div>
-            <h1 className="page-title">결제 · 구독</h1>
-            <p className="sub-title">전체 결제 내역 / 환불 처리 / 구독 현황.</p>
+            <h1 className="page-title">{t('billing.title')}</h1>
+            <p className="sub-title">{t('billing.subtitle')}</p>
           </div>
         </div>
 
@@ -41,19 +30,19 @@ export default function Payments() {
             onClick={() => setTab('payments')}
           >
             <Receipt size={16} />
-            <span>결제 내역</span>
+            <span>{t('billing.tab_payments')}</span>
           </button>
           <button
             className={`tab-btn ${tab === 'subscriptions' ? 'active' : ''}`}
             onClick={() => setTab('subscriptions')}
           >
             <Calendar size={16} />
-            <span>구독</span>
+            <span>{t('billing.tab_subscriptions')}</span>
           </button>
         </div>
       </div>
 
-      {tab === 'payments' && <PaymentsTab />}
+      {tab === 'payments'     && <PaymentsTab />}
       {tab === 'subscriptions' && <SubscriptionsTab />}
     </div>
   );
@@ -62,42 +51,73 @@ export default function Payments() {
 
 // ── 결제 탭 ──────────────────────────────────────────────────────────────────
 function PaymentsTab() {
-  const [filter, setFilter] = useState({ status: 'all', date_from: '', date_to: '' });
-  const [list, setList] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { t } = useTranslation();
+
+  const statusLabel = {
+    paid:      t('billing.status_paid'),
+    pending:   t('billing.status_pending'),
+    failed:    t('billing.status_failed'),
+    refunded:  t('billing.status_refunded'),
+    cancelled: t('billing.status_cancelled'),
+  };
+  const statusTone = {
+    paid: 'active', pending: 'neutral', failed: 'inactive',
+    refunded: 'neutral', cancelled: 'neutral',
+  };
+
+  const [filter, setFilter]         = useState({ status: 'all', date_from: '', date_to: '' });
+  const [list, setList]             = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState('');
   const [refundTarget, setRefundTarget] = useState(null);
 
   const reload = useCallback(() => {
     setLoading(true); setError('');
     const params = {};
-    if (filter.status !== 'all') params.status = filter.status;
-    if (filter.date_from) params.date_from = filter.date_from;
-    if (filter.date_to)   params.date_to = filter.date_to;
+    if (filter.status !== 'all') params.status    = filter.status;
+    if (filter.date_from)        params.date_from  = filter.date_from;
+    if (filter.date_to)          params.date_to    = filter.date_to;
     adminApi.listPayments(params)
       .then((data) => setList(data.payments || []))
-      .catch((err) => setError(err.message || '결제 내역을 불러오지 못했습니다.'))
+      .catch((err) => setError(err.message || t('billing.load_error')))
       .finally(() => setLoading(false));
-  }, [filter.status, filter.date_from, filter.date_to]);
+  }, [filter.status, filter.date_from, filter.date_to, t]);
 
   useEffect(() => { reload(); }, [reload]);
 
-  const totalPaid = list.filter((p) => p.status === 'paid').reduce((s, p) => s + (p.total || 0), 0);
+  const totalPaid     = list.filter((p) => p.status === 'paid').reduce((s, p) => s + (p.total || 0), 0);
   const totalRefunded = list.filter((p) => p.status === 'refunded').reduce((s, p) => s + (p.total || 0), 0);
 
   return (
     <>
+      {/* 부가세 안내 */}
+      <div className="card" style={{
+        display: 'flex', gap: 12, alignItems: 'flex-start',
+        background: 'var(--bg-3)', border: '1px solid var(--border)',
+        padding: '0.875rem 1.25rem',
+      }}>
+        <AlertTriangle size={16} style={{ color: 'var(--accent)', flexShrink: 0, marginTop: 2 }} />
+        <p style={{ margin: 0, fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
+          {t('billing.compliance_warning')}
+        </p>
+      </div>
+
       <div className="filter-bar">
         <div className="filter-group">
-          <span className="filter-label">상태</span>
-          <select value={filter.status} onChange={(e) => setFilter((f) => ({ ...f, status: e.target.value }))}>
+          <span className="filter-label">{t('billing.filter_status')}</span>
+          <select
+            value={filter.status}
+            onChange={(e) => setFilter((f) => ({ ...f, status: e.target.value }))}
+          >
             {PAYMENT_FILTERS.map((s) => (
-              <option key={s} value={s}>{s === 'all' ? '전체' : PAYMENT_STATUS[s]?.label || s}</option>
+              <option key={s} value={s}>
+                {s === 'all' ? t('billing.filter_all') : (statusLabel[s] || s)}
+              </option>
             ))}
           </select>
         </div>
         <div className="filter-group">
-          <span className="filter-label">기간</span>
+          <span className="filter-label">{t('billing.filter_period')}</span>
           <input
             type="date"
             value={filter.date_from}
@@ -121,7 +141,7 @@ function PaymentsTab() {
             <Receipt size={20} strokeWidth={1.75} />
           </div>
           <div className="stat-content">
-            <div className="stat-label">결제 합계 (필터)</div>
+            <div className="stat-label">{t('billing.stat_paid_total')}</div>
             <div className="stat-value">{totalPaid.toLocaleString()} 원</div>
           </div>
         </div>
@@ -130,7 +150,7 @@ function PaymentsTab() {
             <RotateCcw size={20} strokeWidth={1.75} />
           </div>
           <div className="stat-content">
-            <div className="stat-label">환불 합계</div>
+            <div className="stat-label">{t('billing.stat_refund_total')}</div>
             <div className="stat-value">{totalRefunded.toLocaleString()} 원</div>
           </div>
         </div>
@@ -139,7 +159,7 @@ function PaymentsTab() {
             <CreditCard size={20} strokeWidth={1.75} />
           </div>
           <div className="stat-content">
-            <div className="stat-label">건수</div>
+            <div className="stat-label">{t('billing.stat_count')}</div>
             <div className="stat-value">{list.length}</div>
           </div>
         </div>
@@ -153,25 +173,26 @@ function PaymentsTab() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>주문번호</th>
-              <th>사장 #</th>
-              <th>금액</th>
-              <th>VAT</th>
-              <th>합계</th>
-              <th>PG TID</th>
-              <th>상태</th>
-              <th>결제일</th>
+              <th>{t('billing.col_id')}</th>
+              <th>{t('billing.col_order_no')}</th>
+              <th>{t('billing.col_facility')}</th>
+              <th>{t('billing.col_amount')}</th>
+              <th>{t('billing.col_vat')}</th>
+              <th>{t('billing.col_total')}</th>
+              <th>{t('billing.col_pg_tid')}</th>
+              <th>{t('billing.col_status')}</th>
+              <th>{t('billing.col_paid_at')}</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            {loading && <tr><td colSpan={10} className="row-empty">로딩 중...</td></tr>}
+            {loading && <tr><td colSpan={10} className="row-empty">{t('billing.loading')}</td></tr>}
             {!loading && list.length === 0 && (
-              <tr><td colSpan={10} className="row-empty">결제 내역이 없습니다.</td></tr>
+              <tr><td colSpan={10} className="row-empty">{t('billing.empty')}</td></tr>
             )}
             {!loading && list.map((p) => {
-              const st = PAYMENT_STATUS[p.status] || { label: p.status, tone: 'neutral' };
+              const tone = statusTone[p.status] || 'neutral';
+              const label = statusLabel[p.status] || p.status;
               return (
                 <tr key={p.id}>
                   <td className="cell-mono">{p.id}</td>
@@ -182,14 +203,14 @@ function PaymentsTab() {
                   <td className="cell-mono"><strong>{p.total?.toLocaleString() ?? '—'}</strong></td>
                   <td className="cell-mono cell-uuid" title={p.pg_tid}>{p.pg_tid || '—'}</td>
                   <td>
-                    <span className={`status-badge ${st.tone}`}>{st.label}</span>
+                    <span className={`status-badge ${tone}`}>{label}</span>
                   </td>
                   <td className="cell-mono">{(p.paid_at || p.created_at)?.slice(0, 16) || '—'}</td>
                   <td className="cell-actions">
                     {p.status === 'paid' && (
                       <button
                         className="icon-btn"
-                        title="환불"
+                        title={t('billing.refund_btn_confirm')}
                         onClick={() => setRefundTarget(p)}
                       >
                         <RotateCcw size={15} />
@@ -215,10 +236,19 @@ function PaymentsTab() {
 
 // ── 구독 탭 ──────────────────────────────────────────────────────────────────
 function SubscriptionsTab() {
-  const [filter, setFilter] = useState({ status: 'all' });
-  const [list, setList] = useState([]);
+  const { t } = useTranslation();
+
+  const statusLabel = {
+    active:    t('subscription.status_active'),
+    expired:   t('subscription.status_expired'),
+    cancelled: t('subscription.status_cancelled'),
+  };
+  const statusTone = { active: 'active', expired: 'neutral', cancelled: 'inactive' };
+
+  const [filter, setFilter]   = useState({ status: 'all' });
+  const [list, setList]       = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError]     = useState('');
 
   const reload = useCallback(() => {
     setLoading(true); setError('');
@@ -226,9 +256,9 @@ function SubscriptionsTab() {
     if (filter.status !== 'all') params.status = filter.status;
     adminApi.listSubscriptions(params)
       .then((data) => setList(data.subscriptions || []))
-      .catch((err) => setError(err.message || '구독 목록을 불러오지 못했습니다.'))
+      .catch((err) => setError(err.message || t('subscription.load_error')))
       .finally(() => setLoading(false));
-  }, [filter.status]);
+  }, [filter.status, t]);
 
   useEffect(() => { reload(); }, [reload]);
 
@@ -236,10 +266,15 @@ function SubscriptionsTab() {
     <>
       <div className="filter-bar">
         <div className="filter-group">
-          <span className="filter-label">상태</span>
-          <select value={filter.status} onChange={(e) => setFilter((f) => ({ ...f, status: e.target.value }))}>
+          <span className="filter-label">{t('subscription.filter_status')}</span>
+          <select
+            value={filter.status}
+            onChange={(e) => setFilter((f) => ({ ...f, status: e.target.value }))}
+          >
             {SUB_FILTERS.map((s) => (
-              <option key={s} value={s}>{s === 'all' ? '전체' : SUBSCRIPTION_STATUS[s]?.label || s}</option>
+              <option key={s} value={s}>
+                {s === 'all' ? t('subscription.filter_all') : (statusLabel[s] || s)}
+              </option>
             ))}
           </select>
         </div>
@@ -256,25 +291,26 @@ function SubscriptionsTab() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>사장 #</th>
-              <th>서비스</th>
-              <th>수량</th>
-              <th>기간(개월)</th>
-              <th>단가</th>
-              <th>합계</th>
-              <th>시작</th>
-              <th>종료</th>
-              <th>상태</th>
+              <th>{t('subscription.col_id')}</th>
+              <th>{t('subscription.col_facility')}</th>
+              <th>{t('subscription.col_service')}</th>
+              <th>{t('subscription.col_qty')}</th>
+              <th>{t('subscription.col_period')}</th>
+              <th>{t('subscription.col_unit_price')}</th>
+              <th>{t('subscription.col_total')}</th>
+              <th>{t('subscription.col_started_at')}</th>
+              <th>{t('subscription.col_ends_at')}</th>
+              <th>{t('subscription.col_status')}</th>
             </tr>
           </thead>
           <tbody>
-            {loading && <tr><td colSpan={10} className="row-empty">로딩 중...</td></tr>}
+            {loading && <tr><td colSpan={10} className="row-empty">{t('subscription.loading')}</td></tr>}
             {!loading && list.length === 0 && (
-              <tr><td colSpan={10} className="row-empty">구독 내역이 없습니다.</td></tr>
+              <tr><td colSpan={10} className="row-empty">{t('subscription.empty')}</td></tr>
             )}
             {!loading && list.map((s) => {
-              const st = SUBSCRIPTION_STATUS[s.status] || { label: s.status, tone: 'neutral' };
+              const tone  = statusTone[s.status]  || 'neutral';
+              const label = statusLabel[s.status] || s.status;
               return (
                 <tr key={s.id}>
                   <td className="cell-mono">{s.id}</td>
@@ -287,7 +323,7 @@ function SubscriptionsTab() {
                   <td className="cell-mono">{s.started_at?.slice(0, 10) || '—'}</td>
                   <td className="cell-mono">{s.ends_at?.slice(0, 10) || '—'}</td>
                   <td>
-                    <span className={`status-badge ${st.tone}`}>{st.label}</span>
+                    <span className={`status-badge ${tone}`}>{label}</span>
                   </td>
                 </tr>
               );
@@ -302,9 +338,10 @@ function SubscriptionsTab() {
 
 // ── 환불 모달 ────────────────────────────────────────────────────────────────
 function RefundModal({ payment, onClose, onRefunded }) {
+  const { t } = useTranslation();
   const [reason, setReason] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [busy, setBusy]     = useState(false);
+  const [error, setError]   = useState('');
 
   useEffect(() => { if (payment) { setReason(''); setError(''); } }, [payment]);
 
@@ -314,7 +351,7 @@ function RefundModal({ payment, onClose, onRefunded }) {
       await adminApi.refundPayment(payment.id, { reason: reason.trim() || undefined });
       onRefunded?.();
     } catch (err) {
-      setError(err.message || '환불에 실패했습니다.');
+      setError(err.message || t('billing.refund_error'));
     } finally { setBusy(false); }
   }
 
@@ -322,13 +359,15 @@ function RefundModal({ payment, onClose, onRefunded }) {
     <Modal
       open={!!payment}
       onClose={onClose}
-      title={payment ? `결제 환불 — #${payment.id}` : ''}
+      title={payment ? t('billing.refund_title', { id: payment.id }) : ''}
       size="md"
       footer={
         <>
-          <button className="btn btn-ghost" onClick={onClose} disabled={busy}>취소</button>
+          <button className="btn btn-ghost" onClick={onClose} disabled={busy}>
+            {t('billing.refund_btn_cancel')}
+          </button>
           <button className="btn btn-danger" onClick={handleRefund} disabled={busy}>
-            {busy ? '처리 중...' : '환불 확정'}
+            {busy ? t('billing.refund_btn_busy') : t('billing.refund_btn_confirm')}
           </button>
         </>
       }
@@ -336,24 +375,24 @@ function RefundModal({ payment, onClose, onRefunded }) {
       {payment && (
         <>
           <div className="kv">
-            <div><span className="kv-key">주문번호</span> <span className="cell-mono">{payment.order_no}</span></div>
-            <div><span className="kv-key">사장 ID</span> {payment.facility_account_id}</div>
-            <div><span className="kv-key">금액</span> {payment.amount?.toLocaleString()} 원</div>
-            <div><span className="kv-key">VAT</span> {payment.vat?.toLocaleString()} 원</div>
-            <div><span className="kv-key">합계</span> <strong>{payment.total?.toLocaleString()} 원</strong></div>
-            <div><span className="kv-key">PG TID</span> <span className="cell-mono">{payment.pg_tid}</span></div>
-            <div><span className="kv-key">결제일</span> {payment.paid_at}</div>
+            <div><span className="kv-key">{t('billing.refund_order_no')}</span> <span className="cell-mono">{payment.order_no}</span></div>
+            <div><span className="kv-key">{t('billing.refund_facility')}</span> {payment.facility_account_id}</div>
+            <div><span className="kv-key">{t('billing.refund_amount')}</span> {payment.amount?.toLocaleString()} 원</div>
+            <div><span className="kv-key">{t('billing.refund_vat')}</span> {payment.vat?.toLocaleString()} 원</div>
+            <div><span className="kv-key">{t('billing.refund_total')}</span> <strong>{payment.total?.toLocaleString()} 원</strong></div>
+            <div><span className="kv-key">{t('billing.refund_pg_tid')}</span> <span className="cell-mono">{payment.pg_tid}</span></div>
+            <div><span className="kv-key">{t('billing.refund_paid_at')}</span> {payment.paid_at}</div>
           </div>
           <p className="text-muted" style={{ marginTop: '1rem', fontSize: '0.875rem' }}>
-            ⚠️ 현재는 시뮬 모드 — 실 PG 연동 후 토스/이니시스 환불 API 호출됩니다.
+            {t('billing.refund_sim_warning')}
           </p>
           <label className="form-label">
-            <span>환불 사유 (선택)</span>
+            <span>{t('billing.refund_reason_label')}</span>
             <textarea
               rows={3}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="예: 사용자 요청 / 잘못된 결제"
+              placeholder={t('billing.refund_reason_placeholder')}
               disabled={busy}
             />
           </label>
