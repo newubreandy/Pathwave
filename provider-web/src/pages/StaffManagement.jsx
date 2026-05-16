@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Plus, X, Mail, MoreVertical, Shield, UserCheck, Clock, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, X, Mail, MoreVertical, Shield, UserCheck, Clock, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import StaffService, { ROLES, ROLE_LABELS, STATUS, STATUS_LABELS, validateEmail } from '../services/staff/StaffService';
 import { MOCK_STAFF } from '../services/staff/mockStaff';
 import ConfirmModal from '../components/common/ConfirmModal';
@@ -49,6 +50,7 @@ const StatusBadge = ({ status, invitedAt }) => {
 
 /* ── 초대 모달 ── */
 const InviteModal = ({ onClose, onInvite }) => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -95,13 +97,13 @@ const InviteModal = ({ onClose, onInvite }) => {
     <div className="settings-modal-overlay" onClick={onClose}>
       <div className="settings-modal staff-invite-modal" onClick={e => e.stopPropagation()}>
         <div className="settings-modal-header">
-          <h3 className="settings-modal-title">직원 초대</h3>
+          <h3 className="settings-modal-title">{t('staff_mgmt.invite_btn')}</h3>
           <button className="settings-modal-close" onClick={onClose}><X size={20} /></button>
         </div>
 
         <div className="staff-invite-form">
           <div className="staff-invite-field">
-            <label>이메일 *</label>
+            <label>{t('staff_mgmt.invite_email_label')} *</label>
             <input
               type="email"
               value={email}
@@ -134,7 +136,7 @@ const InviteModal = ({ onClose, onInvite }) => {
           </div>
 
           <div className="staff-invite-field">
-            <label>역할</label>
+            <label>{t('staff_mgmt.role_label')}</label>
             <div className="staff-role-select">
               <button
                 type="button"
@@ -142,7 +144,7 @@ const InviteModal = ({ onClose, onInvite }) => {
                 onClick={() => setRole(ROLES.MANAGER)}
               >
                 <Shield size={16} />
-                <span>관리자</span>
+                <span>{t('staff_mgmt.role_admin')}</span>
                 <small>매장안내/채팅/스탬프/쿠폰 제어</small>
               </button>
               <button
@@ -151,7 +153,7 @@ const InviteModal = ({ onClose, onInvite }) => {
                 onClick={() => setRole(ROLES.STAFF)}
               >
                 <UserCheck size={16} />
-                <span>직원</span>
+                <span>{t('staff_mgmt.role_staff')}</span>
                 <small>매장안내/채팅/스탬프/쿠폰 제어</small>
               </button>
             </div>
@@ -165,14 +167,14 @@ const InviteModal = ({ onClose, onInvite }) => {
 
           <div className="staff-invite-note">
             <Mail size={14} />
-            <span>입력한 이메일로 초대 메일이 발송됩니다. 초대는 <strong>발송 당일</strong>까지 유효합니다.</span>
+            <span>{t('staff_mgmt.invite_expires_hint')}</span>
           </div>
         </div>
 
         <div className="settings-modal-actions">
           <button className="settings-modal-btn cancel" onClick={onClose}>취소</button>
           <button className="settings-modal-btn confirm" onClick={handleSubmit} disabled={isLoading}>
-            {isLoading ? '발송 중...' : '초대 발송'}
+            {isLoading ? '발송 중...' : t('staff_mgmt.invite_btn')}
           </button>
         </div>
       </div>
@@ -182,6 +184,7 @@ const InviteModal = ({ onClose, onInvite }) => {
 
 /* ── 직원 상세/액션 모달 ── */
 const StaffActionModal = ({ member, onClose, onRoleChange, onDisable, onRemove, onResend }) => {
+  const { t } = useTranslation();
   const isOwner = member.role === ROLES.OWNER;
   const isInvited = member.status === STATUS.INVITED;
   const isExpired = isInvited && StaffService.isInviteExpired(member.invitedAt);
@@ -190,7 +193,7 @@ const StaffActionModal = ({ member, onClose, onRoleChange, onDisable, onRemove, 
     <div className="settings-modal-overlay" onClick={onClose}>
       <div className="settings-modal staff-action-modal" onClick={e => e.stopPropagation()}>
         <div className="settings-modal-header">
-          <h3 className="settings-modal-title">직원 관리</h3>
+          <h3 className="settings-modal-title">{t('staff_mgmt.title')}</h3>
           <button className="settings-modal-close" onClick={onClose}><X size={20} /></button>
         </div>
 
@@ -206,19 +209,19 @@ const StaffActionModal = ({ member, onClose, onRoleChange, onDisable, onRemove, 
         <div className="staff-action-list">
           {!isOwner && member.status === STATUS.ACTIVE && (
             <>
-              <div className="staff-action-label">역할 변경</div>
+              <div className="staff-action-label">{t('staff_mgmt.role_label')} 변경</div>
               <div className="staff-role-change">
                 <button
                   className={`role-change-btn ${member.role === ROLES.MANAGER ? 'active' : ''}`}
                   onClick={() => onRoleChange(member.id, ROLES.MANAGER)}
                 >
-                  관리자
+                  {t('staff_mgmt.role_admin')}
                 </button>
                 <button
                   className={`role-change-btn ${member.role === ROLES.STAFF ? 'active' : ''}`}
                   onClick={() => onRoleChange(member.id, ROLES.STAFF)}
                 >
-                  직원
+                  {t('staff_mgmt.role_staff')}
                 </button>
               </div>
             </>
@@ -227,7 +230,15 @@ const StaffActionModal = ({ member, onClose, onRoleChange, onDisable, onRemove, 
           {isInvited && (
             <button className="staff-action-btn" onClick={() => onResend(member.id)}>
               <Mail size={16} />
-              {isExpired ? '초대 재발송 (만료됨)' : '초대 재발송'}
+              {isExpired
+                ? `${t('staff_mgmt.invite_resend')} (${t('staff_mgmt.status_expired')})`
+                : t('staff_mgmt.invite_resend')}
+            </button>
+          )}
+
+          {isInvited && (
+            <button className="staff-action-btn warn" onClick={() => onRemove(member.id)}>
+              {t('staff_mgmt.invite_revoke')}
             </button>
           )}
 
@@ -237,7 +248,7 @@ const StaffActionModal = ({ member, onClose, onRoleChange, onDisable, onRemove, 
             </button>
           )}
 
-          {!isOwner && (
+          {!isOwner && member.status !== STATUS.INVITED && (
             <button className="staff-action-btn danger" onClick={() => onRemove(member.id)}>
               삭제
             </button>
@@ -384,6 +395,7 @@ const ProfileTab = () => {
    Main Component — 탭 통합 (회원정보 + 직원관리)
    ══════════════════════════════════════════════ */
 const StaffManagement = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'staff';
@@ -491,7 +503,7 @@ const StaffManagement = () => {
         <button className="back-btn d-md-none" onClick={() => navigate('/dashboard')}>
           <ChevronLeft size={24} />
         </button>
-        <h1>{activeTab === 'staff' ? '직원 관리' : '회원정보'}</h1>
+        <h1>{activeTab === 'staff' ? t('staff_mgmt.title') : '회원정보'}</h1>
       </header>
 
       <div className="staff-tabs">
@@ -520,17 +532,17 @@ const StaffManagement = () => {
             <div className="staff-counts">
               <span className="staff-count-item">
                 <span className="staff-count-num">{activeCount}</span>
-                <span className="staff-count-label">활성</span>
+                <span className="staff-count-label">{t('staff_mgmt.status_accepted')}</span>
               </span>
               <span className="staff-count-divider" />
               <span className="staff-count-item">
                 <span className="staff-count-num">{invitedCount}</span>
-                <span className="staff-count-label">초대중</span>
+                <span className="staff-count-label">{t('staff_mgmt.status_pending')}</span>
               </span>
             </div>
             <button className="staff-invite-btn" onClick={() => setShowInvite(true)}>
               <Plus size={18} />
-              <span>직원 초대</span>
+              <span>{t('staff_mgmt.invite_btn')}</span>
             </button>
           </div>
 
@@ -542,7 +554,7 @@ const StaffManagement = () => {
               <UserCheck size={40} strokeWidth={1} />
               <p>등록된 직원이 없습니다.</p>
               <button className="staff-empty-btn" onClick={() => setShowInvite(true)}>
-                직원 초대하기
+                {t('staff_mgmt.invite_btn')}
               </button>
             </div>
           ) : (
@@ -595,7 +607,7 @@ const StaffManagement = () => {
                 </ul>
               </div>
               <div className="staff-perm-col">
-                <div className="staff-perm-role"><RoleBadge role={ROLES.MANAGER} /> 관리자</div>
+                <div className="staff-perm-role"><RoleBadge role={ROLES.MANAGER} /> {t('staff_mgmt.role_admin')}</div>
                 <ul>
                   <li>매장안내/채팅/스탬프/쿠폰 제어</li>
                   <li>와이파이/알림/리포트/설정 조회</li>
@@ -603,7 +615,7 @@ const StaffManagement = () => {
                 </ul>
               </div>
               <div className="staff-perm-col">
-                <div className="staff-perm-role"><RoleBadge role={ROLES.STAFF} /> 직원</div>
+                <div className="staff-perm-role"><RoleBadge role={ROLES.STAFF} /> {t('staff_mgmt.role_staff')}</div>
                 <ul>
                   <li>매장안내/채팅/스탬프/쿠폰 제어</li>
                   <li>와이파이/알림/리포트/설정 조회</li>
@@ -611,6 +623,19 @@ const StaffManagement = () => {
                 </ul>
               </div>
             </div>
+          </div>
+
+          {/* 법적 안내 compliance 카드 */}
+          <div className="staff-compliance-card">
+            <div className="staff-compliance-header">
+              <ShieldAlert size={16} aria-hidden="true" />
+              <h3 className="staff-compliance-title">{t('staff_mgmt.compliance_title')}</h3>
+            </div>
+            <ul className="staff-compliance-list">
+              <li>{t('staff_mgmt.compliance_1')}</li>
+              <li>{t('staff_mgmt.compliance_2')}</li>
+              <li>{t('staff_mgmt.compliance_3')}</li>
+            </ul>
           </div>
         </div>
       )}

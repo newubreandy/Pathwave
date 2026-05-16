@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Radio, UserCheck, Battery, Megaphone, CreditCard,
-  FileText, LogOut, Search, Languages, Ticket, MessageSquare,
+  FileText, LogOut, Search, Languages, Ticket, MessageSquare, Users,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { adminLogout, getCurrentAdmin } from '../services/auth.js';
@@ -18,6 +18,7 @@ const NAV_OPS_DEFS = [
   { to: '/dashboard/battery',        icon: Battery,         labelKey: 'nav.battery'        },
   { to: '/dashboard/announcements',  icon: Megaphone,       labelKey: 'nav.announcements'  },
   { to: '/dashboard/payments',       icon: CreditCard,      labelKey: 'nav.payments'       },
+  { to: '/dashboard/staff-monitor',  icon: Users,           labelKey: 'nav.staff_monitor'  },
   { to: '/dashboard/policies',       icon: FileText,        labelKey: 'nav.policies'       },
   { to: '/dashboard/coupon-stats',   icon: Ticket,          labelKey: 'nav.coupon_stats'   },
   { to: '/dashboard/chat-monitor',   icon: MessageSquare,   labelKey: 'nav.chat_monitor'   },

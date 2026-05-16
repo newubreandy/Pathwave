@@ -637,8 +637,317 @@
 .pay-complete-section h2 { font-size: var(--pw-title-size); font-weight: 700; margin-bottom: var(--pw-space-2); }
 .pay-complete-section p { color: var(--pw-text-hint); font-size: var(--pw-label-size); }
 
+/* ── Compliance Warning Box (부가세 포함 안내) ── */
+.pay-compliance-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--pw-space-2);
+  padding: var(--pw-space-3) var(--pw-space-4);
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: var(--pw-radius-md);
+  margin-bottom: var(--pw-space-6);
+  font-size: var(--pw-caption-size);
+  color: #F59E0B;
+  line-height: 1.6;
+}
+
+.pay-compliance-warning svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ── 자동결제 동의 본문 ── */
+.pay-autopay-consent-note {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-hint);
+  line-height: 1.6;
+  margin: 0;
+  padding: var(--pw-space-3);
+  background: rgba(34, 197, 94, 0.05);
+  border: 1px solid rgba(34, 197, 94, 0.15);
+  border-radius: var(--pw-radius-sm);
+}
+
+/* ── PG 정보 / 환불 정책 공통 카드 ── */
+.pay-info-card {
+  background: var(--pw-surface-1);
+  border: 1px solid var(--pw-surface-line);
+  border-radius: var(--pw-radius-lg);
+  padding: var(--pw-space-5);
+  margin-bottom: var(--pw-space-4);
+}
+
+.pay-info-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-2);
+  margin-bottom: var(--pw-space-3);
+  color: var(--pw-text-hint);
+}
+
+.pay-info-card-title {
+  font-size: var(--pw-label-size);
+  font-weight: 700;
+  color: var(--pw-text);
+  margin: 0;
+}
+
+.pay-info-card-body {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-secondary);
+  line-height: 1.7;
+  margin: 0 0 var(--pw-space-3) 0;
+}
+
+.pay-info-card-row {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-3);
+  padding-top: var(--pw-space-3);
+  border-top: 1px solid var(--pw-surface-line);
+}
+
+.pay-info-card-label {
+  font-size: var(--pw-caption-size);
+  font-weight: 600;
+  color: var(--pw-text-hint);
+  white-space: nowrap;
+}
+
+.pay-info-card-value {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-secondary);
+}
+
+/* ── 환불 정책 목록 ── */
+.pay-refund-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-2);
+}
+
+.pay-refund-list li {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-secondary);
+  line-height: 1.6;
+  padding-left: var(--pw-space-2);
+  border-left: 2px solid var(--pw-surface-line);
+}
+
+/* ══════════════════════════════════════════
+   Subscriptions page
+   ══════════════════════════════════════════ */
+
+/* 구독 목록 */
+.sub-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-4);
+  margin-bottom: var(--pw-space-8);
+}
+
+/* 구독 카드 */
+.sub-card {
+  background: var(--pw-surface-1);
+  border: 1px solid var(--pw-surface-line);
+  border-radius: var(--pw-radius-lg);
+  padding: var(--pw-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-4);
+}
+
+.sub-card--inactive {
+  opacity: 0.65;
+}
+
+.sub-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-3);
+}
+
+.sub-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at 50% 18%, rgba(255,255,255,0.10) 0%, transparent 50%),
+    linear-gradient(180deg, #2a2a36 0%, #16161e 50%, #08080d 100%);
+  border: 1px solid rgba(0,0,0,0.85);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,0.12),
+    inset 0 -2px 5px rgba(0,0,0,0.75),
+    0 2px 5px rgba(0,0,0,0.55);
+  color: var(--pw-primary);
+  flex-shrink: 0;
+}
+
+.sub-card-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.sub-card-plan {
+  font-size: var(--pw-label-size);
+  font-weight: 700;
+  color: var(--pw-text);
+}
+
+.sub-card-period {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-hint);
+  margin-top: 2px;
+}
+
+/* 상태 뱃지 */
+.sub-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: var(--pw-radius-pill);
+  font-size: 0.65rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sub-badge--active {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22C55E;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.sub-badge--expired {
+  background: rgba(239, 68, 68, 0.10);
+  color: #EF4444;
+  border: 1px solid rgba(239, 68, 68, 0.20);
+}
+
+.sub-badge--canceled {
+  background: rgba(255,255,255,0.05);
+  color: var(--pw-text-hint);
+  border: 1px solid var(--pw-surface-line);
+}
+
+/* 날짜/금액 행 */
+.sub-card-dates {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-2);
+  padding: var(--pw-space-3) 0;
+  border-top: 1px solid var(--pw-surface-line);
+  border-bottom: 1px solid var(--pw-surface-line);
+}
+
+.sub-card-date-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--pw-space-3);
+}
+
+.sub-card-date-label {
+  font-size: var(--pw-caption-size);
+  font-weight: 600;
+  color: var(--pw-text-hint);
+}
+
+.sub-card-date-value {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.sub-card-amount {
+  font-size: var(--pw-label-size);
+  font-weight: 600;
+  color: var(--pw-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 카드 푸터 — 갱신 안내 + 해지 버튼 */
+.sub-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pw-space-3);
+  flex-wrap: wrap;
+}
+
+.sub-renewal-notice {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-hint);
+  line-height: 1.5;
+  flex: 1;
+  margin: 0;
+}
+
+/* 해지 모달 경고 박스 */
+.sub-cancel-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--pw-space-2);
+  padding: var(--pw-space-3) var(--pw-space-4);
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: var(--pw-radius-md);
+  font-size: var(--pw-caption-size);
+  color: #F59E0B;
+  line-height: 1.6;
+}
+
+.sub-cancel-warning svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* 빈 상태 */
+.sub-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pw-space-12) var(--pw-space-4);
+  gap: var(--pw-space-4);
+  color: var(--pw-text-hint);
+}
+
+.sub-empty p {
+  font-size: var(--pw-label-size);
+  margin: 0;
+}
+
+/* 하단 compliance 문구 */
+.sub-compliance-terms {
+  padding: var(--pw-space-5);
+  background: var(--pw-surface-1);
+  border: 1px solid var(--pw-surface-line);
+  border-radius: var(--pw-radius-md);
+  margin-top: var(--pw-space-4);
+}
+
+.sub-compliance-terms p {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-hint);
+  line-height: 1.7;
+  margin: 0;
+}
+
 /* ── Mobile ── */
 @media (max-width: 768px) {
   .payment-card, .payment-card-empty { max-width: 280px; }
   .pay-step-label { font-size: 0.55rem; }
+
+  .sub-card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

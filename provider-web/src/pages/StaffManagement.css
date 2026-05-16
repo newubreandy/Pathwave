@@ -633,6 +633,47 @@
   text-decoration: line-through;
 }
 
+/* ── Compliance Card ── */
+.staff-compliance-card {
+  background: var(--pw-surface-1);
+  border: 1px solid var(--pw-surface-line);
+  border-radius: var(--pw-radius-lg);
+  padding: var(--pw-space-5);
+  margin-top: var(--pw-space-4);
+}
+
+.staff-compliance-header {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-2);
+  margin-bottom: var(--pw-space-3);
+  color: var(--pw-text-hint);
+}
+
+.staff-compliance-title {
+  font-size: var(--pw-label-size);
+  font-weight: 700;
+  color: var(--pw-text);
+  margin: 0;
+}
+
+.staff-compliance-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-2);
+}
+
+.staff-compliance-list li {
+  font-size: var(--pw-caption-size);
+  color: var(--pw-text-secondary);
+  line-height: 1.6;
+  padding-left: var(--pw-space-3);
+  border-left: 2px solid var(--pw-surface-line);
+}
+
 /* ── Mobile ── */
 @media (max-width: 768px) {
   .common-form-page > .common-form-header {
