@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/pw.dart';
 
 /// 비밀번호 찾기: 이메일 → 코드 → 새 비번.
 class ForgotPasswordScreen extends StatefulWidget {
@@ -81,39 +82,38 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               Text('가입 이메일 입력',
                 style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 24),
-              TextField(
+              PwTextField(
                 controller: _emailCtrl,
+                hint: '이메일',
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(hintText: '이메일'),
               ),
               const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _busy ? null : _request,
-                child: _busy ? _spin() : const Text('재설정 코드 받기'),
+              PwButton(
+                onPressed: _request,
+                loading: _busy,
+                child: const Text('재설정 코드 받기'),
               ),
             ] else ...[
               Text('새 비밀번호 설정',
                 style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 24),
-              TextField(
+              PwTextField(
                 controller: _codeCtrl,
+                hint: '인증 코드 6자리',
                 keyboardType: TextInputType.number,
                 maxLength: 6,
-                decoration: const InputDecoration(
-                  hintText: '인증 코드 6자리',
-                  counterText: '',
-                ),
               ),
               const SizedBox(height: 12),
-              TextField(
+              PwTextField(
                 controller: _pwCtrl,
+                hint: '새 비밀번호',
                 obscureText: true,
-                decoration: const InputDecoration(hintText: '새 비밀번호'),
               ),
               const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _busy ? null : _reset,
-                child: _busy ? _spin() : const Text('비밀번호 변경'),
+              PwButton(
+                onPressed: _reset,
+                loading: _busy,
+                child: const Text('비밀번호 변경'),
               ),
             ],
 
@@ -130,9 +130,4 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ),
     );
   }
-
-  Widget _spin() => const SizedBox(
-    width: 20, height: 20,
-    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-  );
 }

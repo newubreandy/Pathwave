@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/pw.dart';
 import '../../widgets/social_login_row.dart';
 import 'consent_screen.dart';
 
@@ -140,8 +141,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('회원가입'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+        leading: PwIconButton(
+          icon: Icons.arrow_back,
           onPressed: () {
             if (_step > 0) {
               setState(() { _step -= 1; _error = null; _info = null; });
@@ -257,18 +258,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       const SizedBox(height: 20),
 
-      TextField(
+      PwTextField(
         controller: _emailCtrl,
+        hint: 'example@email.com',
+        prefixIcon: Icons.email_outlined,
         keyboardType: TextInputType.emailAddress,
-        decoration: const InputDecoration(
-          hintText: 'example@email.com',
-          prefixIcon: Icon(Icons.email_outlined),
-        ),
       ),
       const SizedBox(height: 16),
-      ElevatedButton(
-        onPressed: _busy ? null : _sendCode,
-        child: _busy ? _spinner() : const Text('인증 코드 받기'),
+      PwButton(
+        onPressed: _sendCode,
+        loading: _busy,
+        child: const Text('인증 코드 받기'),
       ),
     ];
   }
@@ -279,20 +279,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
     Text('${_emailCtrl.text} 으로 6자리 코드를 보냈습니다.',
       style: const TextStyle(color: AppTheme.textSecondary)),
     const SizedBox(height: 24),
-    TextField(
+    PwTextField(
       controller: _codeCtrl,
+      hint: '000000',
       keyboardType: TextInputType.number,
       maxLength: 6,
       style: const TextStyle(fontSize: 24, letterSpacing: 8),
       textAlign: TextAlign.center,
-      decoration: const InputDecoration(hintText: '000000', counterText: ''),
     ),
     const SizedBox(height: 12),
-    ElevatedButton(
-      onPressed: _busy ? null : _verifyCode,
-      child: _busy ? _spinner() : const Text('확인'),
+    PwButton(
+      onPressed: _verifyCode,
+      loading: _busy,
+      child: const Text('확인'),
     ),
-    TextButton(
+    PwButton(
+      variant: PwButtonVariant.text,
       onPressed: _busy ? null : _sendCode,
       child: const Text('코드 다시 받기'),
     ),
@@ -306,15 +308,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       const Text('만 14세 이상부터 가입 가능합니다.\n만 14~18세는 보호자 초대 코드가 필요합니다.',
         style: TextStyle(color: AppTheme.textSecondary)),
       const SizedBox(height: 24),
-      TextField(
+      PwTextField(
         controller: _birthYearCtrl,
+        hint: '예: 1995',
+        prefixIcon: Icons.cake_outlined,
         keyboardType: TextInputType.number,
         maxLength: 4,
-        decoration: const InputDecoration(
-          hintText: '예: 1995',
-          prefixIcon: Icon(Icons.cake_outlined),
-          counterText: '',
-        ),
         onChanged: (_) => setState(() {}),
       ),
       if (showInviteField) ...[
@@ -341,18 +340,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        TextField(
+        PwTextField(
           controller: _inviteCodeCtrl,
-          decoration: const InputDecoration(
-            hintText: '보호자 초대 코드',
-            prefixIcon: Icon(Icons.family_restroom),
-          ),
+          hint: '보호자 초대 코드',
+          prefixIcon: Icons.family_restroom,
         ),
       ],
       const SizedBox(height: 20),
-      ElevatedButton(
-        onPressed: _busy ? null : _proceedFromAge,
-        child: _busy ? _spinner() : const Text('다음'),
+      PwButton(
+        onPressed: _proceedFromAge,
+        loading: _busy,
+        child: const Text('다음'),
       ),
     ];
   }
@@ -363,23 +361,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     const Text('영문 대/소문자 + 숫자 + 특수문자 포함 8자 이상.',
       style: TextStyle(color: AppTheme.textSecondary)),
     const SizedBox(height: 24),
-    TextField(
+    PwTextField(
       controller: _pwCtrl,
+      hint: '비밀번호',
+      prefixIcon: Icons.lock_outline,
       obscureText: true,
-      decoration: const InputDecoration(
-        hintText: '비밀번호',
-        prefixIcon: Icon(Icons.lock_outline),
-      ),
     ),
     const SizedBox(height: 20),
-    ElevatedButton(
-      onPressed: _busy ? null : _proceedToConsent,
-      child: _busy ? _spinner() : const Text('다음 — 약관 동의'),
+    PwButton(
+      onPressed: _proceedToConsent,
+      loading: _busy,
+      child: const Text('다음 — 약관 동의'),
     ),
   ];
-
-  Widget _spinner() => const SizedBox(
-    width: 20, height: 20,
-    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-  );
 }

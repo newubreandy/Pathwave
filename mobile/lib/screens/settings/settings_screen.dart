@@ -7,6 +7,7 @@ import '../../services/auth_service.dart';
 import '../../services/policy_service.dart';
 import '../../utils/api_config.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/pw.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -58,20 +59,18 @@ class SettingsScreen extends StatelessWidget {
               '주식회사 트리거소프트 (triggersoft)'),
           ]),
           const SizedBox(height: 16),
-          OutlinedButton.icon(
+          PwButton(
+            variant: PwButtonVariant.danger,
+            icon: Icons.logout,
             onPressed: () async {
               await context.read<AuthService>().logout();
               if (context.mounted) context.go('/auth/login');
             },
-            icon: const Icon(Icons.logout, color: AppTheme.error),
-            label: const Text('로그아웃', style: TextStyle(color: AppTheme.error)),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
-              side: const BorderSide(color: AppTheme.error),
-            ),
+            child: const Text('로그아웃'),
           ),
           const SizedBox(height: 8),
-          TextButton(
+          PwButton(
+            variant: PwButtonVariant.text,
             onPressed: () => context.push('/mypage/delete-account'),
             child: const Text('회원 탈퇴',
               style: TextStyle(
@@ -123,7 +122,9 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
         actions: [
-          TextButton(
+          PwButton(
+            variant: PwButtonVariant.text,
+            fullWidth: false,
             onPressed: () => Navigator.pop(context),
             child: const Text('닫기'),
           ),
@@ -277,12 +278,10 @@ class _PolicySheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('닫기'),
-              ),
+            PwButton(
+              variant: PwButtonVariant.text,
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('닫기'),
             ),
           ],
         ),

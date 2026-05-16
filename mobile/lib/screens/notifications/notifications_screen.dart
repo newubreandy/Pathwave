@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../services/notification_service.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/pw.dart';
 
 /// 알림 = 인박스(개인 트랜잭션) + 시스템 공지 (audience 별).
 class NotificationsScreen extends StatefulWidget {
@@ -253,7 +254,14 @@ class _AnnouncementCard extends StatelessWidget {
             backgroundColor: AppTheme.surface,
             title: Text(title),
             content: SingleChildScrollView(child: Text(body)),
-            actions: [TextButton(onPressed: () => context.pop(), child: const Text('닫기'))],
+            actions: [
+              PwButton(
+                variant: PwButtonVariant.text,
+                fullWidth: false,
+                onPressed: () => context.pop(),
+                child: const Text('닫기'),
+              ),
+            ],
           ),
         );
       },

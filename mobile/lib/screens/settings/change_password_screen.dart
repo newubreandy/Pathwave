@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/pw.dart';
 
 /// 비밀번호 변경 (PR #63) — 이메일 가입자 전용.
 class ChangePasswordScreen extends StatefulWidget {
@@ -85,25 +86,21 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 8),
-                TextFormField(
+                PwTextField(
                   controller: _currentCtrl,
+                  label: '현재 비밀번호',
+                  prefixIcon: Icons.lock_outline,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: '현재 비밀번호',
-                    prefixIcon: Icon(Icons.lock_outline),
-                  ),
                   validator: (v) => (v == null || v.isEmpty)
                       ? '현재 비밀번호를 입력해 주세요' : null,
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
+                PwTextField(
                   controller: _newCtrl,
+                  label: '새 비밀번호',
+                  helperText: '8자 이상 + 영문/숫자/특수문자',
+                  prefixIcon: Icons.lock,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: '새 비밀번호',
-                    helperText: '8자 이상 + 영문/숫자/특수문자',
-                    prefixIcon: Icon(Icons.lock),
-                  ),
                   validator: (v) {
                     if (v == null || v.length < 8) return '8자 이상 입력해 주세요';
                     if (v == _currentCtrl.text) return '현재 비밀번호와 다르게 입력해 주세요';
@@ -111,13 +108,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
+                PwTextField(
                   controller: _confirmCtrl,
+                  label: '새 비밀번호 확인',
+                  prefixIcon: Icons.lock,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: '새 비밀번호 확인',
-                    prefixIcon: Icon(Icons.lock),
-                  ),
                   validator: (v) =>
                       (v != _newCtrl.text) ? '새 비밀번호가 일치하지 않습니다' : null,
                 ),
@@ -135,12 +130,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   ),
                 ],
                 const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _busy ? null : _submit,
-                  child: _busy
-                    ? const SizedBox(width: 20, height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('변경하기'),
+                PwButton(
+                  onPressed: _submit,
+                  loading: _busy,
+                  child: const Text('변경하기'),
                 ),
               ],
             ),

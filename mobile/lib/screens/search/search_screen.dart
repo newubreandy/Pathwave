@@ -9,6 +9,7 @@ import '../../services/permission_service.dart';
 import '../../services/store_service.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/pw.dart';
 
 /// 매장 검색 — 키워드 + 현재 위치 기반 거리 정렬.
 class SearchScreen extends StatefulWidget {
@@ -94,15 +95,13 @@ class _SearchScreenState extends State<SearchScreen> {
         children: [
           Text('매장 검색', style: Theme.of(context).textTheme.displaySmall),
           const SizedBox(height: 12),
-          TextField(
+          PwTextField(
             controller: _searchCtrl,
-            onChanged: _onChanged,
+            hint: '매장명 / 주소 / 키워드 검색',
+            prefixIcon: Icons.search,
             textInputAction: TextInputAction.search,
+            onChanged: _onChanged,
             onSubmitted: (_) => _runSearch(),
-            decoration: const InputDecoration(
-              hintText: '매장명 / 주소 / 키워드 검색',
-              prefixIcon: Icon(Icons.search),
-            ),
           ),
           if (_locationDenied) ...[
             const SizedBox(height: 8),

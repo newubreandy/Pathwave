@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../utils/app_theme.dart';
+import '../../widgets/pw.dart';
 
 /// `/mypage` 직접 라우트 진입용. 일반적으로는 홈의 마이 탭을 사용.
 class MyPageScreen extends StatelessWidget {
@@ -22,7 +23,8 @@ class MyPageScreen extends StatelessWidget {
               const Text('홈 화면의 "마이" 탭에서 이용해 주세요.',
                 style: TextStyle(color: AppTheme.textSecondary)),
               const SizedBox(height: 16),
-              ElevatedButton(
+              PwButton(
+                fullWidth: false,
                 onPressed: () => context.go('/home'),
                 child: const Text('홈으로'),
               ),

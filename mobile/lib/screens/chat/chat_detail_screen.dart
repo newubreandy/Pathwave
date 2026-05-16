@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../services/chat_service.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/pw.dart';
 
 /// 1:1 채팅 상세 — SSE 실시간 메시지 + 입력.
 ///
@@ -142,8 +143,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_roomTitle),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+        leading: PwIconButton(
+          icon: Icons.arrow_back,
           onPressed: () => context.pop(),
         ),
       ),
@@ -191,19 +192,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       child: Row(
         children: [
           Expanded(
-            child: TextField(
+            child: PwTextField(
               controller: _inputCtrl,
-              minLines: 1,
-              maxLines: 4,
+              hint: '메시지 입력',
               textInputAction: TextInputAction.send,
               onSubmitted: (_) => _send(),
-              decoration: const InputDecoration(
-                hintText: '메시지 입력',
-                contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              ),
             ),
           ),
           const SizedBox(width: 8),
+          // 전송 버튼은 sending 시 스피너로 바꾸는 비표준 패턴이라
+          // PwIconButton 으로는 모델링하지 않고 raw IconButton 유지.
           IconButton(
             icon: _sending
               ? const SizedBox(width: 18, height: 18,

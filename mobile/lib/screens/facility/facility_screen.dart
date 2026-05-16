@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../services/store_service.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/pw.dart';
 
 /// 매장 상세 — 이미지 / 영업시간 / 위치 / 채팅 진입.
 class FacilityScreen extends StatefulWidget {
@@ -227,10 +228,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
       child: Row(
         children: [
           Expanded(
-            child: ElevatedButton.icon(
+            child: PwButton(
+              icon: Icons.chat_bubble_outline,
               onPressed: () => context.push('/chat/$_id'),
-              icon: const Icon(Icons.chat_bubble_outline),
-              label: const Text('매장과 채팅'),
+              child: const Text('매장과 채팅'),
             ),
           ),
         ],

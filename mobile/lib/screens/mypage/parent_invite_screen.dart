@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../services/parent_invite_service.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/pw.dart';
 
 /// 부모(만 19세 이상)가 자녀(만 14~18) 가입 초대 코드를 발급하는 화면.
 class ParentInviteScreen extends StatefulWidget {
@@ -112,24 +113,21 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
         const Text('자녀 이메일 (선택)',
           style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
         const SizedBox(height: 6),
-        TextField(
+        PwTextField(
           controller: _emailCtrl,
+          hint: 'child@example.com',
+          prefixIcon: Icons.email_outlined,
           keyboardType: TextInputType.emailAddress,
-          decoration: const InputDecoration(
-            hintText: 'child@example.com',
-            prefixIcon: Icon(Icons.email_outlined),
-          ),
         ),
         if (_error != null) ...[
           const SizedBox(height: 12),
           Text(_error!, style: const TextStyle(color: AppTheme.error)),
         ],
         const SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: _busy ? null : _create,
-          child: _busy
-            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-            : const Text('초대 코드 발급'),
+        PwButton(
+          onPressed: _create,
+          loading: _busy,
+          child: const Text('초대 코드 발급'),
         ),
       ],
     );
@@ -185,7 +183,10 @@ class _SuccessView extends StatelessWidget {
             Text('만료: $expiresAt',
               style: const TextStyle(color: AppTheme.textHint, fontSize: 12)),
           const SizedBox(height: 16),
-          OutlinedButton.icon(
+          PwButton(
+            variant: PwButtonVariant.outlined,
+            fullWidth: false,
+            icon: Icons.copy,
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: code));
               if (context.mounted) {
@@ -194,12 +195,14 @@ class _SuccessView extends StatelessWidget {
                 );
               }
             },
-            icon: const Icon(Icons.copy, size: 16),
-            label: const Text('코드 복사'),
+            child: const Text('코드 복사'),
           ),
           if (shareUrl.isNotEmpty) ...[
             const SizedBox(height: 8),
-            OutlinedButton.icon(
+            PwButton(
+              variant: PwButtonVariant.outlined,
+              fullWidth: false,
+              icon: Icons.link,
               onPressed: () async {
                 await Clipboard.setData(ClipboardData(text: shareUrl));
                 if (context.mounted) {
@@ -208,12 +211,15 @@ class _SuccessView extends StatelessWidget {
                   );
                 }
               },
-              icon: const Icon(Icons.link, size: 16),
-              label: const Text('가입 링크 복사'),
+              child: const Text('가입 링크 복사'),
             ),
           ],
           const SizedBox(height: 24),
-          TextButton(onPressed: onClose, child: const Text('닫기')),
+          PwButton(
+            variant: PwButtonVariant.text,
+            onPressed: onClose,
+            child: const Text('닫기'),
+          ),
         ],
       ),
     );
