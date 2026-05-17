@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Radio, UserCheck, Battery, Megaphone, CreditCard,
   FileText, LogOut, Search, Languages, Ticket, MessageSquare, Users,
+  HelpCircle, LifeBuoy, BarChart3,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { adminLogout, getCurrentAdmin } from '../services/auth.js';
@@ -24,6 +25,12 @@ const NAV_OPS_DEFS = [
   { to: '/dashboard/coupon-stats',   icon: Ticket,          labelKey: 'nav.coupon_stats'   },
   { to: '/dashboard/chat-monitor',   icon: MessageSquare,   labelKey: 'nav.chat_monitor'   },
   { to: '/dashboard/i18n',           icon: Languages,       labelKey: 'nav.i18n'           },
+];
+
+const NAV_SUPPORT_DEFS = [
+  { to: '/dashboard/support',         icon: LifeBuoy,        labelKey: 'nav.support'        },
+  { to: '/dashboard/faq',             icon: HelpCircle,      labelKey: 'nav.faq'            },
+  { to: '/dashboard/support/stats',   icon: BarChart3,       labelKey: 'nav.support_stats'  },
 ];
 
 export default function DashboardLayout() {
@@ -72,6 +79,9 @@ export default function DashboardLayout() {
 
         <div className="sidebar-section">운영</div>
         <nav className="sidebar-nav">{NAV_OPS_DEFS.map(renderNavLink)}</nav>
+
+        <div className="sidebar-section">고객지원</div>
+        <nav className="sidebar-nav">{NAV_SUPPORT_DEFS.map(renderNavLink)}</nav>
 
         <div className="sidebar-footer">
           {admin && (

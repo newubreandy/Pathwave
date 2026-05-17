@@ -466,6 +466,98 @@ def init_db():
         );
         CREATE INDEX IF NOT EXISTS idx_announcement_reads_reader
             ON announcement_reads(reader_kind, reader_id);
+
+        -- ─────────────────────────────────────────────────────────────────────
+        -- Phase I — 고객센터 (Support) + FAQ + 신고 (Report) (PR 신규)
+        -- 3 콘솔 공통 도메인. mobile=사용자 문의/신고, provider-web=사장님 문의,
+        -- admin-web=inbox/응답/통계/FAQ CRUD.
+        -- ─────────────────────────────────────────────────────────────────────
+
+        -- 지원 카테고리 (어드민 CRUD, kind 별로 분리)
+        CREATE TABLE IF NOT EXISTS support_categories (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            kind        TEXT    NOT NULL,                -- 'user' | 'provider'
+            code        TEXT    NOT NULL,                -- 'beacon' | 'payment' | ...
+            label_key   TEXT    NOT NULL,                -- i18n key (support_cat.user.beacon ...)
+            sort_order  INTEGER DEFAULT 0,
+            active      INTEGER DEFAULT 1,
+            created_at  TEXT    DEFAULT (datetime('now')),
+            UNIQUE (kind, code)
+        );
+        CREATE INDEX IF NOT EXISTS idx_support_categories_kind
+            ON support_categories(kind, active, sort_order);
+
+        -- 1:N 스레드 - 티켓
+        CREATE TABLE IF NOT EXISTS support_tickets (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            kind          TEXT    NOT NULL,              -- 'user' | 'provider'
+            requester_id  INTEGER NOT NULL,              -- user_id 또는 facility_account_id
+            category      TEXT    NOT NULL,              -- support_categories.code
+            subject       TEXT    NOT NULL,
+            body          TEXT    NOT NULL,
+            status        TEXT    DEFAULT 'open',        -- 'open'|'replied'|'closed'
+            priority      TEXT    DEFAULT 'normal',      -- 'low'|'normal'|'high'|'urgent'
+            assigned_admin_id INTEGER,                   -- super_admin_accounts.id
+            last_reply_at TEXT,
+            closed_at     TEXT,
+            created_at    TEXT    DEFAULT (datetime('now')),
+            updated_at    TEXT    DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_support_tickets_kind_status
+            ON support_tickets(kind, status, created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_support_tickets_requester
+            ON support_tickets(kind, requester_id);
+
+        -- 스레드 메시지
+        CREATE TABLE IF NOT EXISTS support_messages (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            ticket_id   INTEGER NOT NULL,
+            sender      TEXT    NOT NULL,                -- 'user' | 'admin'
+            sender_id   INTEGER,                          -- requester_id 또는 admin id
+            body        TEXT    NOT NULL,
+            created_at  TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (ticket_id) REFERENCES support_tickets(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_support_messages_ticket
+            ON support_messages(ticket_id, created_at);
+
+        -- FAQ (어드민 CRUD, kind=user/provider 분리)
+        CREATE TABLE IF NOT EXISTS faqs (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            kind        TEXT    NOT NULL,                -- 'user' | 'provider'
+            category    TEXT    NOT NULL,                -- support_categories.code
+            question    TEXT    NOT NULL,
+            answer      TEXT    NOT NULL,
+            lang        TEXT    NOT NULL DEFAULT 'ko',
+            sort_order  INTEGER DEFAULT 0,
+            active      INTEGER DEFAULT 1,
+            created_at  TEXT    DEFAULT (datetime('now')),
+            updated_at  TEXT    DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_faqs_kind_lang
+            ON faqs(kind, lang, active, sort_order);
+        CREATE INDEX IF NOT EXISTS idx_faqs_category
+            ON faqs(kind, category, lang);
+
+        -- 신고 (mobile → 매장/사용자 신고. admin 처리)
+        CREATE TABLE IF NOT EXISTS reports (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            target_kind  TEXT    NOT NULL,               -- 'facility' | 'user' | 'review' | 'chat'
+            target_id    INTEGER NOT NULL,
+            reporter_id  INTEGER NOT NULL,               -- users.id
+            reporter_kind TEXT   NOT NULL DEFAULT 'user',-- 'user'|'provider'
+            reason_code  TEXT    NOT NULL,               -- 'spam'|'inappropriate'|'fraud'|'etc'
+            reason_text  TEXT,
+            status       TEXT    DEFAULT 'pending',      -- 'pending'|'reviewing'|'resolved'|'rejected'
+            handled_admin_id INTEGER,
+            handled_at   TEXT,
+            handled_note TEXT,
+            created_at   TEXT    DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_reports_status
+            ON reports(status, created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_reports_target
+            ON reports(target_kind, target_id);
     """)
 
     # ── 마이그레이션: 기존 DB에 없는 컬럼은 ADD COLUMN ────────────────────────

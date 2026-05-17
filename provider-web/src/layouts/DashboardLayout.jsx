@@ -74,6 +74,7 @@ const DashboardLayout = () => {
     { path: '/dashboard/staff', label: t('menu.staff', '직원 관리') },
     { path: '/dashboard/payments', label: t('menu.payments', '결제관리') },
     { path: '/dashboard/service-request', label: t('menu.serviceRequest', '서비스 신청') },
+    { path: '/dashboard/support', label: t('menu.support', '고객센터') },
     { path: '/dashboard/settings', label: t('menu.settings', '설정') },
   ];
 

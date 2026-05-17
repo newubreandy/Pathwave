@@ -21,6 +21,8 @@ import '../screens/chat/chat_list_screen.dart';
 import '../screens/chat/chat_detail_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/settings/change_password_screen.dart';
+import '../screens/support/support_screen.dart';
+import '../screens/support/report_screen.dart';
 import '../widgets/dev_preview_bar.dart';
 
 class AppRouter {
@@ -97,6 +99,22 @@ class AppRouter {
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
       GoRoute(path: '/settings/change-password',
               builder: (_, _) => const ChangePasswordScreen()),
+
+      // ── 고객센터 / 신고 (Phase I) ────────────────────────────────
+      GoRoute(path: '/support', builder: (_, _) => const SupportScreen()),
+      GoRoute(
+        path: '/report',
+        builder: (_, state) {
+          final qp = state.uri.queryParameters;
+          final kind = qp['target_kind'];
+          final tid  = int.tryParse(qp['target_id'] ?? '');
+          return ReportScreen(
+            targetKind:  kind,
+            targetId:    tid,
+            targetLabel: qp['target_label'],
+          );
+        },
+      ),
     ],
   );
 }

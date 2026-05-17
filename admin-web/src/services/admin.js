@@ -74,6 +74,37 @@ export const adminApi = {
     apiClient.delete(`/api/admin/policies/${pid}`),
   notifyPolicy: (pid, subType = 'all') =>
     apiClient.post(`/api/admin/policies/${pid}/notify`, { sub_type: subType }),
+
+  // ── Phase I — 고객센터 / FAQ / 신고 ─────────────────────────────────
+  // Support
+  listSupportTickets: (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return apiClient.get(`/api/admin/support/tickets${q ? '?' + q : ''}`);
+  },
+  getSupportTicket: (tid) => apiClient.get(`/api/admin/support/tickets/${tid}`),
+  replySupportTicket: (tid, payload) =>
+    apiClient.post(`/api/admin/support/tickets/${tid}/reply`, payload),
+  patchSupportTicket: (tid, payload) =>
+    apiClient.patch(`/api/admin/support/tickets/${tid}`, payload),
+  supportStats: (days = 30) =>
+    apiClient.get(`/api/admin/support/stats?days=${days}`),
+  listSupportCategories: () => apiClient.get('/api/admin/support/categories'),
+
+  // FAQ
+  listFaqsAdmin: (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return apiClient.get(`/api/admin/faqs${q ? '?' + q : ''}`);
+  },
+  createFaq: (payload) => apiClient.post('/api/admin/faqs', payload),
+  updateFaq: (fid, payload) => apiClient.patch(`/api/admin/faqs/${fid}`, payload),
+  deleteFaq: (fid) => apiClient.delete(`/api/admin/faqs/${fid}`),
+
+  // Reports
+  listReports: (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return apiClient.get(`/api/admin/reports${q ? '?' + q : ''}`);
+  },
+  patchReport: (rid, payload) => apiClient.patch(`/api/admin/reports/${rid}`, payload),
 };
 
 export default adminApi;
