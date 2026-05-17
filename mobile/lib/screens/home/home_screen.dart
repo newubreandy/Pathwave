@@ -284,6 +284,7 @@ class _MyPageTab extends StatelessWidget {
           _MenuTile(icon: Icons.favorite_outline, title: '즐겨찾기', onTap: () => context.go('/mypage/favorites')),
           _MenuTile(icon: Icons.family_restroom,            title: '자녀 초대', onTap: () => context.go('/mypage/parent-invite')),
           _MenuTile(icon: Icons.chat_bubble_outline,        title: '매장 채팅', onTap: () => context.go('/chat')),
+          _MenuTile(icon: Icons.headset_mic_outlined,        title: '고객센터', onTap: () => context.go('/support')),
           _MenuTile(icon: Icons.settings_outlined,          title: '설정', onTap: () => context.go('/settings')),
           const Spacer(),
           PwButton(

@@ -162,6 +162,66 @@
     "queue_desc": "현재 처리 대기 중인 직원 신고가 없습니다. 백엔드 /api/admin/staff/reports 엔드포인트 연동 후 목록이 표시됩니다.",
     "refresh": "새로고침"
   },
+  "support": {
+    "title": "고객센터",
+    "business_hours": "평일 09:00 – 18:00 (주말·공휴일 제외)",
+    "response_eta": "영업일 기준 1일 이내",
+    "privacy_notice": "개인정보는 문의 처리 목적으로만 사용됩니다.",
+    "status_open": "미답변",
+    "status_replied": "답변 완료",
+    "status_closed": "종료",
+    "priority_label": "우선순위",
+    "send_btn": "답변 보내기",
+    "reply_placeholder": "답변 내용을 입력하세요…",
+    "empty_admin": "문의 내역이 없습니다.",
+    "thread_title": "대화 내용",
+    "add_message": "답변 작성",
+    "subject_label": "제목",
+    "body_label": "본문",
+    "category_label": "카테고리",
+    "create_btn": "작성",
+    "cat": {
+      "user": {
+        "reservation": "예약",
+        "payment": "결제",
+        "stamp": "스탬프",
+        "coupon": "쿠폰",
+        "account": "계정",
+        "app": "앱 이용",
+        "cancel": "취소/환불",
+        "other": "기타",
+        "notice": "공지",
+        "privacy": "개인정보"
+      },
+      "provider": {
+        "subscription": "구독",
+        "payment": "결제",
+        "beacon": "비콘",
+        "staff": "직원",
+        "store": "매장",
+        "coupon": "쿠폰",
+        "report": "신고",
+        "other": "기타",
+        "notice": "공지",
+        "privacy": "개인정보"
+      }
+    }
+  },
+  "faq": {
+    "title": "자주 묻는 질문 (FAQ)",
+    "search_placeholder": "FAQ 검색…",
+    "empty": "등록된 FAQ가 없습니다."
+  },
+  "report": {
+    "status_pending": "처리 대기",
+    "status_reviewed": "검토 완료",
+    "status_dismissed": "기각",
+    "reason_spam": "스팸",
+    "reason_abuse": "욕설/혐오",
+    "reason_fraud": "사기",
+    "reason_other": "기타",
+    "submitted": "신고 접수됨"
+  },
   "nav": {
     "dashboard": "대시보드",
     "beacons": "비콘",
@@ -175,6 +235,9 @@
     "coupon_stats": "쿠폰 통계",
     "chat_monitor": "채팅 모니터링",
     "i18n": "i18n 관리",
+    "support": "고객센터",
+    "faq": "FAQ",
+    "support_stats": "응대 통계",
     "logout": "로그아웃"
   },
   "footer": {

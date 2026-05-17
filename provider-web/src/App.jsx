@@ -21,6 +21,7 @@ import StaffManagement from './pages/StaffManagement';
 import PaymentManagement from './pages/PaymentManagement';
 import Subscriptions from './pages/Subscriptions';
 import ServiceRequest from './pages/ServiceRequest';
+import Support from './pages/Support';
 
 // 페이지 전환 시 스크롤 상단으로 리셋
 const ScrollToTop = () => {
@@ -98,6 +99,7 @@ function App() {
           <Route path="/dashboard/settings" element={<Settings />} />
           <Route path="/dashboard/profile" element={<Navigate to="/dashboard/staff" replace />} />
           <Route path="/dashboard/chat" element={<CustomerChat />} />
+          <Route path="/dashboard/support" element={<Support />} />
         </Route>
 
         {/* Fallback — 알 수 없는 경로는 인증 상태에 따라 분기 */}

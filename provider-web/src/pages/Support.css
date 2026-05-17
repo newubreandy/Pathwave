@@ -1,0 +1,583 @@
+/* ═══════════════════════════════════════════════════
+   Support — PathWave Provider (고객센터 + FAQ)
+   다크 + 그린 #22C55E 포인트 (design-tokens.css 준수)
+   ═══════════════════════════════════════════════════ */
+
+.sp-page {
+  max-width: 100%;
+  margin: 0 auto;
+  padding-bottom: 100px;
+  animation: fadeIn var(--pw-duration-slow) var(--pw-ease-out);
+}
+
+/* ── 페이지 헤더 ── */
+.sp-page-header {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-3);
+  margin-bottom: var(--pw-space-5);
+}
+
+.sp-page-icon {
+  color: var(--pw-primary);
+  flex-shrink: 0;
+}
+
+.sp-page-title {
+  font-size: var(--pw-heading-size, 1.25rem);
+  font-weight: 700;
+  color: var(--pw-text-primary);
+  margin: 0;
+}
+
+/* ── 안내 박스 ── */
+.sp-info-box {
+  background: var(--pw-primary-subtle);
+  border: 1px solid var(--pw-primary-light);
+  border-radius: var(--pw-radius-md);
+  padding: var(--pw-space-3) var(--pw-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sp-info-box--page {
+  margin-bottom: var(--pw-space-5);
+}
+
+.sp-info-row {
+  font-size: 13px;
+  color: var(--pw-text-secondary);
+  margin: 0;
+}
+
+.sp-info-row strong {
+  color: var(--pw-primary);
+  margin-right: 6px;
+}
+
+/* ── 탭 이후 여백 ── */
+.sp-tickets,
+.sp-faq {
+  margin-top: var(--pw-space-5);
+}
+
+/* ── 문의 목록 툴바 ── */
+.sp-tickets-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--pw-space-4);
+}
+
+/* ── 문의 카드 ── */
+.sp-ticket-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-1);
+  width: 100%;
+  background: var(--pw-surface);
+  border: 1px solid var(--pw-border-light);
+  border-radius: var(--pw-radius-md);
+  padding: var(--pw-space-4);
+  margin-bottom: var(--pw-space-3);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--pw-duration-fast), border-color var(--pw-duration-fast);
+}
+
+.sp-ticket-card:hover {
+  background: var(--pw-surface-hover);
+  border-color: var(--pw-border-strong);
+}
+
+.sp-ticket-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pw-space-2);
+}
+
+.sp-ticket-subject {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pw-text-primary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sp-ticket-cat {
+  font-size: 12px;
+  color: var(--pw-text-hint);
+}
+
+.sp-ticket-date {
+  font-size: 12px;
+  color: var(--pw-text-hint);
+}
+
+/* ── 상태 뱃지 ── */
+.sp-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sp-badge--open {
+  background: var(--pw-primary-subtle);
+  color: var(--pw-primary);
+  border: 1px solid var(--pw-primary-light);
+}
+
+.sp-badge--pending {
+  background: rgba(245, 158, 11, 0.10);
+  color: var(--pw-warning);
+  border: 1px solid rgba(245, 158, 11, 0.20);
+}
+
+.sp-badge--resolved {
+  background: rgba(139, 92, 246, 0.10);
+  color: #8B5CF6;
+  border: 1px solid rgba(139, 92, 246, 0.20);
+}
+
+.sp-badge--closed {
+  background: rgba(90, 96, 114, 0.15);
+  color: var(--pw-text-hint);
+  border: 1px solid var(--pw-border);
+}
+
+/* ── 빈 상태 ── */
+.sp-empty-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--pw-space-12) var(--pw-space-6);
+  gap: var(--pw-space-3);
+}
+
+.sp-empty-icon {
+  color: var(--pw-text-hint);
+  opacity: 0.4;
+}
+
+.sp-empty {
+  font-size: 14px;
+  color: var(--pw-text-hint);
+  text-align: center;
+  margin: 0;
+}
+
+/* ── 로딩 / 에러 ── */
+.sp-loading {
+  text-align: center;
+  color: var(--pw-text-hint);
+  padding: var(--pw-space-10) 0;
+  font-size: 14px;
+}
+
+.sp-error-block {
+  background: var(--pw-error-light);
+  border: 1px solid var(--pw-error);
+  border-radius: var(--pw-radius-md);
+  padding: var(--pw-space-4);
+  color: var(--pw-error);
+  font-size: 13px;
+}
+
+.sp-link {
+  background: none;
+  border: none;
+  color: var(--pw-primary);
+  cursor: pointer;
+  padding: 0;
+  font-size: 13px;
+  text-decoration: underline;
+}
+
+/* ════════════════════════════════════════
+   상세 뷰 (thread)
+═════════════════════════════════════════ */
+.sp-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-4);
+}
+
+.sp-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--pw-text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0;
+  transition: color var(--pw-duration-fast);
+}
+
+.sp-back-btn:hover {
+  color: var(--pw-primary);
+}
+
+.sp-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--pw-space-3);
+}
+
+.sp-detail-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--pw-text-primary);
+  margin: 0;
+}
+
+.sp-detail-meta {
+  font-size: 12px;
+  color: var(--pw-text-hint);
+  margin: 0;
+}
+
+/* ── 대화 스레드 ── */
+.sp-thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-3);
+  background: var(--pw-bg-4);
+  border: 1px solid var(--pw-border-light);
+  border-radius: var(--pw-radius-md);
+  padding: var(--pw-space-4);
+  min-height: 120px;
+}
+
+.sp-msg {
+  display: flex;
+  flex-direction: column;
+  max-width: 80%;
+}
+
+.sp-msg--user {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.sp-msg--admin {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.sp-msg-bubble {
+  background: var(--pw-surface);
+  border: 1px solid var(--pw-border-light);
+  border-radius: var(--pw-radius-md);
+  padding: var(--pw-space-2) var(--pw-space-3);
+  font-size: 13px;
+  color: var(--pw-text-primary);
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.sp-msg--user .sp-msg-bubble {
+  background: var(--pw-primary-subtle);
+  border-color: var(--pw-primary-light);
+}
+
+.sp-msg-time {
+  font-size: 11px;
+  color: var(--pw-text-hint);
+  margin-top: 3px;
+}
+
+/* ── 추가 메시지 입력 ── */
+.sp-reply-area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-3);
+}
+
+.sp-reply-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pw-text-secondary);
+  margin: 0;
+}
+
+.sp-reply-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.sp-closed-notice {
+  font-size: 13px;
+  color: var(--pw-text-hint);
+  text-align: center;
+  padding: var(--pw-space-4);
+  background: var(--pw-bg-4);
+  border: 1px dashed var(--pw-border);
+  border-radius: var(--pw-radius-md);
+  margin: 0;
+}
+
+/* ════════════════════════════════════════
+   FAQ
+═════════════════════════════════════════ */
+.sp-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--pw-space-5);
+}
+
+.sp-search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--pw-text-hint);
+  pointer-events: none;
+}
+
+.sp-search-input {
+  width: 100%;
+  background: var(--pw-surface);
+  border: 1px solid var(--pw-border-strong);
+  border-radius: var(--pw-radius-md);
+  padding: 10px 36px;
+  font-size: 14px;
+  color: var(--pw-text-primary);
+  outline: none;
+  font-family: inherit;
+  transition: border-color var(--pw-duration-fast);
+}
+
+.sp-search-input:focus {
+  border-color: var(--pw-primary);
+}
+
+.sp-search-input::placeholder {
+  color: var(--pw-text-hint);
+}
+
+.sp-search-clear {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--pw-text-hint);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+}
+
+.sp-faq-group {
+  margin-bottom: var(--pw-space-5);
+}
+
+.sp-faq-group-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--pw-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 var(--pw-space-2) 0;
+  padding-bottom: var(--pw-space-2);
+  border-bottom: 1px solid var(--pw-border);
+}
+
+.sp-faq-item {
+  border-bottom: 1px solid var(--pw-border-light);
+}
+
+.sp-faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: var(--pw-space-3) 0;
+  color: var(--pw-text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  gap: var(--pw-space-3);
+  font-family: inherit;
+  transition: color var(--pw-duration-fast);
+}
+
+.sp-faq-q:hover {
+  color: var(--pw-primary);
+}
+
+.sp-faq-q svg {
+  flex-shrink: 0;
+  color: var(--pw-text-hint);
+}
+
+.sp-faq-a {
+  font-size: 13px;
+  color: var(--pw-text-secondary);
+  line-height: 1.6;
+  padding: 0 0 var(--pw-space-3) 0;
+  white-space: pre-wrap;
+}
+
+/* ════════════════════════════════════════
+   모달 (문의 작성)
+═════════════════════════════════════════ */
+.sp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .sp-modal-overlay {
+    align-items: center;
+    padding: var(--pw-space-6);
+  }
+}
+
+.sp-modal {
+  background: var(--pw-bg-3);
+  border: 1px solid var(--pw-border-strong);
+  border-radius: var(--pw-radius-xl) var(--pw-radius-xl) 0 0;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 640px) {
+  .sp-modal {
+    border-radius: var(--pw-radius-xl);
+  }
+}
+
+.sp-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--pw-space-4) var(--pw-space-5);
+  border-bottom: 1px solid var(--pw-border-light);
+  position: sticky;
+  top: 0;
+  background: var(--pw-bg-3);
+  z-index: 1;
+}
+
+.sp-modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--pw-text-primary);
+  margin: 0;
+}
+
+.sp-modal-close {
+  background: none;
+  border: none;
+  color: var(--pw-text-hint);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: var(--pw-radius-sm);
+  transition: color var(--pw-duration-fast);
+}
+
+.sp-modal-close:hover {
+  color: var(--pw-text-primary);
+}
+
+.sp-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-4);
+  padding: var(--pw-space-5);
+}
+
+.sp-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-1);
+}
+
+.sp-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pw-text-secondary);
+}
+
+.sp-input,
+.sp-select,
+.sp-textarea {
+  width: 100%;
+  background: var(--pw-bg-4);
+  border: 1px solid var(--pw-border-strong);
+  border-radius: var(--pw-radius-md);
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--pw-text-primary);
+  outline: none;
+  font-family: inherit;
+  transition: border-color var(--pw-duration-fast);
+  box-sizing: border-box;
+}
+
+.sp-input:focus,
+.sp-select:focus,
+.sp-textarea:focus {
+  border-color: var(--pw-primary);
+}
+
+.sp-input::placeholder,
+.sp-textarea::placeholder {
+  color: var(--pw-text-hint);
+}
+
+.sp-select {
+  appearance: none;
+  cursor: pointer;
+}
+
+.sp-textarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.5;
+}
+
+.sp-privacy-notice {
+  font-size: 12px;
+  color: var(--pw-text-hint);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.sp-error {
+  font-size: 12px;
+  color: var(--pw-error);
+  margin: 0;
+}
+
+.sp-modal-actions {
+  display: flex;
+  gap: var(--pw-space-3);
+  justify-content: flex-end;
+  padding-top: var(--pw-space-2);
+}

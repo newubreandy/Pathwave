@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Radio, UserCheck, Battery, Megaphone, CreditCard,
   FileText, LogOut, Search, Languages, Ticket, MessageSquare, Users,
+  HelpCircle, BookOpen, BarChart2,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { adminLogout, getCurrentAdmin } from '../services/auth.js';
@@ -24,6 +25,9 @@ const NAV_OPS_DEFS = [
   { to: '/dashboard/coupon-stats',   icon: Ticket,          labelKey: 'nav.coupon_stats'   },
   { to: '/dashboard/chat-monitor',   icon: MessageSquare,   labelKey: 'nav.chat_monitor'   },
   { to: '/dashboard/i18n',           icon: Languages,       labelKey: 'nav.i18n'           },
+  { to: '/dashboard/support',        icon: HelpCircle,      labelKey: 'nav.support'        },
+  { to: '/dashboard/faq',            icon: BookOpen,        labelKey: 'nav.faq'            },
+  { to: '/dashboard/support/stats',  icon: BarChart2,       labelKey: 'nav.support_stats'  },
 ];
 
 export default function DashboardLayout() {

@@ -8,7 +8,40 @@
     "coupons": "Coupons",
     "notifications": "Notifications",
     "report": "Reports",
-    "staff": "Staff Management"
+    "staff": "Staff Management",
+    "support": "Support"
+  },
+  "support": {
+    "title": "Support",
+    "business_hours": "Business Hours",
+    "response_eta": "Response Time",
+    "privacy_notice": "Your personal information will be used solely for inquiry processing and retained in accordance with applicable law.",
+    "create_btn": "New Inquiry",
+    "subject_label": "Subject",
+    "body_label": "Body",
+    "category_label": "Category",
+    "status_open": "Open",
+    "status_pending": "Pending",
+    "status_resolved": "Resolved",
+    "status_closed": "Closed",
+    "empty_user": "No inquiries submitted yet.",
+    "thread_title": "Conversation",
+    "send_btn": "Send",
+    "add_message": "Add Message",
+    "cat": {
+      "provider": {
+        "store_ops": "Store Ops",
+        "beacon": "Beacon",
+        "payment": "Payment",
+        "settlement": "Settlement",
+        "staff": "Staff Mgmt"
+      }
+    }
+  },
+  "faq": {
+    "title": "FAQ",
+    "search_placeholder": "Search FAQ...",
+    "empty": "No results found."
   },
   "store": {
     "title_edit": "Edit Store Info",

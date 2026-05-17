@@ -8,7 +8,40 @@
     "coupons": "쿠폰",
     "notifications": "알림발송",
     "report": "리포트",
-    "staff": "직원 관리"
+    "staff": "직원 관리",
+    "support": "고객센터"
+  },
+  "support": {
+    "title": "고객센터",
+    "business_hours": "영업시간",
+    "response_eta": "응답 예상시간",
+    "privacy_notice": "※ 입력하신 개인정보는 문의 처리 목적으로만 사용되며, 처리 완료 후 관련 법령에 따라 보관됩니다.",
+    "create_btn": "문의 작성",
+    "subject_label": "제목",
+    "body_label": "내용",
+    "category_label": "문의 유형",
+    "status_open": "접수",
+    "status_pending": "처리중",
+    "status_resolved": "해결됨",
+    "status_closed": "종료",
+    "empty_user": "접수된 문의가 없습니다.",
+    "thread_title": "대화 내용",
+    "send_btn": "보내기",
+    "add_message": "추가 메시지",
+    "cat": {
+      "provider": {
+        "store_ops": "매장 운영",
+        "beacon": "비콘",
+        "payment": "결제",
+        "settlement": "정산",
+        "staff": "직원 관리"
+      }
+    }
+  },
+  "faq": {
+    "title": "FAQ",
+    "search_placeholder": "FAQ 검색...",
+    "empty": "검색 결과가 없습니다."
   },
   "store": {
     "title_edit": "매장 정보 수정",

@@ -454,6 +454,94 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_announcements_audience ON announcements(audience);
         CREATE INDEX IF NOT EXISTS idx_announcements_starts   ON announcements(starts_at);
 
+        -- Phase I — 고객센터 (support tickets + messages + categories) -----
+        CREATE TABLE IF NOT EXISTS support_tickets (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            kind        TEXT    NOT NULL,         -- 'user' | 'provider'
+            user_id     INTEGER,                  -- kind=user
+            facility_account_id INTEGER,          -- kind=provider
+            category    TEXT,                     -- code: 'usage' | 'beacon' | 'coupon' | 'payment' | 'etc' (user)
+                                                  -- 'store_ops' | 'beacon' | 'payment' | 'settlement' | 'staff' (provider)
+            subject     TEXT    NOT NULL,
+            body        TEXT    NOT NULL,
+            status      TEXT    DEFAULT 'open',   -- 'open' | 'replied' | 'closed'
+            priority    TEXT    DEFAULT 'normal', -- 'low' | 'normal' | 'high' | 'urgent'
+            replied_at  TEXT,
+            closed_at   TEXT,
+            created_at  TEXT    DEFAULT (datetime('now')),
+            updated_at  TEXT    DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_support_tickets_user
+            ON support_tickets(kind, user_id);
+        CREATE INDEX IF NOT EXISTS idx_support_tickets_facility
+            ON support_tickets(kind, facility_account_id);
+        CREATE INDEX IF NOT EXISTS idx_support_tickets_status
+            ON support_tickets(status, kind);
+
+        CREATE TABLE IF NOT EXISTS support_messages (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            ticket_id   INTEGER NOT NULL,
+            sender      TEXT    NOT NULL,         -- 'user' | 'admin'
+            sender_admin_id INTEGER,              -- super_admin_accounts.id (sender=admin)
+            body        TEXT    NOT NULL,
+            created_at  TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (ticket_id) REFERENCES support_tickets(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_support_messages_ticket
+            ON support_messages(ticket_id);
+
+        -- 어드민이 카테고리 마스터를 직접 관리 (label 은 i18n key)
+        CREATE TABLE IF NOT EXISTS support_categories (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            kind        TEXT    NOT NULL,         -- 'user' | 'provider'
+            code        TEXT    NOT NULL,         -- 'usage' | 'beacon' | ...
+            label_key   TEXT    NOT NULL,         -- i18n key e.g. 'support.cat.user.usage'
+            sort_order  INTEGER DEFAULT 0,
+            active      INTEGER DEFAULT 1,
+            created_at  TEXT    DEFAULT (datetime('now')),
+            UNIQUE (kind, code)
+        );
+        CREATE INDEX IF NOT EXISTS idx_support_categories_kind
+            ON support_categories(kind, active);
+
+        -- FAQ
+        CREATE TABLE IF NOT EXISTS faqs (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            kind        TEXT    NOT NULL,         -- 'user' | 'provider'
+            category    TEXT,                     -- support_categories.code 와 매칭 (선택)
+            question    TEXT    NOT NULL,
+            answer      TEXT    NOT NULL,
+            lang        TEXT    NOT NULL DEFAULT 'ko',
+            sort_order  INTEGER DEFAULT 0,
+            active      INTEGER DEFAULT 1,
+            created_at  TEXT    DEFAULT (datetime('now')),
+            updated_at  TEXT    DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_faqs_kind_lang
+            ON faqs(kind, lang, active);
+        CREATE INDEX IF NOT EXISTS idx_faqs_category
+            ON faqs(category);
+
+        -- 신고 (abuse report) — 사용자 → 매장/사용자
+        CREATE TABLE IF NOT EXISTS abuse_reports (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            target_kind     TEXT    NOT NULL,     -- 'facility' | 'user'
+            target_id       INTEGER NOT NULL,
+            reporter_kind   TEXT    NOT NULL,     -- 'user' | 'facility' (서로 신고 가능)
+            reporter_id     INTEGER NOT NULL,
+            reason_code     TEXT    NOT NULL,     -- 'spam' | 'abuse' | 'illegal' | 'inappropriate' | 'other'
+            reason_detail   TEXT,
+            status          TEXT    DEFAULT 'open', -- 'open' | 'in_review' | 'action_taken' | 'dismissed'
+            resolution_note TEXT,
+            resolved_by_admin_id INTEGER,
+            resolved_at     TEXT,
+            created_at      TEXT    DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_abuse_reports_target
+            ON abuse_reports(target_kind, target_id);
+        CREATE INDEX IF NOT EXISTS idx_abuse_reports_status
+            ON abuse_reports(status);
+
         -- 공지 읽음 처리
         CREATE TABLE IF NOT EXISTS announcement_reads (
             id              INTEGER PRIMARY KEY AUTOINCREMENT,
