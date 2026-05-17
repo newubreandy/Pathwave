@@ -698,8 +698,70 @@ def init_db():
     # 최초 1명을 자동 생성. 이후 ENV 변경/삭제해도 무시됨 (idempotent).
     _bootstrap_super_admin(db)
 
+    # ── 약관/정책 자동 등록 (Phase J) ────────────────────────────────────
+    # static/policies/*.ko.md 가 있고 DB 에 (kind, version, lang) 가 없으면
+    # v0.1 로 등록. 푸터 링크에서 본문이 정상적으로 노출되도록 보장.
+    # (idempotent — 이미 있으면 skip)
+    _bootstrap_policies(db)
+
     db.commit()
     db.close()
+
+
+_POLICY_KIND_TITLES = {
+    'terms':        '서비스 이용약관',
+    'privacy':      '개인정보 수집·이용 동의',
+    'location':     '위치 정보 이용 동의',
+    'age14':        '만 14세 이상 동의',
+    'camera':       '카메라 접근 권한',
+    'storage':      '저장공간 접근 권한',
+    'push':         '푸시 알림 동의',
+    'marketing':    '마케팅 정보 수신 동의',
+    'third_party':  '제3자 정보 제공 동의',
+}
+
+
+def _bootstrap_policies(db) -> None:
+    """static/policies/<kind>.ko.md 를 v0.1 로 자동 등록 (idempotent).
+
+    PR #45 fallback 은 정적 파일이지만, admin-web 정책 관리 / 푸터 링크 /
+    가입 동의가 일관되게 동작하려면 DB 에 row 가 있어야 한다.
+    이미 같은 (kind, lang='ko', version='0.1') 이 있으면 skip.
+    """
+    from datetime import datetime as _dt, timedelta as _td
+    policies_dir = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        'static', 'policies'
+    )
+    if not os.path.isdir(policies_dir):
+        return
+    effective_at = (_dt.utcnow() - _td(minutes=1)).isoformat()
+    inserted = 0
+    for kind, title in _POLICY_KIND_TITLES.items():
+        path = os.path.join(policies_dir, f'{kind}.ko.md')
+        if not os.path.isfile(path):
+            continue
+        existing = db.execute(
+            "SELECT id FROM policies WHERE kind=? AND lang='ko' AND version='0.1'",
+            (kind,)
+        ).fetchone()
+        if existing:
+            continue
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                body = f.read()
+        except Exception:
+            continue
+        db.execute(
+            """INSERT INTO policies
+                 (kind, lang, version, title, body, change_log, effective_at)
+               VALUES (?, 'ko', '0.1', ?, ?, '정적 파일에서 v0.1 자동 등록', ?)""",
+            (kind, title, body, effective_at)
+        )
+        inserted += 1
+    if inserted:
+        from models.log import logger as _lg
+        _lg.info('[policies] Bootstrapped %d policy versions (v0.1)', inserted)
 
 
 def _bootstrap_super_admin(db) -> None:

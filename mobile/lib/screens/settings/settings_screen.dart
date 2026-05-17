@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/auth_service.dart';
 import '../../services/policy_service.dart';
@@ -30,6 +31,7 @@ class SettingsScreen extends StatelessWidget {
           _section(context, '알림', [
             _linkTile(context, Icons.notifications_outlined, '알림 보기',
               () => context.go('/notifications')),
+            const _MarketingConsentToggleTile(),
           ]),
           _section(context, '고객 지원', [
             _linkTile(context, Icons.mail_outline, '이메일 문의',
@@ -293,6 +295,66 @@ class _PolicySheet extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// 마케팅 정보 수신 동의 토글 (정보통신망법 §50 — 별도 동의·언제든지 거부).
+///
+/// SharedPreferences 키 `pw.notif.consent.marketing` 를 읽고/쓴다.
+/// notification_permission_dialog.dart 와 동일 키 — 가입 후에도 사용자가
+/// 마이페이지/설정에서 자유롭게 ON/OFF 가능.
+class _MarketingConsentToggleTile extends StatefulWidget {
+  const _MarketingConsentToggleTile();
+
+  @override
+  State<_MarketingConsentToggleTile> createState() =>
+      _MarketingConsentToggleTileState();
+}
+
+class _MarketingConsentToggleTileState
+    extends State<_MarketingConsentToggleTile> {
+  static const _kKey = 'pw.notif.consent.marketing';
+  bool _value = false;
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    SharedPreferences.getInstance().then((prefs) {
+      if (!mounted) return;
+      setState(() {
+        _value = prefs.getBool(_kKey) ?? false;
+        _loaded = true;
+      });
+    });
+  }
+
+  Future<void> _toggle(bool v) async {
+    setState(() => _value = v);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kKey, v);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(v
+          ? '마케팅 정보 수신에 동의했습니다.'
+          : '마케팅 정보 수신을 거부했습니다.')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      secondary: const Icon(Icons.campaign_outlined,
+        color: AppTheme.textSecondary, size: 20),
+      title: const Text('마케팅 정보 수신', style: TextStyle(fontSize: 14)),
+      subtitle: const Text(
+        '이벤트/쿠폰 안내 푸시·이메일 수신 (정보통신망법 §50)',
+        style: TextStyle(color: AppTheme.textHint, fontSize: 11),
+      ),
+      value: _value,
+      onChanged: _loaded ? _toggle : null,
     );
   }
 }
