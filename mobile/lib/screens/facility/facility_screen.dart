@@ -117,6 +117,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
           tooltip: _isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가',
           onPressed: _favLoading ? null : _toggleFavorite,
         ),
+        PwIconButton(
+          icon: Icons.flag_outlined,
+          tooltip: '신고하기',
+          onPressed: () => context.push(
+            '/support?tab=report&target=facility&id=$_id',
+          ),
+        ),
       ],
       flexibleSpace: FlexibleSpaceBar(
         background: imageUrl != null && imageUrl.isNotEmpty

@@ -23,6 +23,66 @@
       "failed": "Sign-in failed."
     }
   },
+  "support": {
+    "title": "Customer Support",
+    "business_hours": "Weekdays 09:00 – 18:00 (excl. weekends & holidays)",
+    "response_eta": "Within 1 business day",
+    "privacy_notice": "Personal data is used solely for handling inquiries.",
+    "status_open": "Open",
+    "status_replied": "Replied",
+    "status_closed": "Closed",
+    "priority_label": "Priority",
+    "send_btn": "Send Reply",
+    "reply_placeholder": "Type your reply…",
+    "empty_admin": "No tickets found.",
+    "thread_title": "Conversation",
+    "add_message": "Write Reply",
+    "subject_label": "Subject",
+    "body_label": "Body",
+    "category_label": "Category",
+    "create_btn": "Create",
+    "cat": {
+      "user": {
+        "reservation": "Reservation",
+        "payment": "Payment",
+        "stamp": "Stamp",
+        "coupon": "Coupon",
+        "account": "Account",
+        "app": "App Usage",
+        "cancel": "Cancel/Refund",
+        "other": "Other",
+        "notice": "Notice",
+        "privacy": "Privacy"
+      },
+      "provider": {
+        "subscription": "Subscription",
+        "payment": "Payment",
+        "beacon": "Beacon",
+        "staff": "Staff",
+        "store": "Store",
+        "coupon": "Coupon",
+        "report": "Report",
+        "other": "Other",
+        "notice": "Notice",
+        "privacy": "Privacy"
+      }
+    }
+  },
+  "faq": {
+    "title": "FAQ",
+    "search_placeholder": "Search FAQ…",
+    "empty": "No FAQs registered."
+  },
+  "report": {
+    "status_pending": "Pending",
+    "status_reviewed": "Reviewed",
+    "status_dismissed": "Dismissed",
+    "reason_spam": "Spam",
+    "reason_abuse": "Abuse/Hate",
+    "reason_fraud": "Fraud",
+    "reason_other": "Other",
+    "submitted": "Report submitted"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "beacons": "Beacons",
@@ -36,6 +96,9 @@
     "coupon_stats": "Coupon Stats",
     "chat_monitor": "Chat Monitor",
     "i18n": "i18n Management",
+    "support": "Customer Support",
+    "faq": "FAQ",
+    "support_stats": "Support Stats",
     "logout": "Log out"
   },
   "notif": {

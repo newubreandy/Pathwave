@@ -15,6 +15,9 @@ import Translations from './pages/Translations.jsx';
 import CouponStats from './pages/CouponStats.jsx';
 import ChatMonitor from './pages/ChatMonitor.jsx';
 import StaffMonitor from './pages/StaffMonitor.jsx';
+import Support from './pages/Support.jsx';
+import Faq from './pages/Faq.jsx';
+import SupportStats from './pages/SupportStats.jsx';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -43,6 +46,9 @@ export default function App() {
           <Route path="/dashboard/chat-monitor" element={<ChatMonitor />} />
           <Route path="/dashboard/staff-monitor" element={<StaffMonitor />} />
           <Route path="/dashboard/i18n" element={<Translations />} />
+          <Route path="/dashboard/support" element={<Support />} />
+          <Route path="/dashboard/faq" element={<Faq />} />
+          <Route path="/dashboard/support/stats" element={<SupportStats />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
