@@ -23,6 +23,7 @@ import '../screens/settings/settings_screen.dart';
 import '../screens/settings/change_password_screen.dart';
 import '../screens/support/support_screen.dart';
 import '../screens/support/support_detail_screen.dart';
+import '../screens/settings/policy_view_screen.dart';
 import '../widgets/dev_preview_bar.dart';
 
 class AppRouter {
@@ -40,10 +41,14 @@ class AppRouter {
 
       final auth = context.read<AuthService>();
       final isLoggedIn = auth.isLoggedIn;
-      final isAuthRoute = state.matchedLocation.startsWith('/auth');
-      final isSplash = state.matchedLocation == '/splash';
+      final loc = state.matchedLocation;
+      final isAuthRoute = loc.startsWith('/auth');
+      final isSplash = loc == '/splash';
+      // 공개 경로 — 푸터 약관 링크는 비로그인 상태에서도 열려야 함.
+      final isPublic = loc.startsWith('/policy/');
 
       if (isSplash) return null;
+      if (isPublic) return null;
       if (!isLoggedIn && !isAuthRoute) return '/auth/login';
       if (isLoggedIn && isAuthRoute) return '/home';
       return null;
@@ -124,6 +129,14 @@ class AppRouter {
           final tid = int.tryParse(state.pathParameters['tid'] ?? '') ?? 0;
           return SupportDetailScreen(ticketId: tid);
         },
+      ),
+
+      // ── 정책 뷰어 (공개) ─────────────────────────────────────────
+      GoRoute(
+        path: '/policy/:kind',
+        builder: (_, state) => PolicyViewScreen(
+          kind: state.pathParameters['kind'] ?? 'terms',
+        ),
       ),
     ],
   );

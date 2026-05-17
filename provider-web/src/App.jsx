@@ -22,6 +22,7 @@ import PaymentManagement from './pages/PaymentManagement';
 import Subscriptions from './pages/Subscriptions';
 import ServiceRequest from './pages/ServiceRequest';
 import Support from './pages/Support';
+import PolicyView from './pages/PolicyView';
 
 // 페이지 전환 시 스크롤 상단으로 리셋
 const ScrollToTop = () => {
@@ -79,6 +80,8 @@ function App() {
         {/* 공개 — 인증 불필요 */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        {/* 공개 정책 뷰어 — 푸터/회원가입 흐름에서 진입 */}
+        <Route path="/policy/:kind" element={<PolicyView />} />
 
         {/* 보호 — 토큰 없으면 /login 으로 강제 리다이렉트 */}
         <Route element={<RequireAuth><DashboardLayout /></RequireAuth>}>

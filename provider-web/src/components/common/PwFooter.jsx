@@ -1,12 +1,17 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import './PwFooter.css';
 
 /**
- * PwFooter — 법인 정보 placeholder 푸터
- * 법인 설립 후 이 파일의 상수 값만 채우면 전체 반영됩니다.
+ * PwFooter — 3 콘솔 공통 푸터 (provider-web).
  *
- * 현재는 모든 항목이 [법인 등록 후 채워질 예정] 상태입니다.
+ * memory/ui_legal_compliance + brand_strategy:
+ * 한국 전자상거래법 §10 / 정보통신망법 §50 / 위치정보법 필수 노출.
+ * footer.* i18n 키는 mobile / provider-web / admin-web 모두 동일.
+ * 어드민이 한 번 입력 → 3 콘솔 자동 동기화.
+ *
+ * 약관 링크는 SPA 라우트 `/policy/:kind` 로 이동 (PolicyViewer).
  */
 const PwFooter = () => {
   const { t } = useTranslation();
@@ -14,7 +19,7 @@ const PwFooter = () => {
   return (
     <footer className="pw-footer">
       <div className="pw-footer-inner">
-        {/* 법인 정보 */}
+        {/* 1행: 법인 정보 */}
         <dl className="pw-footer-info">
           <div className="pw-footer-row">
             <dt>{t('footer.company_name_label', '상호')}</dt>
@@ -25,12 +30,12 @@ const PwFooter = () => {
             <dd>{t('footer.ceo', '[법인 등록 후 채워질 예정]')}</dd>
           </div>
           <div className="pw-footer-row">
-            <dt>{t('footer.business_reg_label', '사업자등록번호')}</dt>
-            <dd>{t('footer.business_reg', '[법인 등록 후 채워질 예정]')}</dd>
+            <dt>{t('footer.biz_number_label', '사업자등록번호')}</dt>
+            <dd>{t('footer.biz_number', '[법인 등록 후 채워질 예정]')}</dd>
           </div>
           <div className="pw-footer-row">
-            <dt>{t('footer.ecommerce_reg_label', '통신판매업신고')}</dt>
-            <dd>{t('footer.ecommerce_reg', '[법인 등록 후 채워질 예정]')}</dd>
+            <dt>{t('footer.commerce_label', '통신판매업신고')}</dt>
+            <dd>{t('footer.commerce', '[법인 등록 후 채워질 예정]')}</dd>
           </div>
           <div className="pw-footer-row">
             <dt>{t('footer.address_label', '주소')}</dt>
@@ -42,43 +47,45 @@ const PwFooter = () => {
           </div>
           <div className="pw-footer-row">
             <dt>{t('footer.email_label', '이메일')}</dt>
-            <dd>{t('footer.email', '[법인 등록 후 채워질 예정]')}</dd>
+            <dd>{t('footer.email', 'support@pathwave.co.kr')}</dd>
           </div>
           <div className="pw-footer-row">
-            <dt>{t('footer.hosting_label', '호스팅')}</dt>
+            <dt>{t('footer.hosting_label', '호스팅 제공자')}</dt>
             <dd>{t('footer.hosting', '[법인 등록 후 채워질 예정]')}</dd>
           </div>
         </dl>
 
-        {/* 약관 링크 */}
+        {/* 2행: 약관 + 지원 링크 */}
         <div className="pw-footer-links">
-          <a
-            href="/terms"
-            className="pw-footer-link"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {t('footer.terms', '이용약관')}
-          </a>
+          <Link to="/policy/terms" className="pw-footer-link">
+            {t('footer.terms_of_service', '이용약관')}
+          </Link>
           <span className="pw-footer-sep" aria-hidden="true" />
-          <a
-            href="/privacy"
-            className="pw-footer-link pw-footer-link--bold"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {t('footer.privacy', '개인정보처리방침')}
-          </a>
+          <Link to="/policy/privacy" className="pw-footer-link pw-footer-link--bold">
+            {t('footer.privacy_policy', '개인정보처리방침')}
+          </Link>
           <span className="pw-footer-sep" aria-hidden="true" />
-          <a
-            href="/location-terms"
-            className="pw-footer-link"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {t('footer.location_terms', '위치기반서비스 약관')}
-          </a>
+          <Link to="/policy/location" className="pw-footer-link">
+            {t('footer.location_terms', '위치기반서비스 이용약관')}
+          </Link>
+          <span className="pw-footer-sep" aria-hidden="true" />
+          <Link to="/policy/marketing" className="pw-footer-link">
+            {t('footer.marketing_terms', '마케팅 정보 수신')}
+          </Link>
+          <span className="pw-footer-sep" aria-hidden="true" />
+          <Link to="/dashboard/support" className="pw-footer-link">
+            {t('footer.faq', '자주 묻는 질문')}
+          </Link>
+          <span className="pw-footer-sep" aria-hidden="true" />
+          <Link to="/dashboard/support" className="pw-footer-link">
+            {t('footer.support', '고객센터')}
+          </Link>
         </div>
+
+        <p className="pw-footer-notice">
+          {t('footer.notice_disclaimer',
+             '※ PathWave 는 매장 멤버십 플랫폼으로, 매장에서 제공하는 정보·이벤트·혜택의 책임은 등록 업체에 있습니다.')}
+        </p>
 
         <p className="pw-footer-copy">
           {t('footer.copyright', '© PathWave. All rights reserved.')}

@@ -85,6 +85,14 @@
   flex-shrink: 0;
 }
 
+/* 안내 disclaimer */
+.pw-footer-notice {
+  margin: 0 0 var(--pw-space-3);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--pw-text-hint, #5A6072);
+}
+
 /* 저작권 */
 .pw-footer-copy {
   font-size: 11px;

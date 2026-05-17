@@ -3,6 +3,7 @@ import { Outlet, NavLink, Link, useLocation, useNavigate } from 'react-router-do
 import { useTranslation } from 'react-i18next';
 import { Menu, X, ChevronLeft, ChevronRight, User, Settings, Bell, HelpCircle } from 'lucide-react';
 import { getUnreadCount } from '../services/notification/mockInbox';
+import PwFooter from '../components/common/PwFooter';
 import './DashboardLayout.css';
 
 const DashboardLayout = () => {
@@ -191,27 +192,8 @@ const DashboardLayout = () => {
         </div>
       </main>
 
-      {/* 공통 푸터 — 인증 페이지 제외 */}
-      {!isAuthPage && (
-        <footer className="layout-footer">
-          <div className="layout-footer-inner">
-            <div className="layout-footer-links">
-              <button className="layout-footer-link">고객센터</button>
-              <span className="layout-footer-divider">|</span>
-              <button className="layout-footer-link">자주묻는 질문</button>
-              <span className="layout-footer-divider">|</span>
-              <button className="layout-footer-link">서비스이용약관</button>
-            </div>
-            <p className="layout-footer-notice">
-              ※ PathWave는 서비스 플랫폼으로, 플랫폼 내에서 제공되는 정보 및 이벤트, 혜택 등에 대한 책임은 등록 업체에 있습니다.
-            </p>
-            <div className="layout-footer-company">
-              <p style={{ fontWeight: 600, marginBottom: '2px' }}>시원컴퍼니 Copyright 2023, siwon company. All rights reserved.</p>
-              <p>서울특별시 서초구 메헌로 26(하이브랜드 1312,1313층) 02-1234-5678</p>
-            </div>
-          </div>
-        </footer>
-      )}
+      {/* 공통 푸터 — 인증 페이지 제외. 3 콘솔 공통 PwFooter 사용. */}
+      {!isAuthPage && <PwFooter />}
     </div>
   );
 };
