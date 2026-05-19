@@ -51,7 +51,7 @@ class _WifiConnectScreenState extends State<WifiConnectScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('WiFi 자동 연결')),
+      appBar: PwAppBar(title: const Text('WiFi 자동 연결')),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(

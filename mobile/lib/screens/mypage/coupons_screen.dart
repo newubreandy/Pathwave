@@ -59,7 +59,7 @@ class _CouponsScreenState extends State<CouponsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: PwAppBar(
         title: Text(_t.t('coupon_issue.title', defaultValue: '내 쿠폰')),
         bottom: TabBar(
           controller: _tabCtrl,

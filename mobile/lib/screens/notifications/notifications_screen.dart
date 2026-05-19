@@ -42,7 +42,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: PwAppBar(
         title: Text(_t.t('notif.screen_title', defaultValue: '알림')),
         bottom: TabBar(
           controller: _tabCtrl,

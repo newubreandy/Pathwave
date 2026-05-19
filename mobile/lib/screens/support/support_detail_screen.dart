@@ -55,7 +55,7 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('문의 상세')),
+      appBar: PwAppBar(title: const Text('문의 상세')),
       body: FutureBuilder<Map<String, dynamic>>(
         future: _ticketFuture,
         builder: (context, snap) {
