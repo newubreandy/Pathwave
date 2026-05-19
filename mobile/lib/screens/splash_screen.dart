@@ -116,10 +116,11 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: NeuTheme.background,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
             Container(
               width: 110, height: 110,
               decoration: BoxDecoration(
@@ -147,12 +148,13 @@ class _SplashScreenState extends State<SplashScreen> {
             const SizedBox(height: 6),
             const Text('비콘 기반 WiFi · 스탬프 · 쿠폰',
               style: TextStyle(color: NeuTheme.textSecondary)),
-            const SizedBox(height: 40),
-            const CircularProgressIndicator(
-              strokeWidth: 2.5,
-              valueColor: AlwaysStoppedAnimation(NeuTheme.primary),
-            ),
-          ],
+              const SizedBox(height: 40),
+              const CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation(NeuTheme.primary),
+              ),
+            ],
+          ),
         ),
       ),
     );

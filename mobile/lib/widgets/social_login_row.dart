@@ -44,7 +44,7 @@ class SocialLoginRow extends StatelessWidget {
           icon: const Text('f',
             style: TextStyle(
               fontSize: 24, fontWeight: FontWeight.w900,
-              color: Colors.white, fontFamily: 'Helvetica',
+              color: Colors.white,
             )),
           label: 'Facebook',
           onTap: busy ? null : onFacebook,
@@ -76,18 +76,29 @@ class SocialLoginRow extends StatelessWidget {
     VoidCallback? onTap,
     Color? labelColor,
   }) {
+    // Apple HIG / Material 3 / WCAG 2.5.5 — 터치 영역 ≥44×44pt, 의미있는 레이블.
     return Column(
       children: [
-        GestureDetector(
-          onTap: onTap,
-          child: Container(
-            width: 56, height: 56,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              boxShadow: NeuTheme.outerShadow(distance: 4, blur: 10),
+        Semantics(
+          button: true,
+          enabled: onTap != null,
+          label: '$label 로 로그인',
+          child: Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            child: InkWell(
+              onTap: onTap,
+              customBorder: const CircleBorder(),
+              child: Container(
+                width: 56, height: 56,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  boxShadow: NeuTheme.outerShadow(distance: 4, blur: 10),
+                ),
+                child: Center(child: icon),
+              ),
             ),
-            child: Center(child: icon),
           ),
         ),
         const SizedBox(height: 6),

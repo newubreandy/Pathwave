@@ -171,8 +171,9 @@ class _SuccessView extends StatelessWidget {
                   code,
                   style: const TextStyle(
                     fontSize: 28, fontWeight: FontWeight.bold,
-                    fontFamily: 'monospace', color: AppTheme.primary,
+                    color: AppTheme.primary,
                     letterSpacing: 4,
+                    fontFeatures: [FontFeature.tabularFigures()],
                   ),
                 ),
               ],

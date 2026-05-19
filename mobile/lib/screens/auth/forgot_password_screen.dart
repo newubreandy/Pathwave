@@ -73,8 +73,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PwAppBar(title: const Text('비밀번호 찾기')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -127,6 +128,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ],
           ],
         ),
+      ),
       ),
     );
   }
