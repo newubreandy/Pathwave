@@ -18,6 +18,7 @@ import StaffMonitor from './pages/StaffMonitor.jsx';
 import Support from './pages/Support.jsx';
 import Faq from './pages/Faq.jsx';
 import SupportStats from './pages/SupportStats.jsx';
+import CompanyInfo from './pages/CompanyInfo.jsx';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="/dashboard/support" element={<Support />} />
           <Route path="/dashboard/faq" element={<Faq />} />
           <Route path="/dashboard/support/stats" element={<SupportStats />} />
+          <Route path="/dashboard/company-info" element={<CompanyInfo />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
