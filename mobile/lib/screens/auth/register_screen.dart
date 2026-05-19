@@ -23,6 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _birthYearCtrl = TextEditingController();
   final _inviteCodeCtrl = TextEditingController();
   bool _busy = false;
+  bool _isSocialFlow = false;   // 소셜 신규 가입 분기 — consent 만 추가 기록
   String? _error;
   String? _info;
 
@@ -115,6 +116,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _completeRegister(List<Map<String, dynamic>> consents) async {
     setState(() { _busy = true; _error = null; });
     try {
+      // 소셜 신규 가입: 계정은 이미 만들어졌고 JWT 보유. consent 만 기록.
+      if (_isSocialFlow) {
+        final res = await context.read<AuthService>().submitConsents(consents);
+        if (!mounted) return;
+        if (res['success'] == true) {
+          context.go('/home');
+        } else {
+          setState(() => _error = res['message']?.toString() ?? '동의 기록 실패.');
+        }
+        return;
+      }
+      // 이메일 가입: 기존 흐름 그대로
       final res = await context.read<AuthService>().register(
         _emailCtrl.text.trim(), _codeCtrl.text.trim(), _pwCtrl.text,
         consents: consents,
@@ -141,16 +154,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       appBar: PwAppBar(
         title: const Text('회원가입'),
-        leading: PwIconButton(
-          icon: Icons.arrow_back,
-          onPressed: () {
-            if (_step > 0) {
-              setState(() { _step -= 1; _error = null; _info = null; });
-            } else {
-              context.pop();
-            }
-          },
-        ),
+        // 소셜 신규 가입 흐름의 consent 단계에서는 뒤로가기를 막는다 —
+        // 계정은 이미 생성됐고, 동의 미기록 상태로 빠져나가는 것을 방지.
+        leading: (_isSocialFlow && _step == 4)
+          ? null
+          : PwIconButton(
+              icon: Icons.arrow_back,
+              onPressed: () {
+                if (_step > 0) {
+                  setState(() { _step -= 1; _error = null; _info = null; });
+                } else {
+                  context.pop();
+                }
+              },
+            ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
@@ -207,8 +224,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final res = await fn();
       if (!mounted) return;
       if (res['success'] == true) {
-        // 소셜 로그인 성공 — 백엔드가 신규/기존 알아서 처리. 바로 홈으로.
-        context.go('/home');
+        // PIPC §22 / 정보통신망법 §50: 신규 가입 시 동의 항목 별도 기록.
+        // 백엔드가 `is_new_user=true` 를 내려주면 consent 화면으로,
+        // 기존 사용자면 곧장 홈으로.
+        if (res['is_new_user'] == true) {
+          setState(() {
+            _isSocialFlow = true;
+            _step = 4;
+            _info = '계속 진행하려면 필수 약관에 동의해 주세요.';
+          });
+        } else {
+          context.go('/home');
+        }
       } else {
         setState(() => _error = res['message']?.toString() ?? fallbackErr);
       }

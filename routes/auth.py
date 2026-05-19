@@ -519,6 +519,7 @@ def social_login():
         (firebase_uid, provider)
     ).fetchone()
 
+    is_new_user = False
     if row:
         # 기존 사용자 → 로그인
         user_id    = row['id']
@@ -559,14 +560,52 @@ def social_login():
                 consume_invitation(db, invitation_code, user_id)
             db.commit()
             user_email = email
+            is_new_user = True
 
     db.close()
     return jsonify({
         'success': True,
         'message': '로그인 성공!',
+        'is_new_user': is_new_user,
         **issue_token_pair(user_id, user_email),
         'user': {'id': user_id, 'email': user_email},
     })
+
+
+@auth_bp.route('/consents', methods=['POST'])
+def submit_consents():
+    """소셜 신규 유저 가입 후 동의 항목 기록 (PIPC §22 / 정보통신망법 §50).
+
+    /api/auth/social 응답에 `is_new_user=true` 가 포함되면 클라이언트는
+    consent 화면을 띄우고 이 엔드포인트로 동의 결과를 전송한다.
+    """
+    auth = request.headers.get('Authorization', '')
+    if not auth.startswith('Bearer '):
+        return jsonify({'success': False, 'message': '인증 토큰이 필요합니다.'}), 401
+    try:
+        payload = decode_access_token(auth.split(' ', 1)[1], expected_sub_type='user')
+    except ValueError as e:
+        return jsonify({'success': False, 'message': str(e)}), 401
+
+    user_id = payload['user_id']
+    data    = request.get_json(silent=True) or {}
+    consents_in = data.get('consents') or []
+
+    ok, msg = validate_consents('user', consents_in)
+    if not ok:
+        return jsonify({'success': False, 'message': msg}), 400
+
+    db = get_db()
+    try:
+        record_consents(
+            db, 'user', user_id, consents_in,
+            ip=request.remote_addr,
+            user_agent=request.headers.get('User-Agent', ''),
+        )
+        db.commit()
+        return jsonify({'success': True})
+    finally:
+        db.close()
 
 
 @auth_bp.route('/me', methods=['GET'])

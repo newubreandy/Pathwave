@@ -276,6 +276,18 @@ class AuthService extends ChangeNotifier {
     return data;
   }
 
+  /// 소셜 신규 가입 후 동의 항목 기록 (PIPC §22 / 정보통신망법 §50).
+  /// `/api/auth/social` 응답에 `is_new_user=true` 가 포함되면 호출.
+  Future<Map<String, dynamic>> submitConsents(
+      List<Map<String, dynamic>> consents) async {
+    final res = await http.post(
+      Uri.parse('$_baseUrl/api/auth/consents'),
+      headers: authHeaders,
+      body: jsonEncode({'consents': consents}),
+    );
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
   // ── 비밀번호 찾기 ────────────────────────────────────────────────
   Future<Map<String, dynamic>> forgotPassword(String email) async {
     final res = await http.post(
