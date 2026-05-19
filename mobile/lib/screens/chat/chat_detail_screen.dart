@@ -203,7 +203,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: PwAppBar(
         title: Text(_roomTitle),
         leading: PwIconButton(
           icon: Icons.arrow_back,

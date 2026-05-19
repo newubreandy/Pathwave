@@ -31,7 +31,7 @@ class _StampsScreenState extends State<StampsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: PwAppBar(
         title: Text(_t.t('stamp.title', defaultValue: '내 스탬프')),
       ),
       body: RefreshIndicator(

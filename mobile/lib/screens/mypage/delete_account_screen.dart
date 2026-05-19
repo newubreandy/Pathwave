@@ -61,7 +61,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
     final isEmailUser = (auth.user?['provider']?.toString() ?? 'email') == 'email';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('회원 탈퇴')),
+      appBar: PwAppBar(title: const Text('회원 탈퇴')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
