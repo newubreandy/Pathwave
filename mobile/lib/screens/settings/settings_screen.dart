@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -41,10 +42,11 @@ class SettingsScreen extends StatelessWidget {
             _linkTile(context, Icons.help_outline, '자주 묻는 질문',
               () => _showFaq(context)),
           ]),
-          _section(context, '서버', [
-            _tile(context, Icons.cloud_outlined, 'API Base URL', ApiConfig.baseUrl,
-              subtitle: 'flutter run 시 --dart-define=API_BASE=... 로 변경'),
-          ]),
+          if (kDebugMode)
+            _section(context, '서버 (디버그 전용)', [
+              _tile(context, Icons.cloud_outlined, 'API Base URL', ApiConfig.baseUrl,
+                subtitle: 'flutter run 시 --dart-define=API_BASE=... 로 변경'),
+            ]),
           _section(context, '약관 및 정책', [
             _linkTile(context, Icons.description_outlined,
               '서비스 이용약관', () => _showPolicy(context, 'terms')),
@@ -59,8 +61,6 @@ class SettingsScreen extends StatelessWidget {
           ]),
           _section(context, '앱 정보', [
             _tile(context, Icons.info_outline, '버전', '1.0.0+1'),
-            _tile(context, Icons.business_outlined, '사업자',
-              '주식회사 트리거소프트 (triggersoft)'),
           ]),
           const SizedBox(height: 16),
           PwButton(

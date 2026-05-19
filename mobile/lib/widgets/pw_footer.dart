@@ -10,12 +10,32 @@ import 'pw_card.dart';
 /// memory/ui_legal_compliance: 한국 전자상거래법 §10 / 정보통신망법 §50 /
 /// 위치정보법 필수 표기 사항. footer.* i18n 키는 3 콘솔 공통.
 /// 어드민 i18n DB 에 한 번 입력 → mobile/provider-web/admin-web 자동 동기화.
+///
+/// i18n 값이 비어있거나 placeholder 패턴(`[`로 시작)이면 해당 행을 렌더링하지 않는다 —
+/// 앱스토어 심사에서 placeholder text 노출은 Apple 2.3.10 / Google 정책 reject 사유.
 class PwFooter extends StatelessWidget {
   const PwFooter({super.key});
+
+  /// placeholder/미설정 값 검출. 빈 문자열, `null` 표시, 또는 `[...]` 패턴이면 true.
+  static bool _isPlaceholder(String v) {
+    final s = v.trim();
+    if (s.isEmpty) return true;
+    if (s.startsWith('[') && s.endsWith(']')) return true;
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
     final t = I18nService.instance;
+
+    final companyName = t.t('footer.company_name', defaultValue: '');
+    final ceo         = t.t('footer.ceo', defaultValue: '');
+    final bizNumber   = t.t('footer.biz_number', defaultValue: '');
+    final commerce    = t.t('footer.commerce', defaultValue: '');
+    final address     = t.t('footer.address', defaultValue: '');
+    final phone       = t.t('footer.phone', defaultValue: '');
+    final email       = t.t('footer.email', defaultValue: 'support@pathwave.co.kr');
+    final hosting     = t.t('footer.hosting', defaultValue: '');
 
     return PwCard(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -23,54 +43,41 @@ class PwFooter extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 회사명 + 대표자
-          Text(
-            t.t('footer.company_name_label', defaultValue: '상호'),
-            style: const TextStyle(
-              color: AppTheme.textHint,
-              fontSize: 11,
-              letterSpacing: 0.3,
+          if (!_isPlaceholder(companyName)) ...[
+            Text(
+              t.t('footer.company_name_label', defaultValue: '상호'),
+              style: const TextStyle(
+                color: AppTheme.textHint,
+                fontSize: 11,
+                letterSpacing: 0.3,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            t.t('footer.company_name', defaultValue: '[법인 등록 후 채워질 예정]'),
-            style: const TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
+            const SizedBox(height: 2),
+            Text(
+              companyName,
+              style: const TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
+          ],
 
-          _InfoRow(
-            label: t.t('footer.ceo_label', defaultValue: '대표자'),
-            value: t.t('footer.ceo', defaultValue: '[법인 등록 후 채워질 예정]'),
-          ),
-          _InfoRow(
-            label: t.t('footer.biz_number_label', defaultValue: '사업자등록번호'),
-            value: t.t('footer.biz_number', defaultValue: '[법인 등록 후 채워질 예정]'),
-          ),
-          _InfoRow(
-            label: t.t('footer.commerce_label', defaultValue: '통신판매업신고'),
-            value: t.t('footer.commerce', defaultValue: '[법인 등록 후 채워질 예정]'),
-          ),
-          _InfoRow(
-            label: t.t('footer.address_label', defaultValue: '주소'),
-            value: t.t('footer.address', defaultValue: '[법인 등록 후 채워질 예정]'),
-          ),
-          _InfoRow(
-            label: t.t('footer.phone_label', defaultValue: '전화'),
-            value: t.t('footer.phone', defaultValue: '[법인 등록 후 채워질 예정]'),
-          ),
-          _InfoRow(
-            label: t.t('footer.email_label', defaultValue: '이메일'),
-            value: t.t('footer.email', defaultValue: 'support@pathwave.co.kr'),
-          ),
-          _InfoRow(
-            label: t.t('footer.hosting_label', defaultValue: '호스팅 제공자'),
-            value: t.t('footer.hosting', defaultValue: '[법인 등록 후 채워질 예정]'),
-          ),
+          if (!_isPlaceholder(ceo))
+            _InfoRow(label: t.t('footer.ceo_label', defaultValue: '대표자'), value: ceo),
+          if (!_isPlaceholder(bizNumber))
+            _InfoRow(label: t.t('footer.biz_number_label', defaultValue: '사업자등록번호'), value: bizNumber),
+          if (!_isPlaceholder(commerce))
+            _InfoRow(label: t.t('footer.commerce_label', defaultValue: '통신판매업신고'), value: commerce),
+          if (!_isPlaceholder(address))
+            _InfoRow(label: t.t('footer.address_label', defaultValue: '주소'), value: address),
+          if (!_isPlaceholder(phone))
+            _InfoRow(label: t.t('footer.phone_label', defaultValue: '전화'), value: phone),
+          if (!_isPlaceholder(email))
+            _InfoRow(label: t.t('footer.email_label', defaultValue: '이메일'), value: email),
+          if (!_isPlaceholder(hosting))
+            _InfoRow(label: t.t('footer.hosting_label', defaultValue: '호스팅 제공자'), value: hosting),
 
           const SizedBox(height: 14),
           const Divider(color: AppTheme.border, height: 1),
