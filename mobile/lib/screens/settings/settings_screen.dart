@@ -31,7 +31,8 @@ class SettingsScreen extends StatelessWidget {
           ]),
           _section(context, '알림', [
             _linkTile(context, Icons.notifications_outlined, '알림 보기',
-              () => context.go('/notifications')),
+              // push 사용 — 알림 화면에서 백 버튼으로 설정 복귀.
+              () => context.push('/notifications')),
             const _MarketingConsentToggleTile(),
           ]),
           const _NotificationPreferencesSection(),
