@@ -9,7 +9,6 @@ import '../../services/favorite_service.dart';
 import '../../services/permission_service.dart';
 import '../../services/store_service.dart';
 import '../../utils/app_theme.dart';
-import '../../widgets/empty_state.dart';
 import '../../widgets/pw.dart';
 
 /// 매장 검색 — 키워드 + 현재 위치 기반 거리 정렬.
@@ -160,10 +159,10 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _buildBody() {
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_error != null) {
-      return ErrorState(message: _error!, onRetry: _runSearch);
+      return PwErrorState(message: _error!, onRetry: _runSearch);
     }
     if (_results.isEmpty) {
-      return const EmptyState(
+      return const PwEmptyState(
         icon: Icons.search_off,
         title: '결과가 없습니다',
         subtitle: '다른 키워드로 검색해 보세요.',

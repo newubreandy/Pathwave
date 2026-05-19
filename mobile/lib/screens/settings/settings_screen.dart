@@ -20,7 +20,7 @@ class SettingsScreen extends StatelessWidget {
     final email = auth.user?['email']?.toString() ?? '—';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('설정')),
+      appBar: PwAppBar(title: const Text('설정')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -346,15 +346,10 @@ class _MarketingConsentToggleTileState
 
   @override
   Widget build(BuildContext context) {
-    return SwitchListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      secondary: const Icon(Icons.campaign_outlined,
-        color: AppTheme.textSecondary, size: 20),
-      title: const Text('마케팅 정보 수신', style: TextStyle(fontSize: 14)),
-      subtitle: const Text(
-        '이벤트/쿠폰 안내 푸시·이메일 수신 (정보통신망법 §50)',
-        style: TextStyle(color: AppTheme.textHint, fontSize: 11),
-      ),
+    return PwSwitchTile(
+      leading: const Icon(Icons.campaign_outlined),
+      title: '마케팅 정보 수신',
+      subtitle: '이벤트/쿠폰 안내 푸시·이메일 수신 (정보통신망법 §50)',
       value: _value,
       onChanged: _loaded ? _toggle : null,
     );
@@ -462,10 +457,8 @@ class _NotificationPreferencesSectionState
             }
             return Column(children: [
               for (final p in _prefs!)
-                SwitchListTile(
-                  contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  title: Text(p.label, style: const TextStyle(fontSize: 14)),
+                PwSwitchTile(
+                  title: p.label,
                   value: p.enabled,
                   onChanged: _busyCategory == p.category
                     ? null

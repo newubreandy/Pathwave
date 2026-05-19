@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../services/i18n_service.dart';
 import '../../services/stamp_service.dart';
 import '../../utils/app_theme.dart';
-import '../../widgets/empty_state.dart';
 import '../../widgets/pw.dart';
 
 /// 내 스탬프 — 시설별 카드 형태.
@@ -31,7 +30,7 @@ class _StampsScreenState extends State<StampsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: PwAppBar(
         title: Text(_t.t('stamp.title', defaultValue: '내 스탬프')),
       ),
       body: RefreshIndicator(
@@ -43,14 +42,14 @@ class _StampsScreenState extends State<StampsScreen> {
               return const Center(child: CircularProgressIndicator());
             }
             if (snap.hasError) {
-              return ErrorState(message: snap.error.toString(), onRetry: _reload);
+              return PwErrorState(message: snap.error.toString(), onRetry: _reload);
             }
             final list = snap.data ?? [];
             if (list.isEmpty) {
               return ListView(
                 children: [
                   const SizedBox(height: 100),
-                  EmptyState(
+                  PwEmptyState(
                     icon: Icons.local_activity_outlined,
                     title: _t.t('stamp.empty', defaultValue: '아직 적립된 스탬프가 없습니다'),
                     subtitle: '매장에 방문하면 비콘으로 자동 적립됩니다.',

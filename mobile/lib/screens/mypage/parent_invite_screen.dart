@@ -47,7 +47,7 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('자녀 초대 코드 발급')),
+      appBar: PwAppBar(title: const Text('자녀 초대 코드 발급')),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: _result != null

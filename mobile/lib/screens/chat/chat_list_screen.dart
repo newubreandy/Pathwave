@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../services/chat_service.dart';
 import '../../utils/app_theme.dart';
-import '../../widgets/empty_state.dart';
+import '../../widgets/pw.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -28,7 +28,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('매장 채팅')),
+      appBar: PwAppBar(title: const Text('매장 채팅')),
       body: RefreshIndicator(
         onRefresh: _reload,
         child: FutureBuilder<List<Map<String, dynamic>>>(
@@ -38,13 +38,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
               return const Center(child: CircularProgressIndicator());
             }
             if (snap.hasError) {
-              return ErrorState(message: snap.error.toString(), onRetry: _reload);
+              return PwErrorState(message: snap.error.toString(), onRetry: _reload);
             }
             final list = snap.data ?? [];
             if (list.isEmpty) {
               return ListView(children: const [
                 SizedBox(height: 100),
-                EmptyState(
+                PwEmptyState(
                   icon: Icons.chat_bubble_outline,
                   title: '진행 중인 채팅이 없습니다',
                   subtitle: '시설 상세에서 "매장과 채팅" 을 눌러 시작하세요.',

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../services/api_client.dart';
 import '../../services/i18n_service.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/pw.dart';
 
 /// 공개 약관 본문 뷰어.
 ///
@@ -69,7 +70,7 @@ class _PolicyViewScreenState extends State<PolicyViewScreen> {
     final title = _kindLabel[widget.kind]
         ?? I18nService.instance.t('policy.viewer_title', defaultValue: '약관 보기');
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: PwAppBar(title: Text(title)),
       body: _loading
         ? const Center(child: CircularProgressIndicator())
         : _error != null

@@ -139,7 +139,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: PwAppBar(
         title: const Text('회원가입'),
         leading: PwIconButton(
           icon: Icons.arrow_back,

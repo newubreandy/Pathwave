@@ -1,17 +1,35 @@
 import 'package:flutter/material.dart';
 
 import '../utils/app_theme.dart';
+import 'pw_button.dart';
 
-/// 목록 화면 공통 빈 상태 위젯.
-class EmptyState extends StatelessWidget {
+/// 목록 화면 공통 빈 상태 위젯 (구 `EmptyState` 의 Pw* 통일판).
+///
+/// 사용
+/// ----
+/// ```dart
+/// const PwEmptyState(
+///   icon: Icons.inbox_outlined,
+///   title: '받은 알림이 없습니다',
+///   subtitle: '스탬프 / 쿠폰 / 채팅 알림이 표시됩니다.',
+/// )
+/// ```
+class PwEmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
-  const EmptyState({
+
+  /// (선택) 액션 버튼. null 이면 표시 안 함.
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  const PwEmptyState({
     super.key,
     required this.icon,
     required this.title,
     this.subtitle,
+    this.actionLabel,
+    this.onAction,
   });
 
   @override
@@ -33,6 +51,15 @@ class EmptyState extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: AppTheme.textHint, fontSize: 13)),
             ],
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 16),
+              PwButton(
+                variant: PwButtonVariant.outlined,
+                fullWidth: false,
+                onPressed: onAction,
+                child: Text(actionLabel!),
+              ),
+            ],
           ],
         ),
       ),
@@ -40,12 +67,21 @@ class EmptyState extends StatelessWidget {
   }
 }
 
-
-/// 에러 상태 위젯 + 재시도 버튼.
-class ErrorState extends StatelessWidget {
+/// 에러 상태 위젯 + 재시도 버튼 (구 `ErrorState` 의 Pw* 통일판).
+///
+/// 사용
+/// ----
+/// ```dart
+/// PwErrorState(
+///   message: '알림을 불러오지 못했어요.',
+///   onRetry: _reload,
+/// )
+/// ```
+class PwErrorState extends StatelessWidget {
   final String message;
   final VoidCallback? onRetry;
-  const ErrorState({super.key, required this.message, this.onRetry});
+
+  const PwErrorState({super.key, required this.message, this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -62,10 +98,12 @@ class ErrorState extends StatelessWidget {
               style: const TextStyle(color: AppTheme.textSecondary)),
             if (onRetry != null) ...[
               const SizedBox(height: 16),
-              OutlinedButton.icon(
+              PwButton(
+                variant: PwButtonVariant.outlined,
+                fullWidth: false,
+                icon: Icons.refresh,
                 onPressed: onRetry,
-                icon: const Icon(Icons.refresh),
-                label: const Text('다시 시도'),
+                child: const Text('다시 시도'),
               ),
             ],
           ],

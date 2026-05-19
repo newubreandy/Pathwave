@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/chat_service.dart';
 import '../../services/i18n_service.dart';
 import '../../utils/app_theme.dart';
-import '../../widgets/empty_state.dart';
 import '../../widgets/pw.dart';
 
 /// 1:1 채팅 상세 — SSE 실시간 메시지 + 입력.
@@ -203,7 +202,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: PwAppBar(
         title: Text(_roomTitle),
         leading: PwIconButton(
           icon: Icons.arrow_back,
@@ -231,10 +230,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   Widget _buildBody() {
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_error != null) {
-      return ErrorState(message: _error!, onRetry: _bootstrap);
+      return PwErrorState(message: _error!, onRetry: _bootstrap);
     }
     if (_messages.isEmpty) {
-      return const EmptyState(
+      return const PwEmptyState(
         icon: Icons.message_outlined,
         title: '아직 메시지가 없습니다',
         subtitle: '첫 메시지를 보내 대화를 시작하세요.',

@@ -6,7 +6,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../services/favorite_service.dart';
 import '../../services/store_service.dart';
 import '../../utils/app_theme.dart';
-import '../../widgets/empty_state.dart';
 import '../../widgets/pw.dart';
 
 /// 매장 상세 — 이미지 / 영업시간 / 위치 / 채팅 진입.
@@ -84,7 +83,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
             if (snap.hasError) {
               return ListView(children: [
                 const SizedBox(height: 100),
-                ErrorState(message: snap.error.toString(), onRetry: _refresh),
+                PwErrorState(message: snap.error.toString(), onRetry: _refresh),
               ]);
             }
             final f = snap.data ?? {};

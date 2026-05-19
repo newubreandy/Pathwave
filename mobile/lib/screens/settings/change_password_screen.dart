@@ -61,7 +61,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
     if (!isEmail) {
       return Scaffold(
-        appBar: AppBar(title: const Text('비밀번호 변경')),
+        appBar: PwAppBar(title: const Text('비밀번호 변경')),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -76,7 +76,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('비밀번호 변경')),
+      appBar: PwAppBar(title: const Text('비밀번호 변경')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
