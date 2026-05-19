@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/auth_service.dart';
+import '../../services/notification_preferences_service.dart';
 import '../../services/policy_service.dart';
 import '../../utils/api_config.dart';
 import '../../utils/app_theme.dart';
@@ -33,6 +34,7 @@ class SettingsScreen extends StatelessWidget {
               () => context.go('/notifications')),
             const _MarketingConsentToggleTile(),
           ]),
+          const _NotificationPreferencesSection(),
           _section(context, '고객 지원', [
             _linkTile(context, Icons.mail_outline, '이메일 문의',
               () => _launchSupport(context)),
@@ -355,6 +357,125 @@ class _MarketingConsentToggleTileState
       ),
       value: _value,
       onChanged: _loaded ? _toggle : null,
+    );
+  }
+}
+
+/// 알림 카테고리별 on/off 섹션 (Phase L) — 사용자 측.
+///
+/// 백엔드 GET /api/users/me/notification-preferences 호출 → 토글.
+/// 네트워크 실패 시 친절한 빈 카드 (앱은 정상 진행).
+class _NotificationPreferencesSection extends StatefulWidget {
+  const _NotificationPreferencesSection();
+
+  @override
+  State<_NotificationPreferencesSection> createState() =>
+      _NotificationPreferencesSectionState();
+}
+
+class _NotificationPreferencesSectionState
+    extends State<_NotificationPreferencesSection> {
+  List<NotificationPreference>? _prefs;
+  String? _error;
+  String? _busyCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final list = await NotificationPreferencesService.instance.list();
+      if (!mounted) return;
+      setState(() {
+        _prefs = list;
+        _error = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _error = '알림 설정을 불러오지 못했습니다.');
+    }
+  }
+
+  Future<void> _toggle(NotificationPreference p, bool next) async {
+    // optimistic UI
+    setState(() {
+      _busyCategory = p.category;
+      _prefs = _prefs?.map((e) => e.category == p.category
+        ? NotificationPreference(category: e.category, label: e.label, enabled: next)
+        : e).toList();
+    });
+    try {
+      await NotificationPreferencesService.instance.set(p.category, next);
+    } catch (_) {
+      // rollback
+      if (!mounted) return;
+      setState(() {
+        _prefs = _prefs?.map((e) => e.category == p.category
+          ? NotificationPreference(category: e.category, label: e.label, enabled: !next)
+          : e).toList();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('변경 실패 — 잠시 후 다시 시도해 주세요.')),
+      );
+    } finally {
+      if (mounted) setState(() => _busyCategory = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text('알림 카테고리',
+            style: TextStyle(color: AppTheme.textHint, fontSize: 12, letterSpacing: 0.5)),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppTheme.border),
+          ),
+          child: Builder(builder: (_) {
+            if (_error != null) {
+              return Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(_error!,
+                  style: const TextStyle(color: AppTheme.error, fontSize: 12)),
+              );
+            }
+            if (_prefs == null) {
+              return const Padding(
+                padding: EdgeInsets.all(20),
+                child: Center(
+                  child: SizedBox(
+                    width: 18, height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              );
+            }
+            return Column(children: [
+              for (final p in _prefs!)
+                SwitchListTile(
+                  contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  title: Text(p.label, style: const TextStyle(fontSize: 14)),
+                  value: p.enabled,
+                  onChanged: _busyCategory == p.category
+                    ? null
+                    : (v) => _toggle(p, v),
+                ),
+            ]);
+          }),
+        ),
+        const SizedBox(height: 8),
+      ],
     );
   }
 }

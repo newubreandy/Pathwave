@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, X, Info } from 'lucide-react';
 import AuthService from '../services/auth/AuthService';
+import NotificationPreferencesService from '../services/notification/NotificationPreferencesService';
 import ConfirmModal from '../components/common/ConfirmModal';
 import PasswordInput from '../components/common/PasswordInput';
 import StatusBadge from '../components/common/StatusBadge';
@@ -186,6 +187,34 @@ const Settings = () => {
     saveSettings(settings);
   }, [settings]);
 
+  // ── Phase L — 백엔드 알림 카테고리 prefs (sub_type='facility') ───────────
+  const [serverPrefs, setServerPrefs]     = useState(null);
+  const [serverPrefsError, setServerErr]  = useState(null);
+  const [togglingCategory, setToggling]   = useState(null);
+
+  useEffect(() => {
+    NotificationPreferencesService.list()
+      .then(res => setServerPrefs(res.preferences || []))
+      .catch(err => setServerErr(err.message || '알림 설정을 불러오지 못했습니다.'));
+  }, []);
+
+  const toggleServerPref = async (cat, next) => {
+    setToggling(cat);
+    // optimistic
+    setServerPrefs(prev =>
+      prev?.map(p => p.category === cat ? { ...p, enabled: next } : p));
+    try {
+      await NotificationPreferencesService.set(cat, next);
+    } catch (err) {
+      // rollback
+      setServerPrefs(prev =>
+        prev?.map(p => p.category === cat ? { ...p, enabled: !next } : p));
+      alert(err.message || '변경 실패 — 잠시 후 다시 시도해 주세요.');
+    } finally {
+      setToggling(null);
+    }
+  };
+
   const toggleSetting = (key) => {
     setSettings(prev => {
       const next = { ...prev, [key]: !prev[key] };
@@ -299,6 +328,42 @@ const Settings = () => {
               onChange={() => toggleSetting('ootPush')}
             />
           </div>
+        </div>
+
+        {/* ════════════════════════════════════════════════════
+            Phase L — 수신 알림 카테고리 (서버 동기, 매장 운영용)
+            ════════════════════════════════════════════════════ */}
+        <h2 className="settings-group-title">수신 알림 카테고리</h2>
+        <div className="settings-section">
+          {serverPrefsError && (
+            <div className="settings-row">
+              <div className="settings-row-left">
+                <span className="settings-row-label" style={{ color: 'var(--pw-error, #ef4444)' }}>
+                  {serverPrefsError}
+                </span>
+              </div>
+            </div>
+          )}
+          {!serverPrefsError && !serverPrefs && (
+            <div className="settings-row">
+              <div className="settings-row-left">
+                <span className="settings-row-hint">알림 설정을 불러오는 중…</span>
+              </div>
+            </div>
+          )}
+          {serverPrefs && serverPrefs.map((p) => (
+            <div className="settings-row" key={p.category}>
+              <div className="settings-row-left">
+                <span className="settings-row-label">{p.label}</span>
+              </div>
+              <ToggleSwitch
+                id={`server-pref-${p.category}`}
+                checked={p.enabled}
+                onChange={() => togglingCategory !== p.category
+                  && toggleServerPref(p.category, !p.enabled)}
+              />
+            </div>
+          ))}
         </div>
 
         {/* ════════════════════════════════════════════════════
