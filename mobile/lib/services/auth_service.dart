@@ -346,8 +346,11 @@ class AuthService extends ChangeNotifier {
     await _storage.delete(key: _kToken);
     await _storage.delete(key: _kRefreshToken);
     await _storage.delete(key: _kUser);
-    await GoogleSignIn().signOut();
-    await FirebaseAuth.instance.signOut();
+    // Firebase 가 미초기화된 dev 모드에서도 안전하게 동작 — 토큰 만료/서버
+    // 실패 시 _fetchMe → logout 체인이 [core/no-app] 으로 throw 되어 콘솔
+    // 빨간 에러 + AuthService 가 사용자 상태 정리 못 하던 문제 차단.
+    try { await GoogleSignIn().signOut(); } catch (_) {}
+    try { await FirebaseAuth.instance.signOut(); } catch (_) {}
     _token = null;
     _user  = null;
     notifyListeners();
