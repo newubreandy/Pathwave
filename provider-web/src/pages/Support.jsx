@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   HelpCircle, Plus, X, ChevronDown, ChevronUp, Search, Send, ArrowLeft,
@@ -331,7 +332,11 @@ const Support = () => {
     { key: 'staff',     label: t('support.cat.provider.staff',     '직원 관리') },
   ];
 
-  const [tab, setTab]             = useState('tickets');
+  // PwFooter "자주 묻는 질문" 링크에서 ?tab=faq 로 진입하면 FAQ 탭 바로 열기.
+  const [searchParams] = useSearchParams();
+  const [tab, setTab]             = useState(
+    searchParams.get('tab') === 'faq' ? 'faq' : 'tickets'
+  );
   const [tickets, setTickets]     = useState([]);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState('');

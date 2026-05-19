@@ -73,7 +73,7 @@ const PwFooter = () => {
             {t('footer.marketing_terms', '마케팅 정보 수신')}
           </Link>
           <span className="pw-footer-sep" aria-hidden="true" />
-          <Link to="/dashboard/support" className="pw-footer-link">
+          <Link to="/dashboard/support?tab=faq" className="pw-footer-link">
             {t('footer.faq', '자주 묻는 질문')}
           </Link>
           <span className="pw-footer-sep" aria-hidden="true" />
