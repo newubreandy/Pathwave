@@ -564,6 +564,19 @@ def init_db():
             force_message  TEXT,                    -- 강제 업데이트 안내 문구
             updated_at     TEXT DEFAULT (datetime('now'))
         );
+
+        -- 알림 카테고리별 on/off 설정 (사용자 / 시설 별도) — Phase L
+        CREATE TABLE IF NOT EXISTS notification_preferences (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            sub_type    TEXT    NOT NULL,           -- 'user' | 'facility'
+            subject_id  INTEGER NOT NULL,           -- users.id 또는 facility_accounts.id
+            category    TEXT    NOT NULL,           -- 도메인별 카테고리 코드
+            enabled     INTEGER NOT NULL DEFAULT 1, -- 0=off, 1=on (기본 on)
+            updated_at  TEXT    DEFAULT (datetime('now')),
+            UNIQUE (sub_type, subject_id, category)
+        );
+        CREATE INDEX IF NOT EXISTS idx_notif_prefs_subject
+            ON notification_preferences(sub_type, subject_id);
     """)
 
     # ── 마이그레이션: 기존 DB에 없는 컬럼은 ADD COLUMN ────────────────────────
