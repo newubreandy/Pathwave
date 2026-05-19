@@ -326,26 +326,18 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                     }
                     final body = snap.data?['body']?.toString() ?? '';
                     final needsContent = snap.data?['needs_content'] == true;
+                    // 앱스토어 심사 정책상 사용자에게 placeholder 안내를 노출하지 않는다.
+                    // 본문 미준비 상태에서는 본문 영역을 비워두고, 동의는 체크박스로만 진행.
+                    if (needsContent || body.trim().isEmpty) {
+                      return const Center(
+                        child: Text(
+                          '본문 준비 중입니다.',
+                          style: TextStyle(color: AppTheme.textHint, fontSize: 13),
+                        ),
+                      );
+                    }
                     return SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (needsContent)
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              margin: const EdgeInsets.only(bottom: 12),
-                              decoration: BoxDecoration(
-                                color: AppTheme.warning.withValues(alpha: 0.18),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Text(
-                                '⚠️ 정책 본문이 아직 등록되지 않았습니다 (placeholder).',
-                                style: TextStyle(color: AppTheme.warning, fontSize: 12),
-                              ),
-                            ),
-                          Text(body, style: const TextStyle(height: 1.5)),
-                        ],
-                      ),
+                      child: Text(body, style: const TextStyle(height: 1.5)),
                     );
                   },
                 ),
