@@ -150,7 +150,8 @@ class _HomeTab extends StatelessWidget {
                   onTap: () {
                     final f = ble.pendingWifi!['facility'] ?? {};
                     final w = ble.pendingWifi!['wifi'] ?? {};
-                    context.go('/wifi-connect?'
+                    // push 사용 — wifi-connect 에서 시스템 백 제스처로 홈 복귀.
+                    context.push('/wifi-connect?'
                         'name=${Uri.encodeComponent(f['name']?.toString() ?? '')}'
                         '&ssid=${Uri.encodeComponent(w['ssid']?.toString() ?? '')}');
                   },
@@ -279,13 +280,14 @@ class _MyPageTab extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          _MenuTile(icon: Icons.local_activity_outlined, title: '내 스탬프', onTap: () => context.go('/mypage/stamps')),
-          _MenuTile(icon: Icons.confirmation_number_outlined, title: '내 쿠폰', onTap: () => context.go('/mypage/coupons')),
-          _MenuTile(icon: Icons.favorite_outline, title: '즐겨찾기', onTap: () => context.go('/mypage/favorites')),
-          _MenuTile(icon: Icons.family_restroom,            title: '자녀 초대', onTap: () => context.go('/mypage/parent-invite')),
-          _MenuTile(icon: Icons.chat_bubble_outline,        title: '매장 채팅', onTap: () => context.go('/chat')),
-          _MenuTile(icon: Icons.headset_mic_outlined,        title: '고객센터', onTap: () => context.go('/support')),
-          _MenuTile(icon: Icons.settings_outlined,          title: '설정', onTap: () => context.go('/settings')),
+          // context.push 사용 — 스택 보존으로 시스템 백 제스처 + AppBar back arrow 동작 보장 (iOS HIG / Material 3).
+          _MenuTile(icon: Icons.local_activity_outlined, title: '내 스탬프', onTap: () => context.push('/mypage/stamps')),
+          _MenuTile(icon: Icons.confirmation_number_outlined, title: '내 쿠폰', onTap: () => context.push('/mypage/coupons')),
+          _MenuTile(icon: Icons.favorite_outline, title: '즐겨찾기', onTap: () => context.push('/mypage/favorites')),
+          _MenuTile(icon: Icons.family_restroom,            title: '자녀 초대', onTap: () => context.push('/mypage/parent-invite')),
+          _MenuTile(icon: Icons.chat_bubble_outline,        title: '매장 채팅', onTap: () => context.push('/chat')),
+          _MenuTile(icon: Icons.headset_mic_outlined,        title: '고객센터', onTap: () => context.push('/support')),
+          _MenuTile(icon: Icons.settings_outlined,          title: '설정', onTap: () => context.push('/settings')),
           const Spacer(),
           PwButton(
             variant: PwButtonVariant.danger,
@@ -352,7 +354,8 @@ class _NotificationsTab extends StatelessWidget {
           const SizedBox(height: 16),
           Center(
             child: TextButton.icon(
-              onPressed: () => context.go('/notifications'),
+              // push 사용 — 알림 화면에서 시스템 백 제스처로 홈 복귀.
+              onPressed: () => context.push('/notifications'),
               icon: const Icon(Icons.open_in_new),
               label: const Text('전체 알림 보기'),
             ),

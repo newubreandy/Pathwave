@@ -154,14 +154,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   PwButton(
                     variant: PwButtonVariant.text,
                     fullWidth: false,
-                    onPressed: _busy ? null : () => context.go('/auth/forgot'),
+                    // push 사용 — 비밀번호 찾기 화면에서 백 버튼으로 로그인 복귀.
+                    onPressed: _busy ? null : () => context.push('/auth/forgot'),
                     child: const Text('비밀번호 찾기',
                       style: TextStyle(color: NeuTheme.textSecondary)),
                   ),
                   PwButton(
                     variant: PwButtonVariant.text,
                     fullWidth: false,
-                    onPressed: _busy ? null : () => context.go('/auth/register'),
+                    // push 사용 — 회원가입 화면에서 백 버튼으로 로그인 복귀.
+                    onPressed: _busy ? null : () => context.push('/auth/register'),
                     child: const Text('회원가입',
                       style: TextStyle(color: NeuTheme.primary, fontWeight: FontWeight.w600)),
                   ),
