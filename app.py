@@ -29,6 +29,7 @@ from routes.social_naver import social_naver_bp
 from routes.support      import support_bp
 from routes.faq          import faq_bp
 from routes.abuse_report import abuse_report_bp
+from routes.version      import version_bp
 
 
 # ── 운영 환경 보안 ENV 검증 ────────────────────────────────────────────────
@@ -179,6 +180,7 @@ app.register_blueprint(social_naver_bp)
 app.register_blueprint(support_bp)
 app.register_blueprint(faq_bp)
 app.register_blueprint(abuse_report_bp)
+app.register_blueprint(version_bp)
 
 # ── Static files ──────────────────────────────────────────────────────────────
 @app.route('/', defaults={'path': ''})

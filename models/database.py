@@ -554,6 +554,16 @@ def init_db():
         );
         CREATE INDEX IF NOT EXISTS idx_announcement_reads_reader
             ON announcement_reads(reader_kind, reader_id);
+
+        -- 앱 버전 강제 업데이트 (mobile 부팅 시 GET /api/version/check)
+        CREATE TABLE IF NOT EXISTS app_versions (
+            platform       TEXT PRIMARY KEY,        -- 'ios' | 'android'
+            min_supported  TEXT NOT NULL,           -- semver 'X.Y.Z' (이 미만은 강제 업데이트)
+            latest         TEXT NOT NULL,           -- 최신 권장 버전
+            store_url      TEXT,                    -- 앱스토어/플레이스토어 링크
+            force_message  TEXT,                    -- 강제 업데이트 안내 문구
+            updated_at     TEXT DEFAULT (datetime('now'))
+        );
     """)
 
     # ── 마이그레이션: 기존 DB에 없는 컬럼은 ADD COLUMN ────────────────────────
