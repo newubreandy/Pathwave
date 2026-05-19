@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../services/company_info_service.dart';
 import '../services/i18n_service.dart';
 import '../utils/app_theme.dart';
 import 'pw_card.dart';
@@ -9,9 +10,33 @@ import 'pw_card.dart';
 ///
 /// memory/ui_legal_compliance: 한국 전자상거래법 §10 / 정보통신망법 §50 /
 /// 위치정보법 필수 표기 사항. footer.* i18n 키는 3 콘솔 공통.
-/// 어드민 i18n DB 에 한 번 입력 → mobile/provider-web/admin-web 자동 동기화.
-class PwFooter extends StatelessWidget {
+///
+/// 데이터 소스 (Phase M):
+///   GET /api/company-info → 슈퍼어드민 입력값
+///   값이 null/공백이면 i18n 키 fallback 사용 (어드민 미입력 단계 안전 처리)
+class PwFooter extends StatefulWidget {
   const PwFooter({super.key});
+
+  @override
+  State<PwFooter> createState() => _PwFooterState();
+}
+
+class _PwFooterState extends State<PwFooter> {
+  CompanyInfo _ci = CompanyInfo.empty();
+
+  @override
+  void initState() {
+    super.initState();
+    CompanyInfoService.instance.get().then((ci) {
+      if (mounted) setState(() => _ci = ci);
+    });
+  }
+
+  /// 우선순위: 1) DB company_info  2) i18n 키  3) hard-coded default.
+  String _resolve(String? apiValue, String i18nKey, String i18nDefault) {
+    if (apiValue != null && apiValue.trim().isNotEmpty) return apiValue;
+    return I18nService.instance.t(i18nKey, defaultValue: i18nDefault);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +59,7 @@ class PwFooter extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            t.t('footer.company_name', defaultValue: '[법인 등록 후 채워질 예정]'),
+            _resolve(_ci.companyName, 'footer.company_name', '[법인 등록 후 채워질 예정]'),
             style: const TextStyle(
               color: AppTheme.textSecondary,
               fontSize: 13,
@@ -45,31 +70,31 @@ class PwFooter extends StatelessWidget {
 
           _InfoRow(
             label: t.t('footer.ceo_label', defaultValue: '대표자'),
-            value: t.t('footer.ceo', defaultValue: '[법인 등록 후 채워질 예정]'),
+            value: _resolve(_ci.ceo, 'footer.ceo', '[법인 등록 후 채워질 예정]'),
           ),
           _InfoRow(
             label: t.t('footer.biz_number_label', defaultValue: '사업자등록번호'),
-            value: t.t('footer.biz_number', defaultValue: '[법인 등록 후 채워질 예정]'),
+            value: _resolve(_ci.bizNumber, 'footer.biz_number', '[법인 등록 후 채워질 예정]'),
           ),
           _InfoRow(
             label: t.t('footer.commerce_label', defaultValue: '통신판매업신고'),
-            value: t.t('footer.commerce', defaultValue: '[법인 등록 후 채워질 예정]'),
+            value: _resolve(_ci.commerceNumber, 'footer.commerce', '[법인 등록 후 채워질 예정]'),
           ),
           _InfoRow(
             label: t.t('footer.address_label', defaultValue: '주소'),
-            value: t.t('footer.address', defaultValue: '[법인 등록 후 채워질 예정]'),
+            value: _resolve(_ci.address, 'footer.address', '[법인 등록 후 채워질 예정]'),
           ),
           _InfoRow(
             label: t.t('footer.phone_label', defaultValue: '전화'),
-            value: t.t('footer.phone', defaultValue: '[법인 등록 후 채워질 예정]'),
+            value: _resolve(_ci.phone, 'footer.phone', '[법인 등록 후 채워질 예정]'),
           ),
           _InfoRow(
             label: t.t('footer.email_label', defaultValue: '이메일'),
-            value: t.t('footer.email', defaultValue: 'support@pathwave.co.kr'),
+            value: _resolve(_ci.email, 'footer.email', 'support@pathwave.co.kr'),
           ),
           _InfoRow(
             label: t.t('footer.hosting_label', defaultValue: '호스팅 제공자'),
-            value: t.t('footer.hosting', defaultValue: '[법인 등록 후 채워질 예정]'),
+            value: _resolve(_ci.hosting, 'footer.hosting', '[법인 등록 후 채워질 예정]'),
           ),
 
           const SizedBox(height: 14),

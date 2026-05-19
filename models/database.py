@@ -577,6 +577,21 @@ def init_db():
         );
         CREATE INDEX IF NOT EXISTS idx_notif_prefs_subject
             ON notification_preferences(sub_type, subject_id);
+
+        -- 법인 정보 (3 콘솔 footer 자동 동기) — Phase M
+        -- 단일 행 (id=1) 패턴. 슈퍼어드민이 GET/PUT 으로 관리.
+        CREATE TABLE IF NOT EXISTS company_info (
+            id              INTEGER PRIMARY KEY CHECK (id = 1),
+            company_name    TEXT,           -- 상호
+            ceo             TEXT,           -- 대표자
+            biz_number      TEXT,           -- 사업자등록번호 (예: 000-00-00000)
+            commerce_number TEXT,           -- 통신판매업신고번호
+            address         TEXT,           -- 사업장 주소
+            phone           TEXT,           -- 대표 전화
+            email           TEXT,           -- 대표 이메일 (운영 미지정 시 default 사용)
+            hosting         TEXT,           -- 호스팅 제공자
+            updated_at      TEXT    DEFAULT (datetime('now'))
+        );
     """)
 
     # ── 마이그레이션: 기존 DB에 없는 컬럼은 ADD COLUMN ────────────────────────

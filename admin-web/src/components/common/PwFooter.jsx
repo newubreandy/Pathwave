@@ -1,19 +1,43 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { companyInfoApi } from '../../services/companyInfo.js';
 
 /**
  * PwFooter — 3 콘솔 공통 푸터.
  *
  * memory/ui_legal_compliance: 한국 전자상거래법 §10 / 정보통신망법 / 위치정보법
- * 필수 노출 사항. footer.* i18n 키는 mobile / provider-web / admin-web 모두 동일.
- * 어드민에서 한 번 입력하면 3 콘솔 모두 동일 값.
+ * 필수 노출 사항.
  *
- * 약관 링크는 어드민 콘솔이므로 슈퍼어드민용 /dashboard/policies (전체 정책 관리)
- * 로 이동한다. 일반 사용자/사장님 푸터는 각 콘솔에서 정책 뷰어로 SPA 이동.
+ * 데이터 소스 (Phase M):
+ *   GET /api/company-info → company_name / ceo / biz_number / commerce_number
+ *                            address / phone / email / hosting
+ *   값이 null 이면 i18n 키의 fallback default 사용.
+ *
+ * 어드민 콘솔이므로 약관 링크는 슈퍼어드민용 /dashboard/policies (전체 정책 관리).
  */
 export default function PwFooter() {
   const { t } = useTranslation();
+  const [ci, setCi] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    companyInfoApi.get()
+      .then((data) => { if (alive) setCi(data.company_info || {}); })
+      .catch(() => {}); // 실패해도 i18n fallback 사용 — 페이지 자체는 죽지 않음
+    return () => { alive = false; };
+  }, []);
+
+  /**
+   * 우선순위: 1) DB 의 company_info 값 (비어있지 않으면)
+   *           2) i18n 키 (`t(key, default)`)
+   *           3) hard-coded default
+   */
+  const resolve = (apiField, i18nKey, i18nDefault) => {
+    const v = ci?.[apiField];
+    if (v && v.toString().trim()) return v;
+    return t(i18nKey, i18nDefault);
+  };
 
   const labelStyle = {
     color: 'var(--text-hint)',
@@ -25,10 +49,10 @@ export default function PwFooter() {
     fontSize: 'var(--fs-xs)',
   };
 
-  const InfoCell = ({ labelKey, labelDefault, valueKey, valueDefault }) => (
+  const InfoCell = ({ labelKey, labelDefault, value }) => (
     <span style={{ display: 'inline-flex', gap: 4 }}>
       <span style={labelStyle}>{t(labelKey, labelDefault)}</span>
-      <span style={valueStyle}>{t(valueKey, valueDefault)}</span>
+      <span style={valueStyle}>{value}</span>
     </span>
   );
 
@@ -53,27 +77,27 @@ export default function PwFooter() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 20px', lineHeight: 1.6 }}>
           <span>
             <strong style={valueStyle}>
-              {t('footer.company_name', '[법인 등록 후 채워질 예정]')}
+              {resolve('company_name', 'footer.company_name', '[법인 등록 후 채워질 예정]')}
             </strong>
           </span>
           <InfoCell labelKey="footer.ceo_label" labelDefault="대표자"
-                    valueKey="footer.ceo" valueDefault="[법인 등록 후 채워질 예정]" />
+                    value={resolve('ceo', 'footer.ceo', '[법인 등록 후 채워질 예정]')} />
           <InfoCell labelKey="footer.biz_number_label" labelDefault="사업자등록번호"
-                    valueKey="footer.biz_number" valueDefault="[법인 등록 후 채워질 예정]" />
+                    value={resolve('biz_number', 'footer.biz_number', '[법인 등록 후 채워질 예정]')} />
           <InfoCell labelKey="footer.commerce_label" labelDefault="통신판매업신고"
-                    valueKey="footer.commerce" valueDefault="[법인 등록 후 채워질 예정]" />
+                    value={resolve('commerce_number', 'footer.commerce', '[법인 등록 후 채워질 예정]')} />
         </div>
 
         {/* 주소 + 전화 + 이메일 + 호스팅 */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 20px', lineHeight: 1.6 }}>
           <InfoCell labelKey="footer.address_label" labelDefault="주소"
-                    valueKey="footer.address" valueDefault="[법인 등록 후 채워질 예정]" />
+                    value={resolve('address', 'footer.address', '[법인 등록 후 채워질 예정]')} />
           <InfoCell labelKey="footer.phone_label" labelDefault="전화"
-                    valueKey="footer.phone" valueDefault="[법인 등록 후 채워질 예정]" />
+                    value={resolve('phone', 'footer.phone', '[법인 등록 후 채워질 예정]')} />
           <InfoCell labelKey="footer.email_label" labelDefault="이메일"
-                    valueKey="footer.email" valueDefault="support@pathwave.co.kr" />
+                    value={resolve('email', 'footer.email', 'support@pathwave.co.kr')} />
           <InfoCell labelKey="footer.hosting_label" labelDefault="호스팅 제공자"
-                    valueKey="footer.hosting" valueDefault="[법인 등록 후 채워질 예정]" />
+                    value={resolve('hosting', 'footer.hosting', '[법인 등록 후 채워질 예정]')} />
         </div>
 
         {/* 약관/지원 링크 + 저작권 */}

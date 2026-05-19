@@ -31,6 +31,7 @@ from routes.faq          import faq_bp
 from routes.abuse_report import abuse_report_bp
 from routes.version      import version_bp
 from routes.notification_preferences import notification_preferences_bp
+from routes.company_info import company_info_bp
 
 
 # ── 운영 환경 보안 ENV 검증 ────────────────────────────────────────────────
@@ -183,6 +184,7 @@ app.register_blueprint(faq_bp)
 app.register_blueprint(abuse_report_bp)
 app.register_blueprint(version_bp)
 app.register_blueprint(notification_preferences_bp)
+app.register_blueprint(company_info_bp)
 
 # ── Static files ──────────────────────────────────────────────────────────────
 @app.route('/', defaults={'path': ''})

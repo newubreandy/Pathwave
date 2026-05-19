@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Radio, UserCheck, Battery, Megaphone, CreditCard,
   FileText, LogOut, Search, Languages, Ticket, MessageSquare, Users,
-  HelpCircle, BookOpen, BarChart2, ChevronDown, ChevronRight,
+  HelpCircle, BookOpen, BarChart2, ChevronDown, ChevronRight, Building2,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { adminLogout, getCurrentAdmin } from '../services/auth.js';
@@ -66,7 +66,8 @@ const NAV_GROUPS = [
     labelDefault: '시스템',
     defaultOpen: false,
     items: [
-      { to: '/dashboard/i18n', icon: Languages, labelKey: 'nav.i18n' },
+      { to: '/dashboard/company-info', icon: Building2, labelKey: 'nav.company_info', labelDefault: '법인 정보' },
+      { to: '/dashboard/i18n',         icon: Languages, labelKey: 'nav.i18n' },
     ],
   },
 ];

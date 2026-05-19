@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import CompanyInfoService from '../../services/companyInfo/CompanyInfoService';
 import './PwFooter.css';
 
 /**
@@ -8,13 +9,35 @@ import './PwFooter.css';
  *
  * memory/ui_legal_compliance + brand_strategy:
  * 한국 전자상거래법 §10 / 정보통신망법 §50 / 위치정보법 필수 노출.
- * footer.* i18n 키는 mobile / provider-web / admin-web 모두 동일.
- * 어드민이 한 번 입력 → 3 콘솔 자동 동기화.
+ *
+ * 데이터 소스 (Phase M):
+ *   GET /api/company-info → 슈퍼어드민이 입력한 법인 정보
+ *   값이 null/빈 문자열이면 i18n 키 fallback 사용
  *
  * 약관 링크는 SPA 라우트 `/policy/:kind` 로 이동 (PolicyViewer).
  */
 const PwFooter = () => {
   const { t } = useTranslation();
+  const [ci, setCi] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    CompanyInfoService.get()
+      .then((data) => { if (alive) setCi(data.company_info || {}); })
+      .catch(() => {}); // 실패해도 i18n fallback 사용 — 페이지는 죽지 않음
+    return () => { alive = false; };
+  }, []);
+
+  /**
+   * 우선순위: 1) DB company_info 값 (비어있지 않으면)
+   *           2) i18n 키 (`t(key, default)`)
+   *           3) hard-coded default
+   */
+  const resolve = (apiField, i18nKey, i18nDefault) => {
+    const v = ci?.[apiField];
+    if (v && v.toString().trim()) return v;
+    return t(i18nKey, i18nDefault);
+  };
 
   return (
     <footer className="pw-footer">
@@ -23,35 +46,35 @@ const PwFooter = () => {
         <dl className="pw-footer-info">
           <div className="pw-footer-row">
             <dt>{t('footer.company_name_label', '상호')}</dt>
-            <dd>{t('footer.company_name', '[법인 등록 후 채워질 예정]')}</dd>
+            <dd>{resolve('company_name', 'footer.company_name', '[법인 등록 후 채워질 예정]')}</dd>
           </div>
           <div className="pw-footer-row">
             <dt>{t('footer.ceo_label', '대표자')}</dt>
-            <dd>{t('footer.ceo', '[법인 등록 후 채워질 예정]')}</dd>
+            <dd>{resolve('ceo', 'footer.ceo', '[법인 등록 후 채워질 예정]')}</dd>
           </div>
           <div className="pw-footer-row">
             <dt>{t('footer.biz_number_label', '사업자등록번호')}</dt>
-            <dd>{t('footer.biz_number', '[법인 등록 후 채워질 예정]')}</dd>
+            <dd>{resolve('biz_number', 'footer.biz_number', '[법인 등록 후 채워질 예정]')}</dd>
           </div>
           <div className="pw-footer-row">
             <dt>{t('footer.commerce_label', '통신판매업신고')}</dt>
-            <dd>{t('footer.commerce', '[법인 등록 후 채워질 예정]')}</dd>
+            <dd>{resolve('commerce_number', 'footer.commerce', '[법인 등록 후 채워질 예정]')}</dd>
           </div>
           <div className="pw-footer-row">
             <dt>{t('footer.address_label', '주소')}</dt>
-            <dd>{t('footer.address', '[법인 등록 후 채워질 예정]')}</dd>
+            <dd>{resolve('address', 'footer.address', '[법인 등록 후 채워질 예정]')}</dd>
           </div>
           <div className="pw-footer-row">
             <dt>{t('footer.phone_label', '전화')}</dt>
-            <dd>{t('footer.phone', '[법인 등록 후 채워질 예정]')}</dd>
+            <dd>{resolve('phone', 'footer.phone', '[법인 등록 후 채워질 예정]')}</dd>
           </div>
           <div className="pw-footer-row">
             <dt>{t('footer.email_label', '이메일')}</dt>
-            <dd>{t('footer.email', 'support@pathwave.co.kr')}</dd>
+            <dd>{resolve('email', 'footer.email', 'support@pathwave.co.kr')}</dd>
           </div>
           <div className="pw-footer-row">
             <dt>{t('footer.hosting_label', '호스팅 제공자')}</dt>
-            <dd>{t('footer.hosting', '[법인 등록 후 채워질 예정]')}</dd>
+            <dd>{resolve('hosting', 'footer.hosting', '[법인 등록 후 채워질 예정]')}</dd>
           </div>
         </dl>
 
