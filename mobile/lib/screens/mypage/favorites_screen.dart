@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../services/favorite_service.dart';
 import '../../utils/app_theme.dart';
-import '../../widgets/empty_state.dart';
 import '../../widgets/pw.dart';
 
 /// 즐겨찾기 매장 목록 화면 — `/mypage/favorites`.
@@ -53,14 +52,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             if (snap.hasError) {
               return ListView(children: [
                 const SizedBox(height: 100),
-                ErrorState(message: snap.error.toString(), onRetry: _reload),
+                PwErrorState(message: snap.error.toString(), onRetry: _reload),
               ]);
             }
             final list = snap.data ?? [];
             if (list.isEmpty) {
               return ListView(children: const [
                 SizedBox(height: 100),
-                EmptyState(
+                PwEmptyState(
                   icon: Icons.favorite_border,
                   title: '즐겨찾기한 매장이 없습니다',
                   subtitle: '매장 상세나 검색에서 하트를 눌러보세요.',

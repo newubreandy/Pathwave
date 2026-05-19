@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/coupon_service.dart';
 import '../../services/i18n_service.dart';
 import '../../utils/app_theme.dart';
-import '../../widgets/empty_state.dart';
 import '../../widgets/pw.dart';
 
 const _statusTabs = ['active', 'used', 'expired'];
@@ -107,14 +106,14 @@ class _CouponListState extends State<_CouponList> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snap.hasError) {
-            return ErrorState(message: snap.error.toString(), onRetry: widget.onRetry);
+            return PwErrorState(message: snap.error.toString(), onRetry: widget.onRetry);
           }
           final list = snap.data ?? [];
           if (list.isEmpty) {
             return ListView(
               children: [
                 const SizedBox(height: 100),
-                EmptyState(
+                PwEmptyState(
                   icon: Icons.confirmation_number_outlined,
                   title: '${_statusLabel[widget.status]} 쿠폰이 없습니다',
                 ),

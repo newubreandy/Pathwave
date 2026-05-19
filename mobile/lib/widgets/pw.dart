@@ -10,6 +10,7 @@ library;
 export 'pw_app_bar.dart';
 export 'pw_button.dart';
 export 'pw_card.dart';
+export 'pw_empty_state.dart';
 export 'pw_footer.dart';
 export 'pw_icon_button.dart';
 export 'pw_switch.dart';

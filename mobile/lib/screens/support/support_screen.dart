@@ -167,22 +167,10 @@ class _FaqTabState extends State<_FaqTab> {
                 return const Center(child: CircularProgressIndicator());
               }
               if (snap.hasError) {
-                return Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('불러오기 실패: ${snap.error}',
-                          style:
-                              const TextStyle(color: AppTheme.textSecondary)),
-                      const SizedBox(height: 12),
-                      PwButton(
-                        fullWidth: false,
-                        onPressed: () =>
-                            setState(() { _faqFuture = SupportService().listFaqs(); }),
-                        child: const Text('다시 시도'),
-                      ),
-                    ],
-                  ),
+                return PwErrorState(
+                  message: 'FAQ를 불러오지 못했습니다.\n${snap.error}',
+                  onRetry: () => setState(
+                    () { _faqFuture = SupportService().listFaqs(); }),
                 );
               }
 
@@ -190,11 +178,12 @@ class _FaqTabState extends State<_FaqTab> {
               final list = _filtered(all);
 
               if (list.isEmpty) {
-                return Center(
-                  child: Text(
-                    _query.isEmpty ? 'FAQ가 없습니다.' : '검색 결과가 없습니다.',
-                    style: const TextStyle(color: AppTheme.textSecondary),
-                  ),
+                return PwEmptyState(
+                  icon: _query.isEmpty ? Icons.help_outline : Icons.search_off,
+                  title: _query.isEmpty ? 'FAQ가 없습니다.' : '검색 결과가 없습니다.',
+                  subtitle: _query.isEmpty
+                    ? null
+                    : '다른 키워드로 검색해 보세요.',
                 );
               }
 
@@ -400,29 +389,18 @@ class _MyTicketsTabState extends State<_MyTicketsTab> {
                 return const Center(child: CircularProgressIndicator());
               }
               if (snap.hasError) {
-                return Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('불러오기 실패: ${snap.error}',
-                          style:
-                              const TextStyle(color: AppTheme.textSecondary)),
-                      const SizedBox(height: 12),
-                      PwButton(
-                        fullWidth: false,
-                        onPressed: () => setState(() { _load(); }),
-                        child: const Text('다시 시도'),
-                      ),
-                    ],
-                  ),
+                return PwErrorState(
+                  message: '문의 내역을 불러오지 못했습니다.\n${snap.error}',
+                  onRetry: () => setState(() { _load(); }),
                 );
               }
 
               final tickets = snap.data ?? [];
               if (tickets.isEmpty) {
-                return const Center(
-                  child: Text('문의 내역이 없습니다.',
-                      style: TextStyle(color: AppTheme.textSecondary)),
+                return const PwEmptyState(
+                  icon: Icons.support_agent_outlined,
+                  title: '문의 내역이 없습니다.',
+                  subtitle: '궁금한 점이 있으시면 우측 하단 + 버튼으로 문의를 남겨주세요.',
                 );
               }
 
