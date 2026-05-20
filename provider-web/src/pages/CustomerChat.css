@@ -1437,3 +1437,210 @@
     animation: slideUp 0.2s ease-out;
   }
 }
+
+/* ── 손님 신고 모달 (출시 심사 HIGH#1 — UGC 모더레이션) ── */
+.report-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: var(--pw-z-modal);
+}
+
+.report-modal {
+  background: var(--pw-surface);
+  border: 1px solid var(--pw-border);
+  border-radius: var(--pw-radius-lg);
+  width: 100%;
+  max-width: 400px;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem 1.5rem;
+  box-shadow: var(--pw-shadow-xl);
+  color: var(--pw-text);
+}
+
+.report-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.report-modal-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.report-modal-close {
+  display: flex;
+  padding: 0.25rem;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--pw-text-secondary);
+}
+
+.report-modal-close:hover { color: var(--pw-text); }
+.report-modal-close:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.report-modal-intro {
+  margin: 0 0 1rem;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--pw-text-secondary);
+}
+
+.report-field { margin-bottom: 1rem; }
+
+.report-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.report-reason-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.report-reason-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.5rem;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--pw-text);
+  text-align: left;
+}
+
+.report-reason-item:hover { background: rgba(255, 255, 255, 0.04); }
+.report-reason-item:disabled { cursor: not-allowed; }
+
+.report-reason-dot {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--pw-border-strong);
+}
+
+.report-reason-item.selected .report-reason-dot {
+  border-color: var(--pw-primary);
+  background: radial-gradient(circle, var(--pw-primary) 0 3.5px, transparent 4.5px);
+}
+
+.report-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem 0.75rem;
+  background: var(--pw-bg-2);
+  border: 1px solid var(--pw-border);
+  border-radius: 8px;
+  color: var(--pw-text);
+  font-family: inherit;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+.report-textarea:focus {
+  outline: none;
+  border-color: var(--pw-primary);
+}
+
+.report-ugc-notice {
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 0.9rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--pw-border);
+  border-radius: 8px;
+}
+
+.report-ugc-notice strong {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.8rem;
+}
+
+.report-ugc-notice ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.report-ugc-notice li {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--pw-text-secondary);
+}
+
+.report-modal-error {
+  margin: 0 0 0.75rem;
+  font-size: 0.78rem;
+  color: #F87171;
+}
+
+.report-modal-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.report-btn-cancel,
+.report-btn-submit {
+  flex: 1;
+  padding: 0.7rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.report-btn-cancel {
+  background: none;
+  border: 1px solid var(--pw-border-strong);
+  color: var(--pw-text-secondary);
+}
+
+.report-btn-submit {
+  background: #EF4444;
+  border: 1px solid #EF4444;
+  color: #FFFFFF;
+}
+
+.report-btn-cancel:disabled,
+.report-btn-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.report-done {
+  padding: 1rem 0 0.25rem;
+  text-align: center;
+}
+
+.report-done-icon {
+  margin-bottom: 0.75rem;
+  color: var(--pw-primary);
+}
+
+.report-done-text {
+  margin: 0 0 1.25rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--pw-text-secondary);
+}

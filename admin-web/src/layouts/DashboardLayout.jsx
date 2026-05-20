@@ -4,6 +4,7 @@ import {
   LayoutDashboard, Radio, UserCheck, Battery, Megaphone, CreditCard,
   FileText, LogOut, Search, Languages, Ticket, MessageSquare, Users,
   HelpCircle, BookOpen, BarChart2, ChevronDown, ChevronRight, Building2,
+  Flag,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { adminLogout, getCurrentAdmin } from '../services/auth.js';
@@ -36,6 +37,7 @@ const NAV_GROUPS = [
       { to: '/dashboard/announcements', icon: Megaphone,      labelKey: 'nav.announcements'  },
       { to: '/dashboard/staff-monitor', icon: Users,          labelKey: 'nav.staff_monitor'  },
       { to: '/dashboard/chat-monitor',  icon: MessageSquare,  labelKey: 'nav.chat_monitor'   },
+      { to: '/dashboard/abuse-reports', icon: Flag,           labelKey: 'nav.abuse_reports'  },
     ],
   },
   {

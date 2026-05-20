@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, ChevronLeft, Send, Paperclip, MoreVertical, Loader2, Trash2, CheckCheck, X, Info } from 'lucide-react';
+import { Search, ChevronLeft, Send, Paperclip, MoreVertical, Loader2, Trash2, CheckCheck, X, Info, CheckCircle2 } from 'lucide-react';
 import GroupCard, { GroupCardItem } from '../components/common/GroupCard';
+import ReportService, { REPORT_REASONS } from '../services/ReportService';
 import './CustomerChat.css';
 
 import { LANG_CONFIG, getPhotoText, getProviderLang, detectLang, getCustomerLang, translateText } from '../services/translation/TranslationService';
@@ -10,7 +11,7 @@ import { LANG_CONFIG, getPhotoText, getProviderLang, detectLang, getCustomerLang
 /* ── 더미 데이터 ── */
 const DUMMY_CHATS = [
   {
-    id: 1, customerName: '김민준', avatar: '김', customerLang: 'ko',
+    id: 1, customerUserId: 1001, customerName: '김민준', avatar: '김', customerLang: 'ko',
     lastMessage: '와이파이 비밀번호가 변경되었나요?', time: '방금 전',
     unread: 2, status: 'online', dateGroup: 'today', sortKey: Date.now() - 0,
     messages: [
@@ -20,7 +21,7 @@ const DUMMY_CHATS = [
     ],
   },
   {
-    id: 2, customerName: 'James Miller', avatar: 'J', customerLang: 'en',
+    id: 2, customerUserId: 1002, customerName: 'James Miller', avatar: 'J', customerLang: 'en',
     lastMessage: 'Is Wi-Fi free to use?', time: '3분 전',
     unread: 1, status: 'online', dateGroup: 'today', sortKey: Date.now() - 3 * 60 * 1000,
     messages: [
@@ -30,7 +31,7 @@ const DUMMY_CHATS = [
     ],
   },
   {
-    id: 3, customerName: '田中花子', avatar: '田', customerLang: 'ja',
+    id: 3, customerUserId: 1003, customerName: '田中花子', avatar: '田', customerLang: 'ja',
     lastMessage: 'Wi-Fiは無料ですか？', time: '10분 전',
     unread: 2, status: 'online', dateGroup: 'today', sortKey: Date.now() - 10 * 60 * 1000,
     messages: [
@@ -40,7 +41,7 @@ const DUMMY_CHATS = [
     ],
   },
   {
-    id: 4, customerName: '王伟 (간체)', avatar: '王', customerLang: 'zh',
+    id: 4, customerUserId: 1004, customerName: '王伟 (간체)', avatar: '王', customerLang: 'zh',
     lastMessage: 'Wi-Fi是免费的吗？', time: '15분 전',
     unread: 1, status: 'online', dateGroup: 'today', sortKey: Date.now() - 15 * 60 * 1000,
     messages: [
@@ -50,7 +51,7 @@ const DUMMY_CHATS = [
     ],
   },
   {
-    id: 5, customerName: '陳美玲 (번체)', avatar: '陳', customerLang: 'zh-TW',
+    id: 5, customerUserId: 1005, customerName: '陳美玲 (번체)', avatar: '陳', customerLang: 'zh-TW',
     lastMessage: '請問有提供Wi-Fi嗎？', time: '4월 23일 (목) 14:02',
     unread: 0, status: 'offline', dateGroup: 'yesterday', sortKey: Date.now() - 26 * 60 * 60 * 1000,
     messages: [
@@ -61,7 +62,7 @@ const DUMMY_CHATS = [
     ],
   },
   {
-    id: 6, customerName: '黃志明 (홍콩)', avatar: '黃', customerLang: 'zh-HK',
+    id: 6, customerUserId: 1006, customerName: '黃志明 (홍콩)', avatar: '黃', customerLang: 'zh-HK',
     lastMessage: '請問有冇Wi-Fi用？', time: '4월 23일 (목) 13:32',
     unread: 0, status: 'offline', dateGroup: 'yesterday', sortKey: Date.now() - 27 * 60 * 60 * 1000,
     messages: [
@@ -71,7 +72,7 @@ const DUMMY_CHATS = [
     ],
   },
   {
-    id: 7, customerName: 'Sophie Dubois', avatar: 'S', customerLang: 'fr',
+    id: 7, customerUserId: 1007, customerName: 'Sophie Dubois', avatar: 'S', customerLang: 'fr',
     lastMessage: 'Est-ce que le Wi-Fi est gratuit ?', time: '4월 23일 (목) 12:02',
     unread: 0, status: 'offline', dateGroup: 'yesterday', sortKey: Date.now() - 28 * 60 * 60 * 1000,
     messages: [
@@ -93,6 +94,13 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
   const [showMenu, setShowMenu] = useState(false);
   const [showAttachSheet, setShowAttachSheet] = useState(false);
   const [showGuideline, setShowGuideline] = useState(false);
+  // 손님 신고 모달 (출시 심사 HIGH#1 — UGC 모더레이션)
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDetail, setReportDetail] = useState('');
+  const [reportBusy, setReportBusy] = useState(false);
+  const [reportError, setReportError] = useState('');
+  const [reportDone, setReportDone] = useState(false);
 
   const bottomRef = useRef(null);
   const listRef = useRef(null);
@@ -144,6 +152,28 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
     reader.readAsDataURL(file);
   };
 
+  const closeReportModal = () => {
+    setShowReportModal(false);
+    setReportReason('');
+    setReportDetail('');
+    setReportError('');
+    setReportDone(false);
+  };
+
+  const handleSubmitReport = async () => {
+    if (!reportReason || reportBusy) return;
+    setReportBusy(true);
+    setReportError('');
+    try {
+      await ReportService.reportUser(chat.customerUserId, reportReason, reportDetail);
+      setReportDone(true);
+    } catch (err) {
+      setReportError(err?.message || '신고 접수에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+    } finally {
+      setReportBusy(false);
+    }
+  };
+
   const langCfg = LANG_CONFIG[chat.customerLang] || LANG_CONFIG.en;
 
   const getDateLabel = (timeStr) => {
@@ -183,7 +213,8 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
             <>
               <div className="menu-backdrop" onClick={() => setShowMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 10 }} />
               <div className="chat-room-dropdown" style={{ position: 'absolute', right: 0, top: '100%', background: 'var(--pw-bg-3)', border: '1px solid var(--pw-border-strong)', borderRadius: '10px', boxShadow: 'var(--pw-shadow-lg)', zIndex: 20, minWidth: '140px', padding: '0.4rem 0', display: 'flex', flexDirection: 'column' }}>
-                <button onClick={() => { onLeaveChat(chat.id); setShowMenu(false); }} style={{ padding: '0.75rem 1rem', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--pw-text)' }}>방 나가기</button>
+                <button onClick={() => { setShowReportModal(true); setShowMenu(false); }} style={{ padding: '0.75rem 1rem', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--pw-text)' }}>{t('chat.report_menu', '신고하기')}</button>
+                <button onClick={() => { onLeaveChat(chat.id); setShowMenu(false); }} style={{ padding: '0.75rem 1rem', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--pw-text)', borderTop: '1px solid var(--pw-border)' }}>방 나가기</button>
                 <button onClick={() => { onBlockUser(chat.id); setShowMenu(false); }} style={{ padding: '0.75rem 1rem', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.9rem', color: '#F87171', borderTop: '1px solid var(--pw-border)' }}>차단하기</button>
               </div>
             </>
@@ -228,6 +259,107 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
                 {t('noti.btn_confirm', '확인')}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 손님 신고 모달 (출시 심사 HIGH#1 — Apple Guideline 1.2 UGC 모더레이션) */}
+      {showReportModal && (
+        <div
+          className="report-modal-overlay"
+          onClick={() => { if (!reportBusy) closeReportModal(); }}
+        >
+          <div className="report-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="report-modal-header">
+              <h2>{t('chat.report_title', '손님 신고')}</h2>
+              <button
+                className="report-modal-close"
+                onClick={closeReportModal}
+                disabled={reportBusy}
+                aria-label={t('noti.btn_close', '닫기')}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {reportDone ? (
+              <div className="report-done">
+                <CheckCircle2 size={40} className="report-done-icon" />
+                <p className="report-done-text">
+                  {t('chat.report_done', '신고가 접수되었습니다. 운영팀이 검토 후 조치합니다.')}
+                </p>
+                <button className="report-btn-submit" onClick={closeReportModal}>
+                  {t('noti.btn_confirm', '확인')}
+                </button>
+              </div>
+            ) : (
+              <>
+                <p className="report-modal-intro">
+                  {t('chat.report_intro', '욕설·불법·스팸 등 채팅 이용규칙 위반을 신고합니다. 접수된 신고는 운영팀이 검토하며, 신고는 제출 후 취소할 수 없습니다.')}
+                </p>
+
+                <div className="report-field">
+                  <span className="report-label">{t('chat.report_reason', '신고 사유')}</span>
+                  <div className="report-reason-list">
+                    {REPORT_REASONS.map(({ code, labelKey, labelDefault }) => (
+                      <button
+                        key={code}
+                        type="button"
+                        className={`report-reason-item ${reportReason === code ? 'selected' : ''}`}
+                        onClick={() => setReportReason(code)}
+                        disabled={reportBusy}
+                      >
+                        <span className="report-reason-dot" />
+                        {t(labelKey, labelDefault)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="report-field">
+                  <span className="report-label">{t('chat.report_detail', '상세 내용 (선택)')}</span>
+                  <textarea
+                    className="report-textarea"
+                    rows={3}
+                    maxLength={500}
+                    value={reportDetail}
+                    onChange={(e) => setReportDetail(e.target.value)}
+                    placeholder={t('chat.report_detail_ph', '신고 사유를 자세히 적어주세요.')}
+                    disabled={reportBusy}
+                  />
+                </div>
+
+                <div className="report-ugc-notice">
+                  <strong>{t('chat.ugc_title', '채팅 이용규칙')}</strong>
+                  <ul>
+                    <li>{t('chat.ugc_rule_1', '욕설·차별·혐오 표현 금지')}</li>
+                    <li>{t('chat.ugc_rule_2', '불법 정보·음란물·사기 행위 금지')}</li>
+                    <li>{t('chat.ugc_rule_3', '스팸·광고·도배 금지')}</li>
+                  </ul>
+                </div>
+
+                {reportError && <p className="report-modal-error">{reportError}</p>}
+
+                <div className="report-modal-actions">
+                  <button
+                    className="report-btn-cancel"
+                    onClick={closeReportModal}
+                    disabled={reportBusy}
+                  >
+                    {t('noti.btn_cancel', '취소')}
+                  </button>
+                  <button
+                    className="report-btn-submit"
+                    onClick={handleSubmitReport}
+                    disabled={!reportReason || reportBusy}
+                  >
+                    {reportBusy
+                      ? t('chat.report_submitting', '제출 중…')
+                      : t('chat.report_submit', '신고 제출')}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

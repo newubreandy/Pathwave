@@ -23,6 +23,7 @@ from flask import Blueprint, Response, request, jsonify, g
 from models.database import get_db
 from models.push import push_to_users
 from routes.auth import require_auth, SECRET_KEY
+from routes.block import is_blocked
 
 chat_bp = Blueprint('chat', __name__)
 
@@ -146,7 +147,10 @@ def list_rooms():
                      WHERE m.room_id=r.id AND m.sender_type='facility' AND m.read_at IS NULL) AS unread,
                    (SELECT body FROM chat_messages m WHERE m.room_id=r.id ORDER BY id DESC LIMIT 1) AS last_body
             FROM chat_rooms r JOIN facilities f ON r.facility_id=f.id
-            WHERE r.user_id=? ORDER BY COALESCE(r.last_message_at, r.created_at) DESC
+            WHERE r.user_id=?
+              AND NOT EXISTS (SELECT 1 FROM chat_blocks b
+                               WHERE b.user_id=r.user_id AND b.facility_id=r.facility_id)
+            ORDER BY COALESCE(r.last_message_at, r.created_at) DESC
         """, (actor['user_id'],)).fetchall()
     else:
         rows = db.execute("""
@@ -158,6 +162,8 @@ def list_rooms():
             JOIN facilities f ON r.facility_id=f.id
             JOIN users u ON r.user_id=u.id
             WHERE f.owner_id=? AND f.active=1
+              AND NOT EXISTS (SELECT 1 FROM chat_blocks b
+                               WHERE b.user_id=r.user_id AND b.facility_id=r.facility_id)
             ORDER BY COALESCE(r.last_message_at, r.created_at) DESC
         """, (actor['owner_account_id'],)).fetchall()
     db.close()
@@ -232,6 +238,12 @@ def send_message(rid):
     if not _can_access_room(db, room, actor):
         db.close()
         return jsonify({'success': False, 'message': '방을 찾을 수 없거나 권한이 없습니다.'}), 404
+
+    # 차단된 상대와는 양쪽 모두 메시지 전송 불가 (UGC 모더레이션).
+    if is_blocked(db, room['user_id'], room['facility_id']):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '차단된 대화에는 메시지를 보낼 수 없습니다.'}), 403
 
     if actor['kind'] == 'user':
         sender_type = 'user'
