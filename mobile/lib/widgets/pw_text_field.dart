@@ -24,6 +24,8 @@ class PwTextField extends StatelessWidget {
   final TextAlign textAlign;
   final bool autofocus;
   final bool enabled;
+  /// 여러 줄 입력 (기본 1줄). 신고 상세 등 긴 텍스트에 사용.
+  final int maxLines;
 
   const PwTextField({
     super.key,
@@ -45,6 +47,7 @@ class PwTextField extends StatelessWidget {
     this.textAlign = TextAlign.start,
     this.autofocus = false,
     this.enabled = true,
+    this.maxLines = 1,
   });
 
   @override
@@ -62,6 +65,7 @@ class PwTextField extends StatelessWidget {
       textAlign: textAlign,
       autofocus: autofocus,
       enabled: enabled,
+      maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,

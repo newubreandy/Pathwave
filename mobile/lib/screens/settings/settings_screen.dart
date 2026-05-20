@@ -41,6 +41,8 @@ class SettingsScreen extends StatelessWidget {
               () => _launchSupport(context)),
             _linkTile(context, Icons.help_outline, '자주 묻는 질문',
               () => _showFaq(context)),
+            _linkTile(context, Icons.block, '차단 목록',
+              () => context.push('/settings/blocked-facilities')),
           ]),
           _section(context, '서버', [
             _tile(context, Icons.cloud_outlined, 'API Base URL', ApiConfig.baseUrl,

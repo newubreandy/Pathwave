@@ -29,6 +29,7 @@ from routes.social_naver import social_naver_bp
 from routes.support      import support_bp
 from routes.faq          import faq_bp
 from routes.abuse_report import abuse_report_bp
+from routes.block        import block_bp
 from routes.version      import version_bp
 from routes.notification_preferences import notification_preferences_bp
 from routes.company_info import company_info_bp
@@ -182,6 +183,7 @@ app.register_blueprint(social_naver_bp)
 app.register_blueprint(support_bp)
 app.register_blueprint(faq_bp)
 app.register_blueprint(abuse_report_bp)
+app.register_blueprint(block_bp)
 app.register_blueprint(version_bp)
 app.register_blueprint(notification_preferences_bp)
 app.register_blueprint(company_info_bp)

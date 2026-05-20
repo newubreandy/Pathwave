@@ -15,6 +15,7 @@ import Translations from './pages/Translations.jsx';
 import CouponStats from './pages/CouponStats.jsx';
 import ChatMonitor from './pages/ChatMonitor.jsx';
 import StaffMonitor from './pages/StaffMonitor.jsx';
+import AbuseReports from './pages/AbuseReports.jsx';
 import Support from './pages/Support.jsx';
 import Faq from './pages/Faq.jsx';
 import SupportStats from './pages/SupportStats.jsx';
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="/dashboard/coupon-stats" element={<CouponStats />} />
           <Route path="/dashboard/chat-monitor" element={<ChatMonitor />} />
           <Route path="/dashboard/staff-monitor" element={<StaffMonitor />} />
+          <Route path="/dashboard/abuse-reports" element={<AbuseReports />} />
           <Route path="/dashboard/i18n" element={<Translations />} />
           <Route path="/dashboard/support" element={<Support />} />
           <Route path="/dashboard/faq" element={<Faq />} />

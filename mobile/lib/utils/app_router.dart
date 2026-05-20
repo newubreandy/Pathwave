@@ -21,6 +21,7 @@ import '../screens/chat/chat_list_screen.dart';
 import '../screens/chat/chat_detail_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/settings/change_password_screen.dart';
+import '../screens/settings/blocked_facilities_screen.dart';
 import '../screens/support/support_screen.dart';
 import '../screens/support/support_detail_screen.dart';
 import '../screens/settings/policy_view_screen.dart';
@@ -104,6 +105,8 @@ class AppRouter {
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
       GoRoute(path: '/settings/change-password',
               builder: (_, _) => const ChangePasswordScreen()),
+      GoRoute(path: '/settings/blocked-facilities',
+              builder: (_, _) => const BlockedFacilitiesScreen()),
 
       // ── 고객센터 ─────────────────────────────────────────────────
       GoRoute(

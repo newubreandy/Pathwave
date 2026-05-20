@@ -542,6 +542,23 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_abuse_reports_status
             ON abuse_reports(status);
 
+        -- 채팅 차단 (block) — 손님(user)이 매장(facility)을 차단.
+        -- 차단되면 양쪽 채팅방 목록에서 숨김 + 메시지 전송 차단 (UGC 모더레이션).
+        -- 해지 가능 (DELETE). UNIQUE 로 중복 차단 방지.
+        CREATE TABLE IF NOT EXISTS chat_blocks (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id     INTEGER NOT NULL,
+            facility_id INTEGER NOT NULL,
+            created_at  TEXT    DEFAULT (datetime('now')),
+            UNIQUE (user_id, facility_id),
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (facility_id) REFERENCES facilities(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_chat_blocks_user
+            ON chat_blocks(user_id);
+        CREATE INDEX IF NOT EXISTS idx_chat_blocks_facility
+            ON chat_blocks(facility_id);
+
         -- 공지 읽음 처리
         CREATE TABLE IF NOT EXISTS announcement_reads (
             id              INTEGER PRIMARY KEY AUTOINCREMENT,
