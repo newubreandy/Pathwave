@@ -10,7 +10,6 @@ import ForgotPassword from './pages/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import StoreInfo from './pages/StoreInfo';
 import WifiSettings from './pages/WifiSettings';
-import Facilities from './pages/Facilities';
 import CustomerChat from './pages/CustomerChat';
 import Notifications from './pages/Notifications';
 import Stamps from './pages/Stamps';

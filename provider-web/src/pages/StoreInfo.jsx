@@ -36,32 +36,88 @@ const RecenterAutomatically = ({lat, lng}) => {
   }, [lat, lng, map]);
   return null;
 };
+// business_hours string("HH:MM-HH:MM") → { start, end }
+const parseBusinessHours = (raw) => {
+  if (!raw) return { start: '09:00', end: '22:00' };
+  const match = raw.match(/^(\d{2}:\d{2})[~\-–](\d{2}:\d{2})$/);
+  if (match) return { start: match[1], end: match[2] };
+  // 공백 구분자 허용
+  const parts = raw.split(/\s*[~\-–]\s*/);
+  if (parts.length === 2) return { start: parts[0].trim(), end: parts[1].trim() };
+  return { start: '09:00', end: '22:00' };
+};
+
+// { start, end } → "HH:MM-HH:MM"
+const formatBusinessHours = (hours) => `${hours.start}-${hours.end}`;
+
 const StoreInfo = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [fid, setFid] = useState(null);
 
   // 검증 메시지 표시 (모달)
   const showError = (msg) => {
     setErrorMessage(msg);
   };
+
+  const defaultCoords = LocationService.getDefaultCoordinates();
   const [store, setStore] = useState({
-    name: '패스트파이브 강남점',
-    address: '서울특별시 강남구 테헤란로 123',
+    name: '',
+    address: '',
     detailAddress: '',
-    phone: '02-1234-5678',
-    description: '크리에이티브 전문가와 고성장 스타트업을 위한 미니멀한 공유 오피스입니다.',
-    images: [
-      'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200',
-      'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&q=80&w=400',
-    ],
+    phone: '',
+    description: '',
+    images: [],
     hours: { start: '09:00', end: '22:00' },
-    holidays: { days: ['토요일', '일요일'], publicHolidays: true },
-    categories: ['공유오피스'],
-    lat: LocationService.getDefaultCoordinates().lat,
-    lng: LocationService.getDefaultCoordinates().lng
+    holidays: { days: [], publicHolidays: false },
+    categories: [],
+    lat: defaultCoords.lat,
+    lng: defaultCoords.lng,
   });
+
+  // API 응답 → store state 형태로 변환
+  const apiToStore = (facility) => ({
+    name: facility.name || '',
+    address: facility.address || '',
+    detailAddress: '',
+    phone: facility.phone || '',
+    description: facility.description || '',
+    images: facility.image_url ? [facility.image_url] : [],
+    hours: parseBusinessHours(facility.business_hours),
+    holidays: { days: [], publicHolidays: false },
+    categories: [],
+    lat: facility.latitude ?? defaultCoords.lat,
+    lng: facility.longitude ?? defaultCoords.lng,
+  });
+
+  // 마운트 시 매장 정보 로드
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    StoreService.list()
+      .then((res) => {
+        if (!alive) return;
+        const facilities = res.facilities ?? [];
+        const facility = facilities[0];
+        if (facility) {
+          const storeData = apiToStore(facility);
+          setFid(facility.id);
+          setStore(storeData);
+          fetchBeacons(facility.id);
+        }
+      })
+      .catch(() => {
+        // 로드 실패 시 빈 state 유지 — 네트워크 에러에 페이지가 죽지 않음
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => { alive = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [categoriesDB, setCategoriesDB] = useState(CategoryService.getCategories());
 
@@ -83,7 +139,7 @@ const StoreInfo = () => {
   const fetchBeacons = async (fid) => {
     try {
       const res = await StoreService.listBeacons(fid);
-      setBeacons(res.data?.beacons ?? res.data ?? []);
+      setBeacons(res.beacons ?? []);
     } catch {
       // 목록 조회 실패는 조용히 무시 (빈 목록 유지)
     }
@@ -92,6 +148,10 @@ const StoreInfo = () => {
   // 비콘 claim 제출
   const handleClaimBeacon = async () => {
     setBeaconError('');
+    if (!fid) {
+      setBeaconError('매장 정보를 먼저 불러와야 합니다.');
+      return;
+    }
     const snTrimmed = beaconSn.trim();
     if (!snTrimmed) {
       setBeaconError(t('store.beacon_err_sn'));
@@ -104,10 +164,8 @@ const StoreInfo = () => {
 
     setBeaconLoading(true);
     try {
-      // TODO: store.fid 를 실 매장 ID (API 응답값) 로 교체
-      const MOCK_FID = 'demo';
-      const res = await StoreService.claimBeacon(MOCK_FID, snTrimmed, beaconMinor || null);
-      const beacon = res.data?.beacon ?? {};
+      const res = await StoreService.claimBeacon(fid, snTrimmed, beaconMinor || null);
+      const beacon = res.beacon ?? {};
       setBeacons(prev => [...prev, beacon]);
       setBeaconSn('');
       setBeaconMinor('');
@@ -251,11 +309,10 @@ const StoreInfo = () => {
       return '매장명을 입력해주세요.';
     }
 
-    // 2. 업종 (1~3개)
-    if (!editData.categories || editData.categories.length === 0) {
-      return '업종을 1개 이상 선택해주세요.';
-    }
-    if (editData.categories.length > 3) {
+    // 2. 업종 — 백엔드 facilities 스키마에 category 컬럼이 없어 영속화 불가.
+    //    필수 검증을 강제하면 저장이 항상 막히므로 개수 상한만 유지.
+    //    (업종 영속화는 백엔드 스키마 확장 후 별도 PR 에서.)
+    if (editData.categories && editData.categories.length > 3) {
       return '업종은 최대 3개까지 선택할 수 있습니다.';
     }
 
@@ -322,6 +379,29 @@ const StoreInfo = () => {
     }
 
     const finalData = { ...editData, lat: newLat, lng: newLng };
+
+    // 실 API 호출
+    if (fid) {
+      const payload = {
+        name: finalData.name,
+        address: finalData.address,
+        phone: finalData.phone,
+        description: finalData.description,
+        business_hours: formatBusinessHours(finalData.hours),
+        latitude: finalData.lat,
+        longitude: finalData.lng,
+        // image_url: 이미지 업로드는 별도 이미지 API 사용 — 대표 이미지 URL만 반영
+        ...(finalData.images.length > 0 && { image_url: finalData.images[0] }),
+      };
+      try {
+        await StoreService.update(fid, payload);
+      } catch (err) {
+        const msg = err?.response?.data?.message ?? err?.message ?? '저장에 실패했습니다. 다시 시도해주세요.';
+        showError(msg);
+        return;
+      }
+    }
+
     setStore(finalData);
     setEditData(finalData);
     setIsEditing(false);
@@ -334,10 +414,21 @@ const StoreInfo = () => {
     ? `${store.holidays.days.join(', ')} 휴무${store.holidays.publicHolidays ? ' (공휴일 휴무)' : ''}`
     : (store.holidays.publicHolidays ? '공휴일 휴무' : '연중무휴');
 
+  if (loading) {
+    return (
+      <div className="modern-store-page">
+        <header className="page-header-section">
+          <h1 className="page-title">{t('store.title_edit', '매장 정보')}</h1>
+          <p className="sub-title" style={{ color: 'var(--pw-text-hint)' }}>매장 정보를 불러오는 중...</p>
+        </header>
+      </div>
+    );
+  }
+
   return (
     <div className="modern-store-page">
       <header className="page-header-section">
-        <h1 className="page-title">{isEditing ? t('store.title_edit') : store.name}</h1>
+        <h1 className="page-title">{isEditing ? t('store.title_edit') : (store.name || t('store.title_edit', '매장 정보'))}</h1>
         <p className="sub-title">{t('store.subtitle')}</p>
       </header>
 

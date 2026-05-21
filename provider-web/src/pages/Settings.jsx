@@ -8,6 +8,7 @@ import { useDialog } from '../components/common/DialogProvider';
 import PasswordInput from '../components/common/PasswordInput';
 import StatusBadge from '../components/common/StatusBadge';
 import BusinessInfoModal from '../components/common/BusinessInfoModal';
+import PwFooter from '../components/common/PwFooter';
 import './Settings.css';
 
 /* ── 기본값 ── */
@@ -490,10 +491,7 @@ const Settings = () => {
         <p className="settings-footer-notice">
           ※ PathWave는 서비스 플랫폼으로, 플랫폼 내에서 제공되는 정보 및 이벤트, 혜택 등에 대한 책임은 등록 업체에 있습니다.
         </p>
-        <div className="settings-footer-company">
-          <p style={{ fontWeight: 600, marginBottom: '2px' }}>시원컴퍼니 Copyright 2023, siwon company. All rights reserved.</p>
-          <p>서울특별시 서초구 메헌로 26(하이브랜드 1312,1313층) 02-1234-5678</p>
-        </div>
+        <PwFooter />
       </div>
 
       {/* ── Modals ── */}
