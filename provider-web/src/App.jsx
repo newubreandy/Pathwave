@@ -6,6 +6,7 @@ import SectionTabs from './components/common/SectionTabs';
 import { DialogProvider } from './components/common/DialogProvider';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import StoreInfo from './pages/StoreInfo';
 import WifiSettings from './pages/WifiSettings';
@@ -82,6 +83,7 @@ function App() {
         {/* 공개 — 인증 불필요 */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         {/* 공개 정책 뷰어 — 푸터/회원가입 흐름에서 진입 */}
         <Route path="/policy/:kind" element={<PolicyView />} />
 
