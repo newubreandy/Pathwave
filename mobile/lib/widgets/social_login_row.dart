@@ -37,7 +37,6 @@ class SocialLoginRow extends StatelessWidget {
           icon: const Icon(Icons.apple, color: Colors.white, size: 28),
           label: 'Apple',
           onTap: busy ? null : onApple,
-          labelColor: PwTheme.textPrimary,
         ),
         _socialBtn(
           color: const Color(0xFF1877F2),

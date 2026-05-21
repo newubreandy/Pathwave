@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/pw_theme.dart';
+
 /// PathWave 표준 버튼 (Material 3 기반 추상화).
 ///
 /// 화면은 raw [ElevatedButton] / [OutlinedButton] / [TextButton] 대신 항상
@@ -62,11 +64,14 @@ class PwButton extends StatelessWidget {
           child: content,
         );
       case PwButtonVariant.secondary:
-        return FilledButton.tonal(
+        return FilledButton(
           onPressed: disabled ? null : onPressed,
           style: FilledButton.styleFrom(
             minimumSize: minSize,
             padding: padding,
+            backgroundColor: PwTheme.surfaceLight,
+            foregroundColor: PwTheme.textPrimary,
+            side: const BorderSide(color: PwTheme.border),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
