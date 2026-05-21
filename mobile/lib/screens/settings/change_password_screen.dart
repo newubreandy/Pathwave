@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
+import '../../services/i18n_service.dart';
 import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
@@ -14,6 +15,7 @@ class ChangePasswordScreen extends StatefulWidget {
 }
 
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
+  final _t = I18nService.instance;
   final _formKey = GlobalKey<FormState>();
   final _currentCtrl = TextEditingController();
   final _newCtrl = TextEditingController();
@@ -40,11 +42,15 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       if (!mounted) return;
       if (res['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(res['message']?.toString() ?? '비밀번호가 변경되었습니다.')),
+          SnackBar(content: Text(res['message']?.toString()
+              ?? _t.t('change_password.done',
+                  defaultValue: '비밀번호가 변경되었습니다.'))),
         );
         context.pop();
       } else {
-        setState(() => _error = res['message']?.toString() ?? '변경에 실패했습니다.');
+        setState(() => _error = res['message']?.toString()
+            ?? _t.t('change_password.err_failed',
+                defaultValue: '변경에 실패했습니다.'));
       }
     } catch (e) {
       if (!mounted) return;
@@ -61,12 +67,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
     if (!isEmail) {
       return Scaffold(
-        appBar: PwAppBar(title: const Text('비밀번호 변경')),
+        appBar: PwAppBar(
+          title: Text(_t.t('change_password.title', defaultValue: '비밀번호 변경'))),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              '소셜 로그인으로 가입하셨습니다.\n해당 서비스(Google / Apple)에서 비밀번호를 관리해 주세요.',
+              _t.t('change_password.social_notice',
+                  defaultValue:
+                      '소셜 로그인으로 가입하셨습니다.\n'
+                      '해당 서비스(Google / Apple)에서 비밀번호를 관리해 주세요.'),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
@@ -76,7 +86,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     }
 
     return Scaffold(
-      appBar: PwAppBar(title: const Text('비밀번호 변경')),
+      appBar: PwAppBar(
+        title: Text(_t.t('change_password.title', defaultValue: '비밀번호 변경'))),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -88,33 +99,47 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 const SizedBox(height: 8),
                 PwTextField(
                   controller: _currentCtrl,
-                  label: '현재 비밀번호',
+                  label: _t.t('change_password.current_label',
+                      defaultValue: '현재 비밀번호'),
                   prefixIcon: Icons.lock_outline,
                   obscureText: true,
                   validator: (v) => (v == null || v.isEmpty)
-                      ? '현재 비밀번호를 입력해 주세요' : null,
+                      ? _t.t('change_password.current_required',
+                          defaultValue: '현재 비밀번호를 입력해 주세요')
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 PwTextField(
                   controller: _newCtrl,
-                  label: '새 비밀번호',
-                  helperText: '8자 이상 + 영문/숫자/특수문자',
+                  label: _t.t('change_password.new_label',
+                      defaultValue: '새 비밀번호'),
+                  helperText: _t.t('change_password.new_helper',
+                      defaultValue: '8자 이상 + 영문/숫자/특수문자'),
                   prefixIcon: Icons.lock,
                   obscureText: true,
                   validator: (v) {
-                    if (v == null || v.length < 8) return '8자 이상 입력해 주세요';
-                    if (v == _currentCtrl.text) return '현재 비밀번호와 다르게 입력해 주세요';
+                    if (v == null || v.length < 8) {
+                      return _t.t('change_password.min_length',
+                          defaultValue: '8자 이상 입력해 주세요');
+                    }
+                    if (v == _currentCtrl.text) {
+                      return _t.t('change_password.must_differ',
+                          defaultValue: '현재 비밀번호와 다르게 입력해 주세요');
+                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
                 PwTextField(
                   controller: _confirmCtrl,
-                  label: '새 비밀번호 확인',
+                  label: _t.t('change_password.confirm_label',
+                      defaultValue: '새 비밀번호 확인'),
                   prefixIcon: Icons.lock,
                   obscureText: true,
-                  validator: (v) =>
-                      (v != _newCtrl.text) ? '새 비밀번호가 일치하지 않습니다' : null,
+                  validator: (v) => (v != _newCtrl.text)
+                      ? _t.t('change_password.mismatch',
+                          defaultValue: '새 비밀번호가 일치하지 않습니다')
+                      : null,
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 12),
@@ -133,7 +158,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 PwButton(
                   onPressed: _submit,
                   loading: _busy,
-                  child: const Text('변경하기'),
+                  child: Text(_t.t('change_password.submit',
+                      defaultValue: '변경하기')),
                 ),
               ],
             ),

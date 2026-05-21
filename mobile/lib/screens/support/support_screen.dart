@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/abuse_report_service.dart';
+import '../../services/i18n_service.dart';
 import '../../services/support_service.dart';
 import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
@@ -33,6 +34,7 @@ class SupportScreen extends StatefulWidget {
 
 class _SupportScreenState extends State<SupportScreen>
     with SingleTickerProviderStateMixin {
+  final _t = I18nService.instance;
   late final TabController _tabCtrl;
 
   @override
@@ -55,13 +57,13 @@ class _SupportScreenState extends State<SupportScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PwAppBar(
-        title: const Text('고객센터'),
+        title: Text(_t.t('support.title', defaultValue: '고객센터')),
         bottom: TabBar(
           controller: _tabCtrl,
-          tabs: const [
-            Tab(text: 'FAQ'),
-            Tab(text: '내 문의'),
-            Tab(text: '신고하기'),
+          tabs: [
+            const Tab(text: 'FAQ'),
+            Tab(text: _t.t('support.tab_tickets', defaultValue: '내 문의')),
+            Tab(text: _t.t('support.tab_report', defaultValue: '신고하기')),
           ],
           indicatorColor: PwTheme.primary,
           labelColor: PwTheme.primary,
@@ -83,6 +85,25 @@ class _SupportScreenState extends State<SupportScreen>
   }
 }
 
+/// 고객센터 카테고리 코드 → 표시 라벨 (i18n). FAQ 그룹핑·문의 작성 공용.
+String _categoryLabel(String cat) {
+  final t = I18nService.instance;
+  switch (cat) {
+    case 'usage':
+      return t.t('support.category_usage', defaultValue: '서비스 이용');
+    case 'beacon':
+      return t.t('support.category_beacon', defaultValue: '비콘 / WiFi');
+    case 'coupon':
+      return t.t('support.category_coupon', defaultValue: '쿠폰');
+    case 'payment':
+      return t.t('support.category_payment', defaultValue: '결제');
+    case 'etc':
+      return t.t('support.category_etc', defaultValue: '기타');
+    default:
+      return cat;
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // FAQ 탭
 // ─────────────────────────────────────────────────────────────────────────────
@@ -95,6 +116,7 @@ class _FaqTab extends StatefulWidget {
 }
 
 class _FaqTabState extends State<_FaqTab> {
+  final _t = I18nService.instance;
   late Future<List<Map<String, dynamic>>> _faqFuture;
   final _searchCtrl = TextEditingController();
   String _query = '';
@@ -130,7 +152,7 @@ class _FaqTabState extends State<_FaqTab> {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: PwTextField(
             controller: _searchCtrl,
-            hint: 'FAQ 검색',
+            hint: _t.t('support.faq_search_hint', defaultValue: 'FAQ 검색'),
             prefixIcon: Icons.search,
             onChanged: (v) => setState(() => _query = v),
           ),
@@ -143,14 +165,18 @@ class _FaqTabState extends State<_FaqTab> {
             padding: const EdgeInsets.all(12),
             color: PwTheme.primary.withValues(alpha: 0.1),
             border: Border.all(color: PwTheme.primary.withValues(alpha: 0.3)),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.access_time, size: 16, color: PwTheme.primary),
-                SizedBox(width: 8),
+                const Icon(Icons.access_time, size: 16, color: PwTheme.primary),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '영업시간 평일 09:00–18:00 · 주말·공휴일 제외\n평균 응답시간 1–2 영업일',
-                    style: TextStyle(fontSize: 12, color: PwTheme.textSecondary),
+                    _t.t('support.hours_notice',
+                        defaultValue:
+                            '영업시간 평일 09:00–18:00 · 주말·공휴일 제외\n'
+                            '평균 응답시간 1–2 영업일'),
+                    style: const TextStyle(
+                        fontSize: 12, color: PwTheme.textSecondary),
                   ),
                 ),
               ],
@@ -168,7 +194,8 @@ class _FaqTabState extends State<_FaqTab> {
               }
               if (snap.hasError) {
                 return PwErrorState(
-                  message: 'FAQ를 불러오지 못했습니다.\n${snap.error}',
+                  message:
+                      '${_t.t('support.faq_load_failed', defaultValue: 'FAQ를 불러오지 못했습니다.')}\n${snap.error}',
                   onRetry: () => setState(
                     () { _faqFuture = SupportService().listFaqs(); }),
                 );
@@ -180,17 +207,21 @@ class _FaqTabState extends State<_FaqTab> {
               if (list.isEmpty) {
                 return PwEmptyState(
                   icon: _query.isEmpty ? Icons.help_outline : Icons.search_off,
-                  title: _query.isEmpty ? 'FAQ가 없습니다.' : '검색 결과가 없습니다.',
+                  title: _query.isEmpty
+                    ? _t.t('support.faq_empty', defaultValue: 'FAQ가 없습니다.')
+                    : _t.t('support.search_empty',
+                        defaultValue: '검색 결과가 없습니다.'),
                   subtitle: _query.isEmpty
                     ? null
-                    : '다른 키워드로 검색해 보세요.',
+                    : _t.t('search.empty_subtitle',
+                        defaultValue: '다른 키워드로 검색해 보세요.'),
                 );
               }
 
               // 카테고리별 그룹핑
               final grouped = <String, List<Map<String, dynamic>>>{};
               for (final faq in list) {
-                final cat = faq['category']?.toString() ?? '기타';
+                final cat = faq['category']?.toString() ?? 'etc';
                 grouped.putIfAbsent(cat, () => []).add(faq);
               }
 
@@ -218,17 +249,6 @@ class _FaqTabState extends State<_FaqTab> {
         ),
       ],
     );
-  }
-
-  String _categoryLabel(String cat) {
-    const map = {
-      'usage': '서비스 이용',
-      'beacon': '비콘 / WiFi',
-      'coupon': '쿠폰',
-      'payment': '결제',
-      'etc': '기타',
-    };
-    return map[cat] ?? cat;
   }
 }
 
@@ -315,6 +335,7 @@ class _MyTicketsTab extends StatefulWidget {
 }
 
 class _MyTicketsTabState extends State<_MyTicketsTab> {
+  final _t = I18nService.instance;
   late Future<List<Map<String, dynamic>>> _ticketsFuture;
 
   @override
@@ -355,14 +376,17 @@ class _MyTicketsTabState extends State<_MyTicketsTab> {
             padding: const EdgeInsets.all(12),
             color: PwTheme.primary.withValues(alpha: 0.1),
             border: Border.all(color: PwTheme.primary.withValues(alpha: 0.3)),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.access_time, size: 16, color: PwTheme.primary),
-                SizedBox(width: 8),
+                const Icon(Icons.access_time, size: 16, color: PwTheme.primary),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '영업시간 평일 09:00–18:00 · 평균 응답시간 1–2 영업일',
-                    style: TextStyle(fontSize: 12, color: PwTheme.textSecondary),
+                    _t.t('support.hours_notice_short',
+                        defaultValue:
+                            '영업시간 평일 09:00–18:00 · 평균 응답시간 1–2 영업일'),
+                    style: const TextStyle(
+                        fontSize: 12, color: PwTheme.textSecondary),
                   ),
                 ),
               ],
@@ -376,7 +400,7 @@ class _MyTicketsTabState extends State<_MyTicketsTab> {
           child: PwButton(
             icon: Icons.edit_outlined,
             onPressed: _openCreate,
-            child: const Text('문의 작성'),
+            child: Text(_t.t('support.create_ticket', defaultValue: '문의 작성')),
           ),
         ),
 
@@ -390,17 +414,20 @@ class _MyTicketsTabState extends State<_MyTicketsTab> {
               }
               if (snap.hasError) {
                 return PwErrorState(
-                  message: '문의 내역을 불러오지 못했습니다.\n${snap.error}',
+                  message:
+                      '${_t.t('support.tickets_load_failed', defaultValue: '문의 내역을 불러오지 못했습니다.')}\n${snap.error}',
                   onRetry: () => setState(() { _load(); }),
                 );
               }
 
               final tickets = snap.data ?? [];
               if (tickets.isEmpty) {
-                return const PwEmptyState(
+                return PwEmptyState(
                   icon: Icons.support_agent_outlined,
-                  title: '문의 내역이 없습니다.',
-                  subtitle: '궁금한 점이 있으시면 우측 하단 + 버튼으로 문의를 남겨주세요.',
+                  title: _t.t('support.tickets_empty_title',
+                      defaultValue: '문의 내역이 없습니다.'),
+                  subtitle: _t.t('support.tickets_empty_subtitle',
+                      defaultValue: '궁금한 점이 있으시면 문의 작성 버튼으로 문의를 남겨주세요.'),
                 );
               }
 
@@ -410,11 +437,12 @@ class _MyTicketsTabState extends State<_MyTicketsTab> {
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                   itemCount: tickets.length,
                   itemBuilder: (context, i) {
-                    final t = tickets[i];
-                    final tid = t['id'] as int? ?? 0;
-                    final subject = t['subject']?.toString() ?? '문의';
-                    final status = t['status']?.toString() ?? '';
-                    final createdAt = t['created_at']?.toString() ?? '';
+                    final ticket = tickets[i];
+                    final tid = ticket['id'] as int? ?? 0;
+                    final subject = ticket['subject']?.toString()
+                        ?? _t.t('support.default_subject', defaultValue: '문의');
+                    final createdAt = ticket['created_at']?.toString() ?? '';
+                    final status = ticket['status']?.toString() ?? '';
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: PwCard(
@@ -464,20 +492,21 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = I18nService.instance;
     final Color color;
     final String label;
     switch (status) {
       case 'open':
         color = PwTheme.warning;
-        label = '접수됨';
+        label = t.t('support.status_open', defaultValue: '접수됨');
         break;
       case 'in_progress':
         color = PwTheme.warning;
-        label = '처리중';
+        label = t.t('support.status_in_progress', defaultValue: '처리중');
         break;
       case 'closed':
         color = PwTheme.success;
-        label = '완료';
+        label = t.t('support.status_closed', defaultValue: '완료');
         break;
       default:
         color = PwTheme.textHint;
@@ -507,19 +536,15 @@ class _CreateTicketSheet extends StatefulWidget {
 }
 
 class _CreateTicketSheetState extends State<_CreateTicketSheet> {
+  final _t = I18nService.instance;
   final _formKey = GlobalKey<FormState>();
   final _subjectCtrl = TextEditingController();
   final _bodyCtrl = TextEditingController();
   String? _category;
   bool _loading = false;
 
-  static const _categories = [
-    ('usage', '서비스 이용'),
-    ('beacon', '비콘 / WiFi'),
-    ('coupon', '쿠폰'),
-    ('payment', '결제'),
-    ('etc', '기타'),
-  ];
+  /// (code, 기본 라벨) — 실제 표시는 support.category_<code> 키로 i18n.
+  static const _categoryCodes = ['usage', 'beacon', 'coupon', 'payment', 'etc'];
 
   @override
   void dispose() {
@@ -542,7 +567,8 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('제출 실패: $e')),
+        SnackBar(content: Text(
+            '${_t.t('support.submit_failed', defaultValue: '제출 실패')}: $e')),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -561,8 +587,8 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('문의 작성',
-                  style: TextStyle(
+              Text(_t.t('support.create_ticket', defaultValue: '문의 작성'),
+                  style: const TextStyle(
                       fontSize: 18, fontWeight: FontWeight.w700)),
               const SizedBox(height: 16),
 
@@ -570,7 +596,8 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
               DropdownButtonFormField<String>(
                 initialValue: _category,
                 decoration: InputDecoration(
-                  labelText: '카테고리 (선택)',
+                  labelText: _t.t('support.category_optional',
+                      defaultValue: '카테고리 (선택)'),
                   filled: true,
                   fillColor: PwTheme.surface,
                   border: OutlineInputBorder(
@@ -584,9 +611,14 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
                 ),
                 dropdownColor: PwTheme.surface,
                 items: [
-                  const DropdownMenuItem(value: null, child: Text('선택 안 함')),
-                  for (final (code, label) in _categories)
-                    DropdownMenuItem(value: code, child: Text(label)),
+                  DropdownMenuItem(
+                    value: null,
+                    child: Text(_t.t('support.category_none',
+                        defaultValue: '선택 안 함')),
+                  ),
+                  for (final code in _categoryCodes)
+                    DropdownMenuItem(
+                        value: code, child: Text(_categoryLabel(code))),
                 ],
                 onChanged: (v) => setState(() => _category = v),
               ),
@@ -595,11 +627,14 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
               // 제목
               PwTextField(
                 controller: _subjectCtrl,
-                label: '제목',
-                hint: '문의 제목을 입력하세요',
+                label: _t.t('support.subject_label', defaultValue: '제목'),
+                hint: _t.t('support.subject_hint',
+                    defaultValue: '문의 제목을 입력하세요'),
                 textInputAction: TextInputAction.next,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? '제목을 입력해 주세요' : null,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? _t.t('support.subject_required',
+                        defaultValue: '제목을 입력해 주세요')
+                    : null,
               ),
               const SizedBox(height: 12),
 
@@ -607,13 +642,16 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
               TextFormField(
                 controller: _bodyCtrl,
                 maxLines: 5,
-                decoration: const InputDecoration(
-                  labelText: '내용',
-                  hintText: '문의 내용을 상세히 작성해 주세요',
+                decoration: InputDecoration(
+                  labelText: _t.t('support.body_label', defaultValue: '내용'),
+                  hintText: _t.t('support.body_hint',
+                      defaultValue: '문의 내용을 상세히 작성해 주세요'),
                   alignLabelWithHint: true,
                 ),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? '내용을 입력해 주세요' : null,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? _t.t('support.body_required',
+                        defaultValue: '내용을 입력해 주세요')
+                    : null,
               ),
               const SizedBox(height: 12),
 
@@ -621,9 +659,11 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
               PwCard(
                 padding: const EdgeInsets.all(10),
                 color: PwTheme.surfaceLight,
-                child: const Text(
-                  '개인정보 처리방침에 따라 문의 내용은 상담 처리 목적으로만 사용되며 1년 후 자동 삭제됩니다.',
-                  style: TextStyle(
+                child: Text(
+                  _t.t('support.privacy_notice',
+                      defaultValue:
+                          '개인정보 처리방침에 따라 문의 내용은 상담 처리 목적으로만 사용되며 1년 후 자동 삭제됩니다.'),
+                  style: const TextStyle(
                       color: PwTheme.textHint, fontSize: 11, height: 1.4),
                 ),
               ),
@@ -632,7 +672,7 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
               PwButton(
                 loading: _loading,
                 onPressed: _loading ? null : _submit,
-                child: const Text('제출하기'),
+                child: Text(_t.t('support.submit', defaultValue: '제출하기')),
               ),
             ],
           ),
@@ -657,6 +697,7 @@ class _ReportTab extends StatefulWidget {
 }
 
 class _ReportTabState extends State<_ReportTab> {
+  final _t = I18nService.instance;
   final _formKey = GlobalKey<FormState>();
   final _targetIdCtrl = TextEditingController();
   final _detailCtrl = TextEditingController();
@@ -664,13 +705,32 @@ class _ReportTabState extends State<_ReportTab> {
   String _reasonCode = 'spam';
   bool _loading = false;
 
-  static const _reasons = [
-    ('spam', '스팸 / 광고'),
-    ('abuse', '욕설 / 혐오'),
-    ('illegal', '불법 정보'),
-    ('inappropriate', '부적절한 콘텐츠'),
-    ('other', '기타'),
+  /// 신고 사유 코드 — 실제 표시는 support.reason_<code> 키로 i18n.
+  static const _reasonCodes = [
+    'spam',
+    'abuse',
+    'illegal',
+    'inappropriate',
+    'other',
   ];
+
+  String _reasonLabel(String code) {
+    switch (code) {
+      case 'spam':
+        return _t.t('support.reason_spam', defaultValue: '스팸 / 광고');
+      case 'abuse':
+        return _t.t('support.reason_abuse', defaultValue: '욕설 / 혐오');
+      case 'illegal':
+        return _t.t('support.reason_illegal', defaultValue: '불법 정보');
+      case 'inappropriate':
+        return _t.t('support.reason_inappropriate',
+            defaultValue: '부적절한 콘텐츠');
+      case 'other':
+        return _t.t('support.reason_other', defaultValue: '기타');
+      default:
+        return code;
+    }
+  }
 
   @override
   void initState() {
@@ -711,12 +771,14 @@ class _ReportTabState extends State<_ReportTab> {
         _reasonCode = 'spam';
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('신고가 접수되었습니다. 검토 후 조치하겠습니다.')),
+        SnackBar(content: Text(_t.t('support.report_done',
+            defaultValue: '신고가 접수되었습니다. 검토 후 조치하겠습니다.'))),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('신고 실패: $e')),
+        SnackBar(content: Text(
+            '${_t.t('support.report_failed', defaultValue: '신고 실패')}: $e')),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -737,14 +799,17 @@ class _ReportTabState extends State<_ReportTab> {
               padding: const EdgeInsets.all(12),
               color: PwTheme.primary.withValues(alpha: 0.1),
               border: Border.all(color: PwTheme.primary.withValues(alpha: 0.3)),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 16, color: PwTheme.primary),
-                  SizedBox(width: 8),
+                  const Icon(Icons.info_outline, size: 16, color: PwTheme.primary),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '허위 신고는 서비스 이용에 제한이 있을 수 있습니다.\n검토 후 7 영업일 이내에 조치합니다.',
-                      style: TextStyle(
+                      _t.t('support.report_notice',
+                          defaultValue:
+                              '허위 신고는 서비스 이용에 제한이 있을 수 있습니다.\n'
+                              '검토 후 7 영업일 이내에 조치합니다.'),
+                      style: const TextStyle(
                           fontSize: 12, color: PwTheme.textSecondary),
                     ),
                   ),
@@ -754,19 +819,21 @@ class _ReportTabState extends State<_ReportTab> {
             const SizedBox(height: 20),
 
             // ── 신고 대상 종류 ──────────────────────────────────────
-            const Text('신고 대상',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+            Text(_t.t('support.report_target', defaultValue: '신고 대상'),
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600, fontSize: 14)),
             const SizedBox(height: 8),
             Row(
               children: [
                 _KindChip(
-                  label: '시설 / 매장',
+                  label: _t.t('support.target_facility',
+                      defaultValue: '시설 / 매장'),
                   selected: _targetKind == 'facility',
                   onTap: () => setState(() => _targetKind = 'facility'),
                 ),
                 const SizedBox(width: 8),
                 _KindChip(
-                  label: '사용자',
+                  label: _t.t('support.target_user', defaultValue: '사용자'),
                   selected: _targetKind == 'user',
                   onTap: () => setState(() => _targetKind = 'user'),
                 ),
@@ -777,25 +844,33 @@ class _ReportTabState extends State<_ReportTab> {
             // ── 대상 ID ────────────────────────────────────────────
             PwTextField(
               controller: _targetIdCtrl,
-              label: '대상 ID (숫자)',
-              hint: '예: 42',
+              label: _t.t('support.target_id_label',
+                  defaultValue: '대상 ID (숫자)'),
+              hint: _t.t('support.target_id_hint', defaultValue: '예: 42'),
               keyboardType: TextInputType.number,
               textInputAction: TextInputAction.next,
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'ID를 입력해 주세요';
-                if (int.tryParse(v.trim()) == null) return '숫자만 입력해 주세요';
+                if (v == null || v.trim().isEmpty) {
+                  return _t.t('support.target_id_required',
+                      defaultValue: 'ID를 입력해 주세요');
+                }
+                if (int.tryParse(v.trim()) == null) {
+                  return _t.t('support.target_id_numeric',
+                      defaultValue: '숫자만 입력해 주세요');
+                }
                 return null;
               },
             ),
             const SizedBox(height: 20),
 
             // ── 신고 사유 라디오 ────────────────────────────────────
-            const Text('신고 사유',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+            Text(_t.t('support.report_reason', defaultValue: '신고 사유'),
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600, fontSize: 14)),
             const SizedBox(height: 4),
-            for (final (code, label) in _reasons)
+            for (final code in _reasonCodes)
               _ReasonRadio(
-                label: label,
+                label: _reasonLabel(code),
                 value: code,
                 groupValue: _reasonCode,
                 onChanged: (v) => setState(() => _reasonCode = v),
@@ -806,9 +881,11 @@ class _ReportTabState extends State<_ReportTab> {
             TextFormField(
               controller: _detailCtrl,
               maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: '상세 사유 (선택)',
-                hintText: '추가 설명이 있으면 입력해 주세요',
+              decoration: InputDecoration(
+                labelText: _t.t('support.detail_label',
+                    defaultValue: '상세 사유 (선택)'),
+                hintText: _t.t('support.detail_hint',
+                    defaultValue: '추가 설명이 있으면 입력해 주세요'),
                 alignLabelWithHint: true,
               ),
             ),
@@ -818,10 +895,12 @@ class _ReportTabState extends State<_ReportTab> {
             PwCard(
               padding: const EdgeInsets.all(10),
               color: PwTheme.surfaceLight,
-              child: const Text(
-                '신고 내용은 「개인정보 보호법」에 따라 처리 목적으로만 사용하며 처리 완료 후 파기됩니다.',
-                style:
-                    TextStyle(color: PwTheme.textHint, fontSize: 11, height: 1.4),
+              child: Text(
+                _t.t('support.report_privacy_notice',
+                    defaultValue:
+                        '신고 내용은 「개인정보 보호법」에 따라 처리 목적으로만 사용하며 처리 완료 후 파기됩니다.'),
+                style: const TextStyle(
+                    color: PwTheme.textHint, fontSize: 11, height: 1.4),
               ),
             ),
             const SizedBox(height: 20),
@@ -830,7 +909,8 @@ class _ReportTabState extends State<_ReportTab> {
               icon: Icons.flag_outlined,
               loading: _loading,
               onPressed: _loading ? null : _submit,
-              child: const Text('신고 제출'),
+              child: Text(_t.t('support.report_submit',
+                  defaultValue: '신고 제출')),
             ),
           ],
         ),

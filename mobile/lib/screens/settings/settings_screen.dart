@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/auth_service.dart';
+import '../../services/i18n_service.dart';
 import '../../services/notification_preferences_service.dart';
 import '../../services/policy_service.dart';
 import '../../utils/api_config.dart';
@@ -16,53 +17,68 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = I18nService.instance;
     final auth = context.watch<AuthService>();
     final email = auth.user?['email']?.toString() ?? '—';
 
     return Scaffold(
-      appBar: PwAppBar(title: const Text('설정')),
+      appBar: PwAppBar(title: Text(t.t('settings.title', defaultValue: '설정'))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _section(context, '계정', [
-            _tile(context, Icons.email_outlined, '이메일', email),
-            _linkTile(context, Icons.password_outlined, '비밀번호 변경',
+          _section(context, t.t('settings.section_account', defaultValue: '계정'), [
+            _tile(context, Icons.email_outlined,
+              t.t('settings.email', defaultValue: '이메일'), email),
+            _linkTile(context, Icons.password_outlined,
+              t.t('change_password.title', defaultValue: '비밀번호 변경'),
               () => context.push('/settings/change-password')),
           ]),
-          _section(context, '알림', [
-            _linkTile(context, Icons.notifications_outlined, '알림 보기',
+          _section(context, t.t('settings.section_notif', defaultValue: '알림'), [
+            _linkTile(context, Icons.notifications_outlined,
+              t.t('settings.notif_view', defaultValue: '알림 보기'),
               // push 사용 — 알림 화면에서 백 버튼으로 설정 복귀.
               () => context.push('/notifications')),
             const _MarketingConsentToggleTile(),
           ]),
           const _NotificationPreferencesSection(),
-          _section(context, '고객 지원', [
-            _linkTile(context, Icons.mail_outline, '이메일 문의',
+          _section(context, t.t('settings.section_support', defaultValue: '고객 지원'), [
+            _linkTile(context, Icons.mail_outline,
+              t.t('settings.email_inquiry', defaultValue: '이메일 문의'),
               () => _launchSupport(context)),
-            _linkTile(context, Icons.help_outline, '자주 묻는 질문',
+            _linkTile(context, Icons.help_outline,
+              t.t('settings.faq', defaultValue: '자주 묻는 질문'),
               () => _showFaq(context)),
-            _linkTile(context, Icons.block, '차단 목록',
+            _linkTile(context, Icons.block,
+              t.t('settings.blocked_list_title', defaultValue: '차단 목록'),
               () => context.push('/settings/blocked-facilities')),
           ]),
-          _section(context, '서버', [
+          _section(context, t.t('settings.section_server', defaultValue: '서버'), [
             _tile(context, Icons.cloud_outlined, 'API Base URL', ApiConfig.baseUrl,
-              subtitle: 'flutter run 시 --dart-define=API_BASE=... 로 변경'),
+              subtitle: t.t('settings.api_base_hint',
+                  defaultValue: 'flutter run 시 --dart-define=API_BASE=... 로 변경')),
           ]),
-          _section(context, '약관 및 정책', [
+          _section(context, t.t('settings.section_legal', defaultValue: '약관 및 정책'), [
             _linkTile(context, Icons.description_outlined,
-              '서비스 이용약관', () => _showPolicy(context, 'terms')),
+              t.t('settings.legal_terms', defaultValue: '서비스 이용약관'),
+              () => _showPolicy(context, 'terms')),
             _linkTile(context, Icons.privacy_tip_outlined,
-              '개인정보 처리방침', () => _showPolicy(context, 'privacy')),
+              t.t('settings.legal_privacy', defaultValue: '개인정보 처리방침'),
+              () => _showPolicy(context, 'privacy')),
             _linkTile(context, Icons.location_on_outlined,
-              '위치 정보 이용 약관', () => _showPolicy(context, 'location')),
+              t.t('settings.legal_location', defaultValue: '위치 정보 이용 약관'),
+              () => _showPolicy(context, 'location')),
             _linkTile(context, Icons.share_outlined,
-              '제3자 정보 제공', () => _showPolicy(context, 'third_party')),
+              t.t('settings.legal_third_party', defaultValue: '제3자 정보 제공'),
+              () => _showPolicy(context, 'third_party')),
             _linkTile(context, Icons.campaign_outlined,
-              '마케팅 정보 수신', () => _showPolicy(context, 'marketing')),
+              t.t('settings.legal_marketing', defaultValue: '마케팅 정보 수신'),
+              () => _showPolicy(context, 'marketing')),
           ]),
-          _section(context, '앱 정보', [
-            _tile(context, Icons.info_outline, '버전', '1.0.0+1'),
-            _tile(context, Icons.business_outlined, '사업자',
+          _section(context, t.t('settings.section_app', defaultValue: '앱 정보'), [
+            _tile(context, Icons.info_outline,
+              t.t('settings.version', defaultValue: '버전'), '1.0.0+1'),
+            _tile(context, Icons.business_outlined,
+              t.t('settings.business', defaultValue: '사업자'),
               '주식회사 트리거소프트 (triggersoft)'),
           ]),
           const SizedBox(height: 16),
@@ -73,14 +89,14 @@ class SettingsScreen extends StatelessWidget {
               await context.read<AuthService>().logout();
               if (context.mounted) context.go('/auth/login');
             },
-            child: const Text('로그아웃'),
+            child: Text(t.t('settings.logout', defaultValue: '로그아웃')),
           ),
           const SizedBox(height: 8),
           PwButton(
             variant: PwButtonVariant.text,
             onPressed: () => context.push('/mypage/delete-account'),
-            child: const Text('회원 탈퇴',
-              style: TextStyle(
+            child: Text(t.t('delete_account.title', defaultValue: '회원 탈퇴'),
+              style: const TextStyle(
                 color: PwTheme.error,
                 decoration: TextDecoration.underline,
                 fontSize: 13,
@@ -97,38 +113,55 @@ class SettingsScreen extends StatelessWidget {
   static const _supportEmail = 'support@triggersoft.kr';
 
   Future<void> _launchSupport(BuildContext context) async {
+    final t = I18nService.instance;
     // url_launcher 의존성 없이 클립보드 + 안내 — 실 앱에서는 url_launcher 추가 권장
     await Clipboard.setData(const ClipboardData(text: _supportEmail));
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('고객지원 이메일을 클립보드에 복사했습니다: support@triggersoft.kr')),
+      SnackBar(content: Text(t
+          .t('settings.support_email_copied',
+              defaultValue: '고객지원 이메일을 클립보드에 복사했습니다: {email}')
+          .replaceFirst('{email}', _supportEmail))),
     );
   }
 
   Future<void> _showFaq(BuildContext context) async {
+    final t = I18nService.instance;
     showDialog(
       context: context,
       barrierColor: const Color(0x99000000),
       barrierDismissible: true,
       builder: (_) => AlertDialog(
-        title: const Text('자주 묻는 질문'),
-        content: const SingleChildScrollView(
+        title: Text(t.t('settings.faq', defaultValue: '자주 묻는 질문')),
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _FaqItem(q: 'Q. 비콘이 감지되지 않아요',
-                a: 'A. Bluetooth 와 위치 권한이 모두 허용되어 있는지 확인해 주세요. '
-                   '또한 매장에서 5~10m 이내에 있어야 감지됩니다.'),
-              SizedBox(height: 12),
-              _FaqItem(q: 'Q. WiFi 자동 연결이 안 돼요',
-                a: 'A. iOS 의 경우 설정 → PathWave → "WiFi 자동 연결" 권한을 확인해 주세요. '
-                   'Android 는 시스템 설정의 위치 권한이 활성화되어야 합니다.'),
-              SizedBox(height: 12),
-              _FaqItem(q: 'Q. 스탬프가 적립되지 않았어요',
-                a: 'A. 매장 비콘 감지 후 자동 적립됩니다. 같은 매장에서 24시간 내 재방문은 1회로 카운트됩니다.'),
-              SizedBox(height: 12),
-              _FaqItem(q: 'Q. 회원 탈퇴는 어떻게 하나요?',
-                a: 'A. 설정 → 회원 탈퇴 메뉴에서 진행 가능합니다. 즉시 모든 알림이 차단되며 14일 후 재가입 가능합니다.'),
+              _FaqItem(
+                q: t.t('settings.faq_q1', defaultValue: 'Q. 비콘이 감지되지 않아요'),
+                a: t.t('settings.faq_a1',
+                    defaultValue:
+                        'A. Bluetooth 와 위치 권한이 모두 허용되어 있는지 확인해 주세요. '
+                        '또한 매장에서 5~10m 이내에 있어야 감지됩니다.')),
+              const SizedBox(height: 12),
+              _FaqItem(
+                q: t.t('settings.faq_q2', defaultValue: 'Q. WiFi 자동 연결이 안 돼요'),
+                a: t.t('settings.faq_a2',
+                    defaultValue:
+                        'A. iOS 의 경우 설정 → PathWave → "WiFi 자동 연결" 권한을 확인해 주세요. '
+                        'Android 는 시스템 설정의 위치 권한이 활성화되어야 합니다.')),
+              const SizedBox(height: 12),
+              _FaqItem(
+                q: t.t('settings.faq_q3', defaultValue: 'Q. 스탬프가 적립되지 않았어요'),
+                a: t.t('settings.faq_a3',
+                    defaultValue:
+                        'A. 매장 비콘 감지 후 자동 적립됩니다. 같은 매장에서 24시간 내 재방문은 1회로 카운트됩니다.')),
+              const SizedBox(height: 12),
+              _FaqItem(
+                q: t.t('settings.faq_q4', defaultValue: 'Q. 회원 탈퇴는 어떻게 하나요?'),
+                a: t.t('settings.faq_a4',
+                    defaultValue:
+                        'A. 설정 → 회원 탈퇴 메뉴에서 진행 가능합니다. 즉시 모든 알림이 차단되며 14일 후 재가입 가능합니다.')),
             ],
           ),
         ),
@@ -137,7 +170,7 @@ class SettingsScreen extends StatelessWidget {
             variant: PwButtonVariant.text,
             fullWidth: false,
             onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
+            child: Text(t.t('common.close', defaultValue: '닫기')),
           ),
         ],
       ),
@@ -145,6 +178,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Future<void> _showPolicy(BuildContext context, String kind) async {
+    final t = I18nService.instance;
     showDialog(
       context: context,
       barrierColor: const Color(0x99000000),
@@ -170,7 +204,8 @@ class SettingsScreen extends StatelessWidget {
       if (!context.mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('약관을 불러오지 못했습니다: $e')),
+        SnackBar(content: Text(
+            '${t.t('policy.load_failed', defaultValue: '약관을 불러오지 못했습니다.')} $e')),
       );
     }
   }
@@ -231,9 +266,13 @@ class _PolicySheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = data['label']?.toString() ?? data['kind']?.toString() ?? '약관';
+    final t = I18nService.instance;
+    final title = data['label']?.toString()
+        ?? data['kind']?.toString()
+        ?? t.t('policy.default_title', defaultValue: '약관');
     final version = data['version']?.toString() ?? '';
-    final body = data['body']?.toString() ?? '본문이 등록되어 있지 않습니다.';
+    final body = data['body']?.toString()
+        ?? t.t('policy.empty_body', defaultValue: '본문이 등록되어 있지 않습니다.');
     final effective = data['effective_at']?.toString();
 
     return DraggableScrollableSheet(
@@ -280,7 +319,8 @@ class _PolicySheet extends StatelessWidget {
             ),
             if (effective != null && effective.isNotEmpty) ...[
               const SizedBox(height: 4),
-              Text('시행일: ${effective.split("T").first}',
+              Text(
+                '${t.t('policy.effective_at_label', defaultValue: '시행일')}: ${effective.split("T").first}',
                 style: const TextStyle(color: PwTheme.textHint, fontSize: 12)),
             ],
             const Divider(height: 24),
@@ -295,7 +335,7 @@ class _PolicySheet extends StatelessWidget {
             PwButton(
               variant: PwButtonVariant.text,
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('닫기'),
+              child: Text(t.t('common.close', defaultValue: '닫기')),
             ),
           ],
         ),
@@ -319,6 +359,7 @@ class _MarketingConsentToggleTile extends StatefulWidget {
 
 class _MarketingConsentToggleTileState
     extends State<_MarketingConsentToggleTile> {
+  final _t = I18nService.instance;
   static const _kKey = 'pw.notif.consent.marketing';
   bool _value = false;
   bool _loaded = false;
@@ -342,8 +383,10 @@ class _MarketingConsentToggleTileState
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(v
-          ? '마케팅 정보 수신에 동의했습니다.'
-          : '마케팅 정보 수신을 거부했습니다.')),
+          ? _t.t('settings.marketing_on',
+              defaultValue: '마케팅 정보 수신에 동의했습니다.')
+          : _t.t('settings.marketing_off',
+              defaultValue: '마케팅 정보 수신을 거부했습니다.'))),
     );
   }
 
@@ -351,8 +394,9 @@ class _MarketingConsentToggleTileState
   Widget build(BuildContext context) {
     return PwSwitchTile(
       leading: const Icon(Icons.campaign_outlined),
-      title: '마케팅 정보 수신',
-      subtitle: '이벤트/쿠폰 안내 푸시·이메일 수신 (정보통신망법 §50)',
+      title: _t.t('settings.marketing_title', defaultValue: '마케팅 정보 수신'),
+      subtitle: _t.t('settings.marketing_subtitle',
+          defaultValue: '이벤트/쿠폰 안내 푸시·이메일 수신 (정보통신망법 §50)'),
       value: _value,
       onChanged: _loaded ? _toggle : null,
     );
@@ -373,6 +417,7 @@ class _NotificationPreferencesSection extends StatefulWidget {
 
 class _NotificationPreferencesSectionState
     extends State<_NotificationPreferencesSection> {
+  final _t = I18nService.instance;
   List<NotificationPreference>? _prefs;
   String? _error;
   String? _busyCategory;
@@ -393,7 +438,8 @@ class _NotificationPreferencesSectionState
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = '알림 설정을 불러오지 못했습니다.');
+      setState(() => _error = _t.t('settings.notif_pref_error',
+          defaultValue: '알림 설정을 불러오지 못했습니다.'));
     }
   }
 
@@ -416,7 +462,8 @@ class _NotificationPreferencesSectionState
           : e).toList();
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('변경 실패 — 잠시 후 다시 시도해 주세요.')),
+        SnackBar(content: Text(_t.t('settings.change_failed',
+            defaultValue: '변경 실패 — 잠시 후 다시 시도해 주세요.'))),
       );
     } finally {
       if (mounted) setState(() => _busyCategory = null);
@@ -428,10 +475,12 @@ class _NotificationPreferencesSectionState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Text('알림 카테고리',
-            style: TextStyle(color: PwTheme.textHint, fontSize: 12, letterSpacing: 0.5)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            _t.t('settings.section_notif_category', defaultValue: '알림 카테고리'),
+            style: const TextStyle(
+                color: PwTheme.textHint, fontSize: 12, letterSpacing: 0.5)),
         ),
         Container(
           decoration: BoxDecoration(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../services/i18n_service.dart';
 import '../../services/support_service.dart';
 import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
@@ -14,6 +15,7 @@ class SupportDetailScreen extends StatefulWidget {
 }
 
 class _SupportDetailScreenState extends State<SupportDetailScreen> {
+  final _t = I18nService.instance;
   late Future<Map<String, dynamic>> _ticketFuture;
   final _msgCtrl = TextEditingController();
   bool _sending = false;
@@ -45,7 +47,8 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('전송 실패: $e')),
+        SnackBar(content: Text(
+            '${_t.t('support.send_failed', defaultValue: '전송 실패')}: $e')),
       );
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -55,7 +58,8 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PwAppBar(title: const Text('문의 상세')),
+      appBar: PwAppBar(
+        title: Text(_t.t('support.detail_title', defaultValue: '문의 상세'))),
       body: FutureBuilder<Map<String, dynamic>>(
         future: _ticketFuture,
         builder: (context, snap) {
@@ -67,13 +71,14 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('불러오기 실패: ${snap.error}',
-                      style: const TextStyle(color: PwTheme.textSecondary)),
+                  Text(
+                    '${_t.t('support.load_failed', defaultValue: '불러오기 실패')}: ${snap.error}',
+                    style: const TextStyle(color: PwTheme.textSecondary)),
                   const SizedBox(height: 12),
                   PwButton(
                     fullWidth: false,
                     onPressed: () => setState(() { _load(); }),
-                    child: const Text('다시 시도'),
+                    child: Text(_t.t('common.retry', defaultValue: '다시 시도')),
                   ),
                 ],
               ),
@@ -84,7 +89,8 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
           final messages = (ticket['messages'] as List?)
                   ?.cast<Map<String, dynamic>>() ??
               [];
-          final subject = ticket['subject']?.toString() ?? '문의';
+          final subject = ticket['subject']?.toString()
+              ?? _t.t('support.default_subject', defaultValue: '문의');
           final status = ticket['status']?.toString() ?? '';
           final category = ticket['category']?.toString() ?? '';
 
@@ -121,9 +127,12 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
               // ── 대화 thread ────────────────────────────────────────
               Expanded(
                 child: messages.isEmpty
-                    ? const Center(
-                        child: Text('아직 메시지가 없습니다.',
-                            style: TextStyle(color: PwTheme.textSecondary)),
+                    ? Center(
+                        child: Text(
+                            _t.t('support.no_messages',
+                                defaultValue: '아직 메시지가 없습니다.'),
+                            style: const TextStyle(
+                                color: PwTheme.textSecondary)),
                       )
                     : ListView.builder(
                         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -152,7 +161,8 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
                       Expanded(
                         child: PwTextField(
                           controller: _msgCtrl,
-                          hint: '추가 문의 내용을 입력하세요',
+                          hint: _t.t('support.message_hint',
+                              defaultValue: '추가 문의 내용을 입력하세요'),
                           textInputAction: TextInputAction.send,
                           onSubmitted: (_) => _sendMessage(),
                           enabled: !_sending,
@@ -163,7 +173,7 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
                         fullWidth: false,
                         loading: _sending,
                         onPressed: _sending ? null : _sendMessage,
-                        child: const Text('전송'),
+                        child: Text(_t.t('support.send', defaultValue: '전송')),
                       ),
                     ],
                   ),
@@ -210,8 +220,10 @@ class _MessageBubble extends StatelessWidget {
               isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             if (!isUser)
-              const Text('관리자',
-                  style: TextStyle(
+              Text(
+                  I18nService.instance
+                      .t('support.admin', defaultValue: '관리자'),
+                  style: const TextStyle(
                       color: PwTheme.primary,
                       fontSize: 11,
                       fontWeight: FontWeight.w600)),
@@ -241,20 +253,21 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = I18nService.instance;
     final Color color;
     final String label;
     switch (status) {
       case 'open':
         color = PwTheme.warning;
-        label = '접수됨';
+        label = t.t('support.status_open', defaultValue: '접수됨');
         break;
       case 'in_progress':
         color = PwTheme.warning;
-        label = '처리중';
+        label = t.t('support.status_in_progress', defaultValue: '처리중');
         break;
       case 'closed':
         color = PwTheme.success;
-        label = '완료';
+        label = t.t('support.status_closed', defaultValue: '완료');
         break;
       default:
         color = PwTheme.textHint;

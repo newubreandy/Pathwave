@@ -23,17 +23,35 @@ class _PolicyViewScreenState extends State<PolicyViewScreen> {
   bool _loading = true;
   String? _error;
 
-  static const _kindLabel = {
-    'terms':       '이용약관',
-    'privacy':     '개인정보처리방침',
-    'location':    '위치기반서비스 이용약관',
-    'marketing':   '마케팅 정보 수신 동의',
-    'push':        '푸시 알림 동의',
-    'camera':      '카메라 접근 권한',
-    'storage':     '저장공간 접근 권한',
-    'third_party': '제3자 정보 제공 동의',
-    'age14':       '만 14세 이상 동의',
-  };
+  /// 약관 kind → 표시 라벨 (i18n). 미지정 kind 는 일반 제목으로 fallback.
+  String _kindLabel(String kind) {
+    final t = I18nService.instance;
+    switch (kind) {
+      case 'terms':
+        return t.t('policy.kind_terms', defaultValue: '이용약관');
+      case 'privacy':
+        return t.t('policy.kind_privacy', defaultValue: '개인정보처리방침');
+      case 'location':
+        return t.t('policy.kind_location',
+            defaultValue: '위치기반서비스 이용약관');
+      case 'marketing':
+        return t.t('policy.kind_marketing',
+            defaultValue: '마케팅 정보 수신 동의');
+      case 'push':
+        return t.t('policy.kind_push', defaultValue: '푸시 알림 동의');
+      case 'camera':
+        return t.t('policy.kind_camera', defaultValue: '카메라 접근 권한');
+      case 'storage':
+        return t.t('policy.kind_storage', defaultValue: '저장공간 접근 권한');
+      case 'third_party':
+        return t.t('policy.kind_third_party',
+            defaultValue: '제3자 정보 제공 동의');
+      case 'age14':
+        return t.t('policy.kind_age14', defaultValue: '만 14세 이상 동의');
+      default:
+        return t.t('policy.viewer_title', defaultValue: '약관 보기');
+    }
+  }
 
   @override
   void initState() {
@@ -67,8 +85,7 @@ class _PolicyViewScreenState extends State<PolicyViewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final title = _kindLabel[widget.kind]
-        ?? I18nService.instance.t('policy.viewer_title', defaultValue: '약관 보기');
+    final title = _kindLabel(widget.kind);
     return Scaffold(
       appBar: PwAppBar(title: Text(title)),
       body: _loading
