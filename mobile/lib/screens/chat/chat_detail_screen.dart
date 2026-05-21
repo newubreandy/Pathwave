@@ -250,8 +250,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     try {
       final room = await ChatService().openRoom(_facilityIdInt);
       _roomId = room['id'] as int?;
-      _roomTitle = room['facility_name']?.toString() ?? '매장 채팅';
-      if (_roomId == null) throw Exception('채팅방을 열 수 없습니다.');
+      _roomTitle = room['facility_name']?.toString()
+          ?? _t.t('chat.title', defaultValue: '매장 채팅');
+      if (_roomId == null) {
+        throw Exception(
+            _t.t('chat.err_open_room', defaultValue: '채팅방을 열 수 없습니다.'));
+      }
 
       final msgs = await ChatService().messages(_roomId!);
       // 최신순 → 오래된순으로 뒤집어서 ListView 에 자연스럽게 표시
@@ -374,10 +378,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       return PwErrorState(message: _error!, onRetry: _bootstrap);
     }
     if (_messages.isEmpty) {
-      return const PwEmptyState(
+      return PwEmptyState(
         icon: Icons.message_outlined,
-        title: '아직 메시지가 없습니다',
-        subtitle: '첫 메시지를 보내 대화를 시작하세요.',
+        title: _t.t('chat.empty_title', defaultValue: '아직 메시지가 없습니다'),
+        subtitle: _t.t('chat.empty_subtitle',
+            defaultValue: '첫 메시지를 보내 대화를 시작하세요.'),
       );
     }
     return ListView.builder(
@@ -403,7 +408,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           Expanded(
             child: PwTextField(
               controller: _inputCtrl,
-              hint: '메시지 입력',
+              hint: _t.t('chat.input_hint', defaultValue: '메시지 입력'),
               textInputAction: TextInputAction.send,
               onSubmitted: (_) => _send(),
             ),
@@ -461,6 +466,7 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = I18nService.instance;
     // 백엔드 스키마: body 키. 과거 잘못된 'text' 키도 fallback (낙관적 UI 호환).
     final text = (message['body'] ?? message['text'])?.toString() ?? '';
     final at = message['created_at']?.toString();
@@ -505,7 +511,9 @@ class _MessageBubble extends StatelessWidget {
                   if (pending || failed) ...[
                     const SizedBox(height: 2),
                     Text(
-                      failed ? '전송 실패' : '전송 중...',
+                      failed
+                        ? t.t('chat.send_failed', defaultValue: '전송 실패')
+                        : t.t('chat.sending', defaultValue: '전송 중...'),
                       style: TextStyle(
                         color: failed ? PwTheme.error : Colors.white70,
                         fontSize: 10,
