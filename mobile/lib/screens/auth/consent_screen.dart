@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../services/i18n_service.dart';
 import '../../services/policy_service.dart';
 import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
@@ -59,6 +60,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = I18nService.instance;
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _itemsFuture,
       builder: (context, snap) {
@@ -66,7 +68,9 @@ class _ConsentScreenState extends State<ConsentScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snap.hasError) {
-          return Center(child: Text('동의 항목을 불러오지 못했습니다: ${snap.error}'));
+          return Center(child: Text(
+            '${t.t('consent.err_load', defaultValue: '동의 항목을 불러오지 못했습니다')}'
+            ': ${snap.error}'));
         }
         final items = snap.data ?? [];
         final canSubmit = _allAcceptedForItems(items) && !widget.busy;
@@ -74,10 +78,13 @@ class _ConsentScreenState extends State<ConsentScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('약관 및 동의', style: Theme.of(context).textTheme.headlineMedium),
+            Text(t.t('consent.title', defaultValue: '약관 및 동의'),
+              style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 4),
-            const Text('필수 항목에 모두 동의해야 가입할 수 있습니다.',
-              style: TextStyle(color: PwTheme.textSecondary)),
+            Text(
+              t.t('consent.subtitle',
+                defaultValue: '필수 항목에 모두 동의해야 가입할 수 있습니다.'),
+              style: const TextStyle(color: PwTheme.textSecondary)),
             const SizedBox(height: 16),
 
             // 전체 동의 토글
@@ -104,7 +111,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
             PwButton(
               onPressed: canSubmit ? () => _submit(items) : null,
               loading: widget.busy,
-              child: const Text('가입 완료'),
+              child: Text(t.t('consent.btn_complete', defaultValue: '가입 완료')),
             ),
           ],
         );
@@ -121,6 +128,7 @@ class _AllAgreeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = I18nService.instance;
     return InkWell(
       borderRadius: BorderRadius.circular(10),
       onTap: () => onChanged(!allChecked),
@@ -138,9 +146,10 @@ class _AllAgreeRow extends StatelessWidget {
               color: allChecked ? PwTheme.primary : PwTheme.textHint,
             ),
             const SizedBox(width: 10),
-            const Expanded(
-              child: Text('전체 동의 (선택 항목 포함)',
-                style: TextStyle(fontWeight: FontWeight.w600)),
+            Expanded(
+              child: Text(
+                t.t('consent.agree_all', defaultValue: '전체 동의 (선택 항목 포함)'),
+                style: const TextStyle(fontWeight: FontWeight.w600)),
             ),
           ],
         ),
@@ -172,6 +181,7 @@ class _ConsentItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = I18nService.instance;
     final required = item['required'] == true;
     final label = item['label']?.toString() ?? item['kind'];
     return Padding(
@@ -200,7 +210,9 @@ class _ConsentItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
-              required ? '필수' : '선택',
+              required
+                ? t.t('consent.required', defaultValue: '필수')
+                : t.t('consent.optional', defaultValue: '선택'),
               style: TextStyle(
                 color: required ? PwTheme.error : PwTheme.textSecondary,
                 fontSize: 11,
@@ -214,7 +226,8 @@ class _ConsentItem extends StatelessWidget {
             variant: PwButtonVariant.text,
             fullWidth: false,
             onPressed: () => _showPolicy(context),
-            child: const Text('보기', style: TextStyle(fontSize: 12)),
+            child: Text(t.t('consent.btn_view', defaultValue: '보기'),
+              style: const TextStyle(fontSize: 12)),
           ),
         ],
       ),
@@ -251,6 +264,7 @@ class _PolicyDialogState extends State<_PolicyDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final t = I18nService.instance;
     return Dialog(
       backgroundColor: PwTheme.surface,
       child: Padding(
@@ -284,7 +298,9 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                       children: [
                         const Icon(Icons.history, size: 16, color: PwTheme.textSecondary),
                         const SizedBox(width: 6),
-                        const Text('버전:', style: TextStyle(color: PwTheme.textSecondary, fontSize: 13)),
+                        Text(t.t('consent.version_label', defaultValue: '버전:'),
+                          style: const TextStyle(
+                            color: PwTheme.textSecondary, fontSize: 13)),
                         const SizedBox(width: 8),
                         Expanded(
                           child: DropdownButton<int?>(
@@ -292,9 +308,12 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                             isDense: true,
                             isExpanded: true,
                             items: [
-                              const DropdownMenuItem<int?>(
+                              DropdownMenuItem<int?>(
                                 value: null,
-                                child: Text('현재 시행 중', style: TextStyle(fontSize: 13)),
+                                child: Text(
+                                  t.t('consent.version_current',
+                                      defaultValue: '현재 시행 중'),
+                                  style: const TextStyle(fontSize: 13)),
                               ),
                               ...versions.map((v) => DropdownMenuItem<int?>(
                                 value: v['id'] as int?,
@@ -322,7 +341,9 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                       return const Center(child: CircularProgressIndicator());
                     }
                     if (snap.hasError) {
-                      return Text('정책을 불러오지 못했습니다.\n${snap.error}');
+                      return Text(
+                        '${t.t('consent.err_policy_load', defaultValue: '정책을 불러오지 못했습니다.')}'
+                        '\n${snap.error}');
                     }
                     final body = snap.data?['body']?.toString() ?? '';
                     final needsContent = snap.data?['needs_content'] == true;
@@ -338,9 +359,12 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                                 color: PwTheme.warning.withValues(alpha: 0.18),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Text(
-                                '⚠️ 정책 본문이 아직 등록되지 않았습니다 (placeholder).',
-                                style: TextStyle(color: PwTheme.warning, fontSize: 12),
+                              child: Text(
+                                t.t('consent.policy_placeholder',
+                                    defaultValue:
+                                      '⚠️ 정책 본문이 아직 등록되지 않았습니다 (placeholder).'),
+                                style: const TextStyle(
+                                  color: PwTheme.warning, fontSize: 12),
                               ),
                             ),
                           Text(body, style: const TextStyle(height: 1.5)),
