@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../services/i18n_service.dart';
 import '../../services/wifi_connector.dart';
 import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
@@ -21,6 +22,7 @@ class WifiConnectScreen extends StatefulWidget {
 }
 
 class _WifiConnectScreenState extends State<WifiConnectScreen> {
+  final _t = I18nService.instance;
   bool _busy = false;
   String? _error;
   String? _success;
@@ -38,7 +40,9 @@ class _WifiConnectScreenState extends State<WifiConnectScreen> {
         ssid: widget.ssid,
         password: '',
       );
-      setState(() => _success = '연결 요청 완료 (method=${res['method'] ?? 'unknown'})');
+      setState(() => _success =
+          '${_t.t('wifi.connect_done', defaultValue: '연결 요청 완료')} '
+          '(method=${res['method'] ?? 'unknown'})');
     } on PlatformException catch (e) {
       setState(() => _error = '${e.code}: ${e.message ?? ''}');
     } catch (e) {
@@ -51,7 +55,8 @@ class _WifiConnectScreenState extends State<WifiConnectScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PwAppBar(title: const Text('WiFi 자동 연결')),
+      appBar: PwAppBar(
+        title: Text(_t.t('wifi.title', defaultValue: 'WiFi 자동 연결'))),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -70,7 +75,9 @@ class _WifiConnectScreenState extends State<WifiConnectScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              widget.facilityName.isEmpty ? '매장 WiFi' : '${widget.facilityName} WiFi',
+              widget.facilityName.isEmpty
+                ? _t.t('wifi.store_wifi', defaultValue: '매장 WiFi')
+                : '${widget.facilityName} WiFi',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineMedium,
             ),
@@ -86,17 +93,20 @@ class _WifiConnectScreenState extends State<WifiConnectScreen> {
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: PwTheme.border),
               ),
-              child: const Row(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline, size: 18, color: PwTheme.textSecondary),
-                  SizedBox(width: 10),
+                  const Icon(Icons.info_outline, size: 18, color: PwTheme.textSecondary),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'iOS: 가입 직전 시스템 팝업으로 동의를 묻습니다.\n'
-                      'Android 10+: 알림 영역에 WifiNetworkSuggestion 동의 링크가 표시됩니다.\n'
-                      'Android 9 이하는 OS 제한으로 자동 가입 불가.',
-                      style: TextStyle(color: PwTheme.textSecondary, fontSize: 12, height: 1.5),
+                      _t.t('wifi.os_info',
+                        defaultValue:
+                          'iOS: 가입 직전 시스템 팝업으로 동의를 묻습니다.\n'
+                          'Android 10+: 알림 영역에 WifiNetworkSuggestion 동의 링크가 표시됩니다.\n'
+                          'Android 9 이하는 OS 제한으로 자동 가입 불가.'),
+                      style: const TextStyle(
+                        color: PwTheme.textSecondary, fontSize: 12, height: 1.5),
                     ),
                   ),
                 ],
@@ -139,13 +149,13 @@ class _WifiConnectScreenState extends State<WifiConnectScreen> {
             PwButton(
               onPressed: _connect,
               loading: _busy,
-              child: const Text('자동 연결하기'),
+              child: Text(_t.t('wifi.btn_connect', defaultValue: '자동 연결하기')),
             ),
             const SizedBox(height: 8),
             PwButton(
               variant: PwButtonVariant.text,
               onPressed: _busy ? null : () => context.pop(),
-              child: const Text('나중에'),
+              child: Text(_t.t('wifi.btn_later', defaultValue: '나중에')),
             ),
           ],
         ),

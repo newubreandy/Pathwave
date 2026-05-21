@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../services/favorite_service.dart';
+import '../../services/i18n_service.dart';
 import '../../services/store_service.dart';
 import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
@@ -18,6 +19,7 @@ class FacilityScreen extends StatefulWidget {
 }
 
 class _FacilityScreenState extends State<FacilityScreen> {
+  final _t = I18nService.instance;
   late Future<Map<String, dynamic>> _detail;
   late Future<List<Map<String, dynamic>>> _images;
 
@@ -127,10 +129,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
       pinned: true,
       leading: PwIconButton(
         icon: Icons.arrow_back,
-        tooltip: '뒤로',
+        tooltip: _t.t('common.back', defaultValue: '뒤로'),
         onPressed: () => context.pop(),
       ),
-      title: const Text('매장 정보'),
+      title: Text(_t.t('facility.title_info', defaultValue: '매장 정보')),
     );
   }
 
@@ -142,19 +144,21 @@ class _FacilityScreenState extends State<FacilityScreen> {
       leading: PwIconButton(
         icon: Icons.arrow_back,
         color: PwTheme.textPrimary,
-        tooltip: '뒤로',
+        tooltip: _t.t('common.back', defaultValue: '뒤로'),
         onPressed: () => context.pop(),
       ),
       actions: [
         PwIconButton(
           icon: _isFavorite ? Icons.favorite : Icons.favorite_border,
           color: _isFavorite ? PwTheme.primary : PwTheme.textPrimary,
-          tooltip: _isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가',
+          tooltip: _isFavorite
+            ? _t.t('facility.unfavorite', defaultValue: '즐겨찾기 해제')
+            : _t.t('facility.favorite', defaultValue: '즐겨찾기 추가'),
           onPressed: _favLoading ? null : _toggleFavorite,
         ),
         PwIconButton(
           icon: Icons.flag_outlined,
-          tooltip: '신고하기',
+          tooltip: _t.t('facility.report', defaultValue: '신고하기'),
           onPressed: () => context.push(
             '/support?tab=report&target=facility&id=$_id',
           ),
@@ -176,7 +180,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
   Widget _buildHeader(Map<String, dynamic> f) {
-    final name = f['name']?.toString() ?? '매장';
+    final name = f['name']?.toString() ?? _t.t('common.store', defaultValue: '매장');
     final desc = f['description']?.toString() ?? '';
     final address = f['address']?.toString() ?? '';
     return Padding(
@@ -259,10 +263,11 @@ class _FacilityScreenState extends State<FacilityScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(children: [
-              Icon(Icons.access_time, size: 16, color: PwTheme.textSecondary),
-              SizedBox(width: 6),
-              Text('영업시간', style: TextStyle(fontWeight: FontWeight.w600)),
+            Row(children: [
+              const Icon(Icons.access_time, size: 16, color: PwTheme.textSecondary),
+              const SizedBox(width: 6),
+              Text(_t.t('facility.hours', defaultValue: '영업시간'),
+                style: const TextStyle(fontWeight: FontWeight.w600)),
             ]),
             const SizedBox(height: 8),
             Text(
@@ -312,7 +317,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
             child: PwButton(
               icon: Icons.chat_bubble_outline,
               onPressed: () => context.push('/chat/$_id'),
-              child: const Text('매장과 채팅'),
+              child: Text(_t.t('facility.btn_chat', defaultValue: '매장과 채팅')),
             ),
           ),
         ],
