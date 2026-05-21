@@ -12,21 +12,12 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { alert } = useDialog();
 
-  // 이미 로그인된 사용자는 대시보드로 즉시 이동.
-  // ⚠ TEMP (사용자 요구 2026-05-11): 백엔드 인증 연동 전, /login 진입 시
-  //    토큰이 없으면 mock 세션을 자동 발급하고 곧바로 대시보드로 이동.
-  //    실 인증 연동 시 아래 자동 mock 발급 라인 제거.
+  // 이미 로그인된 사용자만 대시보드로 즉시 이동.
+  // 미인증 사용자에게는 아래 실 로그인 폼을 노출한다.
   useEffect(() => {
-    if (!AuthService.isAuthenticated()) {
-      localStorage.setItem('pathwave_token', 'dev-auto-token');
-      localStorage.setItem('pathwave_user', JSON.stringify({
-        id: 'siwon-001',
-        email: 'admin@pathwave.com',
-        name: '시원컴퍼니',
-        role: 'OWNER',
-      }));
+    if (AuthService.isAuthenticated()) {
+      navigate('/dashboard', { replace: true });
     }
-    navigate('/dashboard', { replace: true });
   }, [navigate]);
 
   const handleLogin = async (e) => {

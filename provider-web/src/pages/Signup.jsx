@@ -164,15 +164,18 @@ const Signup = () => {
           </button>
         </form>
         
-        <div className="signup-guest">
-          <button
-            type="button"
-            className="btn-guest"
-            onClick={() => enterAsGuest(navigate)}
-          >
-            로그인 없이 이용
-          </button>
-        </div>
+        {/* 게스트 진입 — 개발 환경 전용. 출시 빌드에서는 렌더되지 않음. */}
+        {import.meta.env.DEV && (
+          <div className="signup-guest">
+            <button
+              type="button"
+              className="btn-guest"
+              onClick={() => enterAsGuest(navigate)}
+            >
+              로그인 없이 이용 (개발용)
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

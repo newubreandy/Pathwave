@@ -6,12 +6,11 @@ import AuthService from '../services/auth/AuthService';
  * 인증 가드 — 토큰이 없으면 /login 으로 리다이렉트.
  * 이전 경로는 state.from 으로 넘겨 로그인 후 복귀 가능.
  *
- * ⚠ TEMP (사용자 요구 2026-05-11): 백엔드 인증 연동 전,
- *    토큰 없으면 mock 세션을 자동 발급해 대시보드에 바로 진입하도록 처리.
- *    실 인증 연동 시 아래 DEV_AUTO_LOGIN 블록 제거하고 isAuthenticated 검사
- *    실패 시 /login 리다이렉트로 복원할 것.
+ * DEV_AUTO_LOGIN — 개발(`vite dev`) 환경에서만 토큰 없이 대시보드 진입을
+ *   허용하는 편의 기능. 출시 빌드(`vite build`)에서는 `import.meta.env.DEV`
+ *   가 false 이므로 자동으로 비활성화되어 실 인증이 강제된다.
  */
-const DEV_AUTO_LOGIN = true;
+const DEV_AUTO_LOGIN = import.meta.env.DEV;
 
 const seedMockSession = () => {
   localStorage.setItem('pathwave_token', 'dev-auto-token');
