@@ -11,8 +11,8 @@ import '../utils/api_config.dart';
 /// 부팅 시 `await I18nService.instance.init()` 를 호출하면
 /// 디바이스 언어를 자동 감지 → 백엔드 fetch → SharedPreferences 24h 캐싱.
 ///
-/// 지원 언어(23): ko, en, zh-CN, ja, zh-TW, vi, th, tl, id, ms, ru, hi,
-///               es, de, fr, pt, it, nl, pl, ar, tr, he, sv
+/// 지원 언어(12, 방한 외국인 상위국 기준): ko, en, zh-CN, zh-TW, zh-HK,
+///               ja, vi, th, id, ms, tl, ru   (확장 13개 → Phase 2)
 class I18nService {
   I18nService._();
   static final I18nService instance = I18nService._();
@@ -20,8 +20,8 @@ class I18nService {
   static const cacheTtl = Duration(hours: 24);
 
   static const _supportedLangs = [
-    'ko', 'en', 'zh-CN', 'ja', 'zh-TW', 'vi', 'th', 'tl', 'id', 'ms',
-    'ru', 'hi', 'es', 'de', 'fr', 'pt', 'it', 'nl', 'pl', 'ar', 'tr', 'he', 'sv',
+    'ko', 'en', 'zh-CN', 'zh-TW', 'zh-HK', 'ja',
+    'vi', 'th', 'id', 'ms', 'tl', 'ru',
   ];
 
   // SharedPreferences 키 패턴: i18n.<lang>.payload / i18n.<lang>.cachedAt
@@ -74,10 +74,10 @@ class I18nService {
       return;
     }
 
-    // 캐시도 없음 → ARB fallback (빈 map — t() 에서 defaultValue/key 반환)
+    // DB·캐시 모두 없음 → 빈 map (t() 가 defaultValue → key 순으로 반환)
     _strings = {};
     _initialized = true;
-    debugPrint('[I18nService] ARB fallback 모드: $_lang (DB/캐시 없음)');
+    debugPrint('[I18nService] 빈 fallback 모드: $_lang (DB/캐시 없음)');
   }
 
   /// 동기 번역 조회. 키가 없으면 [defaultValue] → key 자체 순으로 반환.
@@ -108,9 +108,10 @@ class I18nService {
     // 완전 일치
     if (_supportedLangs.contains(code)) return code;
 
-    // zh 처리: zh-* → zh-CN, zh-TW 로 분기
+    // zh 처리: 간체(zh-CN) / 번체·대만(zh-TW) / 홍콩(zh-HK) 분기
     if (code.startsWith('zh')) {
-      if (code.contains('TW') || code.contains('HK')) return 'zh-TW';
+      if (code.contains('HK')) return 'zh-HK';
+      if (code.contains('TW') || code.contains('Hant')) return 'zh-TW';
       return 'zh-CN';
     }
 

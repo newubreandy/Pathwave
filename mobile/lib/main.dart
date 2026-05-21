@@ -65,14 +65,20 @@ class _PathWaveAppState extends State<PathWaveApp> {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
+        // 지원 언어 12 (방한 외국인 상위국 — I18nService._supportedLangs 와 일치)
         supportedLocales: const [
           Locale('ko'),           // 한국어
           Locale('en'),           // 영어
-          Locale('ja'),           // 일본어
           Locale('zh', 'CN'),     // 중국어 간체
           Locale('zh', 'TW'),     // 중국어 번체
-          Locale('zh', 'HK'),     // 광둥어
-          Locale('fr'),           // 프랑스어
+          Locale('zh', 'HK'),     // 중국어 홍콩
+          Locale('ja'),           // 일본어
+          Locale('vi'),           // 베트남어
+          Locale('th'),           // 태국어
+          Locale('id'),           // 인도네시아어
+          Locale('ms'),           // 말레이어
+          Locale('tl'),           // 타갈로그
+          Locale('ru'),           // 러시아어
         ],
         localeResolutionCallback: (locale, supportedLocales) {
           for (final supported in supportedLocales) {
