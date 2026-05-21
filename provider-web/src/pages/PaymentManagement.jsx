@@ -6,6 +6,7 @@ import AuthService from '../services/auth/AuthService';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
+import { useDialog } from '../components/common/DialogProvider';
 import SectionTabs from '../components/common/SectionTabs';
 import './PaymentManagement.css';
 
@@ -525,6 +526,7 @@ function CardChangeModal({ currentCard, onClose }) {
    ══════════════════════════════════════════ */
 const PaymentInfoTab = ({ card, email, services, onApply }) => {
   const { t } = useTranslation();
+  const { alert } = useDialog();
   const navigate = useNavigate();
   const [modal, setModal] = useState({ open: false, title: '', desc: '', onConfirm: null });
   // 자동결제 토글 — 로컬 상태 mock. 실서비스에선 PUT /api/billing/auto-pay.
@@ -731,6 +733,7 @@ const PAGE_SIZE = 10;
 
 const PaymentHistoryTab = () => {
   const { t } = useTranslation();
+  const { alert } = useDialog();
   // 사용자 요구 (2026-05-10): 10개 단위로 노출. 더 없을 때 버튼 숨김.
   const [visible, setVisible] = useState(PAGE_SIZE);
   const items = MOCK_HISTORY.slice(0, visible);

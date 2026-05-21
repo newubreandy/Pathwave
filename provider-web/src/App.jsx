@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import DashboardLayout from './layouts/DashboardLayout';
 import RequireAuth from './components/RequireAuth';
 import SectionTabs from './components/common/SectionTabs';
+import { DialogProvider } from './components/common/DialogProvider';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
@@ -76,6 +77,7 @@ function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <DialogProvider>
       <Routes>
         {/* 공개 — 인증 불필요 */}
         <Route path="/login" element={<Login />} />
@@ -108,6 +110,7 @@ function App() {
         {/* Fallback — 알 수 없는 경로는 인증 상태에 따라 분기 */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+      </DialogProvider>
     </BrowserRouter>
   );
 }

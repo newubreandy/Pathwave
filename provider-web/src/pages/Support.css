@@ -142,9 +142,9 @@
 }
 
 .sp-badge--resolved {
-  background: rgba(139, 92, 246, 0.10);
-  color: #8B5CF6;
-  border: 1px solid rgba(139, 92, 246, 0.20);
+  background: var(--pw-primary-subtle);
+  color: var(--pw-primary);
+  border: 1px solid var(--pw-primary-light);
 }
 
 .sp-badge--closed {

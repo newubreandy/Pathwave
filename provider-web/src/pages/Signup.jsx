@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthService from '../services/auth/AuthService';
 import ConsentSection from '../components/ConsentSection';
+import { useDialog } from '../components/common/DialogProvider';
 import './Signup.css';
 
 // 출시 전 임시 — 사업자 검증 없이 시설관리자 콘솔을 둘러볼 수 있게.
@@ -16,6 +17,7 @@ function enterAsGuest(navigate) {
 
 const Signup = () => {
   const navigate = useNavigate();
+  const { alert } = useDialog();
   const [formData, setFormData] = useState({
     companyName: '',
     businessNo: '',
@@ -49,7 +51,7 @@ const Signup = () => {
         kind, accepted: !!accepted, version: 'unspecified',
       }));
       await AuthService.register({ ...formData, consents: consentsPayload });
-      alert('회원가입이 완료되었습니다. 대시보드로 이동합니다.');
+      await alert('회원가입이 완료되었습니다. 대시보드로 이동합니다.');
       navigate('/dashboard');
     } catch (error) {
       const msg = error?.message || '회원가입에 실패했습니다.';

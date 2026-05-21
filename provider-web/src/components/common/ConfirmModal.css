@@ -89,6 +89,11 @@
   border-right: 1px solid var(--pw-border);
 }
 
+/* 파괴적 동작(삭제 등) — 확인 버튼 위험 강조 */
+.common-modal-btn.danger {
+  color: var(--pw-error);
+}
+
 .common-modal-btn:hover {
   background-color: var(--pw-surface-hover);
 }

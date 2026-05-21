@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { HelpCircle, RefreshCw, Send, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supportApi } from '../services/support.js';
+import { useDialog } from '../components/DialogProvider.jsx';
 import './Beacons.css';
 
 const STATUS_LIST = ['open', 'replied', 'closed'];
@@ -26,6 +27,7 @@ function priorityColor(p) {
 
 export default function Support() {
   const { t } = useTranslation();
+  const { alert } = useDialog();
   const [kind, setKind]       = useState('user');
   const [statusFilter, setStatusFilter] = useState('');
   const [tickets, setTickets] = useState([]);

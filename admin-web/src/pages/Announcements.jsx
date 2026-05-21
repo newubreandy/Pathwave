@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Modal from '../components/Modal.jsx';
+import { useDialog } from '../components/DialogProvider.jsx';
 import { adminApi } from '../services/admin.js';
 import './Beacons.css';
 
@@ -11,6 +12,7 @@ const AUDIENCE_VALUES = ['all', 'users', 'facilities', 'staff'];
 
 export default function Announcements() {
   const { t } = useTranslation();
+  const { confirm, alert } = useDialog();
 
   const AUDIENCE_OPTIONS = AUDIENCE_VALUES.map((v) => ({
     value: v,
@@ -35,7 +37,12 @@ export default function Announcements() {
   useEffect(() => { reload(); }, [reload]);
 
   async function handleDelete(item) {
-    if (!confirm(`${t('notif.delete_confirm')} "${item.title}"`)) return;
+    const ok = await confirm({
+      title: t('notif.delete_confirm'),
+      message: `"${item.title}"`,
+      danger: true, confirmText: t('common.delete'),
+    });
+    if (!ok) return;
     try {
       await adminApi.deleteAnnouncement(item.id);
       reload();

@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, X, Info } from 'lucide-react';
 import AuthService from '../services/auth/AuthService';
 import NotificationPreferencesService from '../services/notification/NotificationPreferencesService';
 import ConfirmModal from '../components/common/ConfirmModal';
+import { useDialog } from '../components/common/DialogProvider';
 import PasswordInput from '../components/common/PasswordInput';
 import StatusBadge from '../components/common/StatusBadge';
 import BusinessInfoModal from '../components/common/BusinessInfoModal';
@@ -169,6 +170,7 @@ const PasswordModal = ({ onClose }) => {
    ═══════════════════════════════════════════════════ */
 const Settings = () => {
   const navigate = useNavigate();
+  const { alert } = useDialog();
   const [settings, setSettings] = useState(loadSettings);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showBusinessModal, setShowBusinessModal] = useState(false);

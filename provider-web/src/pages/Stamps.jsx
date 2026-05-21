@@ -6,10 +6,12 @@ import StampService from '../services/stamp/StampService';
 import { MOCK_STAMPS } from '../services/stamp/mockStamps';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
+import { useDialog } from '../components/common/DialogProvider';
 import './Stamps.css';
 
 const Stamps = () => {
   const { t } = useTranslation();
+  const { confirm, alert } = useDialog();
   const navigate = useNavigate();
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [stampList, setStampList] = useState([]);
@@ -44,16 +46,17 @@ const Stamps = () => {
   const pausedStamp = stampList.find(s => s.status === 'paused');
   const canRegisterNew = !activeStamp; // active 가 없을 때만 등록 버튼 노출
 
-  const handleAddClick = () => {
+  const handleAddClick = async () => {
     if (activeStamp) {
       // 정상적으로는 버튼이 안 보이지만 만약 클릭되면 안내.
       alert('현재 진행 중인 스탬프가 있습니다. 매장당 1개의 스탬프만 활성화할 수 있으므로, 기존 스탬프를 정지 후 다시 시도해 주세요.');
       return;
     }
     if (pausedStamp) {
-      const ok = window.confirm(
-        '일시정지된 기존 스탬프가 있습니다.\n신규 스탬프를 등록하시면 사용자가 적립한 기존 스탬프는 더 이상 적용되지 않습니다.\n\n계속 진행하시겠어요?'
-      );
+      const ok = await confirm({
+        title: '신규 스탬프 등록',
+        message: '일시정지된 기존 스탬프가 있습니다.\n신규 스탬프를 등록하시면 사용자가 적립한 기존 스탬프는 더 이상 적용되지 않습니다.\n\n계속 진행하시겠어요?',
+      });
       if (!ok) return;
     }
     navigate('/dashboard/stamps/new');
@@ -80,7 +83,12 @@ const Stamps = () => {
   const handleDelete = async (e, id) => {
     e.stopPropagation();
     e.preventDefault();
-    if (window.confirm('이 스탬프를 목록에서 삭제하시겠습니까? (기록은 백데이터에 유지됩니다)')) {
+    const ok = await confirm({
+      title: '스탬프 삭제',
+      message: '이 스탬프를 목록에서 삭제하시겠습니까? (기록은 백데이터에 유지됩니다)',
+      danger: true, confirmText: '삭제',
+    });
+    if (ok) {
       try {
         await StampService.deleteStamp(id);
         loadStamps();

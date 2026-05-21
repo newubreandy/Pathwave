@@ -154,7 +154,7 @@ const Notifications = () => {
 
   const confirmPremium = () => {
     setShowPremiumModal(false);
-    alert('서비스 신청 페이지로 이동합니다.');
+    showAlert('서비스 신청 페이지로 이동합니다.');
   };
 
   const handleSave = () => {

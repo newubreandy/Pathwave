@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { BookOpen, Plus, RefreshCw, Pencil, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Modal from '../components/Modal.jsx';
+import { useDialog } from '../components/DialogProvider.jsx';
 import { supportApi } from '../services/support.js';
 import './Beacons.css';
 
@@ -12,6 +13,7 @@ const KIND_TABS = [
 
 export default function Faq() {
   const { t } = useTranslation();
+  const { confirm, alert } = useDialog();
   const [kind, setKind]   = useState('user');
   const [faqs, setFaqs]   = useState([]);
   const [loading, setLoading] = useState(false);
@@ -30,7 +32,12 @@ export default function Faq() {
   useEffect(() => { reload(); }, [reload]);
 
   async function handleDelete(faq) {
-    if (!confirm(`FAQ #${faq.id}를 삭제하시겠습니까?\n"${faq.question}"`)) return;
+    const ok = await confirm({
+      title: 'FAQ 삭제',
+      message: `FAQ #${faq.id} "${faq.question}"\n삭제하시겠습니까?`,
+      danger: true, confirmText: '삭제',
+    });
+    if (!ok) return;
     try {
       await supportApi.deleteFaq(faq.id);
       reload();

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import DashboardLayout from './layouts/DashboardLayout.jsx';
 import RequireAuth from './layouts/RequireAuth.jsx';
 import DevPreviewBar from './components/DevPreviewBar.jsx';
+import { DialogProvider } from './components/DialogProvider.jsx';
 import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Beacons from './pages/Beacons.jsx';
@@ -32,6 +33,7 @@ export default function App() {
     <BrowserRouter>
       <ScrollToTop />
       <DevPreviewBar />
+      <DialogProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
 
@@ -57,6 +59,7 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+      </DialogProvider>
     </BrowserRouter>
   );
 }

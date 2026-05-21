@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import AuthService from '../services/auth/AuthService';
+import { useDialog } from '../components/common/DialogProvider';
 import './Login.css';
 
 const Login = () => {
@@ -9,6 +10,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const { alert } = useDialog();
 
   // 이미 로그인된 사용자는 대시보드로 즉시 이동.
   // ⚠ TEMP (사용자 요구 2026-05-11): 백엔드 인증 연동 전, /login 진입 시

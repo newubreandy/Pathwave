@@ -7,6 +7,7 @@ import { MOCK_STAFF } from '../services/staff/mockStaff';
 import ConfirmModal from '../components/common/ConfirmModal';
 import PasswordInput from '../components/common/PasswordInput';
 import BusinessInfoModal from '../components/common/BusinessInfoModal';
+import { useDialog } from '../components/common/DialogProvider';
 import './StaffManagement.css';
 
 /* ── 더미 회원 데이터 (MemberProfile 통합) ── */
@@ -396,6 +397,7 @@ const ProfileTab = () => {
    ══════════════════════════════════════════════ */
 const StaffManagement = () => {
   const { t } = useTranslation();
+  const { alert } = useDialog();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'staff';
