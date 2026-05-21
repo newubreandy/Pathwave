@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/i18n_service.dart';
 import '../theme/pw_theme.dart';
 
 /// PR #68 — Google / Apple / Facebook / Kakao / Naver 5종 소셜 로그인 버튼.
@@ -81,7 +82,9 @@ class SocialLoginRow extends StatelessWidget {
         Semantics(
           button: true,
           enabled: onTap != null,
-          label: '$label 로 로그인',
+          label: I18nService.instance
+              .t('auth.social_login_with', defaultValue: '{provider} 로 로그인')
+              .replaceFirst('{provider}', label),
           child: Material(
             color: Colors.transparent,
             shape: const CircleBorder(),

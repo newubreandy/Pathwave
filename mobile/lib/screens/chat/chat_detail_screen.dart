@@ -28,7 +28,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final _inputCtrl = TextEditingController();
 
   int? _roomId;
-  String _roomTitle = '매장 채팅';
+  String _roomTitle =
+      I18nService.instance.t('chat.title', defaultValue: '매장 채팅');
   bool _loading = true;
   String? _error;
   List<Map<String, dynamic>> _messages = [];

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/i18n_service.dart';
 import '../theme/pw_theme.dart';
 import 'pw_button.dart';
 
@@ -103,7 +104,8 @@ class PwErrorState extends StatelessWidget {
                 fullWidth: false,
                 icon: Icons.refresh,
                 onPressed: onRetry,
-                child: const Text('다시 시도'),
+                child: Text(I18nService.instance
+                    .t('common.retry', defaultValue: '다시 시도')),
               ),
             ],
           ],

@@ -143,12 +143,12 @@ class _NotificationPermissionDialogState
           variant: PwButtonVariant.text,
           fullWidth: false,
           onPressed: _onLater,
-          child: const Text('나중에'),
+          child: Text(_t.t('common.later', defaultValue: '나중에')),
         ),
         PwButton(
           fullWidth: false,
           onPressed: _onAllow,
-          child: const Text('허용'),
+          child: Text(_t.t('notif.permission_allow', defaultValue: '허용')),
         ),
       ],
     );
