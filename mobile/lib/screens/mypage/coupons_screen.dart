@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/coupon_service.dart';
 import '../../services/i18n_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 const _statusTabs = ['active', 'used', 'expired'];
@@ -63,9 +63,9 @@ class _CouponsScreenState extends State<CouponsScreen>
         bottom: TabBar(
           controller: _tabCtrl,
           tabs: _statusTabs.map((s) => Tab(text: _statusLabel[s])).toList(),
-          labelColor: AppTheme.primary,
-          unselectedLabelColor: AppTheme.textSecondary,
-          indicatorColor: AppTheme.primary,
+          labelColor: PwTheme.primary,
+          unselectedLabelColor: PwTheme.textSecondary,
+          indicatorColor: PwTheme.primary,
         ),
       ),
       body: TabBarView(
@@ -227,14 +227,14 @@ class _WelcomeCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: PwCard(
-        color: AppTheme.primary.withValues(alpha: 0.12),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.4)),
+        color: PwTheme.primary.withValues(alpha: 0.12),
+        border: Border.all(color: PwTheme.primary.withValues(alpha: 0.4)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.card_giftcard, color: AppTheme.primary, size: 18),
+                const Icon(Icons.card_giftcard, color: PwTheme.primary, size: 18),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -242,14 +242,14 @@ class _WelcomeCard extends StatelessWidget {
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 14,
-                      color: AppTheme.primary,
+                      color: PwTheme.primary,
                     ),
                   ),
                 ),
                 // info 아이콘: 이미 닫은 경우에도 다시 안내 볼 수 있도록 (dismiss 처리는 X 버튼)
                 GestureDetector(
                   onTap: onDismiss,
-                  child: const Icon(Icons.close, size: 18, color: AppTheme.textHint),
+                  child: const Icon(Icons.close, size: 18, color: PwTheme.textHint),
                 ),
               ],
             ),
@@ -292,7 +292,7 @@ class _CouponCard extends StatelessWidget {
     final expiresAt = data['expires_at']?.toString();
 
     final isUsable = status == 'active';
-    final color = isUsable ? AppTheme.primary : AppTheme.textHint;
+    final color = isUsable ? PwTheme.primary : PwTheme.textHint;
 
     return PwCard(
       onTap: () => _showDetailDialog(context, data, isUsable),
@@ -315,7 +315,7 @@ class _CouponCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '${I18nService.instance.t('coupon.facility_label', defaultValue: '사용 가능 매장')}: $facilityName',
-                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                  style: const TextStyle(color: PwTheme.textSecondary, fontSize: 13),
                 ),
                 const SizedBox(height: 4),
                 Row(
@@ -324,10 +324,10 @@ class _CouponCard extends StatelessWidget {
                       Text('$discount$discountSuffix',
                         style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 13)),
                     if (expiresAt != null) ...[
-                      if (discount != null) const Text(' · ', style: TextStyle(color: AppTheme.textHint)),
+                      if (discount != null) const Text(' · ', style: TextStyle(color: PwTheme.textHint)),
                       Text(
                         '${I18nService.instance.t('coupon.expires_label', defaultValue: '유효기간')}: ~${expiresAt.split('T').first}',
-                        style: const TextStyle(color: AppTheme.textHint, fontSize: 12),
+                        style: const TextStyle(color: PwTheme.textHint, fontSize: 12),
                       ),
                     ],
                   ],
@@ -335,7 +335,7 @@ class _CouponCard extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(Icons.chevron_right, size: 18, color: AppTheme.textHint),
+          const Icon(Icons.chevron_right, size: 18, color: PwTheme.textHint),
         ],
       ),
     );
@@ -352,7 +352,7 @@ class _CouponCard extends StatelessWidget {
       barrierColor: const Color(0x99000000),
       barrierDismissible: true,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: PwTheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
         content: SingleChildScrollView(
@@ -377,7 +377,7 @@ class _CouponCard extends StatelessWidget {
               // 쿠폰 사용 안내 (전자상거래법/소비자보호법 필수 고지)
               PwCard(
                 padding: const EdgeInsets.all(14),
-                color: AppTheme.background,
+                color: PwTheme.background,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -386,7 +386,7 @@ class _CouponCard extends StatelessWidget {
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 13,
-                        color: AppTheme.primary,
+                        color: PwTheme.primary,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -445,7 +445,7 @@ class _CouponCard extends StatelessWidget {
       barrierColor: const Color(0x99000000),
       barrierDismissible: true,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: PwTheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(t.t('coupon.use_confirm_title', defaultValue: '쿠폰 사용 확인')),
         content: Text(
@@ -492,7 +492,7 @@ class _DetailRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+        Text(label, style: const TextStyle(color: PwTheme.textSecondary, fontSize: 13)),
         const SizedBox(width: 8),
         Expanded(
           child: Text(value, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
@@ -514,12 +514,12 @@ class _TermsBullet extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('• ', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+          const Text('• ', style: TextStyle(color: PwTheme.textSecondary, fontSize: 13)),
           Expanded(
             child: Text(
               text,
               style: const TextStyle(
-                color: AppTheme.textSecondary,
+                color: PwTheme.textSecondary,
                 fontSize: 13,
                 height: 1.45,
               ),

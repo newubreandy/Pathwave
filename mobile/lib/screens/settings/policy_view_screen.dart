@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../services/api_client.dart';
 import '../../services/i18n_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 /// 공개 약관 본문 뷰어.
@@ -78,7 +78,7 @@ class _PolicyViewScreenState extends State<PolicyViewScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Text(_error!,
-                  style: const TextStyle(color: AppTheme.error), textAlign: TextAlign.center),
+                  style: const TextStyle(color: PwTheme.error), textAlign: TextAlign.center),
               ),
             )
           : SingleChildScrollView(
@@ -94,7 +94,7 @@ class _PolicyViewScreenState extends State<PolicyViewScreen> {
                           ? "  ·  ${I18nService.instance.t('policy.effective_at_label', defaultValue: '시행일')}: "
                             "${_data!['effective_at'].toString().substring(0, 10)}"
                           : ''}',
-                      style: const TextStyle(color: AppTheme.textHint, fontSize: 12),
+                      style: const TextStyle(color: PwTheme.textHint, fontSize: 12),
                     ),
                     const SizedBox(height: 16),
                     Text(

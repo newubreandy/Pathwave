@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 /// 비밀번호 찾기: 이메일 → 코드 → 새 비번.
@@ -120,11 +120,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
             if (_error != null) ...[
               const SizedBox(height: 12),
-              Text(_error!, style: const TextStyle(color: AppTheme.error)),
+              Text(_error!, style: const TextStyle(color: PwTheme.error)),
             ],
             if (_info != null) ...[
               const SizedBox(height: 12),
-              Text(_info!, style: const TextStyle(color: AppTheme.success)),
+              Text(_info!, style: const TextStyle(color: PwTheme.success)),
             ],
           ],
         ),

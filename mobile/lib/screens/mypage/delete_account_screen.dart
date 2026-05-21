@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 /// 회원 탈퇴 화면 (PR #55) — Apple 5.1.1(v) / Google Play 정책.
@@ -70,7 +70,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
             children: [
               const SizedBox(height: 8),
               const Icon(Icons.warning_amber_rounded,
-                size: 48, color: AppTheme.warning),
+                size: 48, color: PwTheme.warning),
               const SizedBox(height: 12),
               Text('정말 탈퇴하시겠습니까?',
                 textAlign: TextAlign.center,
@@ -118,7 +118,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                     children: [
                       Icon(
                         _confirmed ? Icons.check_box : Icons.check_box_outline_blank,
-                        color: _confirmed ? AppTheme.error : AppTheme.textHint,
+                        color: _confirmed ? PwTheme.error : PwTheme.textHint,
                       ),
                       const SizedBox(width: 8),
                       const Expanded(
@@ -137,12 +137,12 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.error.withValues(alpha: 0.12),
+                    color: PwTheme.error.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppTheme.error.withValues(alpha: 0.4)),
+                    border: Border.all(color: PwTheme.error.withValues(alpha: 0.4)),
                   ),
                   child: Text(_error!,
-                    style: const TextStyle(color: AppTheme.error, fontSize: 13)),
+                    style: const TextStyle(color: PwTheme.error, fontSize: 13)),
                 ),
               ],
 
@@ -178,11 +178,11 @@ class _Bullet extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('•  ', style: TextStyle(color: AppTheme.textSecondary)),
+        const Text('•  ', style: TextStyle(color: PwTheme.textSecondary)),
         Expanded(
           child: Text(text,
             style: const TextStyle(
-              color: AppTheme.textSecondary, fontSize: 13, height: 1.5,
+              color: PwTheme.textSecondary, fontSize: 13, height: 1.5,
             )),
         ),
       ],

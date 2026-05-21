@@ -5,7 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../services/auth_service.dart';
 import '../services/version_service.dart';
-import '../utils/neu_theme.dart';
+import '../theme/pw_theme.dart';
 
 /// 스플래시 — AuthService 초기 토큰 로딩 + 앱 버전 강제/권장 업데이트 체크 후
 /// 로그인 상태에 따라 라우팅.
@@ -63,7 +63,7 @@ class _SplashScreenState extends State<SplashScreen> {
       builder: (ctx) => PopScope(
         canPop: false,
         child: AlertDialog(
-          backgroundColor: NeuTheme.surface,
+          backgroundColor: PwTheme.surface,
           title: const Text('업데이트가 필요합니다'),
           content: Text(
             v.forceMessage?.isNotEmpty == true
@@ -88,7 +88,7 @@ class _SplashScreenState extends State<SplashScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: NeuTheme.surface,
+        backgroundColor: PwTheme.surface,
         title: const Text('새로운 버전이 있어요'),
         content: Text(
           '최신 버전이 출시되었습니다.\n'
@@ -115,7 +115,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NeuTheme.background,
+      backgroundColor: PwTheme.background,
       body: SafeArea(
         child: Center(
           child: Column(
@@ -124,20 +124,16 @@ class _SplashScreenState extends State<SplashScreen> {
             Container(
               width: 110, height: 110,
               decoration: BoxDecoration(
-                color: NeuTheme.surface,
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: [NeuTheme.surfaceLight, NeuTheme.surface],
-                ),
+                color: PwTheme.surface,
                 borderRadius: BorderRadius.circular(32),
-                boxShadow: NeuTheme.outerShadow(distance: 12, blur: 24),
+                border: Border.all(color: PwTheme.border),
               ),
               child: const Center(
                 child: Text(
                   'PW',
                   style: TextStyle(
                     fontSize: 40, fontWeight: FontWeight.w800,
-                    color: NeuTheme.primary,
+                    color: PwTheme.primary,
                   ),
                 ),
               ),
@@ -147,11 +143,11 @@ class _SplashScreenState extends State<SplashScreen> {
               style: Theme.of(context).textTheme.displaySmall),
             const SizedBox(height: 6),
             const Text('비콘 기반 WiFi · 스탬프 · 쿠폰',
-              style: TextStyle(color: NeuTheme.textSecondary)),
+              style: TextStyle(color: PwTheme.textSecondary)),
               const SizedBox(height: 40),
               const CircularProgressIndicator(
                 strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation(NeuTheme.primary),
+                valueColor: AlwaysStoppedAnimation(PwTheme.primary),
               ),
             ],
           ),

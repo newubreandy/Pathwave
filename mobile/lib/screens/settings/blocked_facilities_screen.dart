@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../services/block_service.dart';
 import '../../services/i18n_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 /// 차단 목록 — 손님이 차단한 매장을 보고 해지(unblock).
@@ -92,13 +92,13 @@ class _BlockedFacilitiesScreenState extends State<BlockedFacilitiesScreen> {
               final busy = _busy.contains(fid);
               return Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.surface,
+                  color: PwTheme.surface,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.border),
+                  border: Border.all(color: PwTheme.border),
                 ),
                 child: ListTile(
                   leading: const Icon(Icons.store_outlined,
-                      color: AppTheme.textSecondary),
+                      color: PwTheme.textSecondary),
                   title: Text(name, style: const TextStyle(fontSize: 14)),
                   trailing: PwButton(
                     variant: PwButtonVariant.outlined,

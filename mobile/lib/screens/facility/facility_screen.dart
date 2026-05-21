@@ -5,7 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../services/favorite_service.dart';
 import '../../services/store_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 /// 매장 상세 — 이미지 / 영업시간 / 위치 / 채팅 진입.
@@ -141,14 +141,14 @@ class _FacilityScreenState extends State<FacilityScreen> {
       pinned: true,
       leading: PwIconButton(
         icon: Icons.arrow_back,
-        color: AppTheme.textPrimary,
+        color: PwTheme.textPrimary,
         tooltip: '뒤로',
         onPressed: () => context.pop(),
       ),
       actions: [
         PwIconButton(
           icon: _isFavorite ? Icons.favorite : Icons.favorite_border,
-          color: _isFavorite ? AppTheme.primary : AppTheme.textPrimary,
+          color: _isFavorite ? PwTheme.primary : PwTheme.textPrimary,
           tooltip: _isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가',
           onPressed: _favLoading ? null : _toggleFavorite,
         ),
@@ -165,11 +165,11 @@ class _FacilityScreenState extends State<FacilityScreen> {
           ? CachedNetworkImage(
               imageUrl: imageUrl,
               fit: BoxFit.cover,
-              errorWidget: (_, _, _) => Container(color: AppTheme.surfaceLight),
+              errorWidget: (_, _, _) => Container(color: PwTheme.surfaceLight),
             )
           : Container(
-              color: AppTheme.surfaceLight,
-              child: const Icon(Icons.store, size: 64, color: AppTheme.textHint),
+              color: PwTheme.surfaceLight,
+              child: const Icon(Icons.store, size: 64, color: PwTheme.textHint),
             ),
       ),
     );
@@ -189,17 +189,17 @@ class _FacilityScreenState extends State<FacilityScreen> {
             const SizedBox(height: 6),
             Row(
               children: [
-                const Icon(Icons.place, size: 16, color: AppTheme.textHint),
+                const Icon(Icons.place, size: 16, color: PwTheme.textHint),
                 const SizedBox(width: 4),
                 Expanded(child: Text(address,
-                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13))),
+                  style: const TextStyle(color: PwTheme.textSecondary, fontSize: 13))),
               ],
             ),
           ],
           if (desc.isNotEmpty) ...[
             const SizedBox(height: 12),
             Text(desc,
-              style: const TextStyle(color: AppTheme.textSecondary, height: 1.45)),
+              style: const TextStyle(color: PwTheme.textSecondary, height: 1.45)),
           ],
         ],
       ),
@@ -227,12 +227,12 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   child: SizedBox(
                     width: 150, height: 110,
                     child: url.isEmpty
-                      ? Container(color: AppTheme.surfaceLight)
+                      ? Container(color: PwTheme.surfaceLight)
                       : CachedNetworkImage(
                           imageUrl: url,
                           fit: BoxFit.cover,
-                          placeholder: (_, _) => Container(color: AppTheme.surfaceLight),
-                          errorWidget: (_, _, _) => Container(color: AppTheme.surfaceLight),
+                          placeholder: (_, _) => Container(color: PwTheme.surfaceLight),
+                          errorWidget: (_, _, _) => Container(color: PwTheme.surfaceLight),
                         ),
                   ),
                 );
@@ -252,22 +252,22 @@ class _FacilityScreenState extends State<FacilityScreen> {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppTheme.surface,
+          color: PwTheme.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.border),
+          border: Border.all(color: PwTheme.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Row(children: [
-              Icon(Icons.access_time, size: 16, color: AppTheme.textSecondary),
+              Icon(Icons.access_time, size: 16, color: PwTheme.textSecondary),
               SizedBox(width: 6),
               Text('영업시간', style: TextStyle(fontWeight: FontWeight.w600)),
             ]),
             const SizedBox(height: 8),
             Text(
               hours is Map ? hours.entries.map((e) => '${e.key}: ${e.value}').join('\n') : hours.toString(),
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              style: const TextStyle(color: PwTheme.textSecondary, fontSize: 13),
             ),
           ],
         ),
@@ -286,16 +286,16 @@ class _FacilityScreenState extends State<FacilityScreen> {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppTheme.surface,
+            color: PwTheme.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.border),
+            border: Border.all(color: PwTheme.border),
           ),
           child: Row(
             children: [
-              const Icon(Icons.call, size: 18, color: AppTheme.primary),
+              const Icon(Icons.call, size: 18, color: PwTheme.primary),
               const SizedBox(width: 8),
               Expanded(child: Text(phone)),
-              const Icon(Icons.chevron_right, color: AppTheme.textHint),
+              const Icon(Icons.chevron_right, color: PwTheme.textHint),
             ],
           ),
         ),

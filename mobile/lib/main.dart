@@ -7,8 +7,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'services/auth_service.dart';
 import 'services/i18n_service.dart';
 import 'services/ble_service.dart';
+import 'theme/pw_theme.dart';
 import 'utils/app_router.dart';
-import 'utils/neu_theme.dart';
 import 'widgets/dev_preview_bar.dart';
 
 void main() async {
@@ -55,7 +55,7 @@ class _PathWaveAppState extends State<PathWaveApp> {
       child: MaterialApp.router(
         title: 'PathWave',
         debugShowCheckedModeBanner: false,
-        theme: NeuTheme.themeData,
+        theme: PwTheme.theme,
         routerConfig: _router,
         builder: (context, child) => DevPreviewBar(child: child!),
 

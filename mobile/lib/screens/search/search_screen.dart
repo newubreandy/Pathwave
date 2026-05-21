@@ -8,7 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../services/favorite_service.dart';
 import '../../services/permission_service.dart';
 import '../../services/store_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 /// 매장 검색 — 키워드 + 현재 위치 기반 거리 정렬.
@@ -145,7 +145,7 @@ class _SearchScreenState extends State<SearchScreen> {
           if (_locationDenied) ...[
             const SizedBox(height: 8),
             const Text('위치 권한이 없어 거리 정렬을 이용할 수 없습니다.',
-              style: TextStyle(color: AppTheme.warning, fontSize: 12)),
+              style: TextStyle(color: PwTheme.warning, fontSize: 12)),
           ],
           const SizedBox(height: 12),
           Expanded(
@@ -211,9 +211,9 @@ class _ResultCard extends StatelessWidget {
       onTap: id != null ? () => context.push('/facility/$id') : null,
       child: Container(
         decoration: BoxDecoration(
-          color: AppTheme.surface,
+          color: PwTheme.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppTheme.border),
+          border: Border.all(color: PwTheme.border),
         ),
         padding: const EdgeInsets.all(12),
         child: Row(
@@ -226,15 +226,15 @@ class _ResultCard extends StatelessWidget {
                   ? CachedNetworkImage(
                       imageUrl: imageUrl,
                       fit: BoxFit.cover,
-                      placeholder: (_, _) => Container(color: AppTheme.surfaceLight),
+                      placeholder: (_, _) => Container(color: PwTheme.surfaceLight),
                       errorWidget: (_, _, _) => Container(
-                        color: AppTheme.surfaceLight,
-                        child: const Icon(Icons.store, color: AppTheme.textHint),
+                        color: PwTheme.surfaceLight,
+                        child: const Icon(Icons.store, color: PwTheme.textHint),
                       ),
                     )
                   : Container(
-                      color: AppTheme.surfaceLight,
-                      child: const Icon(Icons.store, color: AppTheme.textHint),
+                      color: PwTheme.surfaceLight,
+                      child: const Icon(Icons.store, color: PwTheme.textHint),
                     ),
               ),
             ),
@@ -247,17 +247,17 @@ class _ResultCard extends StatelessWidget {
                   if (address.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(address,
-                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                      style: const TextStyle(color: PwTheme.textSecondary, fontSize: 12),
                       maxLines: 1, overflow: TextOverflow.ellipsis),
                   ],
                   if (dist != null) ...[
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.place, size: 12, color: AppTheme.textHint),
+                        const Icon(Icons.place, size: 12, color: PwTheme.textHint),
                         const SizedBox(width: 2),
                         Text('${(dist as num).toStringAsFixed(2)} km',
-                          style: const TextStyle(color: AppTheme.textHint, fontSize: 11)),
+                          style: const TextStyle(color: PwTheme.textHint, fontSize: 11)),
                       ],
                     ),
                   ],
@@ -267,7 +267,7 @@ class _ResultCard extends StatelessWidget {
             // 즐겨찾기 토글 하트
             PwIconButton(
               icon: isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: isFavorite ? AppTheme.primary : AppTheme.textHint,
+              color: isFavorite ? PwTheme.primary : PwTheme.textHint,
               tooltip: isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가',
               onPressed: onFavoriteToggle,
             ),

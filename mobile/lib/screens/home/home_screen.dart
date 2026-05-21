@@ -6,7 +6,7 @@ import '../../services/auth_service.dart';
 import '../../services/ble_service.dart';
 import '../../services/i18n_service.dart';
 import '../../services/permission_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/notification_permission_dialog.dart';
 import '../../widgets/pw.dart';
 import '../search/search_screen.dart';
@@ -55,8 +55,8 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
         onDestinationSelected: (i) => setState(() => _tab = i),
-        backgroundColor: AppTheme.surface,
-        indicatorColor: AppTheme.primary.withValues(alpha: 0.2),
+        backgroundColor: PwTheme.surface,
+        indicatorColor: PwTheme.primary.withValues(alpha: 0.2),
         destinations: [
           NavigationDestination(icon: const Icon(Icons.home_outlined), selectedIcon: const Icon(Icons.home), label: I18nService.instance.t('nav.home', defaultValue: '홈')),
           NavigationDestination(icon: const Icon(Icons.search), selectedIcon: const Icon(Icons.search), label: I18nService.instance.t('nav.search', defaultValue: '검색')),
@@ -85,22 +85,22 @@ class _HomeTab extends StatelessWidget {
               Text('PathWave', style: Theme.of(context).textTheme.displaySmall),
               const SizedBox(height: 4),
               const Text('비콘이 감지되면 자동으로 WiFi에 연결됩니다.',
-                style: TextStyle(color: AppTheme.textSecondary)),
+                style: TextStyle(color: PwTheme.textSecondary)),
               const SizedBox(height: 20),
 
               // BLE 스캔 상태 카드
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppTheme.surface,
+                  color: PwTheme.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppTheme.border),
+                  border: Border.all(color: PwTheme.border),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       ble.isScanning ? Icons.bluetooth_searching : Icons.bluetooth_disabled,
-                      color: ble.isScanning ? AppTheme.success : AppTheme.textHint,
+                      color: ble.isScanning ? PwTheme.success : PwTheme.textHint,
                       size: 28,
                     ),
                     const SizedBox(width: 12),
@@ -116,7 +116,7 @@ class _HomeTab extends StatelessWidget {
                             ble.isScanning
                               ? '주변에 비콘이 있는지 확인합니다.'
                               : '권한을 허용하면 자동으로 시작합니다.',
-                            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                            style: const TextStyle(color: PwTheme.textSecondary, fontSize: 13),
                           ),
                         ],
                       ),
@@ -161,16 +161,16 @@ class _HomeTab extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppTheme.surface,
+                    color: PwTheme.surface,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppTheme.border),
+                    border: Border.all(color: PwTheme.border),
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.wifi_off, color: AppTheme.textHint),
+                      Icon(Icons.wifi_off, color: PwTheme.textHint),
                       SizedBox(width: 12),
                       Expanded(child: Text('아직 감지된 비콘이 없습니다.',
-                        style: TextStyle(color: AppTheme.textSecondary))),
+                        style: TextStyle(color: PwTheme.textSecondary))),
                     ],
                   ),
                 ),
@@ -201,18 +201,18 @@ class _WifiBanner extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(colors: [
-          AppTheme.primary.withValues(alpha: 0.16),
-          AppTheme.secondary.withValues(alpha: 0.12),
+          PwTheme.primary.withValues(alpha: 0.16),
+          PwTheme.primaryLight.withValues(alpha: 0.12),
         ]),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+        border: Border.all(color: PwTheme.primary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.wifi, color: AppTheme.primary),
+              const Icon(Icons.wifi, color: PwTheme.primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text('${facility?['name'] ?? '매장'} WiFi 발견',
@@ -223,7 +223,7 @@ class _WifiBanner extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text('SSID: ${wifi?['ssid'] ?? '—'}',
-            style: const TextStyle(color: AppTheme.textSecondary)),
+            style: const TextStyle(color: PwTheme.textSecondary)),
           const SizedBox(height: 12),
           PwButton(
             onPressed: onTap,
@@ -255,15 +255,15 @@ class _MyPageTab extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.surface,
+              color: PwTheme.surface,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppTheme.border),
+              border: Border.all(color: PwTheme.border),
             ),
             child: Row(
               children: [
                 const CircleAvatar(
                   radius: 24,
-                  backgroundColor: AppTheme.primary,
+                  backgroundColor: PwTheme.primary,
                   child: Icon(Icons.person, color: Colors.white),
                 ),
                 const SizedBox(width: 12),
@@ -272,7 +272,7 @@ class _MyPageTab extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(email, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      const Text('일반 회원', style: TextStyle(color: AppTheme.textSecondary)),
+                      const Text('일반 회원', style: TextStyle(color: PwTheme.textSecondary)),
                     ],
                   ),
                 ),
@@ -314,7 +314,7 @@ class _MenuTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppTheme.surface,
+      color: PwTheme.surface,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -323,10 +323,10 @@ class _MenuTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
-              Icon(icon, size: 22, color: AppTheme.textSecondary),
+              Icon(icon, size: 22, color: PwTheme.textSecondary),
               const SizedBox(width: 12),
               Expanded(child: Text(title)),
-              const Icon(Icons.chevron_right, size: 20, color: AppTheme.textHint),
+              const Icon(Icons.chevron_right, size: 20, color: PwTheme.textHint),
             ],
           ),
         ),
@@ -350,7 +350,7 @@ class _NotificationsTab extends StatelessWidget {
           Text('알림', style: Theme.of(context).textTheme.displaySmall),
           const SizedBox(height: 8),
           const Text('스탬프 적립 / 쿠폰 발급 / 시스템 공지가 표시됩니다.',
-            style: TextStyle(color: AppTheme.textSecondary)),
+            style: TextStyle(color: PwTheme.textSecondary)),
           const SizedBox(height: 16),
           Center(
             child: TextButton.icon(

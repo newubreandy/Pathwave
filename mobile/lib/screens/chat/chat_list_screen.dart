@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/chat_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 class ChatListScreen extends StatefulWidget {
@@ -54,7 +54,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
             return ListView.separated(
               padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: list.length,
-              separatorBuilder: (_, _) => const Divider(height: 1, color: AppTheme.border),
+              separatorBuilder: (_, _) => const Divider(height: 1, color: PwTheme.border),
               itemBuilder: (context, i) => _RoomTile(room: list[i]),
             );
           },
@@ -88,10 +88,10 @@ class _RoomTile extends StatelessWidget {
             Container(
               width: 44, height: 44,
               decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.18),
+                color: PwTheme.primary.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(22),
               ),
-              child: const Icon(Icons.store, color: AppTheme.primary),
+              child: const Icon(Icons.store, color: PwTheme.primary),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -109,7 +109,7 @@ class _RoomTile extends StatelessWidget {
                       ),
                       if (lastAt.isNotEmpty)
                         Text(lastAt,
-                          style: const TextStyle(color: AppTheme.textHint, fontSize: 11)),
+                          style: const TextStyle(color: PwTheme.textHint, fontSize: 11)),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -119,7 +119,7 @@ class _RoomTile extends StatelessWidget {
                         child: Text(
                           lastMessage.isEmpty ? '대화를 시작해 보세요' : lastMessage,
                           style: TextStyle(
-                            color: lastMessage.isEmpty ? AppTheme.textHint : AppTheme.textSecondary,
+                            color: lastMessage.isEmpty ? PwTheme.textHint : PwTheme.textSecondary,
                             fontSize: 13,
                           ),
                           maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -130,7 +130,7 @@ class _RoomTile extends StatelessWidget {
                           margin: const EdgeInsets.only(left: 6),
                           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                           decoration: BoxDecoration(
-                            color: AppTheme.primary,
+                            color: PwTheme.primary,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(

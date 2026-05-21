@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../utils/app_theme.dart';
+import '../theme/pw_theme.dart';
 import 'pw_switch.dart';
 
 /// 라벨 + (선택) 보조 설명 + PwSwitch 가 한 행에 들어가는 통일 컴포넌트.
@@ -60,7 +60,7 @@ class PwSwitchTile extends StatelessWidget {
             if (leading != null) ...[
               IconTheme.merge(
                 data: const IconThemeData(
-                  color: AppTheme.textSecondary, size: 20),
+                  color: PwTheme.textSecondary, size: 20),
                 child: leading!,
               ),
               const SizedBox(width: 16),
@@ -83,7 +83,7 @@ class PwSwitchTile extends StatelessWidget {
                       child: Text(
                         subtitle!,
                         style: const TextStyle(
-                          color: AppTheme.textHint, fontSize: 11),
+                          color: PwTheme.textHint, fontSize: 11),
                       ),
                     ),
                   ],

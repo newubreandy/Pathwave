@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../services/parent_invite_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 /// 부모(만 19세 이상)가 자녀(만 14~18) 가입 초대 코드를 발급하는 화면.
@@ -63,19 +63,19 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppTheme.warning.withValues(alpha: 0.18),
+            color: PwTheme.warning.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppTheme.warning.withValues(alpha: 0.4)),
+            border: Border.all(color: PwTheme.warning.withValues(alpha: 0.4)),
           ),
           child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded, size: 18, color: AppTheme.warning),
+                  Icon(Icons.warning_amber_rounded, size: 18, color: PwTheme.warning),
                   SizedBox(width: 6),
                   Text('자녀 초대 책임 동의',
-                    style: TextStyle(color: AppTheme.warning, fontWeight: FontWeight.w700)),
+                    style: TextStyle(color: PwTheme.warning, fontWeight: FontWeight.w700)),
                 ],
               ),
               SizedBox(height: 8),
@@ -84,7 +84,7 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
                 '법적 책임은 보호자인 본인에게 있음을 확인합니다. '
                 '자녀가 일부 시설(숙박/유흥 등 미성년자 출입 제한 시설)에 접근하는 것은 '
                 '서비스가 자동으로 차단합니다.',
-                style: TextStyle(color: AppTheme.textPrimary, fontSize: 13, height: 1.5),
+                style: TextStyle(color: PwTheme.textPrimary, fontSize: 13, height: 1.5),
               ),
             ],
           ),
@@ -98,7 +98,7 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
               children: [
                 Icon(
                   _liabilityAccepted ? Icons.check_circle : Icons.radio_button_unchecked,
-                  color: _liabilityAccepted ? AppTheme.primary : AppTheme.textHint,
+                  color: _liabilityAccepted ? PwTheme.primary : PwTheme.textHint,
                 ),
                 const SizedBox(width: 10),
                 const Expanded(
@@ -111,7 +111,7 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
         ),
         const SizedBox(height: 16),
         const Text('자녀 이메일 (선택)',
-          style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+          style: TextStyle(color: PwTheme.textSecondary, fontSize: 13)),
         const SizedBox(height: 6),
         PwTextField(
           controller: _emailCtrl,
@@ -121,7 +121,7 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
         ),
         if (_error != null) ...[
           const SizedBox(height: 12),
-          Text(_error!, style: const TextStyle(color: AppTheme.error)),
+          Text(_error!, style: const TextStyle(color: PwTheme.error)),
         ],
         const SizedBox(height: 20),
         PwButton(
@@ -150,7 +150,7 @@ class _SuccessView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.check_circle, size: 56, color: AppTheme.success),
+          const Icon(Icons.check_circle, size: 56, color: PwTheme.success),
           const SizedBox(height: 12),
           const Text('초대 코드가 발급되었습니다',
             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
@@ -158,20 +158,20 @@ class _SuccessView extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppTheme.surface,
-              border: Border.all(color: AppTheme.primary.withValues(alpha: 0.5)),
+              color: PwTheme.surface,
+              border: Border.all(color: PwTheme.primary.withValues(alpha: 0.5)),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
               children: [
                 const Text('초대 코드',
-                  style: TextStyle(color: AppTheme.textHint, fontSize: 12)),
+                  style: TextStyle(color: PwTheme.textHint, fontSize: 12)),
                 const SizedBox(height: 6),
                 SelectableText(
                   code,
                   style: const TextStyle(
                     fontSize: 28, fontWeight: FontWeight.bold,
-                    color: AppTheme.primary,
+                    color: PwTheme.primary,
                     letterSpacing: 4,
                     fontFeatures: [FontFeature.tabularFigures()],
                   ),
@@ -182,7 +182,7 @@ class _SuccessView extends StatelessWidget {
           const SizedBox(height: 12),
           if (expiresAt.isNotEmpty)
             Text('만료: $expiresAt',
-              style: const TextStyle(color: AppTheme.textHint, fontSize: 12)),
+              style: const TextStyle(color: PwTheme.textHint, fontSize: 12)),
           const SizedBox(height: 16),
           PwButton(
             variant: PwButtonVariant.outlined,

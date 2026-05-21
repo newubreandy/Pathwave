@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/i18n_service.dart';
 import '../services/permission_service.dart';
-import '../utils/app_theme.dart';
+import '../theme/pw_theme.dart';
 import 'pw.dart';
 
 /// 정보통신망법 §50 — 마케팅 수신 동의는 필수 동의와 **분리**하여 별도 획득.
@@ -70,7 +70,7 @@ class _NotificationPermissionDialogState
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: PwTheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Text(
         _t.t('notif.permission_title', defaultValue: '알림 수신 동의'),
@@ -91,7 +91,7 @@ class _NotificationPermissionDialogState
                     '· 마케팅 혜택 정보 (별도 동의 시)',
               ),
               style: const TextStyle(
-                color: AppTheme.textSecondary,
+                color: PwTheme.textSecondary,
                 height: 1.55,
                 fontSize: 14,
               ),
@@ -129,7 +129,7 @@ class _NotificationPermissionDialogState
                   defaultValue: '이벤트·할인 정보 등 혜택 알림을 받습니다. 설정에서 언제든 변경 가능합니다.',
                 ),
                 style: const TextStyle(
-                  color: AppTheme.textHint,
+                  color: PwTheme.textHint,
                   fontSize: 12,
                   height: 1.4,
                 ),
@@ -177,7 +177,7 @@ class _ConsentRow extends StatelessWidget {
         Checkbox(
           value: value,
           onChanged: disabled ? null : onChanged,
-          activeColor: AppTheme.primary,
+          activeColor: PwTheme.primary,
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           visualDensity: VisualDensity.compact,
         ),
@@ -187,7 +187,7 @@ class _ConsentRow extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 14,
-              color: disabled ? AppTheme.textHint : AppTheme.textPrimary,
+              color: disabled ? PwTheme.textHint : PwTheme.textPrimary,
             ),
           ),
         ),

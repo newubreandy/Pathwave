@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../utils/app_theme.dart';
+import '../theme/pw_theme.dart';
 import 'pw_button.dart';
 
 /// 목록 화면 공통 빈 상태 위젯 (구 `EmptyState` 의 Pw* 통일판).
@@ -40,16 +40,16 @@ class PwEmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 56, color: AppTheme.textHint),
+            Icon(icon, size: 56, color: PwTheme.textHint),
             const SizedBox(height: 12),
             Text(title,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 15)),
+              style: const TextStyle(color: PwTheme.textSecondary, fontSize: 15)),
             if (subtitle != null) ...[
               const SizedBox(height: 4),
               Text(subtitle!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppTheme.textHint, fontSize: 13)),
+                style: const TextStyle(color: PwTheme.textHint, fontSize: 13)),
             ],
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 16),
@@ -91,11 +91,11 @@ class PwErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: AppTheme.error),
+            const Icon(Icons.error_outline, size: 48, color: PwTheme.error),
             const SizedBox(height: 12),
             Text(message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppTheme.textSecondary)),
+              style: const TextStyle(color: PwTheme.textSecondary)),
             if (onRetry != null) ...[
               const SizedBox(height: 16),
               PwButton(

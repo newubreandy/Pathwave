@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../services/company_info_service.dart';
 import '../services/i18n_service.dart';
-import '../utils/app_theme.dart';
+import '../theme/pw_theme.dart';
 import 'pw_card.dart';
 
 /// PathWave 법인 정보 푸터 위젯.
@@ -73,7 +73,7 @@ class _PwFooterState extends State<PwFooter> {
 
     return PwCard(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      color: AppTheme.surface,
+      color: PwTheme.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -82,7 +82,7 @@ class _PwFooterState extends State<PwFooter> {
               t.t('footer.empty_notice',
                 defaultValue: '사업자 정보는 법인 등록 후 표시됩니다.'),
               style: const TextStyle(
-                color: AppTheme.textHint,
+                color: PwTheme.textHint,
                 fontSize: 12,
                 height: 1.5,
               ),
@@ -97,7 +97,7 @@ class _PwFooterState extends State<PwFooter> {
               Text(
                 t.t('footer.company_name_label', defaultValue: '상호'),
                 style: const TextStyle(
-                  color: AppTheme.textHint,
+                  color: PwTheme.textHint,
                   fontSize: 11,
                   letterSpacing: 0.3,
                 ),
@@ -106,7 +106,7 @@ class _PwFooterState extends State<PwFooter> {
               Text(
                 companyName,
                 style: const TextStyle(
-                  color: AppTheme.textSecondary,
+                  color: PwTheme.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
@@ -130,7 +130,7 @@ class _PwFooterState extends State<PwFooter> {
           ],
 
           const SizedBox(height: 14),
-          const Divider(color: AppTheme.border, height: 1),
+          const Divider(color: PwTheme.border, height: 1),
           const SizedBox(height: 14),
 
           // 약관 + 지원 링크 (clickable)
@@ -171,13 +171,13 @@ class _PwFooterState extends State<PwFooter> {
             t.t('footer.notice_disclaimer',
               defaultValue:
                 '※ PathWave 는 매장 멤버십 플랫폼으로, 매장에서 제공하는 정보·이벤트·혜택의 책임은 등록 업체에 있습니다.'),
-            style: const TextStyle(color: AppTheme.textHint, fontSize: 11, height: 1.5),
+            style: const TextStyle(color: PwTheme.textHint, fontSize: 11, height: 1.5),
           ),
 
           const SizedBox(height: 12),
           Text(
             t.t('footer.copyright', defaultValue: '© PathWave. All rights reserved.'),
-            style: const TextStyle(color: AppTheme.textHint, fontSize: 11),
+            style: const TextStyle(color: PwTheme.textHint, fontSize: 11),
           ),
         ],
       ),
@@ -202,13 +202,13 @@ class _InfoRow extends StatelessWidget {
             width: 108,
             child: Text(
               label,
-              style: const TextStyle(color: AppTheme.textHint, fontSize: 12),
+              style: const TextStyle(color: PwTheme.textHint, fontSize: 12),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+              style: const TextStyle(color: PwTheme.textSecondary, fontSize: 12),
             ),
           ),
         ],
@@ -234,11 +234,11 @@ class _PolicyLink extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            color: AppTheme.primaryLight,
+            color: PwTheme.primaryLight,
             fontSize: 12,
             fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
             decoration: TextDecoration.underline,
-            decorationColor: AppTheme.primaryLight,
+            decorationColor: PwTheme.primaryLight,
           ),
         ),
       ),

@@ -8,7 +8,7 @@ import '../../services/abuse_report_service.dart';
 import '../../services/block_service.dart';
 import '../../services/chat_service.dart';
 import '../../services/i18n_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 /// 1:1 채팅 상세 — SSE 실시간 메시지 + 입력.
@@ -66,7 +66,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       barrierColor: const Color(0x99000000),
       barrierDismissible: !asAgreement,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: PwTheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           _t.t('chat.guideline_title', defaultValue: '채팅 이용 안내'),
@@ -105,7 +105,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     defaultValue: '"동의하고 시작"을 누르면 위 채팅 이용규칙에 동의한 것으로 간주됩니다.',
                   ),
                   style: const TextStyle(
-                    color: AppTheme.textHint,
+                    color: PwTheme.textHint,
                     fontSize: 12,
                     height: 1.5,
                   ),
@@ -132,7 +132,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     showModalBottomSheet<void>(
       context: context,
       barrierColor: const Color(0x99000000),
-      backgroundColor: AppTheme.surface,
+      backgroundColor: PwTheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -142,7 +142,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           children: [
             const SizedBox(height: 8),
             ListTile(
-              leading: const Icon(Icons.flag_outlined, color: AppTheme.warning),
+              leading: const Icon(Icons.flag_outlined, color: PwTheme.warning),
               title: Text(_t.t('chat.report_facility', defaultValue: '매장 신고')),
               subtitle: Text(_t.t('chat.report_facility_desc',
                   defaultValue: '욕설·불법·스팸 등 이용규칙 위반 신고')),
@@ -152,7 +152,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.block, color: AppTheme.error),
+              leading: const Icon(Icons.block, color: PwTheme.error),
               title: Text(_t.t('chat.block_facility', defaultValue: '매장 차단')),
               subtitle: Text(_t.t('chat.block_facility_desc',
                   defaultValue: '이 매장과의 대화를 더 이상 받지 않습니다')),
@@ -174,7 +174,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       context: context,
       isScrollControlled: true,
       barrierColor: const Color(0x99000000),
-      backgroundColor: AppTheme.surface,
+      backgroundColor: PwTheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -194,14 +194,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       context: context,
       barrierColor: const Color(0x99000000),
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: PwTheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(_t.t('chat.block_confirm_title',
             defaultValue: '매장을 차단할까요?')),
         content: Text(
           _t.t('chat.block_confirm_body',
               defaultValue: '차단하면 이 매장과의 채팅이 목록에서 사라지고 메시지를 주고받을 수 없습니다. 차단은 설정 > 차단 목록에서 언제든 해제할 수 있습니다.'),
-          style: const TextStyle(color: AppTheme.textSecondary, height: 1.5),
+          style: const TextStyle(color: PwTheme.textSecondary, height: 1.5),
         ),
         actions: [
           PwButton(
@@ -396,7 +396,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AppTheme.border)),
+        border: Border(top: BorderSide(color: PwTheme.border)),
       ),
       child: Row(
         children: [
@@ -415,7 +415,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             icon: _sending
               ? const SizedBox(width: 18, height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2))
-              : const Icon(Icons.send, color: AppTheme.primary),
+              : const Icon(Icons.send, color: PwTheme.primary),
             onPressed: _sending ? null : _send,
           ),
         ],
@@ -436,12 +436,12 @@ class _GuidelineBullet extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('• ', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+          const Text('• ', style: TextStyle(color: PwTheme.textSecondary, fontSize: 14)),
           Expanded(
             child: Text(
               text,
               style: const TextStyle(
-                color: AppTheme.textSecondary,
+                color: PwTheme.textSecondary,
                 fontSize: 14,
                 height: 1.5,
               ),
@@ -475,7 +475,7 @@ class _MessageBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (isMe && time.isNotEmpty) ...[
-            Text(time, style: const TextStyle(color: AppTheme.textHint, fontSize: 10)),
+            Text(time, style: const TextStyle(color: PwTheme.textHint, fontSize: 10)),
             const SizedBox(width: 6),
           ],
           Flexible(
@@ -484,22 +484,22 @@ class _MessageBubble extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: failed
-                  ? AppTheme.error.withValues(alpha: 0.18)
-                  : (isMe ? AppTheme.primary : AppTheme.surface),
+                  ? PwTheme.error.withValues(alpha: 0.18)
+                  : (isMe ? PwTheme.primary : PwTheme.surface),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(14),
                   topRight: const Radius.circular(14),
                   bottomLeft: Radius.circular(isMe ? 14 : 4),
                   bottomRight: Radius.circular(isMe ? 4 : 14),
                 ),
-                border: isMe ? null : Border.all(color: AppTheme.border),
+                border: isMe ? null : Border.all(color: PwTheme.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(text,
                     style: TextStyle(
-                      color: isMe ? Colors.white : AppTheme.textPrimary,
+                      color: isMe ? Colors.white : PwTheme.textPrimary,
                       height: 1.4,
                     )),
                   if (pending || failed) ...[
@@ -507,7 +507,7 @@ class _MessageBubble extends StatelessWidget {
                     Text(
                       failed ? '전송 실패' : '전송 중...',
                       style: TextStyle(
-                        color: failed ? AppTheme.error : Colors.white70,
+                        color: failed ? PwTheme.error : Colors.white70,
                         fontSize: 10,
                       ),
                     ),
@@ -518,7 +518,7 @@ class _MessageBubble extends StatelessWidget {
           ),
           if (!isMe && time.isNotEmpty) ...[
             const SizedBox(width: 6),
-            Text(time, style: const TextStyle(color: AppTheme.textHint, fontSize: 10)),
+            Text(time, style: const TextStyle(color: PwTheme.textHint, fontSize: 10)),
           ],
         ],
       ),
@@ -598,7 +598,7 @@ class _ReportSheetState extends State<_ReportSheet> {
               height: 4,
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: AppTheme.border,
+                color: PwTheme.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -612,7 +612,7 @@ class _ReportSheetState extends State<_ReportSheet> {
             _t.t('chat.report_intro',
                 defaultValue: '욕설·불법·스팸 등 채팅 이용규칙 위반을 신고합니다. 접수된 신고는 운영팀이 검토하며, 신고는 제출 후 취소할 수 없습니다.'),
             style: const TextStyle(
-              color: AppTheme.textSecondary,
+              color: PwTheme.textSecondary,
               fontSize: 13,
               height: 1.5,
             ),
@@ -679,7 +679,7 @@ class _ReasonRow extends StatelessWidget {
               selected
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
-              color: selected ? AppTheme.primary : AppTheme.textHint,
+              color: selected ? PwTheme.primary : PwTheme.textHint,
               size: 20,
             ),
             const SizedBox(width: 12),

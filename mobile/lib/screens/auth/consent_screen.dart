@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../services/policy_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 /// 동의 항목 입력 화면. register_screen 의 마지막 단계로 사용.
@@ -77,7 +77,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
             Text('약관 및 동의', style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 4),
             const Text('필수 항목에 모두 동의해야 가입할 수 있습니다.',
-              style: TextStyle(color: AppTheme.textSecondary)),
+              style: TextStyle(color: PwTheme.textSecondary)),
             const SizedBox(height: 16),
 
             // 전체 동의 토글
@@ -86,7 +86,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
               onChanged: (v) => _toggleAll(items, v),
             ),
             const SizedBox(height: 8),
-            const Divider(color: AppTheme.border),
+            const Divider(color: PwTheme.border),
 
             // 항목 리스트
             Expanded(
@@ -127,15 +127,15 @@ class _AllAgreeRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
-          color: AppTheme.surface,
+          color: PwTheme.surface,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppTheme.border),
+          border: Border.all(color: PwTheme.border),
         ),
         child: Row(
           children: [
             Icon(
               allChecked ? Icons.check_circle : Icons.circle_outlined,
-              color: allChecked ? AppTheme.primary : AppTheme.textHint,
+              color: allChecked ? PwTheme.primary : PwTheme.textHint,
             ),
             const SizedBox(width: 10),
             const Expanded(
@@ -185,7 +185,7 @@ class _ConsentItem extends StatelessWidget {
               padding: const EdgeInsets.all(4),
               child: Icon(
                 checked ? Icons.check_circle : Icons.radio_button_unchecked,
-                color: checked ? AppTheme.primary : AppTheme.textHint,
+                color: checked ? PwTheme.primary : PwTheme.textHint,
                 size: 24,
               ),
             ),
@@ -195,14 +195,14 @@ class _ConsentItem extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
               color: required
-                ? AppTheme.error.withValues(alpha: 0.18)
-                : AppTheme.textHint.withValues(alpha: 0.15),
+                ? PwTheme.error.withValues(alpha: 0.18)
+                : PwTheme.textHint.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
               required ? '필수' : '선택',
               style: TextStyle(
-                color: required ? AppTheme.error : AppTheme.textSecondary,
+                color: required ? PwTheme.error : PwTheme.textSecondary,
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
@@ -252,7 +252,7 @@ class _PolicyDialogState extends State<_PolicyDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: PwTheme.surface,
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: SizedBox(
@@ -272,7 +272,7 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                   ),
                 ],
               ),
-              const Divider(color: AppTheme.border),
+              const Divider(color: PwTheme.border),
               FutureBuilder<List<Map<String, dynamic>>>(
                 future: _versionsFuture,
                 builder: (context, snap) {
@@ -282,9 +282,9 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Row(
                       children: [
-                        const Icon(Icons.history, size: 16, color: AppTheme.textSecondary),
+                        const Icon(Icons.history, size: 16, color: PwTheme.textSecondary),
                         const SizedBox(width: 6),
-                        const Text('버전:', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                        const Text('버전:', style: TextStyle(color: PwTheme.textSecondary, fontSize: 13)),
                         const SizedBox(width: 8),
                         Expanded(
                           child: DropdownButton<int?>(
@@ -312,7 +312,7 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                   );
                 },
               ),
-              const Divider(color: AppTheme.border, height: 8),
+              const Divider(color: PwTheme.border, height: 8),
               Expanded(
                 child: FutureBuilder<Map<String, dynamic>>(
                   // ignore: discarded_futures
@@ -335,12 +335,12 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                               padding: const EdgeInsets.all(12),
                               margin: const EdgeInsets.only(bottom: 12),
                               decoration: BoxDecoration(
-                                color: AppTheme.warning.withValues(alpha: 0.18),
+                                color: PwTheme.warning.withValues(alpha: 0.18),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Text(
                                 '⚠️ 정책 본문이 아직 등록되지 않았습니다 (placeholder).',
-                                style: TextStyle(color: AppTheme.warning, fontSize: 12),
+                                style: TextStyle(color: PwTheme.warning, fontSize: 12),
                               ),
                             ),
                           Text(body, style: const TextStyle(height: 1.5)),

@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/wifi_connector.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 /// BLE 핸드셰이크에서 받은 WiFi 정보로 OS 자동 가입 요청 (PR #49 native plugin).
@@ -62,10 +62,10 @@ class _WifiConnectScreenState extends State<WifiConnectScreen> {
               child: Container(
                 width: 96, height: 96,
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.18),
+                  color: PwTheme.primary.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(24),
                 ),
-                child: const Icon(Icons.wifi, size: 48, color: AppTheme.primary),
+                child: const Icon(Icons.wifi, size: 48, color: PwTheme.primary),
               ),
             ),
             const SizedBox(height: 24),
@@ -77,26 +77,26 @@ class _WifiConnectScreenState extends State<WifiConnectScreen> {
             const SizedBox(height: 8),
             Text('SSID: ${widget.ssid}',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppTheme.textSecondary)),
+              style: const TextStyle(color: PwTheme.textSecondary)),
             const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.surface,
+                color: PwTheme.surface,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppTheme.border),
+                border: Border.all(color: PwTheme.border),
               ),
               child: const Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline, size: 18, color: AppTheme.textSecondary),
+                  Icon(Icons.info_outline, size: 18, color: PwTheme.textSecondary),
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       'iOS: 가입 직전 시스템 팝업으로 동의를 묻습니다.\n'
                       'Android 10+: 알림 영역에 WifiNetworkSuggestion 동의 링크가 표시됩니다.\n'
                       'Android 9 이하는 OS 제한으로 자동 가입 불가.',
-                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 12, height: 1.5),
+                      style: TextStyle(color: PwTheme.textSecondary, fontSize: 12, height: 1.5),
                     ),
                   ),
                 ],
@@ -107,14 +107,14 @@ class _WifiConnectScreenState extends State<WifiConnectScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.success.withValues(alpha: 0.18),
+                  color: PwTheme.success.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(children: [
-                  const Icon(Icons.check_circle, color: AppTheme.success, size: 18),
+                  const Icon(Icons.check_circle, color: PwTheme.success, size: 18),
                   const SizedBox(width: 8),
                   Expanded(child: Text(_success!,
-                    style: const TextStyle(color: AppTheme.success, fontSize: 13))),
+                    style: const TextStyle(color: PwTheme.success, fontSize: 13))),
                 ]),
               ),
               const SizedBox(height: 16),
@@ -123,14 +123,14 @@ class _WifiConnectScreenState extends State<WifiConnectScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.error.withValues(alpha: 0.18),
+                  color: PwTheme.error.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(children: [
-                  const Icon(Icons.error_outline, color: AppTheme.error, size: 18),
+                  const Icon(Icons.error_outline, color: PwTheme.error, size: 18),
                   const SizedBox(width: 8),
                   Expanded(child: Text(_error!,
-                    style: const TextStyle(color: AppTheme.error, fontSize: 13))),
+                    style: const TextStyle(color: PwTheme.error, fontSize: 13))),
                 ]),
               ),
               const SizedBox(height: 16),

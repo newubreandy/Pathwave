@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../services/abuse_report_service.dart';
 import '../../services/support_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 /// 고객센터 메인 화면 — FAQ / 내 문의 / 신고하기 탭.
@@ -63,9 +63,9 @@ class _SupportScreenState extends State<SupportScreen>
             Tab(text: '내 문의'),
             Tab(text: '신고하기'),
           ],
-          indicatorColor: AppTheme.primary,
-          labelColor: AppTheme.primary,
-          unselectedLabelColor: AppTheme.textSecondary,
+          indicatorColor: PwTheme.primary,
+          labelColor: PwTheme.primary,
+          unselectedLabelColor: PwTheme.textSecondary,
         ),
       ),
       body: TabBarView(
@@ -141,16 +141,16 @@ class _FaqTabState extends State<_FaqTab> {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
           child: PwCard(
             padding: const EdgeInsets.all(12),
-            color: AppTheme.primary.withValues(alpha: 0.1),
-            border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+            color: PwTheme.primary.withValues(alpha: 0.1),
+            border: Border.all(color: PwTheme.primary.withValues(alpha: 0.3)),
             child: const Row(
               children: [
-                Icon(Icons.access_time, size: 16, color: AppTheme.primary),
+                Icon(Icons.access_time, size: 16, color: PwTheme.primary),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     '영업시간 평일 09:00–18:00 · 주말·공휴일 제외\n평균 응답시간 1–2 영업일',
-                    style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                    style: TextStyle(fontSize: 12, color: PwTheme.textSecondary),
                   ),
                 ),
               ],
@@ -203,7 +203,7 @@ class _FaqTabState extends State<_FaqTab> {
                       child: Text(
                         _categoryLabel(entry.key),
                         style: const TextStyle(
-                          color: AppTheme.primary,
+                          color: PwTheme.primary,
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                         ),
@@ -261,7 +261,7 @@ class _FaqItemState extends State<_FaqItem> {
               Row(
                 children: [
                   const Text('Q', style: TextStyle(
-                    color: AppTheme.primary,
+                    color: PwTheme.primary,
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
                   )),
@@ -272,17 +272,17 @@ class _FaqItemState extends State<_FaqItem> {
                   ),
                   Icon(
                     _expanded ? Icons.expand_less : Icons.expand_more,
-                    color: AppTheme.textHint,
+                    color: PwTheme.textHint,
                   ),
                 ],
               ),
               if (_expanded) ...[
-                const Divider(height: 16, color: AppTheme.border),
+                const Divider(height: 16, color: PwTheme.border),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('A', style: TextStyle(
-                      color: AppTheme.success,
+                      color: PwTheme.success,
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
                     )),
@@ -290,7 +290,7 @@ class _FaqItemState extends State<_FaqItem> {
                     Expanded(
                       child: Text(answer,
                           style: const TextStyle(
-                              color: AppTheme.textSecondary, height: 1.5)),
+                              color: PwTheme.textSecondary, height: 1.5)),
                     ),
                   ],
                 ),
@@ -332,7 +332,7 @@ class _MyTicketsTabState extends State<_MyTicketsTab> {
       context: context,
       isScrollControlled: true,
       barrierColor: const Color(0x99000000),
-      backgroundColor: AppTheme.surface,
+      backgroundColor: PwTheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -353,16 +353,16 @@ class _MyTicketsTabState extends State<_MyTicketsTab> {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: PwCard(
             padding: const EdgeInsets.all(12),
-            color: AppTheme.primary.withValues(alpha: 0.1),
-            border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+            color: PwTheme.primary.withValues(alpha: 0.1),
+            border: Border.all(color: PwTheme.primary.withValues(alpha: 0.3)),
             child: const Row(
               children: [
-                Icon(Icons.access_time, size: 16, color: AppTheme.primary),
+                Icon(Icons.access_time, size: 16, color: PwTheme.primary),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     '영업시간 평일 09:00–18:00 · 평균 응답시간 1–2 영업일',
-                    style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                    style: TextStyle(fontSize: 12, color: PwTheme.textSecondary),
                   ),
                 ),
               ],
@@ -432,7 +432,7 @@ class _MyTicketsTabState extends State<_MyTicketsTab> {
                                     const SizedBox(height: 4),
                                     Text(createdAt,
                                         style: const TextStyle(
-                                            color: AppTheme.textHint,
+                                            color: PwTheme.textHint,
                                             fontSize: 12)),
                                   ],
                                 ],
@@ -442,7 +442,7 @@ class _MyTicketsTabState extends State<_MyTicketsTab> {
                             _StatusChip(status),
                             const SizedBox(width: 4),
                             const Icon(Icons.chevron_right,
-                                color: AppTheme.textHint, size: 18),
+                                color: PwTheme.textHint, size: 18),
                           ],
                         ),
                       ),
@@ -468,19 +468,19 @@ class _StatusChip extends StatelessWidget {
     final String label;
     switch (status) {
       case 'open':
-        color = AppTheme.warning;
+        color = PwTheme.warning;
         label = '접수됨';
         break;
       case 'in_progress':
-        color = AppTheme.secondary;
+        color = PwTheme.warning;
         label = '처리중';
         break;
       case 'closed':
-        color = AppTheme.success;
+        color = PwTheme.success;
         label = '완료';
         break;
       default:
-        color = AppTheme.textHint;
+        color = PwTheme.textHint;
         label = status.isEmpty ? '—' : status;
     }
     return Container(
@@ -572,17 +572,17 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
                 decoration: InputDecoration(
                   labelText: '카테고리 (선택)',
                   filled: true,
-                  fillColor: AppTheme.surface,
+                  fillColor: PwTheme.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppTheme.border),
+                    borderSide: const BorderSide(color: PwTheme.border),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppTheme.border),
+                    borderSide: const BorderSide(color: PwTheme.border),
                   ),
                 ),
-                dropdownColor: AppTheme.surface,
+                dropdownColor: PwTheme.surface,
                 items: [
                   const DropdownMenuItem(value: null, child: Text('선택 안 함')),
                   for (final (code, label) in _categories)
@@ -620,11 +620,11 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
               // 개인정보 안내
               PwCard(
                 padding: const EdgeInsets.all(10),
-                color: AppTheme.surfaceLight,
+                color: PwTheme.surfaceLight,
                 child: const Text(
                   '개인정보 처리방침에 따라 문의 내용은 상담 처리 목적으로만 사용되며 1년 후 자동 삭제됩니다.',
                   style: TextStyle(
-                      color: AppTheme.textHint, fontSize: 11, height: 1.4),
+                      color: PwTheme.textHint, fontSize: 11, height: 1.4),
                 ),
               ),
               const SizedBox(height: 16),
@@ -735,17 +735,17 @@ class _ReportTabState extends State<_ReportTab> {
             // ── 안내 카드 ───────────────────────────────────────────
             PwCard(
               padding: const EdgeInsets.all(12),
-              color: AppTheme.primary.withValues(alpha: 0.1),
-              border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+              color: PwTheme.primary.withValues(alpha: 0.1),
+              border: Border.all(color: PwTheme.primary.withValues(alpha: 0.3)),
               child: const Row(
                 children: [
-                  Icon(Icons.info_outline, size: 16, color: AppTheme.primary),
+                  Icon(Icons.info_outline, size: 16, color: PwTheme.primary),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       '허위 신고는 서비스 이용에 제한이 있을 수 있습니다.\n검토 후 7 영업일 이내에 조치합니다.',
                       style: TextStyle(
-                          fontSize: 12, color: AppTheme.textSecondary),
+                          fontSize: 12, color: PwTheme.textSecondary),
                     ),
                   ),
                 ],
@@ -817,11 +817,11 @@ class _ReportTabState extends State<_ReportTab> {
             // ── 개인정보 처리 안내 ──────────────────────────────────
             PwCard(
               padding: const EdgeInsets.all(10),
-              color: AppTheme.surfaceLight,
+              color: PwTheme.surfaceLight,
               child: const Text(
                 '신고 내용은 「개인정보 보호법」에 따라 처리 목적으로만 사용하며 처리 완료 후 파기됩니다.',
                 style:
-                    TextStyle(color: AppTheme.textHint, fontSize: 11, height: 1.4),
+                    TextStyle(color: PwTheme.textHint, fontSize: 11, height: 1.4),
               ),
             ),
             const SizedBox(height: 20),
@@ -855,18 +855,18 @@ class _KindChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: selected
-              ? AppTheme.primary.withValues(alpha: 0.15)
-              : AppTheme.surfaceLight,
+              ? PwTheme.primary.withValues(alpha: 0.15)
+              : PwTheme.surfaceLight,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? AppTheme.primary : AppTheme.border,
+            color: selected ? PwTheme.primary : PwTheme.border,
             width: selected ? 1.5 : 1,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? AppTheme.primary : AppTheme.textSecondary,
+            color: selected ? PwTheme.primary : PwTheme.textSecondary,
             fontWeight:
                 selected ? FontWeight.w600 : FontWeight.normal,
             fontSize: 13,
@@ -907,16 +907,16 @@ class _ReasonRadio extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: selected ? AppTheme.primary : AppTheme.border,
+                  color: selected ? PwTheme.primary : PwTheme.border,
                   width: selected ? 5 : 2,
                 ),
-                color: selected ? AppTheme.primary : Colors.transparent,
+                color: selected ? PwTheme.primary : Colors.transparent,
               ),
             ),
             Text(
               label,
               style: TextStyle(
-                color: selected ? AppTheme.textPrimary : AppTheme.textSecondary,
+                color: selected ? PwTheme.textPrimary : PwTheme.textSecondary,
                 fontWeight: selected ? FontWeight.w500 : FontWeight.normal,
               ),
             ),

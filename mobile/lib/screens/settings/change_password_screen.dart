@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 /// 비밀번호 변경 (PR #63) — 이메일 가입자 전용.
@@ -121,12 +121,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppTheme.error.withValues(alpha: 0.12),
+                      color: PwTheme.error.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppTheme.error.withValues(alpha: 0.4)),
+                      border: Border.all(color: PwTheme.error.withValues(alpha: 0.4)),
                     ),
                     child: Text(_error!,
-                      style: const TextStyle(color: AppTheme.error, fontSize: 13)),
+                      style: const TextStyle(color: PwTheme.error, fontSize: 13)),
                   ),
                 ],
                 const SizedBox(height: 24),

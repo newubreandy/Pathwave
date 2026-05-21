@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../services/support_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 /// 문의 상세 — ticket 정보 + thread 메시지 + 추가 메시지 입력.
@@ -68,7 +68,7 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text('불러오기 실패: ${snap.error}',
-                      style: const TextStyle(color: AppTheme.textSecondary)),
+                      style: const TextStyle(color: PwTheme.textSecondary)),
                   const SizedBox(height: 12),
                   PwButton(
                     fullWidth: false,
@@ -111,7 +111,7 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
                         const SizedBox(height: 4),
                         Text(category,
                             style: const TextStyle(
-                                color: AppTheme.textHint, fontSize: 12)),
+                                color: PwTheme.textHint, fontSize: 12)),
                       ],
                     ],
                   ),
@@ -123,7 +123,7 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
                 child: messages.isEmpty
                     ? const Center(
                         child: Text('아직 메시지가 없습니다.',
-                            style: TextStyle(color: AppTheme.textSecondary)),
+                            style: TextStyle(color: PwTheme.textSecondary)),
                       )
                     : ListView.builder(
                         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -142,8 +142,8 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
               Container(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
                 decoration: const BoxDecoration(
-                  border: Border(top: BorderSide(color: AppTheme.border)),
-                  color: AppTheme.surface,
+                  border: Border(top: BorderSide(color: PwTheme.border)),
+                  color: PwTheme.surface,
                 ),
                 child: SafeArea(
                   top: false,
@@ -196,8 +196,8 @@ class _MessageBubble extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: isUser
-              ? AppTheme.primary.withValues(alpha: 0.85)
-              : AppTheme.surfaceLight,
+              ? PwTheme.primary.withValues(alpha: 0.85)
+              : PwTheme.surfaceLight,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(14),
             topRight: const Radius.circular(14),
@@ -212,12 +212,12 @@ class _MessageBubble extends StatelessWidget {
             if (!isUser)
               const Text('관리자',
                   style: TextStyle(
-                      color: AppTheme.primary,
+                      color: PwTheme.primary,
                       fontSize: 11,
                       fontWeight: FontWeight.w600)),
             Text(body,
                 style: TextStyle(
-                    color: isUser ? Colors.white : AppTheme.textPrimary,
+                    color: isUser ? Colors.white : PwTheme.textPrimary,
                     fontSize: 14)),
             if (createdAt.isNotEmpty) ...[
               const SizedBox(height: 4),
@@ -225,7 +225,7 @@ class _MessageBubble extends StatelessWidget {
                   style: TextStyle(
                       color: isUser
                           ? Colors.white.withValues(alpha: 0.6)
-                          : AppTheme.textHint,
+                          : PwTheme.textHint,
                       fontSize: 11)),
             ],
           ],
@@ -245,19 +245,19 @@ class _StatusBadge extends StatelessWidget {
     final String label;
     switch (status) {
       case 'open':
-        color = AppTheme.warning;
+        color = PwTheme.warning;
         label = '접수됨';
         break;
       case 'in_progress':
-        color = AppTheme.secondary;
+        color = PwTheme.warning;
         label = '처리중';
         break;
       case 'closed':
-        color = AppTheme.success;
+        color = PwTheme.success;
         label = '완료';
         break;
       default:
-        color = AppTheme.textHint;
+        color = PwTheme.textHint;
         label = status.isEmpty ? '—' : status;
     }
     return Container(

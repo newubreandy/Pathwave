@@ -8,7 +8,7 @@ import '../../services/auth_service.dart';
 import '../../services/notification_preferences_service.dart';
 import '../../services/policy_service.dart';
 import '../../utils/api_config.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -81,7 +81,7 @@ class SettingsScreen extends StatelessWidget {
             onPressed: () => context.push('/mypage/delete-account'),
             child: const Text('회원 탈퇴',
               style: TextStyle(
-                color: AppTheme.error,
+                color: PwTheme.error,
                 decoration: TextDecoration.underline,
                 fontSize: 13,
               )),
@@ -160,7 +160,7 @@ class SettingsScreen extends StatelessWidget {
         isScrollControlled: true,
         barrierColor: const Color(0x99000000),
         isDismissible: true,
-        backgroundColor: AppTheme.surface,
+        backgroundColor: PwTheme.surface,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
@@ -182,13 +182,13 @@ class SettingsScreen extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: Text(title,
-            style: const TextStyle(color: AppTheme.textHint, fontSize: 12, letterSpacing: 0.5)),
+            style: const TextStyle(color: PwTheme.textHint, fontSize: 12, letterSpacing: 0.5)),
         ),
         Container(
           decoration: BoxDecoration(
-            color: AppTheme.surface,
+            color: PwTheme.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.border),
+            border: Border.all(color: PwTheme.border),
           ),
           child: Column(children: children),
         ),
@@ -199,16 +199,16 @@ class SettingsScreen extends StatelessWidget {
 
   Widget _tile(BuildContext _, IconData icon, String title, String value, {String? subtitle}) {
     return ListTile(
-      leading: Icon(icon, color: AppTheme.textSecondary, size: 20),
+      leading: Icon(icon, color: PwTheme.textSecondary, size: 20),
       title: Text(title, style: const TextStyle(fontSize: 14)),
       subtitle: subtitle != null
-        ? Text(subtitle, style: const TextStyle(color: AppTheme.textHint, fontSize: 11))
+        ? Text(subtitle, style: const TextStyle(color: PwTheme.textHint, fontSize: 11))
         : null,
       trailing: SizedBox(
         width: 180,
         child: Text(value,
           textAlign: TextAlign.right,
-          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+          style: const TextStyle(color: PwTheme.textSecondary, fontSize: 13),
           overflow: TextOverflow.ellipsis),
       ),
     );
@@ -216,10 +216,10 @@ class SettingsScreen extends StatelessWidget {
 
   Widget _linkTile(BuildContext _, IconData icon, String title, VoidCallback onTap) {
     return ListTile(
-      leading: Icon(icon, color: AppTheme.textSecondary, size: 20),
+      leading: Icon(icon, color: PwTheme.textSecondary, size: 20),
       title: Text(title, style: const TextStyle(fontSize: 14)),
       trailing: const Icon(Icons.chevron_right,
-        color: AppTheme.textHint, size: 20),
+        color: PwTheme.textHint, size: 20),
       onTap: onTap,
     );
   }
@@ -251,7 +251,7 @@ class _PolicySheet extends StatelessWidget {
                 width: 40, height: 4,
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
-                  color: AppTheme.border,
+                  color: PwTheme.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -266,12 +266,12 @@ class _PolicySheet extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.1),
+                      color: PwTheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text('v$version',
                       style: const TextStyle(
-                        color: AppTheme.primary,
+                        color: PwTheme.primary,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       )),
@@ -281,7 +281,7 @@ class _PolicySheet extends StatelessWidget {
             if (effective != null && effective.isNotEmpty) ...[
               const SizedBox(height: 4),
               Text('시행일: ${effective.split("T").first}',
-                style: const TextStyle(color: AppTheme.textHint, fontSize: 12)),
+                style: const TextStyle(color: PwTheme.textHint, fontSize: 12)),
             ],
             const Divider(height: 24),
             Expanded(
@@ -431,20 +431,20 @@ class _NotificationPreferencesSectionState
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: Text('알림 카테고리',
-            style: TextStyle(color: AppTheme.textHint, fontSize: 12, letterSpacing: 0.5)),
+            style: TextStyle(color: PwTheme.textHint, fontSize: 12, letterSpacing: 0.5)),
         ),
         Container(
           decoration: BoxDecoration(
-            color: AppTheme.surface,
+            color: PwTheme.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.border),
+            border: Border.all(color: PwTheme.border),
           ),
           child: Builder(builder: (_) {
             if (_error != null) {
               return Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(_error!,
-                  style: const TextStyle(color: AppTheme.error, fontSize: 12)),
+                  style: const TextStyle(color: PwTheme.error, fontSize: 12)),
               );
             }
             if (_prefs == null) {
@@ -488,7 +488,7 @@ class _FaqItem extends StatelessWidget {
       children: [
         Text(q, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
         const SizedBox(height: 4),
-        Text(a, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12, height: 1.5)),
+        Text(a, style: const TextStyle(color: PwTheme.textSecondary, fontSize: 12, height: 1.5)),
       ],
     );
   }

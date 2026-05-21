@@ -3,7 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/favorite_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 /// 즐겨찾기 매장 목록 화면 — `/mypage/favorites`.
@@ -110,15 +110,15 @@ class _FavoriteCard extends StatelessWidget {
                 ? CachedNetworkImage(
                     imageUrl: imageUrl,
                     fit: BoxFit.cover,
-                    placeholder: (_, _) => Container(color: AppTheme.surfaceLight),
+                    placeholder: (_, _) => Container(color: PwTheme.surfaceLight),
                     errorWidget: (_, _, _) => Container(
-                      color: AppTheme.surfaceLight,
-                      child: const Icon(Icons.store, color: AppTheme.textHint),
+                      color: PwTheme.surfaceLight,
+                      child: const Icon(Icons.store, color: PwTheme.textHint),
                     ),
                   )
                 : Container(
-                    color: AppTheme.surfaceLight,
-                    child: const Icon(Icons.store, color: AppTheme.textHint),
+                    color: PwTheme.surfaceLight,
+                    child: const Icon(Icons.store, color: PwTheme.textHint),
                   ),
             ),
           ),
@@ -132,13 +132,13 @@ class _FavoriteCard extends StatelessWidget {
                 if (address.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(address,
-                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                    style: const TextStyle(color: PwTheme.textSecondary, fontSize: 12),
                     maxLines: 1, overflow: TextOverflow.ellipsis),
                 ],
                 if (description.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(description,
-                    style: const TextStyle(color: AppTheme.textHint, fontSize: 12),
+                    style: const TextStyle(color: PwTheme.textHint, fontSize: 12),
                     maxLines: 1, overflow: TextOverflow.ellipsis),
                 ],
               ],
@@ -147,7 +147,7 @@ class _FavoriteCard extends StatelessWidget {
           // 즐겨찾기 해제 버튼 (하트)
           PwIconButton(
             icon: Icons.favorite,
-            color: AppTheme.primary,
+            color: PwTheme.primary,
             tooltip: '즐겨찾기 해제',
             onPressed: onRemove,
           ),

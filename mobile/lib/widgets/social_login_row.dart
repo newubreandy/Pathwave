@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../utils/neu_theme.dart';
+import '../theme/pw_theme.dart';
 
 /// PR #68 — Google / Apple / Facebook / Kakao / Naver 5종 소셜 로그인 버튼.
 /// 로그인 화면 + 회원가입 화면 양쪽에서 동일하게 사용.
@@ -37,7 +37,7 @@ class SocialLoginRow extends StatelessWidget {
           icon: const Icon(Icons.apple, color: Colors.white, size: 28),
           label: 'Apple',
           onTap: busy ? null : onApple,
-          labelColor: NeuTheme.textPrimary,
+          labelColor: PwTheme.textPrimary,
         ),
         _socialBtn(
           color: const Color(0xFF1877F2),
@@ -94,7 +94,13 @@ class SocialLoginRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: color,
                   shape: BoxShape.circle,
-                  boxShadow: NeuTheme.outerShadow(distance: 4, blur: 10),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x33000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Center(child: icon),
               ),
@@ -105,7 +111,7 @@ class SocialLoginRow extends StatelessWidget {
         Text(label,
           style: TextStyle(
             fontSize: 11,
-            color: labelColor ?? NeuTheme.textSecondary,
+            color: labelColor ?? PwTheme.textSecondary,
             fontWeight: FontWeight.w500,
           )),
       ],

@@ -3,10 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
-import '../../utils/neu_theme.dart';
-import '../../widgets/neu/neu_button.dart';
-import '../../widgets/neu/neu_card.dart';
-import '../../widgets/neu/neu_text_field.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 import '../../widgets/social_login_row.dart';
 
@@ -70,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final auth = context.read<AuthService>();
     return Scaffold(
-      backgroundColor: NeuTheme.background,
+      backgroundColor: PwTheme.background,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -82,18 +79,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Container(
                   width: 88, height: 88,
                   decoration: BoxDecoration(
-                    color: NeuTheme.surface,
+                    color: PwTheme.surface,
                     borderRadius: BorderRadius.circular(28),
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft, end: Alignment.bottomRight,
-                      colors: [NeuTheme.surfaceLight, NeuTheme.surface],
-                    ),
-                    boxShadow: NeuTheme.outerShadow(distance: 8, blur: 18),
+                    border: Border.all(color: PwTheme.border),
                   ),
                   child: const Center(
                     child: Text('PW', style: TextStyle(
                       fontSize: 28, fontWeight: FontWeight.w800,
-                      color: NeuTheme.primary,
+                      color: PwTheme.primary,
                     )),
                   ),
                 ),
@@ -106,20 +99,20 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 4),
               const Center(
                 child: Text('이메일로 로그인',
-                  style: TextStyle(color: NeuTheme.textSecondary)),
+                  style: TextStyle(color: PwTheme.textSecondary)),
               ),
               const SizedBox(height: 28),
 
-              NeuTextField(
+              PwTextField(
                 controller: _emailCtrl,
-                hintText: '이메일',
+                hint: '이메일',
                 prefixIcon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 12),
-              NeuTextField(
+              PwTextField(
                 controller: _passwordCtrl,
-                hintText: '비밀번호',
+                hint: '비밀번호',
                 prefixIcon: Icons.lock_outline,
                 obscureText: true,
                 textInputAction: TextInputAction.done,
@@ -127,24 +120,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
               if (_error != null) ...[
                 const SizedBox(height: 12),
-                NeuCard(
+                PwCard(
                   padding: const EdgeInsets.all(14),
                   child: Text(_error!,
-                    style: const TextStyle(color: NeuTheme.error, fontSize: 13)),
+                    style: const TextStyle(color: PwTheme.error, fontSize: 13)),
                 ),
               ],
 
               const SizedBox(height: 20),
-              NeuButton(
-                variant: NeuButtonVariant.primary,
+              PwButton(
+                loading: _busy,
                 onPressed: _busy ? null : _login,
-                child: Center(
-                  child: _busy
-                    ? const SizedBox(width: 22, height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('로그인',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                ),
+                child: const Text('로그인'),
               ),
 
               const SizedBox(height: 10),
@@ -157,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     // push 사용 — 비밀번호 찾기 화면에서 백 버튼으로 로그인 복귀.
                     onPressed: _busy ? null : () => context.push('/auth/forgot'),
                     child: const Text('비밀번호 찾기',
-                      style: TextStyle(color: NeuTheme.textSecondary)),
+                      style: TextStyle(color: PwTheme.textSecondary)),
                   ),
                   PwButton(
                     variant: PwButtonVariant.text,
@@ -165,7 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     // push 사용 — 회원가입 화면에서 백 버튼으로 로그인 복귀.
                     onPressed: _busy ? null : () => context.push('/auth/register'),
                     child: const Text('회원가입',
-                      style: TextStyle(color: NeuTheme.primary, fontWeight: FontWeight.w600)),
+                      style: TextStyle(color: PwTheme.primary, fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),
@@ -173,13 +160,13 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 4),
               const Row(
                 children: [
-                  Expanded(child: Divider(color: NeuTheme.border)),
+                  Expanded(child: Divider(color: PwTheme.border)),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 12),
                     child: Text('또는 SNS 로 계속',
-                      style: TextStyle(color: NeuTheme.textHint, fontSize: 12)),
+                      style: TextStyle(color: PwTheme.textHint, fontSize: 12)),
                   ),
-                  Expanded(child: Divider(color: NeuTheme.border)),
+                  Expanded(child: Divider(color: PwTheme.border)),
                 ],
               ),
               const SizedBox(height: 18),
@@ -204,33 +191,21 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
 
               const SizedBox(height: 28),
-              const Divider(color: NeuTheme.border),
+              const Divider(color: PwTheme.border),
               const SizedBox(height: 16),
 
               // PR #68 — 둘러보기 (로그인 없이 화면 미리보기)
-              NeuButton(
+              PwButton(
+                variant: PwButtonVariant.secondary,
+                icon: Icons.visibility_outlined,
                 onPressed: _busy ? null : _previewMode,
-                child: const Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.visibility_outlined, size: 18,
-                        color: NeuTheme.textSecondary),
-                      SizedBox(width: 8),
-                      Text('로그인 없이 둘러보기',
-                        style: TextStyle(
-                          color: NeuTheme.textSecondary,
-                          fontWeight: FontWeight.w600,
-                        )),
-                    ],
-                  ),
-                ),
+                child: const Text('로그인 없이 둘러보기'),
               ),
               const SizedBox(height: 8),
               const Center(
                 child: Text(
                   '※ 둘러보기 모드는 실 데이터 호출은 제한됩니다',
-                  style: TextStyle(color: NeuTheme.textHint, fontSize: 11),
+                  style: TextStyle(color: PwTheme.textHint, fontSize: 11),
                 ),
               ),
 
@@ -282,11 +257,11 @@ class _PolicyLink extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            color: NeuTheme.textSecondary,
+            color: PwTheme.textSecondary,
             fontSize: 12,
             fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
             decoration: TextDecoration.underline,
-            decorationColor: NeuTheme.textHint,
+            decorationColor: PwTheme.textHint,
           ),
         ),
       ),

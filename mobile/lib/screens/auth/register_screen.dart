@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 import '../../widgets/social_login_row.dart';
 import 'consent_screen.dart';
@@ -181,7 +181,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   height: 4,
                   margin: EdgeInsets.only(right: i < 4 ? 6 : 0),
                   decoration: BoxDecoration(
-                    color: i <= _step ? AppTheme.primary : AppTheme.border,
+                    color: i <= _step ? PwTheme.primary : PwTheme.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -204,11 +204,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
             if (_error != null) ...[
               const SizedBox(height: 12),
-              Text(_error!, style: const TextStyle(color: AppTheme.error)),
+              Text(_error!, style: const TextStyle(color: PwTheme.error)),
             ],
             if (_info != null && _step < 4) ...[
               const SizedBox(height: 12),
-              Text(_info!, style: const TextStyle(color: AppTheme.success)),
+              Text(_info!, style: const TextStyle(color: PwTheme.success)),
             ],
           ],
         ),
@@ -253,7 +253,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       Text('가입 방법 선택', style: Theme.of(context).textTheme.headlineMedium),
       const SizedBox(height: 8),
       const Text('소셜 로그인 또는 이메일로 가입할 수 있습니다.',
-        style: TextStyle(color: AppTheme.textSecondary)),
+        style: TextStyle(color: PwTheme.textSecondary)),
       const SizedBox(height: 24),
 
       // 5종 소셜 가입 (PR #68)
@@ -274,13 +274,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       const SizedBox(height: 20),
       const Row(
         children: [
-          Expanded(child: Divider(color: AppTheme.border)),
+          Expanded(child: Divider(color: PwTheme.border)),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 12),
             child: Text('또는 이메일로 가입',
-              style: TextStyle(color: AppTheme.textHint, fontSize: 12)),
+              style: TextStyle(color: PwTheme.textHint, fontSize: 12)),
           ),
-          Expanded(child: Divider(color: AppTheme.border)),
+          Expanded(child: Divider(color: PwTheme.border)),
         ],
       ),
       const SizedBox(height: 20),
@@ -304,7 +304,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     Text('인증 코드 입력', style: Theme.of(context).textTheme.headlineMedium),
     const SizedBox(height: 8),
     Text('${_emailCtrl.text} 으로 6자리 코드를 보냈습니다.',
-      style: const TextStyle(color: AppTheme.textSecondary)),
+      style: const TextStyle(color: PwTheme.textSecondary)),
     const SizedBox(height: 24),
     PwTextField(
       controller: _codeCtrl,
@@ -333,7 +333,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       Text('생년 입력', style: Theme.of(context).textTheme.headlineMedium),
       const SizedBox(height: 8),
       const Text('만 14세 이상부터 가입 가능합니다.\n만 14~18세는 보호자 초대 코드가 필요합니다.',
-        style: TextStyle(color: AppTheme.textSecondary)),
+        style: TextStyle(color: PwTheme.textSecondary)),
       const SizedBox(height: 24),
       PwTextField(
         controller: _birthYearCtrl,
@@ -348,19 +348,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppTheme.warning.withValues(alpha: 0.18),
+            color: PwTheme.warning.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTheme.warning.withValues(alpha: 0.4)),
+            border: Border.all(color: PwTheme.warning.withValues(alpha: 0.4)),
           ),
           child: const Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.info_outline, size: 16, color: AppTheme.warning),
+              Icon(Icons.info_outline, size: 16, color: PwTheme.warning),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
                   '만 14~18세 회원은 보호자(만 19세 이상)의 초대를 통해서만 가입할 수 있습니다. 보호자가 앱에서 발급한 초대 코드를 입력해 주세요.',
-                  style: TextStyle(color: AppTheme.warning, fontSize: 12),
+                  style: TextStyle(color: PwTheme.warning, fontSize: 12),
                 ),
               ),
             ],
@@ -386,7 +386,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     Text('비밀번호 설정', style: Theme.of(context).textTheme.headlineMedium),
     const SizedBox(height: 8),
     const Text('영문 대/소문자 + 숫자 + 특수문자 포함 8자 이상.',
-      style: TextStyle(color: AppTheme.textSecondary)),
+      style: TextStyle(color: PwTheme.textSecondary)),
     const SizedBox(height: 24),
     PwTextField(
       controller: _pwCtrl,

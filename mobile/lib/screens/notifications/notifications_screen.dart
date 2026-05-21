@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../services/i18n_service.dart';
 import '../../services/notification_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 /// 알림 = 인박스(개인 트랜잭션) + 시스템 공지 (audience 별).
@@ -45,9 +45,9 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         title: Text(_t.t('notif.screen_title', defaultValue: '알림')),
         bottom: TabBar(
           controller: _tabCtrl,
-          labelColor: AppTheme.primary,
-          unselectedLabelColor: AppTheme.textSecondary,
-          indicatorColor: AppTheme.primary,
+          labelColor: PwTheme.primary,
+          unselectedLabelColor: PwTheme.textSecondary,
+          indicatorColor: PwTheme.primary,
           tabs: [
             Tab(text: _t.t('notif.tab_inbox', defaultValue: '인박스 (개인)')),
             Tab(text: _t.t('notif.tab_system', defaultValue: '공지 (시스템)')),
@@ -98,7 +98,7 @@ class _InboxTab extends StatelessWidget {
           return ListView.separated(
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: list.length,
-            separatorBuilder: (_, _) => const Divider(height: 1, color: AppTheme.border),
+            separatorBuilder: (_, _) => const Divider(height: 1, color: PwTheme.border),
             itemBuilder: (context, i) {
               final n = list[i];
               return _InboxItem(data: n);
@@ -133,7 +133,7 @@ class _InboxItem extends StatelessWidget {
     final at = data['created_at']?.toString().substring(0, 16);
 
     return Material(
-      color: unread ? AppTheme.primary.withValues(alpha: 0.07) : Colors.transparent,
+      color: unread ? PwTheme.primary.withValues(alpha: 0.07) : Colors.transparent,
       child: InkWell(
         onTap: () async {
           final id = data['id'] as int?;
@@ -145,7 +145,7 @@ class _InboxItem extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(_iconFor(kind), color: AppTheme.primary, size: 22),
+              Icon(_iconFor(kind), color: PwTheme.primary, size: 22),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -164,7 +164,7 @@ class _InboxItem extends StatelessWidget {
                           Container(
                             width: 8, height: 8,
                             decoration: const BoxDecoration(
-                              color: AppTheme.primary,
+                              color: PwTheme.primary,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -173,12 +173,12 @@ class _InboxItem extends StatelessWidget {
                     if (body.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(body,
-                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                        style: const TextStyle(color: PwTheme.textSecondary, fontSize: 13),
                         maxLines: 2, overflow: TextOverflow.ellipsis),
                     ],
                     if (at != null) ...[
                       const SizedBox(height: 4),
-                      Text(at, style: const TextStyle(color: AppTheme.textHint, fontSize: 11)),
+                      Text(at, style: const TextStyle(color: PwTheme.textHint, fontSize: 11)),
                     ],
                     // 정보통신망법 §50 — 마케팅 알림에 수신 거부 안내 표시
                     if (kind == 'marketing') ...[
@@ -189,7 +189,7 @@ class _InboxItem extends StatelessWidget {
                           defaultValue: '마케팅 알림입니다. 수신 거부는 설정 > 알림에서 변경할 수 있습니다.',
                         ),
                         style: const TextStyle(
-                          color: AppTheme.textHint,
+                          color: PwTheme.textHint,
                           fontSize: 11,
                           fontStyle: FontStyle.italic,
                         ),
@@ -273,7 +273,7 @@ class _AnnouncementCard extends StatelessWidget {
           barrierColor: const Color(0x99000000),
           barrierDismissible: true,
           builder: (_) => AlertDialog(
-            backgroundColor: AppTheme.surface,
+            backgroundColor: PwTheme.surface,
             title: Text(title),
             content: SingleChildScrollView(child: Text(body)),
             actions: [
@@ -290,10 +290,10 @@ class _AnnouncementCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppTheme.surface,
+          color: PwTheme.surface,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: pinned ? AppTheme.warning.withValues(alpha: 0.5) : AppTheme.border,
+            color: pinned ? PwTheme.warning.withValues(alpha: 0.5) : PwTheme.border,
           ),
         ),
         child: Column(
@@ -304,7 +304,7 @@ class _AnnouncementCard extends StatelessWidget {
                 if (pinned)
                   const Padding(
                     padding: EdgeInsets.only(right: 6),
-                    child: Icon(Icons.push_pin, size: 14, color: AppTheme.warning),
+                    child: Icon(Icons.push_pin, size: 14, color: PwTheme.warning),
                   ),
                 Expanded(
                   child: Text(title,
@@ -317,7 +317,7 @@ class _AnnouncementCard extends StatelessWidget {
                   Container(
                     width: 8, height: 8,
                     decoration: const BoxDecoration(
-                      color: AppTheme.primary,
+                      color: PwTheme.primary,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -326,7 +326,7 @@ class _AnnouncementCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(body,
               maxLines: 2, overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+              style: const TextStyle(color: PwTheme.textSecondary, fontSize: 13)),
           ],
         ),
       ),

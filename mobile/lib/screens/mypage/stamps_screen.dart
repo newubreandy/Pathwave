@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../services/i18n_service.dart';
 import '../../services/stamp_service.dart';
-import '../../utils/app_theme.dart';
+import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 /// 내 스탬프 — 시설별 카드 형태.
@@ -95,20 +95,20 @@ class _StampCard extends StatelessWidget {
         if (hasPolicy) ...[
           PwCard(
             padding: const EdgeInsets.all(14),
-            color: AppTheme.surfaceLight,
+            color: PwTheme.surfaceLight,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.info_outline, size: 16, color: AppTheme.primary),
+                    const Icon(Icons.info_outline, size: 16, color: PwTheme.primary),
                     const SizedBox(width: 6),
                     Text(
                       t.t('stamp.terms_title', defaultValue: '스탬프 적립 안내'),
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 13,
-                        color: AppTheme.primary,
+                        color: PwTheme.primary,
                       ),
                     ),
                   ],
@@ -143,16 +143,16 @@ class _StampCard extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppTheme.surface,
+            color: PwTheme.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppTheme.border),
+            border: Border.all(color: PwTheme.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.local_activity, color: AppTheme.primary),
+                  const Icon(Icons.local_activity, color: PwTheme.primary),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(facilityName,
@@ -161,11 +161,11 @@ class _StampCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.18),
+                      color: PwTheme.primary.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text('$count / $required',
-                      style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600)),
+                      style: const TextStyle(color: PwTheme.primary, fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),
@@ -175,19 +175,19 @@ class _StampCard extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 8,
-                  backgroundColor: AppTheme.border,
-                  color: AppTheme.primary,
+                  backgroundColor: PwTheme.border,
+                  color: PwTheme.primary,
                 ),
               ),
               if (expiresAt != null) ...[
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(Icons.access_time, size: 13, color: AppTheme.textHint),
+                    const Icon(Icons.access_time, size: 13, color: PwTheme.textHint),
                     const SizedBox(width: 4),
                     Text(
                       '${t.t('stamp.expires_at_label', defaultValue: '만료일')}: ${expiresAt.split('T').first}',
-                      style: const TextStyle(color: AppTheme.textHint, fontSize: 12),
+                      style: const TextStyle(color: PwTheme.textHint, fontSize: 12),
                     ),
                   ],
                 ),
@@ -195,7 +195,7 @@ class _StampCard extends StatelessWidget {
               if (count >= required) ...[
                 const SizedBox(height: 8),
                 const Text('🎉 보상 쿠폰이 발급되었어요',
-                  style: TextStyle(color: AppTheme.success, fontSize: 13)),
+                  style: TextStyle(color: PwTheme.success, fontSize: 13)),
               ],
             ],
           ),
@@ -217,12 +217,12 @@ class _TermsBullet extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('• ', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+          const Text('• ', style: TextStyle(color: PwTheme.textSecondary, fontSize: 13)),
           Expanded(
             child: Text(
               text,
               style: const TextStyle(
-                color: AppTheme.textSecondary,
+                color: PwTheme.textSecondary,
                 fontSize: 13,
                 height: 1.45,
               ),

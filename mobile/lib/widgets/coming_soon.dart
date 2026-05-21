@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../utils/app_theme.dart';
+import '../theme/pw_theme.dart';
 
 /// 후속 PR 에서 구현 예정인 화면용 공통 placeholder.
 class ComingSoon extends StatelessWidget {
@@ -27,11 +27,11 @@ class ComingSoon extends StatelessWidget {
             Container(
               width: 88, height: 88,
               decoration: BoxDecoration(
-                color: AppTheme.surface,
+                color: PwTheme.surface,
                 borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: AppTheme.border),
+                border: Border.all(color: PwTheme.border),
               ),
-              child: Icon(icon, size: 40, color: AppTheme.textSecondary),
+              child: Icon(icon, size: 40, color: PwTheme.textSecondary),
             ),
             const SizedBox(height: 16),
             Text(title,
@@ -41,14 +41,14 @@ class ComingSoon extends StatelessWidget {
               const SizedBox(height: 8),
               Text(subtitle!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppTheme.textSecondary)),
+                style: const TextStyle(color: PwTheme.textSecondary)),
             ],
             const SizedBox(height: 12),
             const Text('UI 구현 예정',
-              style: TextStyle(color: AppTheme.textHint, fontSize: 13)),
+              style: TextStyle(color: PwTheme.textHint, fontSize: 13)),
             if (prNote != null) ...[
               const SizedBox(height: 4),
-              Text(prNote!, style: const TextStyle(color: AppTheme.primary, fontSize: 13)),
+              Text(prNote!, style: const TextStyle(color: PwTheme.primary, fontSize: 13)),
             ],
           ],
         ),
