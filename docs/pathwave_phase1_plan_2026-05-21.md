@@ -65,7 +65,7 @@ SSID + 이동 시 무중단 시나리오를 실기기로 walk-through 검증.
 | PR | 도메인 | 콘솔 | 내용 | 갭 |
 |---|---|---|---|---|
 | P1 | mobile 디자인 기반 | mobile | 테마 단일화(`AppTheme`+`NeuTheme`→1) + Noto Sans 폰트 번들(CJK/태국어) + `neu/` 위젯 통합 + `Pw*` 4종 추가(Radio·Checkbox·Dropdown·Chip) | High×4 |
-| P2 | mobile i18n 인프라 | mobile | `l10n.yaml` + ARB 골격 + supportedLocales 단일화(7/23/10→통일) + `I18nService` 정합 + 하드코딩 13화면 `t()` 일괄 전환 | High |
+| P2 | mobile i18n | mobile·BE | DB 기반 `I18nService` 정합(ARB 아님) + supportedLocales 12개 단일화 + 전 화면·공용위젯 하드코딩 한글 `t(키, defaultValue:)` 일괄 전환 + `translations` ko 시드 347개(코드 추출, 203→550) + DeepL 일괄번역 스크립트 준비 | High |
 | P3 | 웹 디자인 시스템 강제 | provider·admin | 네이티브 `alert/confirm`(provider 18+admin 6)→공용 모달 / 색 토큰 정합(provider-web 구 보라 #8B5CF6 잔존→녹색 정리, admin 블루 #2563EB 정상 유지) / `ConfirmModal` prop 정합 | High×3 |
 
 ### 🔴 Critical 도메인 (C1~C14)
@@ -149,7 +149,7 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 | PR | 상태 | PR | 상태 | PR | 상태 |
 |---|---|---|---|---|---|
 | P1 | ✅ | P8 | ⬜ | P15 | ⬜ |
-| P2 | ⬜ | P9 | ⬜ | P16 | ⬜ |
+| P2 | ✅ | P9 | ⬜ | P16 | ⬜ |
 | P3 | ⬜ | P10 | ⬜ | P17 | ⬜ |
 | P4 | ⬜ | P11 | ⬜ | P18 | ⬜ |
 | P5 | ⬜ | P12 | ⬜ | P19 | ⬜ |
