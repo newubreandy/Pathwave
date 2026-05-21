@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/auth_service.dart';
+import '../services/i18n_service.dart';
 import '../services/version_service.dart';
 import '../theme/pw_theme.dart';
 
@@ -17,6 +18,8 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  final _t = I18nService.instance;
+
   @override
   void initState() {
     super.initState();
@@ -64,17 +67,22 @@ class _SplashScreenState extends State<SplashScreen> {
         canPop: false,
         child: AlertDialog(
           backgroundColor: PwTheme.surface,
-          title: const Text('업데이트가 필요합니다'),
+          title: Text(_t.t('splash.force_update_title',
+              defaultValue: '업데이트가 필요합니다')),
           content: Text(
             v.forceMessage?.isNotEmpty == true
                 ? v.forceMessage!
-                : '안전한 사용을 위해 최신 버전 설치가 필요합니다.\n'
-                  '현재 버전: ${v.current ?? '-'} · 최소 지원: ${v.minSupported ?? '-'}',
+                : _t.t('splash.force_update_body',
+                        defaultValue:
+                            '안전한 사용을 위해 최신 버전 설치가 필요합니다.\n'
+                            '현재 버전: {current} · 최소 지원: {min}')
+                    .replaceFirst('{current}', v.current ?? '-')
+                    .replaceFirst('{min}', v.minSupported ?? '-'),
           ),
           actions: [
             FilledButton(
               onPressed: () => _openStore(v.storeUrl),
-              child: const Text('스토어로 이동'),
+              child: Text(_t.t('splash.go_store', defaultValue: '스토어로 이동')),
             ),
           ],
         ),
@@ -89,15 +97,19 @@ class _SplashScreenState extends State<SplashScreen> {
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: PwTheme.surface,
-        title: const Text('새로운 버전이 있어요'),
+        title: Text(_t.t('splash.recommend_title',
+            defaultValue: '새로운 버전이 있어요')),
         content: Text(
-          '최신 버전이 출시되었습니다.\n'
-          '현재 ${v.current ?? '-'} → 최신 ${v.latest ?? '-'}',
+          _t.t('splash.recommend_body',
+                  defaultValue: '최신 버전이 출시되었습니다.\n'
+                      '현재 {current} → 최신 {latest}')
+              .replaceFirst('{current}', v.current ?? '-')
+              .replaceFirst('{latest}', v.latest ?? '-'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('나중에'),
+            child: Text(_t.t('common.later', defaultValue: '나중에')),
           ),
           FilledButton(
             onPressed: () {
@@ -105,7 +117,7 @@ class _SplashScreenState extends State<SplashScreen> {
               Navigator.of(ctx).pop();
               _openStore(v.storeUrl);
             },
-            child: const Text('지금 업데이트'),
+            child: Text(_t.t('splash.update_now', defaultValue: '지금 업데이트')),
           ),
         ],
       ),
@@ -142,8 +154,9 @@ class _SplashScreenState extends State<SplashScreen> {
             Text('PathWave',
               style: Theme.of(context).textTheme.displaySmall),
             const SizedBox(height: 6),
-            const Text('비콘 기반 WiFi · 스탬프 · 쿠폰',
-              style: TextStyle(color: PwTheme.textSecondary)),
+            Text(
+              _t.t('splash.tagline', defaultValue: '비콘 기반 WiFi · 스탬프 · 쿠폰'),
+              style: const TextStyle(color: PwTheme.textSecondary)),
               const SizedBox(height: 40),
               const CircularProgressIndicator(
                 strokeWidth: 2.5,

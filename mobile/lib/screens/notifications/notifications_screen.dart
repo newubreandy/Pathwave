@@ -128,7 +128,8 @@ class _InboxItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final unread = data['read'] == false || data['read_at'] == null;
     final kind = data['kind']?.toString();
-    final title = data['title']?.toString() ?? '알림';
+    final title = data['title']?.toString()
+        ?? I18nService.instance.t('notif.default_title', defaultValue: '알림');
     final body = data['body']?.toString() ?? '';
     final at = data['created_at']?.toString().substring(0, 16);
 
@@ -281,7 +282,8 @@ class _AnnouncementCard extends StatelessWidget {
                 variant: PwButtonVariant.text,
                 fullWidth: false,
                 onPressed: () => context.pop(),
-                child: const Text('닫기'),
+                child: Text(I18nService.instance
+                    .t('common.close', defaultValue: '닫기')),
               ),
             ],
           ),

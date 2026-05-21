@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/favorite_service.dart';
+import '../../services/i18n_service.dart';
 import '../../services/permission_service.dart';
 import '../../services/store_service.dart';
 import '../../theme/pw_theme.dart';
@@ -19,6 +20,7 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
+  final _t = I18nService.instance;
   final _searchCtrl = TextEditingController();
   Timer? _debounce;
 
@@ -132,11 +134,12 @@ class _SearchScreenState extends State<SearchScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('매장 검색', style: Theme.of(context).textTheme.displaySmall),
+          Text(_t.t('search.title', defaultValue: '매장 검색'),
+            style: Theme.of(context).textTheme.displaySmall),
           const SizedBox(height: 12),
           PwTextField(
             controller: _searchCtrl,
-            hint: '매장명 / 주소 / 키워드 검색',
+            hint: _t.t('search.hint', defaultValue: '매장명 / 주소 / 키워드 검색'),
             prefixIcon: Icons.search,
             textInputAction: TextInputAction.search,
             onChanged: _onChanged,
@@ -144,8 +147,10 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
           if (_locationDenied) ...[
             const SizedBox(height: 8),
-            const Text('위치 권한이 없어 거리 정렬을 이용할 수 없습니다.',
-              style: TextStyle(color: PwTheme.warning, fontSize: 12)),
+            Text(
+              _t.t('search.location_denied',
+                  defaultValue: '위치 권한이 없어 거리 정렬을 이용할 수 없습니다.'),
+              style: const TextStyle(color: PwTheme.warning, fontSize: 12)),
           ],
           const SizedBox(height: 12),
           Expanded(
@@ -162,10 +167,11 @@ class _SearchScreenState extends State<SearchScreen> {
       return PwErrorState(message: _error!, onRetry: _runSearch);
     }
     if (_results.isEmpty) {
-      return const PwEmptyState(
+      return PwEmptyState(
         icon: Icons.search_off,
-        title: '결과가 없습니다',
-        subtitle: '다른 키워드로 검색해 보세요.',
+        title: _t.t('search.empty_title', defaultValue: '결과가 없습니다'),
+        subtitle: _t.t('search.empty_subtitle',
+            defaultValue: '다른 키워드로 검색해 보세요.'),
       );
     }
     return RefreshIndicator(
@@ -200,8 +206,10 @@ class _ResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = I18nService.instance;
     final id = data['id'] as int?;
-    final name = data['name']?.toString() ?? '매장';
+    final name = data['name']?.toString()
+        ?? t.t('common.store', defaultValue: '매장');
     final address = data['address']?.toString() ?? '';
     final imageUrl = data['image_url']?.toString();
     final dist = data['distance_km'];
@@ -268,7 +276,9 @@ class _ResultCard extends StatelessWidget {
             PwIconButton(
               icon: isFavorite ? Icons.favorite : Icons.favorite_border,
               color: isFavorite ? PwTheme.primary : PwTheme.textHint,
-              tooltip: isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가',
+              tooltip: isFavorite
+                ? t.t('facility.unfavorite', defaultValue: '즐겨찾기 해제')
+                : t.t('facility.favorite', defaultValue: '즐겨찾기 추가'),
               onPressed: onFavoriteToggle,
             ),
           ],
