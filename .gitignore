@@ -38,3 +38,7 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# 도구 부산물
+.omc/
+*.bak
