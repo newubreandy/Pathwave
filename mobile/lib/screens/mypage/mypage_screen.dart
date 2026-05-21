@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../services/i18n_service.dart';
 import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
@@ -10,8 +11,9 @@ class MyPageScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = I18nService.instance;
     return Scaffold(
-      appBar: PwAppBar(title: const Text('마이페이지')),
+      appBar: PwAppBar(title: Text(t.t('mypage.title', defaultValue: '마이페이지'))),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -20,13 +22,16 @@ class MyPageScreen extends StatelessWidget {
             children: [
               const Icon(Icons.person_outline, size: 56, color: PwTheme.textHint),
               const SizedBox(height: 12),
-              const Text('홈 화면의 "마이" 탭에서 이용해 주세요.',
-                style: TextStyle(color: PwTheme.textSecondary)),
+              Text(
+                t.t('mypage.use_my_tab',
+                    defaultValue: '홈 화면의 "마이" 탭에서 이용해 주세요.'),
+                style: const TextStyle(color: PwTheme.textSecondary),
+              ),
               const SizedBox(height: 16),
               PwButton(
                 fullWidth: false,
                 onPressed: () => context.go('/home'),
-                child: const Text('홈으로'),
+                child: Text(t.t('mypage.go_home', defaultValue: '홈으로')),
               ),
             ],
           ),

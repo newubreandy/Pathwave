@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/favorite_service.dart';
+import '../../services/i18n_service.dart';
 import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
@@ -15,6 +16,7 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
+  final _t = I18nService.instance;
   late Future<List<Map<String, dynamic>>> _future;
 
   @override
@@ -40,7 +42,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PwAppBar(title: const Text('즐겨찾기')),
+      appBar: PwAppBar(
+        title: Text(_t.t('mypage.menu_favorites', defaultValue: '즐겨찾기'))),
       body: RefreshIndicator(
         onRefresh: _reload,
         child: FutureBuilder<List<Map<String, dynamic>>>(
@@ -57,12 +60,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             }
             final list = snap.data ?? [];
             if (list.isEmpty) {
-              return ListView(children: const [
-                SizedBox(height: 100),
+              return ListView(children: [
+                const SizedBox(height: 100),
                 PwEmptyState(
                   icon: Icons.favorite_border,
-                  title: '즐겨찾기한 매장이 없습니다',
-                  subtitle: '매장 상세나 검색에서 하트를 눌러보세요.',
+                  title: _t.t('favorites.empty_title',
+                      defaultValue: '즐겨찾기한 매장이 없습니다'),
+                  subtitle: _t.t('favorites.empty_subtitle',
+                      defaultValue: '매장 상세나 검색에서 하트를 눌러보세요.'),
                 ),
               ]);
             }
@@ -90,8 +95,10 @@ class _FavoriteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = I18nService.instance;
     final id = data['id'] as int?;
-    final name = data['name']?.toString() ?? '매장';
+    final name = data['name']?.toString()
+        ?? t.t('common.store', defaultValue: '매장');
     final address = data['address']?.toString() ?? '';
     final description = data['description']?.toString() ?? '';
     final imageUrl = data['image_url']?.toString();
@@ -148,7 +155,7 @@ class _FavoriteCard extends StatelessWidget {
           PwIconButton(
             icon: Icons.favorite,
             color: PwTheme.primary,
-            tooltip: '즐겨찾기 해제',
+            tooltip: t.t('favorites.remove', defaultValue: '즐겨찾기 해제'),
             onPressed: onRemove,
           ),
         ],

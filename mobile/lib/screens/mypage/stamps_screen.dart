@@ -52,7 +52,8 @@ class _StampsScreenState extends State<StampsScreen> {
                   PwEmptyState(
                     icon: Icons.local_activity_outlined,
                     title: _t.t('stamp.empty', defaultValue: '아직 적립된 스탬프가 없습니다'),
-                    subtitle: '매장에 방문하면 비콘으로 자동 적립됩니다.',
+                    subtitle: _t.t('stamp.empty_subtitle',
+                        defaultValue: '매장에 방문하면 비콘으로 자동 적립됩니다.'),
                   ),
                 ],
               );
@@ -78,7 +79,8 @@ class _StampCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = I18nService.instance;
-    final facilityName = data['facility_name']?.toString() ?? '매장';
+    final facilityName = data['facility_name']?.toString()
+        ?? t.t('common.store', defaultValue: '매장');
     final count = (data['count'] as num?)?.toInt() ?? 0;
     final required = (data['required_count'] as num?)?.toInt() ?? 10;
     final progress = required > 0 ? (count / required).clamp(0.0, 1.0) : 0.0;
@@ -194,8 +196,10 @@ class _StampCard extends StatelessWidget {
               ],
               if (count >= required) ...[
                 const SizedBox(height: 8),
-                const Text('🎉 보상 쿠폰이 발급되었어요',
-                  style: TextStyle(color: PwTheme.success, fontSize: 13)),
+                Text(
+                  t.t('stamp.reward_issued',
+                      defaultValue: '🎉 보상 쿠폰이 발급되었어요'),
+                  style: const TextStyle(color: PwTheme.success, fontSize: 13)),
               ],
             ],
           ),

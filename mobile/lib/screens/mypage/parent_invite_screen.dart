@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../services/i18n_service.dart';
 import '../../services/parent_invite_service.dart';
 import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
@@ -13,6 +14,7 @@ class ParentInviteScreen extends StatefulWidget {
 }
 
 class _ParentInviteScreenState extends State<ParentInviteScreen> {
+  final _t = I18nService.instance;
   final _emailCtrl = TextEditingController();
   bool _liabilityAccepted = false;
   bool _busy = false;
@@ -27,7 +29,8 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
 
   Future<void> _create() async {
     if (!_liabilityAccepted) {
-      setState(() => _error = '법적 책임 동의가 필요합니다.');
+      setState(() => _error = _t.t('parent_invite.err_liability',
+          defaultValue: '법적 책임 동의가 필요합니다.'));
       return;
     }
     setState(() { _busy = true; _error = null; });
@@ -47,7 +50,9 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PwAppBar(title: const Text('자녀 초대 코드 발급')),
+      appBar: PwAppBar(
+        title: Text(_t.t('parent_invite.title',
+            defaultValue: '자녀 초대 코드 발급'))),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: _result != null
@@ -67,24 +72,29 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: PwTheme.warning.withValues(alpha: 0.4)),
           ),
-          child: const Column(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded, size: 18, color: PwTheme.warning),
-                  SizedBox(width: 6),
-                  Text('자녀 초대 책임 동의',
-                    style: TextStyle(color: PwTheme.warning, fontWeight: FontWeight.w700)),
+                  const Icon(Icons.warning_amber_rounded, size: 18, color: PwTheme.warning),
+                  const SizedBox(width: 6),
+                  Text(_t.t('parent_invite.consent_title',
+                      defaultValue: '자녀 초대 책임 동의'),
+                    style: const TextStyle(
+                        color: PwTheme.warning, fontWeight: FontWeight.w700)),
                 ],
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
-                '본 초대 코드로 가입하는 자녀(만 14~18세)의 PathWave 서비스 이용에 대한 '
-                '법적 책임은 보호자인 본인에게 있음을 확인합니다. '
-                '자녀가 일부 시설(숙박/유흥 등 미성년자 출입 제한 시설)에 접근하는 것은 '
-                '서비스가 자동으로 차단합니다.',
-                style: TextStyle(color: PwTheme.textPrimary, fontSize: 13, height: 1.5),
+                _t.t('parent_invite.consent_body',
+                    defaultValue:
+                        '본 초대 코드로 가입하는 자녀(만 14~18세)의 PathWave 서비스 이용에 대한 '
+                        '법적 책임은 보호자인 본인에게 있음을 확인합니다. '
+                        '자녀가 일부 시설(숙박/유흥 등 미성년자 출입 제한 시설)에 접근하는 것은 '
+                        '서비스가 자동으로 차단합니다.'),
+                style: const TextStyle(
+                    color: PwTheme.textPrimary, fontSize: 13, height: 1.5),
               ),
             ],
           ),
@@ -101,17 +111,20 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
                   color: _liabilityAccepted ? PwTheme.primary : PwTheme.textHint,
                 ),
                 const SizedBox(width: 10),
-                const Expanded(
-                  child: Text('위 책임 사항에 동의합니다.',
-                    style: TextStyle(fontSize: 14)),
+                Expanded(
+                  child: Text(
+                    _t.t('parent_invite.consent_check',
+                        defaultValue: '위 책임 사항에 동의합니다.'),
+                    style: const TextStyle(fontSize: 14)),
                 ),
               ],
             ),
           ),
         ),
         const SizedBox(height: 16),
-        const Text('자녀 이메일 (선택)',
-          style: TextStyle(color: PwTheme.textSecondary, fontSize: 13)),
+        Text(_t.t('parent_invite.email_label',
+            defaultValue: '자녀 이메일 (선택)'),
+          style: const TextStyle(color: PwTheme.textSecondary, fontSize: 13)),
         const SizedBox(height: 6),
         PwTextField(
           controller: _emailCtrl,
@@ -127,7 +140,8 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
         PwButton(
           onPressed: _create,
           loading: _busy,
-          child: const Text('초대 코드 발급'),
+          child: Text(_t.t('parent_invite.submit',
+              defaultValue: '초대 코드 발급')),
         ),
       ],
     );
@@ -142,6 +156,7 @@ class _SuccessView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = I18nService.instance;
     final code = result['code']?.toString() ?? '';
     final shareUrl = result['share_url']?.toString() ?? '';
     final expiresAt = result['expires_at']?.toString().substring(0, 16) ?? '';
@@ -152,8 +167,9 @@ class _SuccessView extends StatelessWidget {
         children: [
           const Icon(Icons.check_circle, size: 56, color: PwTheme.success),
           const SizedBox(height: 12),
-          const Text('초대 코드가 발급되었습니다',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+          Text(t.t('parent_invite.success_title',
+              defaultValue: '초대 코드가 발급되었습니다'),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(20),
@@ -164,8 +180,8 @@ class _SuccessView extends StatelessWidget {
             ),
             child: Column(
               children: [
-                const Text('초대 코드',
-                  style: TextStyle(color: PwTheme.textHint, fontSize: 12)),
+                Text(t.t('parent_invite.code_label', defaultValue: '초대 코드'),
+                  style: const TextStyle(color: PwTheme.textHint, fontSize: 12)),
                 const SizedBox(height: 6),
                 SelectableText(
                   code,
@@ -181,7 +197,8 @@ class _SuccessView extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           if (expiresAt.isNotEmpty)
-            Text('만료: $expiresAt',
+            Text(
+              '${t.t('parent_invite.expires_label', defaultValue: '만료')}: $expiresAt',
               style: const TextStyle(color: PwTheme.textHint, fontSize: 12)),
           const SizedBox(height: 16),
           PwButton(
@@ -192,11 +209,12 @@ class _SuccessView extends StatelessWidget {
               await Clipboard.setData(ClipboardData(text: code));
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('초대 코드를 복사했습니다.')),
+                  SnackBar(content: Text(t.t('parent_invite.code_copied',
+                      defaultValue: '초대 코드를 복사했습니다.'))),
                 );
               }
             },
-            child: const Text('코드 복사'),
+            child: Text(t.t('parent_invite.copy_code', defaultValue: '코드 복사')),
           ),
           if (shareUrl.isNotEmpty) ...[
             const SizedBox(height: 8),
@@ -208,18 +226,20 @@ class _SuccessView extends StatelessWidget {
                 await Clipboard.setData(ClipboardData(text: shareUrl));
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('가입 링크를 복사했습니다.')),
+                    SnackBar(content: Text(t.t('parent_invite.link_copied',
+                        defaultValue: '가입 링크를 복사했습니다.'))),
                   );
                 }
               },
-              child: const Text('가입 링크 복사'),
+              child: Text(t.t('parent_invite.copy_link',
+                  defaultValue: '가입 링크 복사')),
             ),
           ],
           const SizedBox(height: 24),
           PwButton(
             variant: PwButtonVariant.text,
             onPressed: onClose,
-            child: const Text('닫기'),
+            child: Text(t.t('common.close', defaultValue: '닫기')),
           ),
         ],
       ),

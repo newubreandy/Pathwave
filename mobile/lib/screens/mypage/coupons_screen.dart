@@ -8,9 +8,21 @@ import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
 const _statusTabs = ['active', 'used', 'expired'];
-const _statusLabel = {
-  'active': '사용 가능', 'used': '사용 완료', 'expired': '만료',
-};
+
+/// 쿠폰 상태별 표시 라벨 (i18n).
+String _statusLabel(String status) {
+  final t = I18nService.instance;
+  switch (status) {
+    case 'active':
+      return t.t('coupon.status_active', defaultValue: '사용 가능');
+    case 'used':
+      return t.t('coupon.status_used', defaultValue: '사용 완료');
+    case 'expired':
+      return t.t('coupon.status_expired', defaultValue: '만료');
+    default:
+      return status;
+  }
+}
 
 /// 새로 발급된 쿠폰 판별: is_new 플래그 또는 created_at 기준 최근 5분 이내.
 bool _isNewlyIssued(Map<String, dynamic> data) {
@@ -62,7 +74,7 @@ class _CouponsScreenState extends State<CouponsScreen>
         title: Text(_t.t('coupon_issue.title', defaultValue: '내 쿠폰')),
         bottom: TabBar(
           controller: _tabCtrl,
-          tabs: _statusTabs.map((s) => Tab(text: _statusLabel[s])).toList(),
+          tabs: _statusTabs.map((s) => Tab(text: _statusLabel(s))).toList(),
           labelColor: PwTheme.primary,
           unselectedLabelColor: PwTheme.textSecondary,
           indicatorColor: PwTheme.primary,
@@ -115,7 +127,9 @@ class _CouponListState extends State<_CouponList> {
                 const SizedBox(height: 100),
                 PwEmptyState(
                   icon: Icons.confirmation_number_outlined,
-                  title: '${_statusLabel[widget.status]} 쿠폰이 없습니다',
+                  title: I18nService.instance
+                      .t('coupon.empty', defaultValue: '{status} 쿠폰이 없습니다')
+                      .replaceFirst('{status}', _statusLabel(widget.status)),
                 ),
               ],
             );
@@ -285,10 +299,15 @@ class _CouponCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = data['title']?.toString() ?? '쿠폰';
-    final facilityName = data['facility_name']?.toString() ?? '매장';
+    final t = I18nService.instance;
+    final title = data['title']?.toString()
+        ?? t.t('coupon.default_title', defaultValue: '쿠폰');
+    final facilityName = data['facility_name']?.toString()
+        ?? t.t('common.store', defaultValue: '매장');
     final discount = data['discount_amount'] ?? data['discount_pct'];
-    final discountSuffix = data['discount_amount'] != null ? '원 할인' : '% 할인';
+    final discountSuffix = data['discount_amount'] != null
+        ? t.t('coupon.discount_won', defaultValue: '원 할인')
+        : t.t('coupon.discount_pct', defaultValue: '% 할인');
     final expiresAt = data['expires_at']?.toString();
 
     final isUsable = status == 'active';
@@ -343,8 +362,10 @@ class _CouponCard extends StatelessWidget {
 
   void _showDetailDialog(BuildContext context, Map<String, dynamic> data, bool isUsable) {
     final t = I18nService.instance;
-    final title = data['title']?.toString() ?? '쿠폰';
-    final facilityName = data['facility_name']?.toString() ?? '매장';
+    final title = data['title']?.toString()
+        ?? t.t('coupon.default_title', defaultValue: '쿠폰');
+    final facilityName = data['facility_name']?.toString()
+        ?? t.t('common.store', defaultValue: '매장');
     final expiresAt = data['expires_at']?.toString();
 
     showDialog<void>(
@@ -421,7 +442,7 @@ class _CouponCard extends StatelessWidget {
             variant: PwButtonVariant.text,
             fullWidth: false,
             onPressed: () => ctx.pop(),
-            child: const Text('닫기'),
+            child: Text(t.t('common.close', defaultValue: '닫기')),
           ),
           if (isUsable)
             PwButton(
@@ -439,7 +460,8 @@ class _CouponCard extends StatelessWidget {
 
   void _showUseConfirm(BuildContext context, Map<String, dynamic> data) {
     final t = I18nService.instance;
-    final title = data['title']?.toString() ?? '쿠폰';
+    final title = data['title']?.toString()
+        ?? t.t('coupon.default_title', defaultValue: '쿠폰');
     showDialog<void>(
       context: context,
       barrierColor: const Color(0x99000000),
@@ -460,7 +482,7 @@ class _CouponCard extends StatelessWidget {
             variant: PwButtonVariant.text,
             fullWidth: false,
             onPressed: () => ctx.pop(),
-            child: const Text('취소'),
+            child: Text(t.t('common.cancel', defaultValue: '취소')),
           ),
           PwButton(
             fullWidth: false,

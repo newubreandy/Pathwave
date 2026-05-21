@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
+import '../../services/i18n_service.dart';
 import '../../theme/pw_theme.dart';
 import '../../widgets/pw.dart';
 
@@ -14,6 +15,7 @@ class DeleteAccountScreen extends StatefulWidget {
 }
 
 class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
+  final _t = I18nService.instance;
   final _passwordCtrl = TextEditingController();
   bool _confirmed = false;
   bool _busy = false;
@@ -27,7 +29,8 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
 
   Future<void> _submit() async {
     if (!_confirmed) {
-      setState(() => _error = '안내 사항을 모두 확인하셨다면 동의 체크를 해 주세요.');
+      setState(() => _error = _t.t('delete_account.err_confirm',
+          defaultValue: '안내 사항을 모두 확인하셨다면 동의 체크를 해 주세요.'));
       return;
     }
     setState(() { _busy = true; _error = null; });
@@ -39,13 +42,17 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       if (res['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(res['message']?.toString() ?? '회원 탈퇴가 완료되었습니다.'),
+            content: Text(res['message']?.toString()
+                ?? _t.t('delete_account.done',
+                    defaultValue: '회원 탈퇴가 완료되었습니다.')),
             duration: const Duration(seconds: 3),
           ),
         );
         context.go('/auth/login');
       } else {
-        setState(() => _error = res['message']?.toString() ?? '탈퇴에 실패했습니다.');
+        setState(() => _error = res['message']?.toString()
+            ?? _t.t('delete_account.err_failed',
+                defaultValue: '탈퇴에 실패했습니다.'));
       }
     } catch (e) {
       if (!mounted) return;
@@ -61,7 +68,8 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
     final isEmailUser = (auth.user?['provider']?.toString() ?? 'email') == 'email';
 
     return Scaffold(
-      appBar: PwAppBar(title: const Text('회원 탈퇴')),
+      appBar: PwAppBar(
+        title: Text(_t.t('delete_account.title', defaultValue: '회원 탈퇴'))),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -72,24 +80,33 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
               const Icon(Icons.warning_amber_rounded,
                 size: 48, color: PwTheme.warning),
               const SizedBox(height: 12),
-              Text('정말 탈퇴하시겠습니까?',
+              Text(_t.t('delete_account.heading',
+                  defaultValue: '정말 탈퇴하시겠습니까?'),
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 24),
 
-              const PwCard(
+              PwCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _Bullet('탈퇴 즉시 로그인 / 알림이 차단됩니다.'),
-                    SizedBox(height: 8),
-                    _Bullet('보유한 스탬프 / 쿠폰은 모두 소멸됩니다.'),
-                    SizedBox(height: 8),
-                    _Bullet('채팅 / 결제 내역은 법령상 보존 기간 동안 익명화 보존됩니다.'),
-                    SizedBox(height: 8),
-                    _Bullet('탈퇴 후 같은 이메일로 재가입할 수 있으나, 이전 데이터는 복구되지 않습니다.'),
-                    SizedBox(height: 8),
-                    _Bullet('14일 이내 미성년 보호자 초대 코드 발급 이력은 별도 보존됩니다.'),
+                    _Bullet(_t.t('delete_account.bullet_block',
+                        defaultValue: '탈퇴 즉시 로그인 / 알림이 차단됩니다.')),
+                    const SizedBox(height: 8),
+                    _Bullet(_t.t('delete_account.bullet_assets',
+                        defaultValue: '보유한 스탬프 / 쿠폰은 모두 소멸됩니다.')),
+                    const SizedBox(height: 8),
+                    _Bullet(_t.t('delete_account.bullet_records',
+                        defaultValue:
+                            '채팅 / 결제 내역은 법령상 보존 기간 동안 익명화 보존됩니다.')),
+                    const SizedBox(height: 8),
+                    _Bullet(_t.t('delete_account.bullet_rejoin',
+                        defaultValue:
+                            '탈퇴 후 같은 이메일로 재가입할 수 있으나, 이전 데이터는 복구되지 않습니다.')),
+                    const SizedBox(height: 8),
+                    _Bullet(_t.t('delete_account.bullet_minor',
+                        defaultValue:
+                            '14일 이내 미성년 보호자 초대 코드 발급 이력은 별도 보존됩니다.')),
                   ],
                 ),
               ),
@@ -97,12 +114,14 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
               const SizedBox(height: 16),
 
               if (isEmailUser) ...[
-                Text('비밀번호 확인',
+                Text(_t.t('delete_account.password_label',
+                    defaultValue: '비밀번호 확인'),
                   style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 PwTextField(
                   controller: _passwordCtrl,
-                  hint: '본인 확인을 위해 비밀번호를 입력해 주세요',
+                  hint: _t.t('delete_account.password_hint',
+                      defaultValue: '본인 확인을 위해 비밀번호를 입력해 주세요'),
                   prefixIcon: Icons.lock_outline,
                   obscureText: true,
                 ),
@@ -121,10 +140,12 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                         color: _confirmed ? PwTheme.error : PwTheme.textHint,
                       ),
                       const SizedBox(width: 8),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          '위 내용을 모두 확인했으며, 영구 탈퇴에 동의합니다.',
-                          style: TextStyle(fontSize: 13),
+                          _t.t('delete_account.confirm_check',
+                              defaultValue:
+                                  '위 내용을 모두 확인했으며, 영구 탈퇴에 동의합니다.'),
+                          style: const TextStyle(fontSize: 13),
                         ),
                       ),
                     ],
@@ -152,13 +173,14 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                 variant: PwButtonVariant.danger,
                 onPressed: _submit,
                 loading: _busy,
-                child: const Text('탈퇴하기'),
+                child: Text(_t.t('delete_account.submit',
+                    defaultValue: '탈퇴하기')),
               ),
               const SizedBox(height: 8),
               PwButton(
                 variant: PwButtonVariant.text,
                 onPressed: _busy ? null : () => context.pop(),
-                child: const Text('취소'),
+                child: Text(_t.t('common.cancel', defaultValue: '취소')),
               ),
             ],
           ),
