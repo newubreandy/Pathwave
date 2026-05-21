@@ -73,7 +73,7 @@ SSID + 이동 시 무중단 시나리오를 실기기로 walk-through 검증.
 | PR | 도메인 | 콘솔 | 내용 | 갭 |
 |---|---|---|---|---|
 | P4 | 인증 우회 제거 | provider·admin·BE | provider `DEV_AUTO_LOGIN`·`Login` 자동토큰·`Signup` 게스트를 `import.meta.env.DEV` 게이트(출시 빌드 차단) + 실 로그인폼 복구 / admin 은 이미 정합(DevPreviewBar=`VITE_PREVIEW_MODE`) / `/forgot-password` 정식 구현 — BE `POST /api/facility/forgot-password`·`reset-password` 신규 + provider `ForgotPassword` 페이지·라우트 | C1·C2·C3 |
-| P5 | 매장·회사정보 실연동 | provider(+admin) | 하드코딩('호텔H'·'02-1234-5678') 제거 + `PwFooter` 통일(트리거소프트 법인정보) + `StoreService` 실연동 | C7·C4 |
+| P5 | 매장·회사정보 실연동 | provider | StoreInfo 하드코딩('패스트파이브'·'02-1234-5678') 제거 + `StoreService` 실연동(list/update/비콘 fid) + Settings 푸터 → `PwFooter`(트리거소프트 법인정보) + dead code Facilities 삭제. ※쿠폰·알림·직원 등의 '호텔H' mock 은 각 도메인 PR(P7/P9/P10/P11) 소관 | C7·C4 |
 | P6 | OCR 허위 제거 | provider | `WifiSettings`·`ServiceRequest` `runOcrMock` 제거 → 정직한 수동입력 UI | C5 |
 | P7 | 결제·구독 실연동 | provider·admin | 카드 평문저장 제거(서버 토큰화) + PG 시뮬 정리 + `Subscriptions` 실연동 + 결제/서비스신청 중복흐름 통합 + admin Payments 정합 | C6·C4 |
 | P8 | 채팅 도메인 | mobile·provider·admin·BE | provider `CustomerChat` 실연동(`ChatService`) + admin `ChatMonitor` 실연동(BE `/api/chat/reports` 신규) + mobile SSE 끊김 복구 + 채팅 번역 연결(`translator.py`↔`chat.py`) | C4·C12·W8 |
@@ -152,7 +152,7 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 | P2 | ✅ | P9 | ⬜ | P16 | ⬜ |
 | P3 | ✅ | P10 | ⬜ | P17 | ⬜ |
 | P4 | ✅ | P11 | ⬜ | P18 | ⬜ |
-| P5 | ⬜ | P12 | ⬜ | P19 | ⬜ |
+| P5 | ✅ | P12 | ⬜ | P19 | ⬜ |
 | P6 | ⬜ | P13 | ⬜ | P20 | ⬜ |
 | P7 | ⬜ | P14 | ⬜ | P21 | ⬜ |
 | P22 | ⬜ |  |  |  |  |
