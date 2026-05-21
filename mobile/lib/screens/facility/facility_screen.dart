@@ -77,14 +77,31 @@ class _FacilityScreenState extends State<FacilityScreen> {
         child: FutureBuilder<Map<String, dynamic>>(
           future: _detail,
           builder: (context, snap) {
+            // loading/error 상태에도 AppBar + back arrow 보장 (HIG/Material 3 — dead-end 금지).
             if (snap.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return CustomScrollView(
+                slivers: [
+                  _buildPlainAppBar(),
+                  const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                ],
+              );
             }
             if (snap.hasError) {
-              return ListView(children: [
-                const SizedBox(height: 100),
-                PwErrorState(message: snap.error.toString(), onRetry: _refresh),
-              ]);
+              return CustomScrollView(
+                slivers: [
+                  _buildPlainAppBar(),
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: PwErrorState(
+                      message: snap.error.toString(),
+                      onRetry: _refresh,
+                    ),
+                  ),
+                ],
+              );
             }
             final f = snap.data ?? {};
             return CustomScrollView(
@@ -104,11 +121,30 @@ class _FacilityScreenState extends State<FacilityScreen> {
     );
   }
 
+  /// loading/error 상태용 단순 AppBar — 백 버튼 + 제목만.
+  SliverAppBar _buildPlainAppBar() {
+    return SliverAppBar(
+      pinned: true,
+      leading: PwIconButton(
+        icon: Icons.arrow_back,
+        tooltip: '뒤로',
+        onPressed: () => context.pop(),
+      ),
+      title: const Text('매장 정보'),
+    );
+  }
+
   SliverAppBar _buildAppBar(Map<String, dynamic> f) {
     final imageUrl = f['image_url']?.toString();
     return SliverAppBar(
       expandedHeight: 220,
       pinned: true,
+      leading: PwIconButton(
+        icon: Icons.arrow_back,
+        color: AppTheme.textPrimary,
+        tooltip: '뒤로',
+        onPressed: () => context.pop(),
+      ),
       actions: [
         PwIconButton(
           icon: _isFavorite ? Icons.favorite : Icons.favorite_border,

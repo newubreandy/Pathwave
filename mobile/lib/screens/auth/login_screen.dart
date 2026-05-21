@@ -235,7 +235,58 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
 
               const SizedBox(height: 24),
+
+              // 법적 도달성 — 로그인 화면에서도 약관/개인정보 처리방침 직접 접근 (Apple 5.1.1, PIPC).
+              Center(
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 14,
+                  runSpacing: 6,
+                  children: [
+                    _PolicyLink('개인정보처리방침',
+                      bold: true,
+                      onTap: () => context.push('/policy/privacy')),
+                    _PolicyLink('이용약관',
+                      onTap: () => context.push('/policy/terms')),
+                    _PolicyLink('위치기반서비스 이용약관',
+                      onTap: () => context.push('/policy/location')),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+/// 로그인 화면 하단 약관 링크 — 한국 법(전자상거래법 §10 / 정보통신망법 §50) +
+/// Apple App Store Guideline 5.1.1 의 "사전 동의 직접 접근" 요구.
+class _PolicyLink extends StatelessWidget {
+  final String label;
+  final bool bold;
+  final VoidCallback onTap;
+  const _PolicyLink(this.label, {this.bold = false, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: NeuTheme.textSecondary,
+            fontSize: 12,
+            fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+            decoration: TextDecoration.underline,
+            decorationColor: NeuTheme.textHint,
           ),
         ),
       ),
