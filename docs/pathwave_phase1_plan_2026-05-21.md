@@ -134,7 +134,7 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 | C1·C2·C3 인증 우회 | P4 | C8 consent placeholder | P12 |
 | C4 mock 데이터 | P5·P7·P8·P9·P10·P11·P15 | C9 settings dev 노출 | P12 |
 | C5 OCR 허위 ✅ | P6 | C10 WiFi 등록화면 | P15 |
-| C6 PG 평문 저장 | P7 | C11 앱 버전관리 | P20 |
+| C6 PG 평문 저장 ✅ | P7 | C11 앱 버전관리 | P20 |
 | C7 구 회사정보 | P5 | C12 placeholder/dead 페이지 | P8·P11 |
 | C13 WiFi password 빈값 | P15 | C14 약관 3종 | P13 |
 
@@ -154,7 +154,7 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 | P4 | ✅ | P11 | ⬜ | P18 | ⬜ |
 | P5 | ✅ | P12 | ⬜ | P19 | ⬜ |
 | P6 | ✅ | P13 | ⬜ | P20 | ⬜ |
-| P7 | ⬜ | P14 | ⬜ | P21 | ⬜ |
+| P7 | ✅ | P14 | ⬜ | P21 | ⬜ |
 | P22 | ⬜ |  |  |  |  |
 
 ---
