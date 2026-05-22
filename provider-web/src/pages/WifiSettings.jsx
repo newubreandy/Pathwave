@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Camera, Plus, X, ChevronLeft, ChevronRight, Search,
-  Image as ImageIcon, Loader2,
+  Image as ImageIcon,
   Wifi, Package, Truck, FileCheck2, PauseCircle, XCircle, ClipboardList,
   Clock,
 } from 'lucide-react';
@@ -200,8 +200,6 @@ const WifiSettings = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [saveConfirmMsg, setSaveConfirmMsg] = useState(null); // 저장 시 안내 (ID/PW + enabled)
   const [errorMsg, setErrorMsg] = useState(null);             // 검증 실패 모달
-  const [ocrLoading, setOcrLoading] = useState(false);
-  const [ocrDone, setOcrDone] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '', ssid: '', password: '', image: null
@@ -327,34 +325,16 @@ const WifiSettings = () => {
     setView('list');
   };
 
-  // ── 사진 선택 + OCR (자동 ID/PW 추출) ──
-  // TODO: 실제 OCR 연동 (백엔드 API 또는 Tesseract.js). 현재는 1초 후 mock 결과 자동 입력
-  const runOcrMock = async (imageUrl) => {
-    console.log('[OCR mock] start', imageUrl);
-    setOcrLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    const mockResult = {
-      ssid: 'kt5G_AUTO' + Math.floor(Math.random() * 9000 + 1000),
-      password: 'Ezddd1@' + Math.floor(Math.random() * 9000 + 1000),
-    };
-    console.log('[OCR mock] result', mockResult);
-    // 함수형 업데이트로 stale state 방지
-    setFormData((prev) => ({ ...prev, ssid: mockResult.ssid, password: mockResult.password }));
-    setOcrLoading(false);
-    setOcrDone(true);
-    setTimeout(() => setOcrDone(false), 2500);
-  };
-
-  const handleImageChange = async (e) => {
+  // ── 사진 첨부 (와이파이 정보 확인용 참고 이미지) ──
+  // 첨부 사진은 입력값 확인·보관용 참고 자료일 뿐, ID/PW 는 사용자가 직접 입력한다.
+  const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
-    // 같은 파일 재선택 가능하도록 reset (OCR 시작 전에 처리)
+    // 같은 파일 재선택 가능하도록 input value reset
     const inputEl = e.target;
     setTimeout(() => { if (inputEl) inputEl.value = ''; }, 0);
-    // 사진 선택 시 자동 OCR 실행
-    await runOcrMock(url);
   };
 
   const removeImage = () => {
@@ -975,13 +955,13 @@ const WifiSettings = () => {
                   <div className="wifi-photo-icon">
                     <Camera size={28} color="var(--pw-primary)" />
                   </div>
-                  <p className="wifi-photo-title">공유기 뒷면의 와이파이정보를 촬영하세요!</p>
-                  <p className="wifi-photo-desc">※ 직접입력하기 어려우실 경우 공유기 뒷면의 와이파이 정보를 촬영하시면 입력을 도와드립니다!</p>
+                  <p className="wifi-photo-title">공유기 뒷면의 와이파이 정보를 촬영해 첨부하세요</p>
+                  <p className="wifi-photo-desc">※ 첨부 사진은 입력 정보 확인용으로 보관됩니다. ID / PW 는 아래에 직접 입력해 주세요.</p>
                 </>
               ) : (
                 <>
-                  <p className="wifi-photo-title" style={{ color: 'var(--pw-text-hint)' }}>와이파이 정보 등록/수정 시 사진을 이용해</p>
-                  <p className="wifi-photo-title" style={{ color: 'var(--pw-text-hint)' }}>보다 쉽게 정보를 입력할 수 있습니다.</p>
+                  <p className="wifi-photo-title" style={{ color: 'var(--pw-text-hint)' }}>와이파이 정보가 적힌 사진을 첨부하면</p>
+                  <p className="wifi-photo-title" style={{ color: 'var(--pw-text-hint)' }}>입력 정보 확인에 도움이 됩니다.</p>
                 </>
               )}
             </div>
@@ -998,24 +978,22 @@ const WifiSettings = () => {
             accept 을 명시적 이미지 MIME 로 좁혀 파일 선택 옵션 최소화 */}
         {canEdit && (
           <div className="wifi-photo-actions">
-            <label className={`wifi-photo-action ${ocrLoading ? 'is-disabled' : ''}`}>
+            <label className="wifi-photo-action">
               <ImageIcon size={14} /> 앨범에서 선택
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/gif"
                 onChange={handleImageChange}
-                disabled={ocrLoading}
                 className="wifi-photo-action-input"
               />
             </label>
-            <label className={`wifi-photo-action ${ocrLoading ? 'is-disabled' : ''}`}>
+            <label className="wifi-photo-action">
               <Camera size={14} /> 카메라 촬영
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
                 capture="environment"
                 onChange={handleImageChange}
-                disabled={ocrLoading}
                 className="wifi-photo-action-input"
               />
             </label>
@@ -1026,18 +1004,6 @@ const WifiSettings = () => {
           <div className="wifi-photo-actions">
             <button className="wifi-photo-action" disabled>앨범에서 선택</button>
             <button className="wifi-photo-action" disabled>카메라 촬영</button>
-          </div>
-        )}
-
-        {/* OCR 인식 안내 */}
-        {ocrLoading && (
-          <div className="wifi-ocr-status">
-            <Loader2 size={14} className="wifi-ocr-spin" /> 사진에서 와이파이 정보 인식 중...
-          </div>
-        )}
-        {ocrDone && (
-          <div className="wifi-ocr-status done">
-            ✓ 사진에서 ID / PW 자동 입력했습니다. 확인 후 수정해주세요.
           </div>
         )}
 
