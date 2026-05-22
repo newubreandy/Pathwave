@@ -1,10 +1,21 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, Minus, HelpCircle, X, Camera, Image as ImageIcon, Edit3, Trash2 } from 'lucide-react';
+import BillingService from '../services/billing/BillingService';
+import AuthService from '../services/auth/AuthService';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
 import './ServiceRequest.css';
+
+// ServiceRequest categoryKey → 백엔드 service_type 매핑
+// stamp 는 백엔드 service_type 에 없음 — 구독 생성 대상에서 제외
+const CATEGORY_TO_SERVICE_TYPE = {
+  wifi: 'wifi',
+  event: 'event',
+  noti: 'notification',
+  // stamp: 백엔드 미지원 — createSubscription 호출 안 함
+};
 
 // 신청 가능 서비스 카테고리
 const SERVICE_CATEGORIES = [
@@ -125,20 +136,31 @@ const ServiceRequest = () => {
   const [showApplicationModal, setShowApplicationModal] = useState(false);
 
 
-  // 결제 단계 (mock)
-  const [card] = useState({
-    name: '나라카드',
-    no: '1234 - 2345 - 3456 - 4567',
-    mmyy: '05/27',
-    cvc: '123',
-    familyName: 'Shin',
-    firstName: 'nara',
-  });
-  const [period] = useState({ start: '2021.02.13', end: '2023.02.12', payment: '1,024,100원 / 월', billDay: '매월 12일 결제' });
-  const [email] = useState('ceo@hotelh.com');
+  // 결제 단계 — BillingService 로 active 카드 표시
+  const [activeCard, setActiveCard] = useState(null);
+  const [cardLoading, setCardLoading] = useState(false);
+  const [payLoading, setPayLoading] = useState(false);
+  const [payError, setPayError] = useState('');
+  const email = AuthService.getCurrentUser()?.email || '';
 
   const [confirmMsg, setConfirmMsg] = useState(null);
   const [submitted, setSubmitted] = useState(false);
+
+  // 결제 단계 진입 시 active 카드 불러오기
+  useEffect(() => {
+    if (step !== 'payment') return;
+    let cancelled = false;
+    setCardLoading(true);
+    BillingService.listCards()
+      .then(res => {
+        if (cancelled) return;
+        const ac = (res.cards || []).find(c => c.active) || null;
+        setActiveCard(ac);
+      })
+      .catch(() => { if (!cancelled) setActiveCard(null); })
+      .finally(() => { if (!cancelled) setCardLoading(false); });
+    return () => { cancelled = true; };
+  }, [step]);
 
   const selectedCategory = SERVICE_CATEGORIES.find((c) => c.key === categoryKey);
   const isDetailStep = (s) => ['wifi', 'stamp', 'event', 'noti'].includes(s);
@@ -325,19 +347,39 @@ const ServiceRequest = () => {
       paymentStatus: 'PENDING',
       applicationStatus: 'DRAFT',
     };
-    // TODO: 백엔드 연동 — POST /api/service-requests (draft 저장 + imageUrl 은 별도 업로드 후 URL 회신)
-    console.log('[ServiceRequest] go to payment with', payload);
+    // TODO: POST /api/service-requests (draft 저장 + imageUrl 별도 업로드) — 추후 연동
     setShowApplicationModal(false);
     setStep('payment');
   };
 
   const handleSubmit = () => {
+    setPayError('');
     setConfirmMsg('서비스를 신청하시겠어요?\n신청 후 운영팀에서 검토하고 연락드립니다.');
   };
 
-  const doSubmit = () => {
+  const doSubmit = async () => {
     setConfirmMsg(null);
-    setSubmitted(true);
+    const serviceType = CATEGORY_TO_SERVICE_TYPE[categoryKey];
+    if (!serviceType) {
+      // stamp 등 백엔드 미지원 타입 — 구독 생성 없이 신청 완료 처리
+      setSubmitted(true);
+      return;
+    }
+    setPayLoading(true);
+    setPayError('');
+    try {
+      await BillingService.createSubscription({
+        serviceType,
+        quantity: categoryKey === 'wifi' ? quantity : 1,
+        periodMonths: 1,
+        receiptEmail: email || undefined,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      setPayError(err.message || '결제에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setPayLoading(false);
+    }
   };
 
   // 카드 헤더 status 라벨
@@ -708,8 +750,9 @@ const ServiceRequest = () => {
                 <div className="sr-app-summary">
                   <div className="sr-app-summary-row">
                     <span className="sr-app-summary-label">신청 시설</span>
-                    {/* TODO: 실 매장 정보 연동 — 현재는 mock 표시 */}
-                    <span className="sr-app-summary-value">호텔H 본점</span>
+                    <span className="sr-app-summary-value">
+                      {AuthService.getCurrentUser()?.name || '내 매장'}
+                    </span>
                   </div>
                   <div className="sr-app-summary-row">
                     <span className="sr-app-summary-label">총 신청 수량</span>
@@ -817,33 +860,24 @@ const ServiceRequest = () => {
           <section className="sr-pay-section">
             <h2 className="sr-pay-section-title">결제방법</h2>
             <div className="sr-pay-card">
-              <div className="sr-pay-row"><span className="sr-pay-label">Card Name</span><span className="sr-pay-value">{card.name}</span><ChevronDown size={16} className="sr-pay-row-arrow" /></div>
-              <div className="sr-pay-row"><span className="sr-pay-label">Card No</span><span className="sr-pay-value">{card.no}</span></div>
-              <div className="sr-pay-row sr-pay-row-split">
-                <div><span className="sr-pay-label">MM/YY</span><span className="sr-pay-value">{card.mmyy}</span></div>
-                <div><span className="sr-pay-label">CVC</span><span className="sr-pay-value">{card.cvc} ⓘ</span></div>
-              </div>
-              <div className="sr-pay-row sr-pay-row-split">
-                <div><span className="sr-pay-label">Family Name</span><span className="sr-pay-value">{card.familyName}</span></div>
-                <div><span className="sr-pay-label">Name</span><span className="sr-pay-value">{card.firstName}</span></div>
-              </div>
-            </div>
-          </section>
-
-          <section className="sr-pay-section">
-            <h2 className="sr-pay-section-title">서비스기간</h2>
-            <div className="sr-pay-card">
-              <div className="sr-pay-row">
-                <span className="sr-pay-label">Period</span>
-                <span className="sr-pay-value">{period.start} ~ {period.end}</span>
-                <button className="sr-pay-row-action">변경</button>
-              </div>
-              <p className="sr-pay-note">※ 최초 2년 약정이며, 2년 이후 1년 단위로 추가 할 수 있습니다.</p>
-              <div className="sr-pay-row">
-                <span className="sr-pay-label">Payment</span>
-                <span className="sr-pay-value">{period.payment} <span className="sr-pay-vat">(VAT 포함)</span></span>
-              </div>
-              <p className="sr-pay-note">※ {period.billDay}</p>
+              {cardLoading ? (
+                <div className="sr-pay-row" style={{ color: 'var(--pw-text-hint)' }}>카드 정보 불러오는 중...</div>
+              ) : activeCard ? (
+                <>
+                  <div className="sr-pay-row">
+                    <span className="sr-pay-label">Card Name</span>
+                    <span className="sr-pay-value">{activeCard.card_brand}</span>
+                  </div>
+                  <div className="sr-pay-row">
+                    <span className="sr-pay-label">Card No</span>
+                    <span className="sr-pay-value">{activeCard.masked_card}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="sr-pay-row" style={{ color: 'var(--pw-danger)', fontSize: 'var(--pw-label-size)' }}>
+                  등록된 카드가 없습니다. 결제관리에서 카드를 먼저 등록해주세요.
+                </div>
+              )}
             </div>
           </section>
 
@@ -852,17 +886,30 @@ const ServiceRequest = () => {
             <div className="sr-pay-card">
               <div className="sr-pay-row">
                 <span className="sr-pay-label">E-Mail</span>
-                <span className="sr-pay-value sr-pay-email">{email}</span>
-                <button className="sr-pay-row-action">이메일 변경</button>
+                <span className="sr-pay-value sr-pay-email">{email || '-'}</span>
               </div>
               <p className="sr-pay-note">※ 결제 및 공지 안내 메일 입니다.</p>
             </div>
           </section>
+
+          {payError && (
+            <div style={{ color: 'var(--pw-danger)', fontSize: 'var(--pw-label-size)', padding: 'var(--pw-space-3) 0' }}>
+              {payError}
+            </div>
+          )}
         </div>
 
         <BottomActionBar>
           <Button variant="outline" fullWidth onClick={() => setStep(categoryKey)}>이전 단계</Button>
-          <Button variant="primary" fullWidth onClick={handleSubmit}>서비스 신청</Button>
+          <Button
+            variant="primary"
+            fullWidth
+            onClick={handleSubmit}
+            disabled={payLoading || (!activeCard && !!CATEGORY_TO_SERVICE_TYPE[categoryKey])}
+            isLoading={payLoading}
+          >
+            서비스 신청
+          </Button>
         </BottomActionBar>
 
         <ConfirmModal

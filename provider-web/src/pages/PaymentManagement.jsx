@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Plus, Check, Wifi, Bell, Gift, CreditCard, ArrowLeft, ArrowRight, Loader2, Download, X, Info, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import AuthService from '../services/auth/AuthService';
+import BillingService from '../services/billing/BillingService';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
@@ -10,92 +11,46 @@ import { useDialog } from '../components/common/DialogProvider';
 import SectionTabs from '../components/common/SectionTabs';
 import './PaymentManagement.css';
 
-/* ── Mock Data ── */
-const MOCK_CARD = {
-  name: '나라카드',
-  number: '****-****-****-6789',
-  expiry: '12/27',          // MM/YY
-  autoPay: true,
-};
-const MOCK_EMAIL = 'ceo@hotelh.com';
-
-/* 다음 결제 요약 mock — 실제 GET /api/billing/next 응답으로 대체.
-   - nextDate ISO 문자열
-   - amount 원
-   - cycle: 결제 주기 라벨
-   - breakdown: 서비스별 분해 (라벨 + 금액) */
-const MOCK_BILLING_NEXT = {
-  nextDate: '2026-06-12',
-  amount: 1024100,
-  cycle: '월간 정기결제',
-  breakdown: [
-    { service: 'wifi',  label: 'wifi 132개',     amount: 1016000 },
-    { service: 'push',  label: '알림 발송 270건', amount: 8100 },
-  ],
-};
-
-const MOCK_SERVICES = [
+/* ── 서비스 카탈로그 (백엔드 가격 일치: wifi 5000 / event 10000 / notification 3000 월 단가, VAT 별도) ── */
+const SERVICE_CATALOG = [
   { id: 'wifi', name: 'wifi 서비스', label: 'Wifi', icon: Wifi, color: '#22C55E',
     desc: 'PathWave WiFi 서비스는 매장 방문 고객이 자동으로 매장 WiFi 에 접속할 수 있도록 지원하는 서비스입니다.',
     plans: [
-      { id: 'wifi-monthly', name: '월간', price: 7700, unit: '원/월', min: 1 },
-      { id: 'wifi-yearly', name: '연간', price: 77000, unit: '원/년', min: 1, discount: '17%' },
-    ],
-    items: [
-      { id: 'wifi-1', quantity: 1, price: '7,700원', priceNote: 'VAT 포함', billingNote: '※ 매월 12일 결제', period: '2021.03.13 ~ 2023.03.12', appliedAt: '(신청일 2021.02.28)' },
-      { id: 'wifi-2', quantity: 132, price: '1,016,000원', priceNote: 'VAT 포함', billingNote: '※ 매월 12일 결제', period: '2021.02.13 ~ 2023.02.12', appliedAt: '(신청일 2021.02.28)' },
+      { id: 'wifi-monthly',  name: '월간', price: 5000,  unit: '원/월',  periodMonths: 1,  min: 1 },
+      { id: 'wifi-yearly',   name: '연간', price: 54000, unit: '원/년', periodMonths: 12, min: 1, discount: '10%' },
     ],
   },
   { id: 'event', name: '이벤트 서비스', label: '이벤트', icon: Gift, color: '#4ADE80',
     desc: '서비스 시설에서 특정 위치에 방문하였을 경우 쿠폰 및 혜택을 제공할 수 있는 서비스입니다.',
     plans: [
-      { id: 'event-basic', name: '기본', price: 6000, unit: '원/월', min: 1 },
+      { id: 'event-monthly', name: '월간', price: 10000, unit: '원/월', periodMonths: 1,  min: 1 },
+      { id: 'event-yearly',  name: '연간', price: 108000, unit: '원/년', periodMonths: 12, min: 1, discount: '10%' },
     ],
-    items: [],
   },
-  { id: 'push', name: '알림 서비스', label: '알림', icon: Bell, color: '#F59E0B',
-    desc: '서비스 시설에서 사용자에게 공지 등 별도의 알림을 발송할 수 있는 서비스입니다. 알림은 100개 단위로 구매 가능합니다.',
+  { id: 'notification', name: '알림 서비스', label: '알림', icon: Bell, color: '#F59E0B',
+    desc: '서비스 시설에서 사용자에게 공지 등 별도의 알림을 발송할 수 있는 서비스입니다.',
     plans: [
-      { id: 'push-100', name: '100건', price: 6000, unit: '원', min: 100 },
-      { id: 'push-500', name: '500건', price: 25000, unit: '원', min: 500, discount: '17%' },
+      { id: 'noti-monthly', name: '월간', price: 3000,  unit: '원/월', periodMonths: 1,  min: 1 },
+      { id: 'noti-yearly',  name: '연간', price: 32400, unit: '원/년', periodMonths: 12, min: 1, discount: '10%' },
     ],
-    items: [],
   },
 ];
 
 /**
- * type 코드 → UI 한글 라벨 (사용자 요구 2026-05-10).
+ * type 코드 → UI 한글 라벨 (백엔드 service_type 포함).
  *   wifi → 와이파이
- *   event → 쿠폰
- *   push → 알림
+ *   event → 이벤트
+ *   notification → 알림
  *   noti → 알림 (호환)
+ *   push → 알림 (호환)
  */
 const SERVICE_TYPE_LABEL = {
   wifi: '와이파이',
-  event: '쿠폰',
-  push: '알림',
+  event: '이벤트',
+  notification: '알림',
   noti: '알림',
+  push: '알림',
 };
-
-const MOCK_HISTORY = [
-  { date: '2022.05.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
-  { date: '2022.04.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
-  { date: '2022.03.12', store: '상암점', amount: '6,000', type: 'push' },
-  { date: '2022.03.12', store: '상암점', amount: '6,000', type: 'event' },
-  { date: '2022.03.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
-  { date: '2022.02.12', store: '상암점', amount: '6,000', type: 'noti' },
-  { date: '2022.02.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
-  { date: '2022.01.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
-  { date: '2021.12.12', store: '상암점', amount: '6,000', type: 'event' },
-  { date: '2021.12.12', store: '상암점', amount: '6,000', type: 'event' },
-  // ── 더보기 페이지 (2번째 page) ───────────────────────────
-  { date: '2021.12.12', store: '상암점', amount: '6,000', type: 'wifi' },
-  { date: '2021.11.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
-  { date: '2021.10.12', store: '상암점', amount: '6,000', type: 'event' },
-  { date: '2021.09.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
-  { date: '2021.08.12', store: '상암점', amount: '6,000', type: 'noti' },
-  { date: '2021.07.12', store: '상암점', amount: '1,024,100', type: 'wifi' },
-];
 
 /* ══════════════════════════════════════════
    Step Indicator
@@ -126,8 +81,10 @@ const ServiceApplyFlow = ({ onBack, onComplete }) => {
   const [quantity, setQuantity] = useState(1);
   const [pgLoading, setPgLoading] = useState(false);
   const [pgDone, setPgDone] = useState(false);
+  const [pgError, setPgError] = useState('');
+  const [orderNo, setOrderNo] = useState('');
 
-  const service = MOCK_SERVICES.find(s => s.id === selectedService);
+  const service = SERVICE_CATALOG.find(s => s.id === selectedService);
   const plan = service?.plans.find(p => p.id === selectedPlan);
   const totalPrice = plan ? plan.price * quantity : 0;
   const vat = Math.round(totalPrice * 0.1);
@@ -138,11 +95,24 @@ const ServiceApplyFlow = ({ onBack, onComplete }) => {
     return true;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step === 3 && !pgDone) {
-      // PG 결제 시뮬레이션
+      // BillingService.createSubscription 호출
       setPgLoading(true);
-      setTimeout(() => { setPgLoading(false); setPgDone(true); }, 2000);
+      setPgError('');
+      try {
+        const res = await BillingService.createSubscription({
+          serviceType: service.id,
+          quantity,
+          periodMonths: plan.periodMonths,
+        });
+        setOrderNo(res.payment?.order_no || '');
+        setPgDone(true);
+      } catch (err) {
+        setPgError(err.message || '결제에 실패했습니다. 다시 시도해주세요.');
+      } finally {
+        setPgLoading(false);
+      }
       return;
     }
     if (step === 4) { onComplete(); return; }
@@ -172,7 +142,7 @@ const ServiceApplyFlow = ({ onBack, onComplete }) => {
           <div className="pay-step-content">
             <h2 className="pay-step-title">이용할 서비스를 선택하세요</h2>
             <div className="pay-service-grid">
-              {MOCK_SERVICES.map(s => {
+              {SERVICE_CATALOG.map(s => {
                 const Icon = s.icon;
                 return (
                   <div
@@ -185,9 +155,6 @@ const ServiceApplyFlow = ({ onBack, onComplete }) => {
                     </div>
                     <div className="pay-service-card-name">{s.name}</div>
                     <div className="pay-service-card-desc">{s.desc}</div>
-                    {s.items.length > 0 && (
-                      <span className="pay-service-card-badge">{s.items.reduce((a,b)=>a+b.quantity,0)}개 이용중</span>
-                    )}
                   </div>
                 );
               })}
@@ -274,7 +241,7 @@ const ServiceApplyFlow = ({ onBack, onComplete }) => {
               <div className="pay-pg-success">
                 <div className="pay-pg-check"><Check size={32} /></div>
                 <h3>결제가 완료되었습니다</h3>
-                <p>주문번호: PW-{Date.now().toString().slice(-8)}</p>
+                {orderNo && <p>주문번호: {orderNo}</p>}
               </div>
             ) : (
               <div className="pay-pg-ready">
@@ -285,6 +252,7 @@ const ServiceApplyFlow = ({ onBack, onComplete }) => {
                   <span>결제금액</span>
                   <strong>{(totalPrice + vat).toLocaleString()}원</strong>
                 </div>
+                {pgError && <p className="pay-pg-error" style={{ color: 'var(--pw-danger)', marginTop: 'var(--pw-space-3)', fontSize: 'var(--pw-label-size)' }}>{pgError}</p>}
               </div>
             )}
           </div>
@@ -335,19 +303,20 @@ const ServiceApplyFlow = ({ onBack, onComplete }) => {
 
 /* ══════════════════════════════════════════
    카드 교체 모달 (사용자 요구 2026-05-11)
-   카드 정보 입력 → mock DB 저장 + 슈퍼어드민 변경 이력 저장.
-   실서비스: PG 토큰화 (카드번호/CVC 직접 보관 X) + 백엔드 audit log.
+   PCI 준수: 카드 전체번호/CVC 는 백엔드 전송·저장 금지.
+   백엔드에는 card_brand + last4(끝 4자리)만 전송.
    ══════════════════════════════════════════ */
-function CardChangeModal({ currentCard, onClose }) {
+function CardChangeModal({ currentCard, onClose, onSuccess }) {
   const [form, setForm] = useState({
     issuer: '',          // 카드사
-    number: '',          // 16자리
-    expMonth: '',        // MM
-    expYear: '',         // YY
-    cvc: '',             // 3자리
-    holder: '',          // 카드 소유자
+    number: '',          // 16자리 (입력만, 백엔드 미전송)
+    expMonth: '',        // MM (입력만, 백엔드 미전송)
+    expYear: '',         // YY (입력만, 백엔드 미전송)
+    cvc: '',             // 3자리 (입력만, 절대 저장·전송 금지)
+    holder: '',          // 카드 소유자 (입력만, 백엔드 미전송)
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const onChange = (k) => (e) => {
@@ -360,7 +329,7 @@ function CardChangeModal({ currentCard, onClose }) {
     setForm((f) => ({ ...f, [k]: v }));
   };
 
-  const submit = () => {
+  const submit = async () => {
     setError('');
     if (!form.issuer.trim())                  return setError('카드사를 입력해주세요.');
     if (form.number.length !== 16)            return setError('카드번호 16자리를 입력해주세요.');
@@ -370,40 +339,17 @@ function CardChangeModal({ currentCard, onClose }) {
     if (form.cvc.length !== 3)                return setError('CVC 3자리를 입력해주세요.');
     if (!form.holder.trim())                  return setError('카드 소유자명을 입력해주세요.');
 
-    // ── mock 저장 ──────────────────────────────────────────
-    // 1) 결제 카드 정보 (요약: 카드사 + 마스킹 번호 + 만료) — localStorage
-    const masked = `****-****-****-${form.number.slice(-4)}`;
-    const newCard = {
-      name: form.issuer,
-      number: masked,
-      expiry: `${form.expMonth}/${form.expYear}`,
-      autoPay: currentCard?.autoPay ?? false,
-    };
+    // PCI 준수: card_brand + last4 만 전송. 전체번호/CVC/만료 는 전송하지 않는다.
+    setLoading(true);
     try {
-      localStorage.setItem('pathwave_payment_card', JSON.stringify(newCard));
-    } catch {/* 저장 실패 무시 — UI 에는 영향 없음 */}
-
-    // 2) 슈퍼어드민 변경 이력 audit log
-    //    실서비스: POST /api/admin/audit/payment-card-change
-    //    여기선 콘솔 + localStorage 큐로 보존 (mock).
-    const user = AuthService.getCurrentUser();
-    const auditEntry = {
-      ts: new Date().toISOString(),
-      actor: user?.id || user?.email || 'unknown',
-      action: 'payment_card_change',
-      before: currentCard ? { name: currentCard.name, number: currentCard.number } : null,
-      after:  { name: newCard.name, number: newCard.number, expiry: newCard.expiry },
-    };
-    try {
-      const queue = JSON.parse(localStorage.getItem('pathwave_audit_queue') || '[]');
-      queue.push(auditEntry);
-      localStorage.setItem('pathwave_audit_queue', JSON.stringify(queue));
-    } catch {/* ignore */}
-    // 디버깅용 — 실서비스 제거
-    console.info('[audit] payment_card_change', auditEntry);
-
-    setSubmitted(true);
-    setTimeout(() => onClose(), 1500);
+      await BillingService.registerCard(form.issuer, form.number.slice(-4));
+      setSubmitted(true);
+      setTimeout(() => { onSuccess?.(); onClose(); }, 1500);
+    } catch (err) {
+      setError(err.message || '카드 등록에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -510,8 +456,10 @@ function CardChangeModal({ currentCard, onClose }) {
               {error && <p className="settings-modal-error">{error}</p>}
 
               <div className="settings-modal-actions">
-                <button className="settings-modal-btn cancel" onClick={onClose}>취소</button>
-                <button className="settings-modal-btn confirm" onClick={submit}>변경하기</button>
+                <button className="settings-modal-btn cancel" onClick={onClose} disabled={loading}>취소</button>
+                <button className="settings-modal-btn confirm" onClick={submit} disabled={loading}>
+                  {loading ? '처리 중...' : '변경하기'}
+                </button>
               </div>
             </>
           )}
@@ -524,48 +472,93 @@ function CardChangeModal({ currentCard, onClose }) {
 /* ══════════════════════════════════════════
    결제정보 탭
    ══════════════════════════════════════════ */
-const PaymentInfoTab = ({ card, email, services, onApply }) => {
+const PaymentInfoTab = ({ onApply }) => {
   const { t } = useTranslation();
   const { alert } = useDialog();
   const navigate = useNavigate();
-  const [modal, setModal] = useState({ open: false, title: '', desc: '', onConfirm: null });
-  // 자동결제 토글 — 로컬 상태 mock. 실서비스에선 PUT /api/billing/auto-pay.
-  const [autoPay, setAutoPay] = useState(card?.autoPay ?? false);
-  // 카드 교체 모달 — 카드 정보 입력 후 mock DB 저장 + 슈퍼어드민 이력.
+
+  // 카드 — BillingService.listCards() 로 active 카드 표시
+  const [card, setCard] = useState(null);
+  const [cardLoading, setCardLoading] = useState(true);
+  const [cardError, setCardError] = useState('');
+
+  // 구독 — 다음 결제 예정 계산용
+  const [subscriptions, setSubscriptions] = useState([]);
+
+  // 이메일 — 현재 로그인 유저
+  const email = AuthService.getCurrentUser()?.email || '';
+
+  const [autoPay, setAutoPay] = useState(false);
   const [showCardChange, setShowCardChange] = useState(false);
 
-  const closeModal = () => setModal(m => ({ ...m, open: false }));
+  const loadCard = async () => {
+    setCardLoading(true);
+    setCardError('');
+    try {
+      const res = await BillingService.listCards();
+      const activeCard = (res.cards || []).find(c => c.active) || null;
+      setCard(activeCard);
+    } catch (err) {
+      setCardError(err.message || '카드 정보를 불러올 수 없습니다.');
+    } finally {
+      setCardLoading(false);
+    }
+  };
+
+  const loadSubscriptions = async () => {
+    try {
+      const res = await BillingService.listSubscriptions();
+      setSubscriptions(res.subscriptions || []);
+    } catch {
+      // 구독 로드 실패는 무시 — 카드 섹션은 독립적으로 동작
+    }
+  };
+
+  useEffect(() => {
+    loadCard();
+    loadSubscriptions();
+  }, []);
+
+  // 다음 결제 예정 — active 구독 중 가장 임박한 ends_at
+  const activeSubscriptions = subscriptions.filter(s => s.status === 'active');
+  const nextBilling = activeSubscriptions.length > 0
+    ? activeSubscriptions.reduce((nearest, s) => {
+        if (!nearest) return s;
+        return new Date(s.ends_at) < new Date(nearest.ends_at) ? s : nearest;
+      }, null)
+    : null;
+
+  const fmt = (n) => Number(n).toLocaleString();
 
   // PG provider label — VITE_PG_PROVIDER env var 또는 fallback
   const pgProvider = import.meta.env.VITE_PG_PROVIDER || 'sim';
   const pgLabel = pgProvider === 'toss' ? t('billing.pg_toss') : t('billing.pg_sim');
 
-  // 다음 결제 D-day / 표시 문자열
-  const nextDate = new Date(MOCK_BILLING_NEXT.nextDate);
-  const dDay = Math.ceil((nextDate.getTime() - Date.now()) / 86_400_000);
-  const nextDateLabel = `${nextDate.getFullYear()}.${String(nextDate.getMonth() + 1).padStart(2, '0')}.${String(nextDate.getDate()).padStart(2, '0')}`;
-  const fmt = (n) => n.toLocaleString();
+  const SERVICE_ROUTES = {
+    wifi: '/dashboard/wifi',
+    event: '/dashboard/coupons',
+    notification: '/dashboard/notifications',
+  };
 
   return (
     <>
       <div className="payment-content">
-        {/* 결제 요약 — 좌(결제수단) / 우(다음 결제) 2-column.
-            모바일에서는 자동으로 세로 stack. (사용자 요구 2026-05-10 — A 안) */}
+        {/* 결제 요약 — 좌(결제수단) / 우(다음 결제) 2-column */}
         <div className="payment-summary-grid">
           {/* 좌 — 결제 수단 */}
           <section className="payment-summary-card payment-method-card" aria-label={t('billing.cards_title')}>
             <h2 className="payment-summary-title">{t('billing.cards_title')}</h2>
-            {card ? (
+            {cardLoading ? (
+              <div style={{ padding: 'var(--pw-space-4)', color: 'var(--pw-text-hint)' }}>불러오는 중...</div>
+            ) : cardError ? (
+              <div style={{ color: 'var(--pw-danger)', fontSize: 'var(--pw-label-size)' }}>{cardError}</div>
+            ) : card ? (
               <>
                 <div className="payment-card">
-                  <div className="payment-card-name">{card.name}</div>
-                  <div className="payment-card-number">{card.number}</div>
+                  <div className="payment-card-name">{card.card_brand}</div>
+                  <div className="payment-card-number">{card.masked_card}</div>
                 </div>
                 <div className="payment-method-meta">
-                  <div className="payment-method-meta-row">
-                    <span className="payment-method-meta-label">유효기간</span>
-                    <span className="payment-method-meta-value">{card.expiry}</span>
-                  </div>
                   <div className="payment-method-meta-row">
                     <span className="payment-method-meta-label">{t('billing.autopay_consent_title')}</span>
                     <label className="toggle-switch" htmlFor="payment-auto-pay">
@@ -594,41 +587,56 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
                 </Button>
               </>
             ) : (
-              <div className="payment-card-empty" onClick={() => alert('PG사 카드 등록 화면으로 이동합니다.')}>
+              <div className="payment-card-empty" onClick={() => setShowCardChange(true)}>
                 <div className="payment-card-empty-icon"><Plus size={24} /></div>
                 <span className="payment-card-empty-text">{t('billing.cards_empty')}</span>
               </div>
             )}
           </section>
 
-          {/* 우 — 다음 결제 요약 */}
+          {/* 우 — 다음 결제 예정 (active 구독에서 유도) */}
           <section className="payment-summary-card payment-billing-card" aria-label="다음 결제 요약">
             <h2 className="payment-summary-title">다음 결제 예정</h2>
-            <div className="payment-billing-date-row">
-              <span className="payment-billing-date">{nextDateLabel}</span>
-              {dDay >= 0 && dDay <= 30 && (
-                <span className="payment-billing-dday">D-{dDay}</span>
-              )}
-            </div>
-            <div className="payment-billing-cycle">{MOCK_BILLING_NEXT.cycle}</div>
-            <div className="payment-billing-amount">
-              <span className="payment-billing-amount-label">예상 청구액</span>
-              <span className="payment-billing-amount-value-wrap">
-                <span className="payment-billing-amount-value">{fmt(MOCK_BILLING_NEXT.amount)}</span>
-                <span className="payment-amount-unit">원</span>
-              </span>
-            </div>
-            <ul className="payment-billing-breakdown">
-              {MOCK_BILLING_NEXT.breakdown.map((b) => (
-                <li key={b.service}>
-                  <span className="payment-billing-breakdown-label">{b.label}</span>
-                  <span className="payment-billing-breakdown-amount">
-                    {fmt(b.amount)}
-                    <span className="payment-amount-unit">원</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
+            {nextBilling ? (() => {
+              const nextDate = new Date(nextBilling.ends_at);
+              const dDay = Math.ceil((nextDate.getTime() - Date.now()) / 86_400_000);
+              const nextDateLabel = `${nextDate.getFullYear()}.${String(nextDate.getMonth() + 1).padStart(2, '0')}.${String(nextDate.getDate()).padStart(2, '0')}`;
+              return (
+                <>
+                  <div className="payment-billing-date-row">
+                    <span className="payment-billing-date">{nextDateLabel}</span>
+                    {dDay >= 0 && dDay <= 30 && (
+                      <span className="payment-billing-dday">D-{dDay}</span>
+                    )}
+                  </div>
+                  <div className="payment-billing-cycle">월간 정기결제</div>
+                  <div className="payment-billing-amount">
+                    <span className="payment-billing-amount-label">예상 청구액</span>
+                    <span className="payment-billing-amount-value-wrap">
+                      <span className="payment-billing-amount-value">{fmt(nextBilling.total_price)}</span>
+                      <span className="payment-amount-unit">원</span>
+                    </span>
+                  </div>
+                  <ul className="payment-billing-breakdown">
+                    {activeSubscriptions.map((s) => (
+                      <li key={s.id}>
+                        <span className="payment-billing-breakdown-label">
+                          {SERVICE_TYPE_LABEL[s.service_type] || s.service_type} {s.quantity}개
+                        </span>
+                        <span className="payment-billing-breakdown-amount">
+                          {fmt(s.total_price)}
+                          <span className="payment-amount-unit">원</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              );
+            })() : (
+              <p style={{ color: 'var(--pw-text-hint)', fontSize: 'var(--pw-label-size)', padding: 'var(--pw-space-4) 0' }}>
+                예정된 결제 없음
+              </p>
+            )}
           </section>
         </div>
 
@@ -684,22 +692,19 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
           </ul>
         </div>
 
-        {/* 서비스 이용 내역 */}
-        {services.map((service) => {
-          const totalQty = service.items.reduce((s, i) => s + i.quantity, 0);
-          const targetRoute =
-            service.id === 'wifi'  ? '/dashboard/wifi'
-            : service.id === 'event' ? '/dashboard/coupons'
-            : service.id === 'push'  ? '/dashboard/notifications'
-            : null;
+        {/* 서비스 구독 현황 — active 구독에서 유도 */}
+        {SERVICE_CATALOG.map((svc) => {
+          const activeSubs = activeSubscriptions.filter(s => s.service_type === svc.id);
+          const totalQty = activeSubs.reduce((acc, s) => acc + (s.quantity || 0), 0);
+          const targetRoute = SERVICE_ROUTES[svc.id] || null;
           return (
             <button
-              key={service.id}
+              key={svc.id}
               type="button"
               className="payment-service-section payment-service-section--clickable"
               onClick={() => targetRoute && navigate(targetRoute)}
             >
-              <span className="payment-service-title">{service.name}</span>
+              <span className="payment-service-title">{svc.name}</span>
               <span className="payment-service-count">
                 {totalQty}
                 <span className="payment-service-count-unit">개 이용중</span>
@@ -715,11 +720,11 @@ const PaymentInfoTab = ({ card, email, services, onApply }) => {
         <Button variant="primary" size="large" fullWidth onClick={onApply}>서비스 신청</Button>
       </BottomActionBar>
 
-      <ConfirmModal isOpen={modal.open} title={modal.title} desc={modal.desc} onConfirm={modal.onConfirm} onCancel={closeModal} />
       {showCardChange && (
         <CardChangeModal
           currentCard={card}
           onClose={() => setShowCardChange(false)}
+          onSuccess={loadCard}
         />
       )}
     </>
@@ -734,56 +739,89 @@ const PAGE_SIZE = 10;
 const PaymentHistoryTab = () => {
   const { t } = useTranslation();
   const { alert } = useDialog();
-  // 사용자 요구 (2026-05-10): 10개 단위로 노출. 더 없을 때 버튼 숨김.
-  const [visible, setVisible] = useState(PAGE_SIZE);
-  const items = MOCK_HISTORY.slice(0, visible);
-  const hasMore = visible < MOCK_HISTORY.length;
 
-  // 영수증 다운로드 — mock. 실서비스에선 GET /api/billing/{id}/receipt PDF.
+  const [allPayments, setAllPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');
+  const [visible, setVisible] = useState(PAGE_SIZE);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setFetchError('');
+      try {
+        const res = await BillingService.listPayments();
+        setAllPayments(res.payments || []);
+      } catch (err) {
+        setFetchError(err.message || '결제 내역을 불러올 수 없습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const items = allPayments.slice(0, visible);
+  const hasMore = visible < allPayments.length;
+
+  // paid_at ISO → 표시용 날짜 (YYYY.MM.DD)
+  const fmtDate = (iso) => {
+    if (!iso) return '-';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  // 영수증 다운로드 — 실서비스에선 GET /api/billing/{id}/receipt PDF.
   const downloadReceipt = (row) => {
-    alert(`영수증 다운로드 (mock)\n${row.date} · ${row.store} · ${row.amount}원`);
+    alert(`영수증 다운로드\n${fmtDate(row.paid_at)} · 주문번호: ${row.order_no} · ${Number(row.total).toLocaleString()}원`);
   };
 
   return (
     <div className="payment-content">
       <div className="payment-history-section">
         <div className="payment-history-note">※ 결제내역은 최대 2년(24개월)기간만 지원합니다.</div>
-        <table className="payment-history-table">
-          <thead>
-            <tr>
-              <th>일시</th>
-              <th>매장명</th>
-              <th>{t('billing.amount_label')}</th>
-              <th>서비스 구분</th>
-              <th className="payment-history-receipt-col">영수증</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.length > 0 ? items.map((row, i) => (
-              <tr key={i}>
-                <td>{row.date}</td>
-                <td>{row.store}</td>
-                <td>{row.amount}</td>
-                <td>{SERVICE_TYPE_LABEL[row.type] || row.type}</td>
-                <td className="payment-history-receipt-col">
-                  <button
-                    type="button"
-                    className="payment-receipt-btn"
-                    onClick={() => downloadReceipt(row)}
-                    aria-label={`${row.date} 영수증 다운로드`}
-                  >
-                    <Download size={14} aria-hidden="true" />
-                    <span>받기</span>
-                  </button>
-                </td>
+        {loading ? (
+          <div style={{ padding: 'var(--pw-space-6)', color: 'var(--pw-text-hint)', textAlign: 'center' }}>불러오는 중...</div>
+        ) : fetchError ? (
+          <div style={{ color: 'var(--pw-danger)', padding: 'var(--pw-space-4)', fontSize: 'var(--pw-label-size)' }}>{fetchError}</div>
+        ) : (
+          <table className="payment-history-table">
+            <thead>
+              <tr>
+                <th>일시</th>
+                <th>주문번호</th>
+                <th>{t('billing.amount_label')}</th>
+                <th>상태</th>
+                <th className="payment-history-receipt-col">영수증</th>
               </tr>
-            )) : (
-              <tr><td colSpan={5} className="payment-history-empty">{t('billing.payments_empty')}</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.length > 0 ? items.map((row) => (
+                <tr key={row.id}>
+                  <td>{fmtDate(row.paid_at)}</td>
+                  <td>{row.order_no}</td>
+                  <td>{Number(row.total).toLocaleString()}원</td>
+                  <td>{row.status}</td>
+                  <td className="payment-history-receipt-col">
+                    <button
+                      type="button"
+                      className="payment-receipt-btn"
+                      onClick={() => downloadReceipt(row)}
+                      aria-label={`${fmtDate(row.paid_at)} 영수증 다운로드`}
+                    >
+                      <Download size={14} aria-hidden="true" />
+                      <span>받기</span>
+                    </button>
+                  </td>
+                </tr>
+              )) : (
+                <tr><td colSpan={5} className="payment-history-empty">{t('billing.payments_empty')}</td></tr>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
-      {/* 더 불러올 항목 있을 때만 버튼 노출. 활성 시 primary 톤. */}
       {hasMore && (
         <BottomActionBar>
           <Button
@@ -809,8 +847,6 @@ const PaymentManagement = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'info';
   const [showApply, setShowApply] = useState(false);
-  const [card] = useState(MOCK_CARD);
-  const [email] = useState(MOCK_EMAIL);
 
   const setActiveTab = (tab) => {
     tab === 'info' ? searchParams.delete('tab') : searchParams.set('tab', tab);
@@ -838,7 +874,7 @@ const PaymentManagement = () => {
       />
       {/* 탭 ↔ 콘텐츠 간격 — 다른 페이지(알림 인박스 등)와 동일 톤 (사용자 요구 2026-05-10) */}
       <div className="payment-tab-content">
-        {activeTab === 'info' && <PaymentInfoTab card={card} email={email} services={MOCK_SERVICES} onApply={() => setShowApply(true)} />}
+        {activeTab === 'info' && <PaymentInfoTab onApply={() => setShowApply(true)} />}
         {activeTab === 'history' && <PaymentHistoryTab />}
       </div>
     </div>

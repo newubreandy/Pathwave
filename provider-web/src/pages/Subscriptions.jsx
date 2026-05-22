@@ -1,41 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Wifi, Gift, Bell, X, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import BillingService from '../services/billing/BillingService';
 import Button from '../components/common/Button';
 import SectionTabs from '../components/common/SectionTabs';
 import './PaymentManagement.css';
 
-/* ── Mock data — 실서비스에선 GET /api/billing/subscriptions 응답으로 대체 ── */
-const MOCK_SUBSCRIPTIONS = [
-  {
-    id: 'sub-1',
-    plan: 'wifi',
-    period: 'monthly',
-    status: 'active',
-    startAt: '2026-03-12',
-    endAt: '2026-06-12',
-    amount: 1016000,
-  },
-  {
-    id: 'sub-2',
-    plan: 'notification',
-    period: 'monthly',
-    status: 'active',
-    startAt: '2026-04-01',
-    endAt: '2026-07-01',
-    amount: 8100,
-  },
-  {
-    id: 'sub-3',
-    plan: 'event',
-    period: 'yearly',
-    status: 'canceled',
-    startAt: '2025-01-01',
-    endAt: '2026-01-01',
-    amount: 72000,
-  },
-];
-
+// 백엔드 service_type → 아이콘 매핑
 const PLAN_ICONS = {
   wifi: Wifi,
   event: Gift,
@@ -85,10 +56,18 @@ const CancelModal = ({ sub, onClose, onConfirm }) => {
 };
 
 /* ── 구독 카드 ── */
-const SubscriptionCard = ({ sub, onCancel }) => {
+const SubscriptionCard = ({ sub, onCancel, onExtend }) => {
   const { t } = useTranslation();
-  const Icon = PLAN_ICONS[sub.plan] || Wifi;
+  // 백엔드 필드: service_type, quantity, period_months, total_price, started_at, ends_at, status
+  const Icon = PLAN_ICONS[sub.service_type] || Wifi;
   const isActive = sub.status === 'active';
+  const periodLabel = sub.period_months === 12 ? '연간' : '월간';
+
+  // ISO 날짜 → YYYY-MM-DD 표시
+  const fmtDate = (iso) => {
+    if (!iso) return '-';
+    return String(iso).slice(0, 10);
+  };
 
   return (
     <div className={`sub-card ${isActive ? '' : 'sub-card--inactive'}`}>
@@ -97,35 +76,44 @@ const SubscriptionCard = ({ sub, onCancel }) => {
           <Icon size={20} strokeWidth={2} />
         </div>
         <div className="sub-card-meta">
-          <div className="sub-card-plan">{t(`subscription.plan_${sub.plan}`)}</div>
-          <div className="sub-card-period">{t(`subscription.period_${sub.period}`)}</div>
+          <div className="sub-card-plan">
+            {t(`subscription.plan_${sub.service_type}`, sub.service_type)} × {sub.quantity}
+          </div>
+          <div className="sub-card-period">{periodLabel}</div>
         </div>
-        <span className={`sub-badge ${STATUS_CSS[sub.status]}`}>
-          {t(STATUS_KEYS[sub.status])}
+        <span className={`sub-badge ${STATUS_CSS[sub.status] || ''}`}>
+          {t(STATUS_KEYS[sub.status] || '', sub.status)}
         </span>
       </div>
 
       <div className="sub-card-dates">
         <div className="sub-card-date-row">
           <span className="sub-card-date-label">{t('subscription.start_at')}</span>
-          <span className="sub-card-date-value">{sub.startAt}</span>
+          <span className="sub-card-date-value">{fmtDate(sub.started_at)}</span>
         </div>
         <div className="sub-card-date-row">
           <span className="sub-card-date-label">{t('subscription.end_at')}</span>
-          <span className="sub-card-date-value">{sub.endAt}</span>
+          <span className="sub-card-date-value">{fmtDate(sub.ends_at)}</span>
         </div>
         <div className="sub-card-date-row">
           <span className="sub-card-date-label">{t('billing.total_label')}</span>
-          <span className="sub-card-amount">{sub.amount.toLocaleString()}원</span>
+          <span className="sub-card-amount">{Number(sub.total_price).toLocaleString()}원</span>
         </div>
       </div>
 
       {isActive && (
         <div className="sub-card-footer">
           <p className="sub-renewal-notice">{t('subscription.renewal_notice')}</p>
-          <Button variant="outline" size="small" onClick={() => onCancel(sub)}>
-            {t('subscription.cancel_btn')}
-          </Button>
+          <div style={{ display: 'flex', gap: 'var(--pw-space-2)' }}>
+            {onExtend && (
+              <Button variant="outline" size="small" onClick={() => onExtend(sub)}>
+                연장
+              </Button>
+            )}
+            <Button variant="outline" size="small" onClick={() => onCancel(sub)}>
+              {t('subscription.cancel_btn')}
+            </Button>
+          </div>
         </div>
       )}
     </div>
@@ -139,19 +127,58 @@ const Subscriptions = () => {
   const { t } = useTranslation();
   const [filter, setFilter] = useState('active');
   const [subs, setSubs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');
   const [cancelTarget, setCancelTarget] = useState(null);
+  const [extendTarget, setExtendTarget] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState('');
+
+  const loadSubscriptions = async () => {
+    setLoading(true);
+    setFetchError('');
+    try {
+      const res = await BillingService.listSubscriptions();
+      setSubs(res.subscriptions || []);
+    } catch (err) {
+      setFetchError(err.message || '구독 목록을 불러올 수 없습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // 실서비스: GET /api/billing/subscriptions
-    setSubs(MOCK_SUBSCRIPTIONS);
+    loadSubscriptions();
   }, []);
 
   const filtered = filter === 'all' ? subs : subs.filter(s => s.status === filter);
 
   const handleCancelConfirm = async (id) => {
-    // 실서비스: POST /api/billing/subscriptions/{id}/cancel
-    setSubs(prev => prev.map(s => s.id === id ? { ...s, status: 'canceled' } : s));
-    setCancelTarget(null);
+    setActionLoading(true);
+    setActionError('');
+    try {
+      await BillingService.cancelSubscription(id);
+      await loadSubscriptions();
+    } catch (err) {
+      setActionError(err.message || '해지에 실패했습니다.');
+    } finally {
+      setActionLoading(false);
+      setCancelTarget(null);
+    }
+  };
+
+  const handleExtendConfirm = async (id) => {
+    setActionLoading(true);
+    setActionError('');
+    try {
+      await BillingService.extendSubscription(id);
+      await loadSubscriptions();
+    } catch (err) {
+      setActionError(err.message || '연장에 실패했습니다.');
+    } finally {
+      setActionLoading(false);
+      setExtendTarget(null);
+    }
   };
 
   return (
@@ -173,7 +200,16 @@ const Subscriptions = () => {
       />
 
       <div style={{ marginTop: 'var(--pw-space-8)' }}>
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="sub-empty">
+            <RefreshCw size={36} strokeWidth={1} />
+            <p>불러오는 중...</p>
+          </div>
+        ) : fetchError ? (
+          <div style={{ color: 'var(--pw-danger)', padding: 'var(--pw-space-4)', fontSize: 'var(--pw-label-size)' }}>
+            {fetchError}
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="sub-empty">
             <RefreshCw size={36} strokeWidth={1} />
             <p>{t('subscription.no_subscriptions')}</p>
@@ -181,8 +217,19 @@ const Subscriptions = () => {
         ) : (
           <div className="sub-list">
             {filtered.map(sub => (
-              <SubscriptionCard key={sub.id} sub={sub} onCancel={setCancelTarget} />
+              <SubscriptionCard
+                key={sub.id}
+                sub={sub}
+                onCancel={setCancelTarget}
+                onExtend={setExtendTarget}
+              />
             ))}
+          </div>
+        )}
+
+        {actionError && (
+          <div style={{ color: 'var(--pw-danger)', padding: 'var(--pw-space-3)', fontSize: 'var(--pw-label-size)' }}>
+            {actionError}
           </div>
         )}
 
@@ -198,6 +245,31 @@ const Subscriptions = () => {
           onClose={() => setCancelTarget(null)}
           onConfirm={handleCancelConfirm}
         />
+      )}
+
+      {/* 연장 확인 모달 */}
+      {extendTarget && (
+        <div className="settings-modal-overlay" onClick={() => setExtendTarget(null)}>
+          <div className="settings-modal" style={{ maxWidth: 400 }} onClick={e => e.stopPropagation()}>
+            <div className="settings-modal-header">
+              <h3 className="settings-modal-title">구독 연장</h3>
+              <button className="settings-modal-close" onClick={() => setExtendTarget(null)} aria-label="닫기">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="settings-modal-body">
+              <p style={{ fontSize: 'var(--pw-label-size)', color: 'var(--pw-text-secondary)', marginBottom: 'var(--pw-space-4)' }}>
+                현재 구독과 동일한 조건으로 연장합니다. 즉시 결제가 진행됩니다.
+              </p>
+              <div className="settings-modal-actions" style={{ marginTop: 'var(--pw-space-5)' }}>
+                <button className="settings-modal-btn cancel" onClick={() => setExtendTarget(null)} disabled={actionLoading}>취소</button>
+                <button className="settings-modal-btn confirm" onClick={() => handleExtendConfirm(extendTarget.id)} disabled={actionLoading}>
+                  {actionLoading ? '처리 중...' : '연장 확인'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
