@@ -285,7 +285,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         });
         _scrollToBottom();
       },
-      onError: (_) {/* 자동 재연결은 후속 PR */},
+      // 재연결은 ChatService.streamMessages 내부에서 지수 backoff 로 처리.
+      // 401/403 등 복구 불가 오류만 여기까지 전파되므로 조용히 무시한다.
+      onError: (_) {},
+      // 스트림이 예기치 않게 완료돼도 화면을 닫지 않는다.
+      cancelOnError: false,
     );
   }
 

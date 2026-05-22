@@ -22,7 +22,7 @@ from flask import Blueprint, Response, request, jsonify, g
 
 from models.database import get_db
 from models.push import push_to_users
-from routes.auth import require_auth, SECRET_KEY
+from routes.auth import require_auth, require_super_admin, SECRET_KEY
 from routes.block import is_blocked
 
 chat_bp = Blueprint('chat', __name__)
@@ -395,3 +395,67 @@ def stream_room(rid):
         'Connection':           'keep-alive',
     }
     return Response(gen(), headers=headers)
+
+
+# ── 운영자 — 채팅 신고 모니터 ────────────────────────────────────────────────
+
+_REASON_LABEL = {
+    'spam':          '스팸·광고',
+    'abuse':         '욕설·혐오',
+    'illegal':       '불법 정보·사기',
+    'inappropriate': '부적절한 콘텐츠',
+    'other':         '기타',
+}
+
+
+@chat_bp.route('/api/chat/reports', methods=['GET'])
+@require_super_admin()
+def list_chat_reports():
+    """운영자 채팅 신고 큐 (admin ChatMonitor 화면용).
+
+    채팅(사용자↔매장)에서 접수된 신고는 abuse_reports 테이블에
+    target_kind='user'|'facility' 로 저장된다 — 메시지 단위 신고 테이블은
+    별도로 두지 않는다(사용자/매장 신고로 충분).
+
+    ?status= 로 필터 (생략 시 미처리 우선 정렬로 전체 반환).
+    """
+    status = (request.args.get('status') or '').strip()
+    db = get_db()
+    q = "SELECT * FROM abuse_reports"
+    params = []
+    if status:
+        q += " WHERE status=?"
+        params.append(status)
+    q += " ORDER BY (status='open') DESC, id DESC LIMIT 200"
+    rows = db.execute(q, params).fetchall()
+
+    out = []
+    for r in rows:
+        # 신고 대상 이름 — facility 면 매장명, user 면 #id (PII 최소화)
+        if r['target_kind'] == 'facility':
+            f = db.execute(
+                "SELECT name FROM facilities WHERE id=?", (r['target_id'],)
+            ).fetchone()
+            target_name = (f['name'] if f and f['name'] else None) \
+                or f"매장 #{r['target_id']}"
+        elif r['target_kind'] == 'user':
+            target_name = f"사용자 #{r['target_id']}"
+        else:
+            target_name = f"#{r['target_id']}"
+
+        reason = _REASON_LABEL.get(r['reason_code'], r['reason_code'])
+        if r['reason_detail']:
+            reason = f"{reason} — {r['reason_detail']}"
+
+        out.append({
+            'id':          r['id'],
+            'room_name':   target_name,
+            'target_kind': r['target_kind'],
+            'target_id':   r['target_id'],
+            'reason':      reason,
+            'reporter_id': f"{r['reporter_kind']} #{r['reporter_id']}",
+            'reported_at': r['created_at'],
+            'status':      r['status'],
+        })
+    db.close()
+    return jsonify({'success': True, 'count': len(out), 'rooms': out})
