@@ -228,29 +228,14 @@ def firebase_ready() -> bool:
         return False
 
 
-def send_email(to_email: str, code: str) -> bool:
-    """인증 코드 메일 발송. EMAIL_PROVIDER 에 따라 console/smtp/ses/sendgrid 중 선택."""
-    html = f"""
-    <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px;
-                background:#0f0f1a;border-radius:16px;color:#fff;">
-      <h2 style="color:#7c3aed;">PathWave 이메일 인증</h2>
-      <p style="color:#a1a1aa;">아래 인증 코드를 입력해 주세요. (5분 내 유효)</p>
-      <div style="background:#1e1e2e;border:2px solid #7c3aed;border-radius:12px;
-                  padding:24px;text-align:center;">
-        <span style="font-size:40px;font-weight:bold;letter-spacing:12px;color:#a78bfa;">
-          {code}
-        </span>
-      </div>
-      <p style="color:#71717a;font-size:12px;margin-top:16px;">
-        본인이 요청하지 않은 경우 이 메일을 무시하세요.
-      </p>
-    </div>
-    """
-    text = f'PathWave 이메일 인증 코드: {code} (5분 내 유효)'
+def send_email(to_email: str, code: str, lang: str | None = None) -> bool:
+    """인증 코드 메일 발송 — P8d 다국어. lang === 'ko' 면 한국어, 그 외 영어."""
+    from services.email_i18n import render_verify_email
+    subject, html, text = render_verify_email(lang, code)
     try:
         res = get_email_provider().send(
             to=to_email,
-            subject='[PathWave] 이메일 인증 코드',
+            subject=subject,
             html=html,
             text=text,
         )
@@ -267,9 +252,16 @@ def send_email(to_email: str, code: str) -> bool:
 @auth_bp.route('/send-code', methods=['POST'])
 @limiter.limit('5 per minute; 30 per hour')
 def send_code():
-    """Step 1: 이메일 입력 → 인증 코드 발송"""
+    """Step 1: 이메일 입력 → 인증 코드 발송.
+
+    P8d — body 의 ``lang`` 또는 ``Accept-Language`` 헤더로 메일 언어 결정.
+          lang === 'ko' 면 한국어, 그 외 모든 lang 은 영어 (P12 정책 통일).
+    """
     data  = request.get_json(silent=True) or {}
     email = (data.get('email') or '').strip().lower()
+    # P8d — 가입 전이라 users.language 없음. 클라이언트가 디바이스 lang 보냄.
+    lang = (data.get('lang') or
+            (request.headers.get('Accept-Language') or '').split(',')[0].strip())
 
     if not email or '@' not in email:
         return jsonify({'success': False, 'message': '유효한 이메일을 입력해 주세요.'}), 400
@@ -292,7 +284,7 @@ def send_code():
     db.commit()
     db.close()
 
-    if not send_email(email, code):
+    if not send_email(email, code, lang=lang):
         return jsonify({'success': False, 'message': '이메일 발송에 실패했습니다.'}), 500
     return jsonify({'success': True, 'message': '인증 코드를 발송했습니다.'})
 

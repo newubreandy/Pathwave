@@ -303,36 +303,43 @@ def admin_notify_policy(pid: int):
             return jsonify({'success': False,
                             'message': '이미 공지 메일이 발송되었습니다.'}), 409
 
-        # 대상 이메일 모집
-        emails: list[str] = []
+        # P8d — 대상 이메일 모집 + 각 수신자 lang. (email, lang) 튜플로.
+        recipients: list[tuple[str, str]] = []
         if target in ('user', 'all'):
             user_rows = db.execute(
-                "SELECT email FROM users WHERE deleted_at IS NULL"
+                "SELECT email, language FROM users WHERE deleted_at IS NULL"
             ).fetchall()
-            emails.extend([r['email'] for r in user_rows if r['email']])
+            for r in user_rows:
+                if r['email']:
+                    recipients.append((r['email'], r['language'] or 'ko'))
         if target in ('facility', 'all'):
+            # facility_accounts 에 language 컬럼 없음 — 한국 사장 가정 'ko' 고정.
             fac_rows = db.execute(
                 "SELECT email FROM facility_accounts WHERE status='verified'"
             ).fetchall()
-            emails.extend([r['email'] for r in fac_rows if r['email']])
+            for r in fac_rows:
+                if r['email']:
+                    recipients.append((r['email'], 'ko'))
 
-        # 본문 — change_log 우선, 없으면 본문 첫 200자.
-        kind_label = KIND_LABELS.get(row['kind'], row['kind'])
-        summary = row.get('change_log') or (row['body'][:200] + '...')
-        subject = f'[PathWave] {kind_label} 변경 안내 ({row["version"]})'
-        html = (
-            f'<h2>{kind_label} 변경 안내</h2>'
-            f'<p>적용일: {row["effective_at"]}</p>'
-            f'<p>변경 내역:</p>'
-            f'<pre style="white-space:pre-wrap">{summary}</pre>'
-            f'<p>자세한 본문은 앱 내 [설정 > 약관 보기] 또는 사장님 콘솔에서 확인하실 수 있습니다.</p>'
-            f'<hr><p style="color:#888">트리거소프트 (triggersoft) PathWave 운영팀</p>'
+        # P8d — 본문 (ko/en 두 언어). change_log 우선, 없으면 본문 첫 200자.
+        from services.email_i18n import (
+            render_policy_notice_email, policy_kind_label_en,
         )
-        text = f'{kind_label} 변경 안내 ({row["version"]})\n적용일: {row["effective_at"]}\n\n{summary}'
+        kind_label_ko = KIND_LABELS.get(row['kind'], row['kind'])
+        kind_label_en = policy_kind_label_en(row['kind'])
+        summary       = row.get('change_log') or (row['body'][:200] + '...')
 
         provider = get_email_provider()
         sent, failed = 0, 0
-        for to in emails:
+        for to, lang in recipients:
+            subject, html, text = render_policy_notice_email(
+                lang,
+                kind_label_ko=kind_label_ko,
+                kind_label_en=kind_label_en,
+                version=row['version'],
+                effective_at=row['effective_at'],
+                summary=summary,
+            )
             res = provider.send(to=to, subject=subject, html=html, text=text)
             if res.get('success'):
                 sent += 1
@@ -345,7 +352,7 @@ def admin_notify_policy(pid: int):
             'success': True,
             'message': f'{sent}건 발송, {failed}건 실패.',
             'sent': sent, 'failed': failed,
-            'recipient_count': len(emails),
+            'recipient_count': len(recipients),
             'provider': provider.name,
         })
     finally:

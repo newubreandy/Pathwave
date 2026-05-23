@@ -9,6 +9,7 @@ import 'package:flutter_naver_login/flutter_naver_login.dart';
 
 import '../utils/api_config.dart';
 import 'api_client.dart';
+import 'i18n_service.dart';
 
 class AuthService extends ChangeNotifier {
   static String get _baseUrl => ApiConfig.baseUrl;
@@ -76,12 +77,17 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  // ── 이메일 인증 코드 발송 ────────────────────────────────────────
+  // ── 이메일 인증 코드 발송 (P8d — 디바이스 lang 동봉) ──────────────
   Future<Map<String, dynamic>> sendCode(String email) async {
+    // P8d — 가입 전이라 users.language 없음. 디바이스 lang 을 body 에 동봉.
+    //       백엔드가 ko/en 자동 분기 (P12 정책과 일관).
     final res = await http.post(
       Uri.parse('$_baseUrl/api/auth/send-code'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email}),
+      body: jsonEncode({
+        'email': email,
+        'lang':  I18nService.instance.currentLang,
+      }),
     );
     return jsonDecode(res.body);
   }
