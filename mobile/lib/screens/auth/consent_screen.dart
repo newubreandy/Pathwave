@@ -268,6 +268,7 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                   ),
                   PwIconButton(
                     icon: Icons.close,
+                    tooltip: '닫기',
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],

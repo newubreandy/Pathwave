@@ -218,7 +218,7 @@ class _WifiBanner extends StatelessWidget {
                 child: Text('${facility?['name'] ?? '매장'} WiFi 발견',
                   style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
               ),
-              PwIconButton(icon: Icons.close, size: 18, onPressed: onDismiss),
+              PwIconButton(icon: Icons.close, tooltip: '닫기', size: 18, onPressed: onDismiss),
             ],
           ),
           const SizedBox(height: 4),

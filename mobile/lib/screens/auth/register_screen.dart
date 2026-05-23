@@ -160,6 +160,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ? null
           : PwIconButton(
               icon: Icons.arrow_back,
+              tooltip: '뒤로',
               onPressed: () {
                 if (_step > 0) {
                   setState(() { _step -= 1; _error = null; _info = null; });

@@ -342,6 +342,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         title: Text(_roomTitle),
         leading: PwIconButton(
           icon: Icons.arrow_back,
+          tooltip: _t.t('common.back', defaultValue: '뒤로'),
           onPressed: () => context.pop(),
         ),
         actions: [
@@ -412,6 +413,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           // 전송 버튼은 sending 시 스피너로 바꾸는 비표준 패턴이라
           // PwIconButton 으로는 모델링하지 않고 raw IconButton 유지.
           IconButton(
+            tooltip: _t.t('chat.send', defaultValue: '메시지 전송'),
             icon: _sending
               ? const SizedBox(width: 18, height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2))
