@@ -9,7 +9,11 @@
  * 백엔드 `/api/policies?sub_type=` 으로 항목 메타 fetch, 보기 클릭 시 본문 모달.
  */
 import React, { useEffect, useState } from 'react';
+import { getProviderLang } from '../services/translation/TranslationService';
 import './ConsentSection.css';
+
+// P12 — 약관은 ko/en 만. 한국어 단말 → ko, 그 외 → en.
+const policyLang = () => (getProviderLang() === 'ko' ? 'ko' : 'en');
 
 export default function ConsentSection({ subType = 'facility', value = {}, onChange }) {
   const [items, setItems] = useState([]);
@@ -19,7 +23,7 @@ export default function ConsentSection({ subType = 'facility', value = {}, onCha
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    fetch(`/api/policies?sub_type=${subType}`)
+    fetch(`/api/policies?sub_type=${subType}&lang=${policyLang()}`)
       .then((r) => r.json())
       .then((data) => { if (alive) setItems(data.items || []); })
       .catch(() => { if (alive) setItems([]); })
@@ -95,7 +99,7 @@ function PolicyModal({ kind, onClose }) {
   // 버전 목록 1회 로드
   useEffect(() => {
     let alive = true;
-    fetch(`/api/policies/${kind}/versions?lang=ko`)
+    fetch(`/api/policies/${kind}/versions?lang=${policyLang()}`)
       .then((r) => r.json())
       .then((data) => { if (alive) setVersions(data.versions || []); })
       .catch(() => {});
@@ -108,7 +112,7 @@ function PolicyModal({ kind, onClose }) {
     setLoading(true);
     const url = selectedVersionId
       ? `/api/policies/${kind}/versions/${selectedVersionId}`
-      : `/api/policies/${kind}?lang=ko`;
+      : `/api/policies/${kind}?lang=${policyLang()}`;
     fetch(url)
       .then((r) => r.json())
       .then((data) => {

@@ -29,17 +29,19 @@ export default function Policies() {
   const [error, setError] = useState('');
   const [editTarget, setEditTarget] = useState(null);   // null | {} | row
   const [historyKind, setHistoryKind] = useState(null);
+  // P12 — ko/en 두 언어만. 어드민이 토글로 전환해 영어 본문도 보고/수정 가능.
+  const [lang, setLang] = useState('ko');
 
   const reload = useCallback(() => {
     setLoading(true); setError('');
-    adminApi.listPolicies()
+    adminApi.listPolicies(lang)
       .then((data) => {
         setActive(data.active || []);
         setPending(data.pending || []);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [lang]);
 
   useEffect(() => { reload(); }, [reload]);
 
@@ -84,7 +86,27 @@ export default function Policies() {
               버전 관리 · 적용 예약 · 변경 메일 공지 · 이전 버전 보기.
             </p>
           </div>
-          <div className="header-actions">
+          <div className="header-actions" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {/* P12 — ko/en 토글. 어드민이 영어 본문도 직접 검토·수정 가능. */}
+            <div style={{ display: 'flex', gap: 0, border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+              {['ko', 'en'].map((l) => (
+                <button
+                  key={l}
+                  onClick={() => setLang(l)}
+                  style={{
+                    padding: '6px 14px',
+                    background: lang === l ? 'var(--accent)' : 'var(--bg-3)',
+                    color:      lang === l ? '#000' : 'var(--text-muted)',
+                    border: 'none',
+                    fontWeight: lang === l ? 600 : 400,
+                    fontSize: 'var(--fs-sm)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {l === 'ko' ? '한국어' : 'English'}
+                </button>
+              ))}
+            </div>
             <button className="btn btn-ghost" onClick={reload} disabled={loading}>
               <RefreshCw size={16} className={loading ? 'spin' : ''} />
               <span>새로고침</span>
