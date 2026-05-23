@@ -7,7 +7,7 @@ import ReportService, { REPORT_REASONS } from '../services/ReportService';
 import ChatService from '../services/chat/ChatService';
 import './CustomerChat.css';
 
-import { LANG_CONFIG, getPhotoText, getProviderLang, getCustomerLang, translateText } from '../services/translation/TranslationService';
+import { LANG_CONFIG, getPhotoText, getProviderLang } from '../services/translation/TranslationService';
 
 /* ── 유틸: 백엔드 room 객체 → UI 채팅방 형태 변환 ── */
 function formatTime(isoStr) {
@@ -79,15 +79,22 @@ function roomToChat(r) {
 }
 
 function msgToUi(m) {
+  // P8b — 백엔드가 viewer 언어(매장 측 ?lang=) 로 번역해서 ``translated_text`` 필드를 줌.
+  // 표시 정책: 매장 본인 메시지(provider)는 한국어 원문만, 손님 메시지는 한국어 번역 + 원문 sub.
+  const isFromCustomer  = m.sender_type !== 'facility';
+  const hasTranslation  = !!m.translated_text && m.translated_text !== m.body;
   return {
     id: m.id,
     from: m.sender_type === 'facility' ? 'provider' : 'customer',
     text: m.body,
+    bodyLang: m.body_lang || undefined,
     time: formatTime(m.created_at),
     read: !!m.read_at,
-    // 번역 필드는 백엔드가 아직 제공하지 않으므로 undefined(미표시)
+    // 손님 외국어 메시지를 매장 viewer 언어(=ko 보통) 로 번역한 결과.
+    incomingTranslation: (isFromCustomer && hasTranslation) ? m.translated_text : undefined,
+    incomingTranslationLang: (isFromCustomer && hasTranslation) ? m.translated_lang : undefined,
+    // 클라이언트 사이드 번역은 사용하지 않음 — 백엔드 캐시가 단일 진실(P8b).
     translation: undefined,
-    incomingTranslation: undefined,
   };
 }
 
@@ -847,32 +854,8 @@ const CustomerChat = () => {
       }
     }
 
-    // 번역 (외국어 고객에게 보내는 경우)
-    const chat = chats.find((c) => c.id === chatId);
-    if (!chat) return;
-    const customerLang = getCustomerLang(chat, chat.messages);
-    if (customerLang === 'ko') return;
-
-    setTranslatingId(tempId);
-    const translated = await translateText(text, 'ko', customerLang);
-    setTranslatingId(null);
-    if (!translated) return;
-
-    setChats((prev) =>
-      prev.map((c) =>
-        c.id === chatId
-          ? {
-              ...c,
-              messages: c.messages.map((m) =>
-                // tempId 또는 저장된 id 모두 처리
-                (m.id === tempId || (m.from === 'provider' && m.text === text && !m.translation))
-                  ? { ...m, translation: translated, translationLang: customerLang }
-                  : m
-              ),
-            }
-          : c
-      )
-    );
+    // P8b — 외국어 고객 메시지 번역은 백엔드가 viewer 언어(?lang=) 로 처리한다.
+    // 클라이언트 사이드 MyMemory 번역은 제거 (비용/일관성/캐시 단일화).
   };
 
   const handleDeleteMessage = (chatId, msgId) => {

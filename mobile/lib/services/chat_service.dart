@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../utils/api_config.dart';
 import 'api_client.dart';
+import 'i18n_service.dart';
 
 /// 1:1 채팅 + SSE 실시간 스트림.
 ///
@@ -37,20 +38,32 @@ class ChatService {
     await _api.post('/api/chat/rooms/$roomId/read');
   }
 
-  /// 메시지 페이지 로드 (?before_id=, ?limit=).
+  /// 메시지 페이지 로드 (?before_id=, ?limit=, ?lang=).
+  ///
+  /// ``?lang`` 은 viewer 언어 — 백엔드가 이걸로 lazy 번역해서 ``translated_text``
+  /// 필드를 같이 보내준다 (P8b).
   Future<List<Map<String, dynamic>>> messages(
     int roomId, {int? beforeId, int limit = 50}
   ) async {
-    final params = <String, String>{'limit': limit.toString()};
+    final params = <String, String>{
+      'limit': limit.toString(),
+      'lang':  I18nService.instance.currentLang,
+    };
     if (beforeId != null) params['before_id'] = beforeId.toString();
     final qs = params.entries.map((e) => '${e.key}=${e.value}').join('&');
     final data = await _api.get('/api/chat/rooms/$roomId/messages?$qs');
     return (data['messages'] as List?)?.cast<Map<String, dynamic>>() ?? [];
   }
 
-  /// 메시지 전송. 백엔드 스키마: `{body: <text>}`.
+  /// 메시지 전송. 백엔드 스키마: ``{body, lang_hint}``.
+  ///
+  /// ``lang_hint`` — 본인 단말 언어를 같이 보내 백엔드가 원문 언어를 저장
+  /// (수신자 측에서 자기 언어로 번역할 때 source 언어로 사용, P8b).
   Future<Map<String, dynamic>> send(int roomId, String text) async {
-    final data = await _api.post('/api/chat/rooms/$roomId/messages', {'body': text});
+    final data = await _api.post('/api/chat/rooms/$roomId/messages', {
+      'body':      text,
+      'lang_hint': I18nService.instance.currentLang,
+    });
     return (data['message'] as Map?)?.cast<String, dynamic>() ?? {};
   }
 
@@ -72,9 +85,12 @@ class ChatService {
 
       while (!cancelled) {
         final token = await _storage.read(key: 'pathwave_token');
+        // ?lang= : SSE 연결 시작 시점의 viewer 언어 (P8b — 백엔드가 번역 머지).
+        final lang = I18nService.instance.currentLang;
+        final qs = StringBuffer('?lang=$lang');
+        if (lastId > 0) qs.write('&after_id=$lastId');
         final uri = Uri.parse(
-          '${ApiConfig.baseUrl}/api/chat/rooms/$roomId/stream'
-          '${lastId > 0 ? '?after_id=$lastId' : ''}',
+          '${ApiConfig.baseUrl}/api/chat/rooms/$roomId/stream$qs',
         );
         final req = http.Request('GET', uri);
         req.headers['Accept'] = 'text/event-stream';

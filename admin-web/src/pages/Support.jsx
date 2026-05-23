@@ -50,11 +50,22 @@ export default function Support() {
 
   useEffect(() => { reload(); }, [reload]);
 
+  // P8b — 백엔드 응답 평탄화: ticket + messages + viewer_lang 을 한 객체로 머지.
+  // 이전엔 detail.messages 가 비어 있어 스레드가 보이지 않을 가능성.
+  function flattenTicketResponse(data) {
+    const ticket = data.ticket || data;
+    return {
+      ...ticket,
+      messages:    data.messages    || ticket.messages || [],
+      viewer_lang: data.viewer_lang || ticket.viewer_lang,
+    };
+  }
+
   useEffect(() => {
     if (!selected) { setDetail(null); return; }
     setDetailLoading(true);
     supportApi.getTicket(selected)
-      .then((data) => setDetail(data.ticket || data))
+      .then((data) => setDetail(flattenTicketResponse(data)))
       .catch(() => setDetail(null))
       .finally(() => setDetailLoading(false));
   }, [selected]);
@@ -66,7 +77,7 @@ export default function Support() {
       await supportApi.reply(selected, replyText.trim());
       setReplyText('');
       const data = await supportApi.getTicket(selected);
-      setDetail(data.ticket || data);
+      setDetail(flattenTicketResponse(data));
       reload();
     } catch (err) {
       alert(err.message || t('support.send_btn'));
@@ -81,7 +92,7 @@ export default function Support() {
     try {
       await supportApi.patchTicket(selected, { [field]: value });
       const data = await supportApi.getTicket(selected);
-      setDetail(data.ticket || data);
+      setDetail(flattenTicketResponse(data));
       reload();
     } catch (err) {
       alert(err.message);
@@ -310,6 +321,13 @@ export default function Support() {
                   )}
                   {messages.map((msg, idx) => {
                     const isAdmin = msg.sender === 'admin' || msg.is_admin;
+                    // P8b — 운영자 viewer(ko) 기준 번역. 외국어 사용자 메시지엔
+                    // translated_text 가 들어옴. 표시 정책: 번역본 메인 + 원문 sub.
+                    const body = msg.body || msg.content || msg.message || '';
+                    const translated = msg.translated_text;
+                    const hasTranslation = !!translated && translated !== body;
+                    const mainText = hasTranslation ? translated : body;
+                    const subText  = hasTranslation ? body : null;
                     return (
                       <div
                         key={msg.id || idx}
@@ -327,7 +345,18 @@ export default function Support() {
                           border: isAdmin ? 'none' : '1px solid var(--border)',
                           lineHeight: 1.5,
                         }}>
-                          {msg.body || msg.content || msg.message}
+                          <div>{mainText}</div>
+                          {subText && (
+                            <div style={{
+                              marginTop: 4,
+                              fontSize: 'var(--fs-xs)',
+                              color: isAdmin ? 'rgba(0,0,0,0.55)' : 'var(--text-muted)',
+                              fontStyle: 'italic',
+                              lineHeight: 1.35,
+                            }}>
+                              {subText}
+                            </div>
+                          )}
                         </div>
                         <div style={{
                           fontSize: 'var(--fs-xs)',
@@ -335,7 +364,13 @@ export default function Support() {
                           marginTop: 3,
                           textAlign: isAdmin ? 'right' : 'left',
                         }}>
-                          {isAdmin ? '관리자' : '사용자'} · {(msg.created_at || '').slice(0, 16)}
+                          {isAdmin ? '관리자' : '사용자'}
+                          {msg.body_lang && msg.body_lang !== 'ko' && (
+                            <span style={{ marginLeft: 6, opacity: 0.8 }}>
+                              · 원문 {msg.body_lang.toUpperCase()}
+                            </span>
+                          )}
+                          {' · '}{(msg.created_at || '').slice(0, 16)}
                         </div>
                       </div>
                     );

@@ -474,6 +474,12 @@ class _MessageBubble extends StatelessWidget {
     final t = I18nService.instance;
     // 백엔드 스키마: body 키. 과거 잘못된 'text' 키도 fallback (낙관적 UI 호환).
     final text = (message['body'] ?? message['text'])?.toString() ?? '';
+    // P8b — 백엔드가 viewer 언어로 번역한 결과 (있을 때만 sub-text 로 표시).
+    final translated = message['translated_text']?.toString();
+    final hasTranslation = translated != null && translated.isNotEmpty;
+    // 표시 정책: 번역본 있으면 메인=번역본, 회색 sub=원문. 없으면 원문만.
+    final mainText = hasTranslation ? translated : text;
+    final subText  = hasTranslation ? text : null;
     final at = message['created_at']?.toString();
     final pending = message['_pending'] == true;
     final failed = message['_failed'] == true;
@@ -508,11 +514,20 @@ class _MessageBubble extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(text,
+                  Text(mainText,
                     style: TextStyle(
                       color: isMe ? Colors.white : PwTheme.textPrimary,
                       height: 1.4,
                     )),
+                  if (subText != null) ...[
+                    const SizedBox(height: 4),
+                    Text(subText,
+                      style: TextStyle(
+                        color: isMe ? Colors.white70 : PwTheme.textHint,
+                        fontSize: 12,
+                        height: 1.35,
+                      )),
+                  ],
                   if (pending || failed) ...[
                     const SizedBox(height: 2),
                     Text(

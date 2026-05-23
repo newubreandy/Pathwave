@@ -139,8 +139,10 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
                         itemCount: messages.length,
                         itemBuilder: (context, i) {
                           final m = messages[i];
-                          final isUser =
-                              m['sender_type']?.toString() == 'user';
+                          // P8b 정리 — 백엔드 support_messages.sender 키 = 'user'|'admin'.
+                          // 이전엔 잘못된 'sender_type' 키를 보고 있어 모든 메시지가
+                          // 운영자처럼 보였다. 동시에 sender='user' 가 본인.
+                          final isUser = m['sender']?.toString() == 'user';
                           return _MessageBubble(
                               message: m, isUser: isUser);
                         },
@@ -195,6 +197,12 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final body = message['body']?.toString() ?? '';
+    // P8b — 백엔드가 viewer 언어로 번역한 결과 (있을 때만 sub-text 로 표시).
+    final translated = message['translated_text']?.toString();
+    final hasTranslation = translated != null && translated.isNotEmpty;
+    // 표시 정책: 번역본 있으면 메인=번역본, 회색 sub=원문. 없으면 원문만.
+    final mainText = hasTranslation ? translated : body;
+    final subText  = hasTranslation ? body : null;
     final createdAt = message['created_at']?.toString() ?? '';
 
     return Align(
@@ -227,10 +235,20 @@ class _MessageBubble extends StatelessWidget {
                       color: PwTheme.primary,
                       fontSize: 11,
                       fontWeight: FontWeight.w600)),
-            Text(body,
+            Text(mainText,
                 style: TextStyle(
                     color: isUser ? Colors.white : PwTheme.textPrimary,
                     fontSize: 14)),
+            if (subText != null) ...[
+              const SizedBox(height: 4),
+              Text(subText,
+                  style: TextStyle(
+                      color: isUser
+                          ? Colors.white.withValues(alpha: 0.7)
+                          : PwTheme.textHint,
+                      fontSize: 12,
+                      height: 1.35)),
+            ],
             if (createdAt.isNotEmpty) ...[
               const SizedBox(height: 4),
               Text(createdAt,

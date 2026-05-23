@@ -27,7 +27,9 @@ from __future__ import annotations
 from flask import Blueprint, request, jsonify, g
 
 from models.database import get_db
+from models.translator import get_translator, TranslatorError
 from routes.auth import require_auth, require_facility_actor, require_super_admin
+from services.translation_ai import SUPPORTED_LANGS, normalize_supported_lang
 
 support_bp = Blueprint('support', __name__)
 
@@ -37,6 +39,67 @@ support_bp = Blueprint('support', __name__)
 _ALLOWED_STATUS = {'open', 'replied', 'closed'}
 _ALLOWED_PRIORITY = {'low', 'normal', 'high', 'urgent'}
 _ALLOWED_KIND = {'user', 'provider'}
+_SUPPORTED_LANGS_SET = frozenset(SUPPORTED_LANGS)
+_VIEWER_FALLBACK_LANG = 'en'   # P8b — 지원 외 → 영어
+_ADMIN_LANG = 'ko'             # 운영자 인박스는 한국어 운영
+
+
+def _resolve_support_viewer_lang(kind, caller_id, db, *, is_admin: bool = False) -> str:
+    """support viewer 언어 — chat 과 동일 정책 (P8b).
+
+    - is_admin → ``ko``
+    - ?lang= 쿼리 우선 → users.language → 매장(ko) / 사용자 fallback en
+    """
+    if is_admin:
+        return _ADMIN_LANG
+    q = (request.args.get('lang') or '').strip()
+    if q:
+        return normalize_supported_lang(q, fallback=_VIEWER_FALLBACK_LANG)
+    if kind == 'user':
+        row = db.execute("SELECT language FROM users WHERE id=?",
+                         (caller_id,)).fetchone()
+        if row and row['language']:
+            return normalize_supported_lang(row['language'],
+                                            fallback=_VIEWER_FALLBACK_LANG)
+        return _VIEWER_FALLBACK_LANG
+    return 'ko'   # provider — 한국 사장 가정
+
+
+def _get_or_translate_support(db, message_id: int, body: str,
+                              body_lang: str | None, viewer_lang: str
+                              ) -> tuple[str | None, str | None]:
+    """support_message_translations 캐시 + lazy 번역 (chat 패턴과 동일)."""
+    if not body or not body_lang or body_lang == viewer_lang:
+        return (None, None)
+    row = db.execute(
+        """SELECT translated_text, provider FROM support_message_translations
+           WHERE message_id=? AND lang=?""",
+        (message_id, viewer_lang)
+    ).fetchone()
+    if row:
+        return (row['translated_text'], row['provider'])
+    translator = get_translator()
+    try:
+        translated = translator.translate(body, source=body_lang, target=viewer_lang)
+    except TranslatorError:
+        return (None, None)
+    if not translated or translated == body:
+        return (None, None)
+    db.execute(
+        """INSERT OR IGNORE INTO support_message_translations
+             (message_id, lang, translated_text, provider)
+           VALUES (?,?,?,?)""",
+        (message_id, viewer_lang, translated, translator.name)
+    )
+    return (translated, translator.name)
+
+
+def _normalize_lang_hint(raw: str | None) -> str | None:
+    """클라이언트가 보낸 ``lang_hint`` → 화이트리스트 내면 그대로, 아니면 None."""
+    if not raw:
+        return None
+    raw = raw.strip()
+    return raw if raw in _SUPPORTED_LANGS_SET else None
 
 
 def _row_to_ticket(row) -> dict:
@@ -57,15 +120,27 @@ def _row_to_ticket(row) -> dict:
     }
 
 
-def _row_to_message(row) -> dict:
-    return {
+def _row_to_message(row, *, viewer_lang: str | None = None, db=None) -> dict:
+    """support_messages row → JSON. ``viewer_lang`` 지정 시 번역 머지 (P8b)."""
+    body_lang = row['body_lang'] if 'body_lang' in row.keys() else None
+    m = {
         'id':         row['id'],
         'ticket_id':  row['ticket_id'],
         'sender':     row['sender'],
         'sender_admin_id': row['sender_admin_id'],
         'body':       row['body'],
+        'body_lang':  body_lang,
         'created_at': row['created_at'],
     }
+    if viewer_lang and db is not None:
+        translated, provider = _get_or_translate_support(
+            db, row['id'], row['body'], body_lang, viewer_lang
+        )
+        if translated:
+            m['translated_text']     = translated
+            m['translated_lang']     = viewer_lang
+            m['translated_provider'] = provider
+    return m
 
 
 # ── 사용자/사장 — 문의 작성 (sub_type 자동 판별) ─────────────────────────────
@@ -105,6 +180,7 @@ def create_ticket():
     subject = (data.get('subject') or '').strip()
     body    = (data.get('body') or '').strip()
     category = (data.get('category') or '').strip() or None
+    body_lang = _normalize_lang_hint(data.get('lang_hint'))   # P8b
     if not subject or not body:
         return jsonify({'success': False, 'message': 'subject 와 body 는 필수입니다.'}), 400
 
@@ -119,11 +195,12 @@ def create_ticket():
          category, subject, body)
     )
     tid = cur.lastrowid
-    # 최초 본문은 자동으로 message 1개로 기록 (사용자 thread 첫 줄)
+    # 최초 본문은 자동으로 message 1개로 기록 (사용자 thread 첫 줄).
+    # P8b — lang_hint 가 있으면 body_lang 저장. 운영자가 외국어 메시지를 한국어로 받을 때 source 로 사용.
     db.execute(
-        """INSERT INTO support_messages (ticket_id, sender, body)
-           VALUES (?, 'user', ?)""",
-        (tid, body)
+        """INSERT INTO support_messages (ticket_id, sender, body, body_lang)
+           VALUES (?, 'user', ?, ?)""",
+        (tid, body, body_lang)
     )
     db.commit()
     row = db.execute("SELECT * FROM support_tickets WHERE id=?", (tid,)).fetchone()
@@ -179,15 +256,20 @@ def get_my_ticket(tid: int):
         db.close()
         return jsonify({'success': False, 'message': '문의를 찾을 수 없습니다.'}), 404
 
+    # P8b — viewer 언어로 lazy 번역 + 캐시 upsert.
+    viewer_lang = _resolve_support_viewer_lang(kind, caller_id, db)
     messages = db.execute(
         "SELECT * FROM support_messages WHERE ticket_id=? ORDER BY id ASC",
         (tid,)
     ).fetchall()
+    out = [_row_to_message(m, viewer_lang=viewer_lang, db=db) for m in messages]
+    db.commit()   # 캐시 upsert 반영
     db.close()
     return jsonify({
-        'success': True,
-        'ticket': _row_to_ticket(ticket),
-        'messages': [_row_to_message(m) for m in messages],
+        'success':     True,
+        'ticket':      _row_to_ticket(ticket),
+        'messages':    out,
+        'viewer_lang': viewer_lang,
     })
 
 
@@ -200,6 +282,7 @@ def add_my_message(tid: int):
 
     data = request.get_json(silent=True) or {}
     body = (data.get('body') or '').strip()
+    body_lang = _normalize_lang_hint(data.get('lang_hint'))   # P8b
     if not body:
         return jsonify({'success': False, 'message': 'body 가 필요합니다.'}), 400
 
@@ -219,9 +302,9 @@ def add_my_message(tid: int):
         return jsonify({'success': False, 'message': '문의를 찾을 수 없습니다.'}), 404
 
     db.execute(
-        """INSERT INTO support_messages (ticket_id, sender, body)
-           VALUES (?, 'user', ?)""",
-        (tid, body)
+        """INSERT INTO support_messages (ticket_id, sender, body, body_lang)
+           VALUES (?, 'user', ?, ?)""",
+        (tid, body, body_lang)
     )
     db.execute(
         """UPDATE support_tickets SET status='open',
@@ -268,14 +351,19 @@ def admin_get_ticket(tid: int):
     if not ticket:
         db.close()
         return jsonify({'success': False, 'message': '문의를 찾을 수 없습니다.'}), 404
+    # P8b — 운영자 인박스는 한국어. 외국어로 들어온 사용자 문의를 한국어로 번역.
+    viewer_lang = _resolve_support_viewer_lang(None, None, db, is_admin=True)
     messages = db.execute(
         "SELECT * FROM support_messages WHERE ticket_id=? ORDER BY id ASC", (tid,)
     ).fetchall()
+    out = [_row_to_message(m, viewer_lang=viewer_lang, db=db) for m in messages]
+    db.commit()
     db.close()
     return jsonify({
-        'success': True,
-        'ticket': _row_to_ticket(ticket),
-        'messages': [_row_to_message(m) for m in messages],
+        'success':     True,
+        'ticket':      _row_to_ticket(ticket),
+        'messages':    out,
+        'viewer_lang': viewer_lang,
     })
 
 
@@ -293,11 +381,14 @@ def admin_reply(tid: int):
         db.close()
         return jsonify({'success': False, 'message': '문의를 찾을 수 없습니다.'}), 404
 
+    # P8b — 운영자 인박스는 한국어 운영. body_lang='ko' 로 저장 → 외국인 사용자가
+    # 자기 언어로 받을 때 source 로 사용. (필요 시 lang_hint 옵션도 받음)
+    admin_lang_hint = _normalize_lang_hint(data.get('lang_hint')) or _ADMIN_LANG
     db.execute(
         """INSERT INTO support_messages
-             (ticket_id, sender, sender_admin_id, body)
-           VALUES (?, 'admin', ?, ?)""",
-        (tid, admin_id, body)
+             (ticket_id, sender, sender_admin_id, body, body_lang)
+           VALUES (?, 'admin', ?, ?, ?)""",
+        (tid, admin_id, body, admin_lang_hint)
     )
     db.execute(
         """UPDATE support_tickets

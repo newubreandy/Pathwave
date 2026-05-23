@@ -304,11 +304,28 @@ def init_db():
             sender_actor_role TEXT,                        -- 'owner'|'admin'|'staff' (facility 측만)
             sender_actor_id   INTEGER,
             body          TEXT    NOT NULL,
+            body_lang     TEXT,                            -- 원문 언어 (lang_hint, P8b). NULL=미상
             read_at       TEXT,
             created_at    TEXT    DEFAULT (datetime('now')),
             FOREIGN KEY (room_id) REFERENCES chat_rooms(id)
         );
         CREATE INDEX IF NOT EXISTS idx_chat_messages_room ON chat_messages(room_id);
+
+        -- P8b — 채팅 메시지 번역 캐시. (message_id, lang) UNIQUE.
+        -- lazy 번역: viewer 의 lang 으로 처음 요청될 때 1회 번역 후 영구 캐시.
+        -- facility_translations 와 동일한 캐시 패턴.
+        CREATE TABLE IF NOT EXISTS chat_message_translations (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            message_id      INTEGER NOT NULL,
+            lang            TEXT    NOT NULL,              -- viewer 언어 (ko/en/ja/zh-CN/...)
+            translated_text TEXT    NOT NULL,
+            provider        TEXT,                          -- 'stub'|'google'|'deepl' (감사용)
+            created_at      TEXT    DEFAULT (datetime('now')),
+            UNIQUE (message_id, lang),
+            FOREIGN KEY (message_id) REFERENCES chat_messages(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_chat_msg_translations_message
+            ON chat_message_translations(message_id);
 
         -- 알림 발송 (SRS FR-NOTI-001/002)
         -- status: pending(예약 대기) / sent(발송 완료) / failed / canceled
@@ -484,11 +501,26 @@ def init_db():
             sender      TEXT    NOT NULL,         -- 'user' | 'admin'
             sender_admin_id INTEGER,              -- super_admin_accounts.id (sender=admin)
             body        TEXT    NOT NULL,
+            body_lang   TEXT,                     -- 원문 언어 (lang_hint, P8b). NULL=미상
             created_at  TEXT    DEFAULT (datetime('now')),
             FOREIGN KEY (ticket_id) REFERENCES support_tickets(id)
         );
         CREATE INDEX IF NOT EXISTS idx_support_messages_ticket
             ON support_messages(ticket_id);
+
+        -- P8b — 사용자 문의 메시지 번역 캐시. chat_message_translations 와 동일 패턴.
+        CREATE TABLE IF NOT EXISTS support_message_translations (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            message_id      INTEGER NOT NULL,
+            lang            TEXT    NOT NULL,
+            translated_text TEXT    NOT NULL,
+            provider        TEXT,
+            created_at      TEXT    DEFAULT (datetime('now')),
+            UNIQUE (message_id, lang),
+            FOREIGN KEY (message_id) REFERENCES support_messages(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_support_msg_translations_message
+            ON support_message_translations(message_id);
 
         -- 어드민이 카테고리 마스터를 직접 관리 (label 은 i18n key)
         CREATE TABLE IF NOT EXISTS support_categories (
@@ -678,6 +710,12 @@ def init_db():
     db.execute(
         "CREATE INDEX IF NOT EXISTS idx_beacons_major_minor ON beacons(major, minor)"
     )
+
+    # P8b — 채팅/사용자 문의 메시지 원문 언어 컬럼 (기존 DB 마이그레이션).
+    # 신규 테이블(chat_message_translations / support_message_translations)은
+    # 위 executescript 의 CREATE TABLE IF NOT EXISTS 로 멱등 생성.
+    _add_column_if_missing(db, 'chat_messages',    'body_lang', 'body_lang TEXT')
+    _add_column_if_missing(db, 'support_messages', 'body_lang', 'body_lang TEXT')
 
     # 비콘 배터리 시계열 (PR #34)
     db.executescript("""

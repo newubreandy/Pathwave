@@ -22,12 +22,16 @@ from flask import Blueprint, Response, request, jsonify, g
 
 from models.database import get_db
 from models.push import push_to_users
+from models.translator import get_translator, TranslatorError
 from routes.auth import require_auth, require_super_admin, SECRET_KEY
 from routes.block import is_blocked
+from services.translation_ai import SUPPORTED_LANGS, normalize_supported_lang
 
 chat_bp = Blueprint('chat', __name__)
 
 _BODY_MAX = 2000
+_VIEWER_FALLBACK_LANG = 'en'                       # 지원 외 언어 → 영어 (P8b)
+_SUPPORTED_VIEWER_LANGS = frozenset(SUPPORTED_LANGS)
 
 
 def _decode_optional(token: str) -> dict | None:
@@ -79,17 +83,95 @@ def _row_to_room(row) -> dict:
     }
 
 
-def _row_to_message(row) -> dict:
-    return {
+# ── viewer 언어 결정 + 번역 캐시 (P8b) ──────────────────────────────────────
+
+def _resolve_viewer_lang(actor, db) -> str:
+    """viewer 언어 결정 — ?lang= 쿼리 > users.language > 매장(ko).
+
+    화이트리스트 외 → 'en' (``normalize_supported_lang`` 적용).
+    """
+    q = (request.args.get('lang') or '').strip()
+    if q:
+        return normalize_supported_lang(q, fallback=_VIEWER_FALLBACK_LANG)
+    if actor['kind'] == 'user':
+        row = db.execute("SELECT language FROM users WHERE id=?",
+                         (actor['user_id'],)).fetchone()
+        if row and row['language']:
+            return normalize_supported_lang(row['language'],
+                                            fallback=_VIEWER_FALLBACK_LANG)
+        return _VIEWER_FALLBACK_LANG
+    # facility-side — 한국 사장 가정. 사장님이 외국어 단말이면 ?lang= 로 명시.
+    return 'ko'
+
+
+def _get_or_translate_chat(db, message_id: int, body: str,
+                           body_lang: str | None, viewer_lang: str
+                           ) -> tuple[str | None, str | None]:
+    """채팅 메시지를 ``viewer_lang`` 으로 번역.
+
+    캐시 적중 시 그대로, 미스 시 translator 호출 + cache upsert.
+    번역이 불필요/실패 시 ``(None, None)`` — UI 는 원문만 표시.
+    """
+    if not body or not body_lang:
+        return (None, None)
+    if body_lang == viewer_lang:
+        return (None, None)
+
+    row = db.execute(
+        """SELECT translated_text, provider FROM chat_message_translations
+           WHERE message_id=? AND lang=?""",
+        (message_id, viewer_lang)
+    ).fetchone()
+    if row:
+        return (row['translated_text'], row['provider'])
+
+    translator = get_translator()
+    try:
+        translated = translator.translate(body, source=body_lang, target=viewer_lang)
+    except TranslatorError:
+        return (None, None)
+    if not translated or translated == body:
+        return (None, None)
+
+    db.execute(
+        """INSERT OR IGNORE INTO chat_message_translations
+             (message_id, lang, translated_text, provider)
+           VALUES (?,?,?,?)""",
+        (message_id, viewer_lang, translated, translator.name)
+    )
+    return (translated, translator.name)
+
+
+def _row_to_message(row, *, viewer_lang: str | None = None, db=None) -> dict:
+    """메시지 row → JSON. ``viewer_lang`` 지정 시 번역 머지(lazy + 캐시).
+
+    응답 필드:
+      - ``body``           : 원문
+      - ``body_lang``      : 원문 언어 (lang_hint)
+      - ``translated_text``: viewer_lang 으로 번역된 텍스트 (있을 때만)
+      - ``translated_lang``: viewer_lang
+    """
+    body_lang = row['body_lang'] if 'body_lang' in row.keys() else None
+    m = {
         'id':           row['id'],
         'room_id':      row['room_id'],
         'sender_type':  row['sender_type'],
         'sender_actor_role': row['sender_actor_role'],
         'sender_actor_id':   row['sender_actor_id'],
         'body':         row['body'],
+        'body_lang':    body_lang,
         'read_at':      row['read_at'],
         'created_at':   row['created_at'],
     }
+    if viewer_lang and db is not None:
+        translated, provider = _get_or_translate_chat(
+            db, row['id'], row['body'], body_lang, viewer_lang
+        )
+        if translated:
+            m['translated_text']     = translated
+            m['translated_lang']     = viewer_lang
+            m['translated_provider'] = provider
+    return m
 
 
 def _can_access_room(db, room, actor) -> bool:
@@ -207,6 +289,7 @@ def list_messages(rid):
     if not _can_access_room(db, room, actor):
         db.close()
         return jsonify({'success': False, 'message': '방을 찾을 수 없거나 권한이 없습니다.'}), 404
+    viewer_lang = _resolve_viewer_lang(actor, db)
     if after:
         rows = db.execute(
             "SELECT * FROM chat_messages WHERE room_id=? AND id>? ORDER BY id ASC",
@@ -217,9 +300,13 @@ def list_messages(rid):
             "SELECT * FROM chat_messages WHERE room_id=? ORDER BY id ASC",
             (rid,)
         ).fetchall()
+    # 번역 캐시 미스 시 _row_to_message 가 upsert — commit 으로 반영.
+    messages = [_row_to_message(r, viewer_lang=viewer_lang, db=db) for r in rows]
+    db.commit()
     db.close()
     return jsonify({'success': True,
-                    'messages': [_row_to_message(r) for r in rows]})
+                    'messages':    messages,
+                    'viewer_lang': viewer_lang})
 
 
 @chat_bp.route('/api/chat/rooms/<int:rid>/messages', methods=['POST'])
@@ -232,6 +319,11 @@ def send_message(rid):
     if not body or len(body) > _BODY_MAX:
         return jsonify({'success': False,
                         'message': f'body는 1~{_BODY_MAX}자여야 합니다.'}), 400
+
+    # P8b — 클라이언트가 본인 단말 언어를 lang_hint 로 같이 보낸다.
+    # 화이트리스트 외/누락 → NULL 저장 (수신 시 viewer 측에서 번역 시도 안 함).
+    lang_hint = (data.get('lang_hint') or '').strip()
+    body_lang = lang_hint if lang_hint in _SUPPORTED_VIEWER_LANGS else None
 
     db = get_db()
     room = db.execute("SELECT * FROM chat_rooms WHERE id=?", (rid,)).fetchone()
@@ -256,9 +348,9 @@ def send_message(rid):
 
     cur = db.execute(
         """INSERT INTO chat_messages (room_id, sender_type, sender_actor_role,
-                                       sender_actor_id, body)
-           VALUES (?,?,?,?,?)""",
-        (rid, sender_type, sender_role, sender_id, body)
+                                       sender_actor_id, body, body_lang)
+           VALUES (?,?,?,?,?,?)""",
+        (rid, sender_type, sender_role, sender_id, body, body_lang)
     )
     db.execute(
         "UPDATE chat_rooms SET last_message_at=datetime('now') WHERE id=?", (rid,)
@@ -266,17 +358,25 @@ def send_message(rid):
     new_row = db.execute("SELECT * FROM chat_messages WHERE id=?",
                          (cur.lastrowid,)).fetchone()
 
+    # 응답: sender 측 viewer_lang 으로 머지 (대부분 sender 본인 언어 = body_lang → 번역 없음).
+    viewer_lang = _resolve_viewer_lang(actor, db)
+    message_payload = _row_to_message(new_row, viewer_lang=viewer_lang, db=db)
+
     # 상대방에게 푸시 (facility 측 송신 → user에게, user 송신 → facility 직원에게는 추후)
+    # P8b — title 은 시스템 문구(ko 고정), body 는 sender 의 lang_hint(body_lang).
+    #       수신자 push_tokens.language 가 다르면 자동 번역, 지원 외 → 영어 fallback.
     if sender_type == 'facility':
         push_to_users(
             db, [room['user_id']],
-            title=f'새 메시지',
+            title='새 메시지',
             body=body[:120],
-            data={'type': 'chat_message', 'room_id': rid}
+            data={'type': 'chat_message', 'room_id': rid},
+            title_lang='ko',
+            body_lang=body_lang,
         )
     db.commit()
     db.close()
-    return jsonify({'success': True, 'message': _row_to_message(new_row)}), 201
+    return jsonify({'success': True, 'message': message_payload}), 201
 
 
 @chat_bp.route('/api/chat/rooms/<int:rid>/read', methods=['POST'])
@@ -354,6 +454,8 @@ def stream_room(rid):
         db.close()
         return jsonify({'success': False,
                         'message': '방을 찾을 수 없거나 권한이 없습니다.'}), 404
+    # SSE 연결 시작 시 한 번만 결정 (?lang= 쿼리 또는 users.language).
+    viewer_lang = _resolve_viewer_lang(actor, db)
     db.close()
 
     poll_interval = 2.0           # 초
@@ -367,17 +469,22 @@ def stream_room(rid):
         # 즉시 연결 확인용 retry 권장값
         yield 'retry: 5000\n\n'
         while True:
-            # 새 메시지 가져오기
+            # 새 메시지 가져오기 + viewer_lang 으로 번역 머지(필요 시 캐시 upsert)
             local_db = get_db()
             rows = local_db.execute(
                 "SELECT * FROM chat_messages WHERE room_id=? AND id>? ORDER BY id ASC",
                 (rid, last_id)
             ).fetchall()
-            local_db.close()
+            payloads = []
             for r in rows:
-                m = _row_to_message(r)
-                yield f'event: message\ndata: {_json.dumps(m, ensure_ascii=False)}\n\n'
+                payloads.append(
+                    _row_to_message(r, viewer_lang=viewer_lang, db=local_db)
+                )
                 last_id = r['id']
+            local_db.commit()  # 번역 캐시 upsert 반영
+            local_db.close()
+            for m in payloads:
+                yield f'event: message\ndata: {_json.dumps(m, ensure_ascii=False)}\n\n'
 
             now = time.time()
             if now - last_keepalive >= keepalive_interval:
