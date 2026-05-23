@@ -54,10 +54,11 @@ def _direct_code(email):
 
 
 _USER_CONSENTS = [
-    {'kind': 'age14',    'version': 'v', 'accepted': True},
-    {'kind': 'terms',    'version': 'v', 'accepted': True},
-    {'kind': 'privacy',  'version': 'v', 'accepted': True},
-    {'kind': 'location', 'version': 'v', 'accepted': True},
+    # C-2-4d — user 가입 필수
+    {'kind': 'age14',         'version': 'v', 'accepted': True},
+    {'kind': 'terms_user',    'version': 'v', 'accepted': True},
+    {'kind': 'privacy_user',  'version': 'v', 'accepted': True},
+    {'kind': 'location',      'version': 'v', 'accepted': True},
 ]
 
 

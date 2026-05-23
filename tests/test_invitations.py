@@ -89,8 +89,9 @@ sc, body = _post('/api/facility/register', {
     'manager_phone': '010-0000-0000',
     'manager_email': 'manager@test.com',
     'consents': [
-        {'kind': 'terms',   'version': 'v', 'accepted': True},
-        {'kind': 'privacy', 'version': 'v', 'accepted': True},
+        # C-2-4d — facility 가입 필수
+        {'kind': 'terms_facility',   'version': 'v', 'accepted': True},
+        {'kind': 'privacy_facility', 'version': 'v', 'accepted': True},
     ],
 })
 _ok(f'/api/facility/register → 201 (pending)', sc == 201, body)
@@ -125,10 +126,11 @@ ec = db.execute(
 db.close()
 
 _USER_CONSENTS = [
-    {'kind': 'age14',    'version': 'v', 'accepted': True},
-    {'kind': 'terms',    'version': 'v', 'accepted': True},
-    {'kind': 'privacy',  'version': 'v', 'accepted': True},
-    {'kind': 'location', 'version': 'v', 'accepted': True},
+    # C-2-4d — user 가입 필수
+    {'kind': 'age14',         'version': 'v', 'accepted': True},
+    {'kind': 'terms_user',    'version': 'v', 'accepted': True},
+    {'kind': 'privacy_user',  'version': 'v', 'accepted': True},
+    {'kind': 'location',      'version': 'v', 'accepted': True},
 ]
 
 sc, body = _post('/api/auth/register', {

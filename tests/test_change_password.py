@@ -59,8 +59,9 @@ r = c.post('/api/auth/register', json={
     'email': 'chpw@test.kr', 'code': '111111', 'password': 'OldPass1!',
     'birth_year': 1990,
     'consents': [
+        # C-2-4d — user 가입 필수: age14, terms_user, privacy_user, location
         {'kind': k, 'version': '1.0.0', 'accepted': True}
-        for k in ['age14','terms','privacy','location','camera','storage','push','third_party']
+        for k in ['age14','terms_user','privacy_user','location','camera','storage','push']
     ],
 })
 data = r.get_json() or {}

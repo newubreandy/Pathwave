@@ -74,10 +74,11 @@ sc, body = _post('/api/auth/register', {
     'email': 'u1@test.com', 'code': ec, 'password': 'User123!',
     'birth_year': 1990,   # PR #47 — 성인 가입
     'consents': [
-        {'kind': 'age14',    'version': 'v', 'accepted': True},
-        {'kind': 'terms',    'version': 'v', 'accepted': True},
-        {'kind': 'privacy',  'version': 'v', 'accepted': True},
-        {'kind': 'location', 'version': 'v', 'accepted': True},
+        # C-2-4d — user 가입
+        {'kind': 'age14',         'version': 'v', 'accepted': True},
+        {'kind': 'terms_user',    'version': 'v', 'accepted': True},
+        {'kind': 'privacy_user',  'version': 'v', 'accepted': True},
+        {'kind': 'location',      'version': 'v', 'accepted': True},
     ],
 })
 _ok(f'register → 200', sc == 200 and body.get('success'), body)
@@ -94,9 +95,9 @@ _post('/api/facility/register', {
     'email': 'o1@test.com', 'code': ec, 'password': 'Owner123!',
     'company_name': 'TestStore', 'business_no': '111-22-33333',
     'manager_name': '홍사장', 'manager_phone': '010', 'manager_email': 'm@t.com',
-    'consents': [   # PR #45 — 사장은 terms/privacy 필수
-        {'kind': 'terms',   'version': 'v', 'accepted': True},
-        {'kind': 'privacy', 'version': 'v', 'accepted': True},
+    'consents': [   # C-2-4d — 사장은 terms_facility / privacy_facility 필수
+        {'kind': 'terms_facility',   'version': 'v', 'accepted': True},
+        {'kind': 'privacy_facility', 'version': 'v', 'accepted': True},
     ],
 })
 db = _patched_get_db()
