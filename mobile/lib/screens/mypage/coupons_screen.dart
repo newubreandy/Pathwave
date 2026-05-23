@@ -68,14 +68,14 @@ class _CouponsScreenState extends State<CouponsScreen>
           indicatorColor: AppTheme.primary,
         ),
       ),
-      body: TabBarView(
+      body: SafeArea(child: TabBarView(
         controller: _tabCtrl,
         children: _statusTabs.map((s) => _CouponList(
           status: s,
           future: _futures[s]!,
           onRetry: () => _reload(s),
         )).toList(),
-      ),
+      )),
     );
   }
 }

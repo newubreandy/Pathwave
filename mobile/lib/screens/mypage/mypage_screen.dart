@@ -12,7 +12,7 @@ class MyPageScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PwAppBar(title: const Text('마이페이지')),
-      body: Center(
+      body: SafeArea(child: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -31,7 +31,7 @@ class MyPageScreen extends StatelessWidget {
             ],
           ),
         ),
-      ),
+      )),
     );
   }
 }

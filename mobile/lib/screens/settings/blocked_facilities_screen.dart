@@ -58,7 +58,7 @@ class _BlockedFacilitiesScreenState extends State<BlockedFacilitiesScreen> {
       appBar: PwAppBar(
         title: Text(_t.t('settings.blocked_list_title', defaultValue: '차단 목록')),
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
+      body: SafeArea(child: FutureBuilder<List<Map<String, dynamic>>>(
         future: _future,
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
@@ -113,7 +113,7 @@ class _BlockedFacilitiesScreenState extends State<BlockedFacilitiesScreen> {
             },
           );
         },
-      ),
+      )),
     );
   }
 }

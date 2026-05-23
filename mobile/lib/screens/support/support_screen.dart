@@ -68,7 +68,7 @@ class _SupportScreenState extends State<SupportScreen>
           unselectedLabelColor: AppTheme.textSecondary,
         ),
       ),
-      body: TabBarView(
+      body: SafeArea(child: TabBarView(
         controller: _tabCtrl,
         children: [
           const _FaqTab(),
@@ -78,7 +78,7 @@ class _SupportScreenState extends State<SupportScreen>
             initialTargetId: widget.reportTargetId,
           ),
         ],
-      ),
+      )),
     );
   }
 }

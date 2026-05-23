@@ -72,7 +72,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: RefreshIndicator(
+      body: SafeArea(child: RefreshIndicator(
         onRefresh: _refresh,
         child: FutureBuilder<Map<String, dynamic>>(
           future: _detail,
@@ -117,7 +117,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
             );
           },
         ),
-      ),
+      )),
     );
   }
 

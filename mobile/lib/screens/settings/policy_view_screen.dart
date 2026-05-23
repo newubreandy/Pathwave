@@ -71,7 +71,7 @@ class _PolicyViewScreenState extends State<PolicyViewScreen> {
         ?? I18nService.instance.t('policy.viewer_title', defaultValue: '약관 보기');
     return Scaffold(
       appBar: PwAppBar(title: Text(title)),
-      body: _loading
+      body: SafeArea(child: _loading
         ? const Center(child: CircularProgressIndicator())
         : _error != null
           ? Center(
@@ -104,7 +104,7 @@ class _PolicyViewScreenState extends State<PolicyViewScreen> {
                   ],
                 ],
               ),
-            ),
+            )),
     );
   }
 }

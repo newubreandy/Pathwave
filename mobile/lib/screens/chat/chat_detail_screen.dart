@@ -512,7 +512,7 @@ class _MessageBubble extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(subText,
                       style: TextStyle(
-                        color: isMe ? Colors.white70 : PwTheme.textHint,
+                        color: isMe ? Colors.white70 : AppTheme.textHint,
                         fontSize: 12,
                         height: 1.35,
                       )),

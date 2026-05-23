@@ -54,13 +54,13 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           ],
         ),
       ),
-      body: TabBarView(
+      body: SafeArea(child: TabBarView(
         controller: _tabCtrl,
         children: [
           _InboxTab(future: _inboxFuture, onRefresh: () async { _reload(); await _inboxFuture; }),
           _AnnouncementsTab(future: _annFuture, onRefresh: () async { _reload(); await _annFuture; }),
         ],
-      ),
+      )),
     );
   }
 }

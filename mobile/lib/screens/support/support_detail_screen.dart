@@ -233,7 +233,7 @@ class _MessageBubble extends StatelessWidget {
                   style: TextStyle(
                       color: isUser
                           ? Colors.white.withValues(alpha: 0.7)
-                          : PwTheme.textHint,
+                          : AppTheme.textHint,
                       fontSize: 12,
                       height: 1.35)),
             ],
