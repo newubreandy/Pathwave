@@ -612,6 +612,11 @@ def claim_beacon(fid):
     if not serial_no:
         return jsonify({'success': False, 'message': 'serial_no가 필요합니다.'}), 400
 
+    # P15 — role: 'wifi' (기본, BLE→WiFi 핸드오프) | 'cashier' (계산대 — 결제·스탬프 트리거).
+    role = (data.get('role') or 'wifi').strip().lower()
+    if role not in ('wifi', 'cashier'):
+        return jsonify({'success': False, 'message': "role 은 'wifi' 또는 'cashier'."}), 400
+
     # Phase C — Major = facility_id 자동 지정 가능. Minor 는 사장이 지정 (1~3 등),
     # 미지정 시 매장 내 다음 순번 자동 할당.
     minor_raw = data.get('minor')
@@ -657,13 +662,13 @@ def claim_beacon(fid):
 
     db.execute(
         """UPDATE beacons
-           SET facility_id=?, major=?, minor=?, status='active'
+           SET facility_id=?, major=?, minor=?, status='active', role=?
            WHERE id=?""",
-        (fid, fid, minor, beacon['id'])
+        (fid, fid, minor, role, beacon['id'])
     )
     new_row = db.execute(
         """SELECT id, serial_no, uuid, major, minor,
-                  status, battery_pct, firmware_ver, created_at
+                  status, battery_pct, firmware_ver, role, created_at
            FROM beacons WHERE id=?""", (beacon['id'],)
     ).fetchone()
     db.commit()
