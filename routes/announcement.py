@@ -24,6 +24,7 @@ from flask import Blueprint, request, jsonify, g
 
 from models.database import get_db
 from models.push import push_to_users
+from services.translation_ai import SUPPORTED_LANGS
 from routes.auth import decode_access_token, require_super_admin
 
 announcement_bp = Blueprint('announcement', __name__)
@@ -99,6 +100,9 @@ def admin_create_announcement():
     pinned   = 1 if data.get('pinned') else 0
     starts_at = (data.get('starts_at') or '').strip() or None
     ends_at   = (data.get('ends_at') or '').strip() or None
+    # P8c — 작성자(어드민) 언어. 미명시 시 한국어 가정 (운영 인박스 정책).
+    lang_hint = (data.get('lang_hint') or 'ko').strip()
+    body_lang = lang_hint if lang_hint in SUPPORTED_LANGS else 'ko'
 
     if not title or not body:
         return jsonify({'success': False, 'message': '제목과 본문을 입력해 주세요.'}), 400
@@ -110,9 +114,9 @@ def admin_create_announcement():
     db = get_db()
     cur = db.execute(
         """INSERT INTO announcements
-           (title, body, audience, created_by_admin_id, pinned, starts_at, ends_at)
-           VALUES (?,?,?,?,?,?,?)""",
-        (title, body, audience, admin_id, pinned, starts_at, ends_at)
+           (title, body, body_lang, audience, created_by_admin_id, pinned, starts_at, ends_at)
+           VALUES (?,?,?,?,?,?,?,?)""",
+        (title, body, body_lang, audience, admin_id, pinned, starts_at, ends_at)
     )
     aid = cur.lastrowid
     db.commit()
@@ -132,10 +136,13 @@ def admin_create_announcement():
                     "SELECT id FROM users WHERE deleted_at IS NULL"
                 ).fetchall()
                 user_ids = [r['id'] for r in user_rows]
+                # P8c — 토큰별 lang 으로 자동 번역. 지원 외 → 영어 fallback.
                 push_result = push_to_users(
                     db, user_ids,
                     title=title, body=body[:200],
-                    data={'announcement_id': str(aid), 'audience': audience}
+                    data={'announcement_id': str(aid), 'audience': audience},
+                    title_lang=body_lang,
+                    body_lang=body_lang,
                 )
             else:
                 # facilities / staff 는 현재 토큰 인프라 부재 → no-op + 로그

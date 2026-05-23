@@ -27,6 +27,7 @@ from models.push import push_to_users
 from routes.auth import require_facility_actor, require_auth, require_super_admin
 from services.notification_quota import get_available_quota, quota_summary
 from services.notification_review import review_notification
+from services.translation_ai import SUPPORTED_LANGS
 
 notification_bp = Blueprint('notification', __name__)
 
@@ -145,12 +146,15 @@ def _dispatch(db, nid: int, *, force: bool = False) -> tuple[bool, str, str | No
            WHERE id=?""",
         (total, nid)
     )
-    # 푸시 발송 — title_lang/body_lang 은 P8c 로 분리 (지금은 한국어 가정)
+    # 푸시 발송 (P8c) — title 은 시스템 문구(ko 고정), body 는 작성자 lang_hint.
+    # 토큰별 lang 으로 자동 번역(P8b push_to_users 통합) + 지원 외 → 영어 fallback.
     push_to_users(db, recipients,
                   title=notif['title'], body=notif['body'],
                   data={'type':         'notification',
                         'notification_id': nid,
-                        'facility_id':     notif['facility_id']})
+                        'facility_id':     notif['facility_id']},
+                  title_lang='ko',
+                  body_lang=(notif['body_lang'] if 'body_lang' in notif.keys() else None))
     return True, 'sent', None
 
 
@@ -181,6 +185,9 @@ def create_notification(fid):
     target_type = (data.get('target_type') or '').strip()
     user_ids    = data.get('user_ids')
     scheduled_at_raw = (data.get('scheduled_at') or '').strip() or None
+    # P8c — 작성자(사장) 단말 언어. 발송 시 토큰 lang 으로 자동 번역.
+    lang_hint = (data.get('lang_hint') or '').strip()
+    body_lang = lang_hint if lang_hint in SUPPORTED_LANGS else None
 
     # ── 입력 검증 ─────────────────────────────────────────────────────────
     if not title or len(title) > _TITLE_MAX:
@@ -249,11 +256,11 @@ def create_notification(fid):
     # ── INSERT ──────────────────────────────────────────────────────────
     cur = db.execute(
         """INSERT INTO notifications
-             (facility_id, title, body, target_type, scheduled_at,
+             (facility_id, title, body, body_lang, target_type, scheduled_at,
               issued_by_actor_role, issued_by_actor_id, status,
               ai_review_status, ai_review_reason, recipient_count)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
-        (fid, title, body, target_type, scheduled_at,
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+        (fid, title, body, body_lang, target_type, scheduled_at,
          actor_role, actor_id, status,
          ai_status, ai_reason, needed)
     )
