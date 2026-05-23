@@ -84,6 +84,10 @@ def list_policies():
     try:
         items = []
         for kind, meta in CONSENT_KINDS.items():
+            # C-2-4d — applicable_for 로 sub_type 별 노출 분리.
+            # user 가입 화면에서 facility 약관이 보이거나 그 반대가 되지 않도록.
+            if sub_type not in meta.get('applicable_for', set()):
+                continue
             active = get_active(db, kind, lang)
             items.append({
                 'kind':     kind,
