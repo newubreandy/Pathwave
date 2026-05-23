@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { Plus, X, ChevronLeft, Upload, Bell, Check, CheckCheck, Star, Info } from 'lucide-react';
 import PushService from '../services/push/PushService';
+import NotificationService from '../services/notification/NotificationService';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import CardAvatar from '../components/common/CardAvatar';
@@ -50,12 +51,37 @@ const Notifications = () => {
     }
   }, [view]);
 
-  // Mock Data
-  const stats = {
-    available: 0, // 테스트를 위해 0으로 고정
-    used: 245,
-    expiry: "2026.12.31"
+  // P11 — 백엔드 quota 연동.
+  // 마운트 시: 1) 내 매장 id 1회 fetch (1계정1매장) → 2) quota 통계 fetch.
+  // 백엔드 응답이 없으면 0 으로 표시 (결제 안 된 신규 매장 + 안전한 디폴트).
+  const [facilityId, setFacilityId] = useState(null);
+  const [stats, setStats] = useState({ available: 0, used: 0, expiry: '-' });
+
+  const loadQuota = async (fid) => {
+    try {
+      const res = await NotificationService.loadQuota(fid);
+      const q = res?.quota || {};
+      setStats((prev) => ({
+        ...prev,
+        available: q.available || 0,
+        used:      q.used || 0,
+        // expiry 는 quota_summary 미반환 — 별도 endpoint 추가 전까지 '-' 표시.
+      }));
+    } catch (_) {
+      /* graceful: 결제 안 된 매장이면 0 유지 */
+    }
   };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const fid = await NotificationService.loadMyFacilityId();
+        if (!fid) return;
+        setFacilityId(fid);
+        await loadQuota(fid);
+      } catch (_) { /* 비로그인/네트워크 오류 graceful */ }
+    })();
+  }, []);
 
   const [notifications, setNotifications] = useState([
     { id: 1, type: "공지", title: "지하 2층 사우나 청소안내", date: "2022.05.17 18:00", status: "sent", message: "안녕하세요 호텔H입니다.\n\n2022.05.17 18:00 ~ 24:00 남성 및 여성 사우나 내부청소로 운영이 중단되오니 이점 참고하시어 이용에 불편이 없도록 이용하셨으면 좋겠습니다.\n\n감사합니다.", pushLocal: true, pushGlobal: false },
@@ -186,11 +212,17 @@ const Notifications = () => {
       return;
     }
 
-    const expiryDate = new Date(stats.expiry.replace(/\./g, '/'));
-    expiryDate.setHours(23, 59, 59, 999);
-    if (selectedDate > expiryDate) {
-      showAlert(t('noti.msg_date_expiry', { expiry: stats.expiry }));
-      return;
+    // P11 — expiry 검증은 백엔드 quota.expires_at 이 명확한 경우만.
+    // stats.expiry 가 '-' (백엔드 미반환) 이면 클라이언트 검증 skip → 백엔드에서 quota 검증으로 잡힘.
+    if (stats.expiry && stats.expiry !== '-') {
+      const expiryDate = new Date(stats.expiry.replace(/\./g, '/'));
+      if (!Number.isNaN(expiryDate.getTime())) {
+        expiryDate.setHours(23, 59, 59, 999);
+        if (selectedDate > expiryDate) {
+          showAlert(t('noti.msg_date_expiry', { expiry: stats.expiry }));
+          return;
+        }
+      }
     }
 
     if (!formData.pushLocal && !formData.pushGlobal) {
@@ -212,20 +244,42 @@ const Notifications = () => {
       finalBody = `${formData.message}\n\n수신 거부: 설정 > 알림 동의`;
     }
 
-    // 1차 백엔드 모듈 연동: 푸시 알림 발송 (Mock)
-    if (formData.pushGlobal) {
-      await PushService.sendBulkNotification(['user1', 'user2', 'user3'], {
-        title: finalTitle,
-        body: finalBody
-      });
-    } else if (formData.pushLocal) {
-      await PushService.sendNotification('local_user', {
-        title: finalTitle,
-        body: finalBody
-      });
+    // P11 — 백엔드 알림 신청 (12h/quota/AI 검토는 서버에서). pushGlobal/pushLocal
+    // 은 v1 에선 전부 'all_visited'(매장 방문 이력 있는 사용자) 로 매핑한다.
+    if (!facilityId) {
+      showAlert('매장 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+      return;
     }
+    try {
+      // datetime-local → ISO 8601
+      const scheduledAt = new Date(formData.date).toISOString();
+      const res = await NotificationService.createNotification(facilityId, {
+        title:        finalTitle,
+        body:         finalBody,
+        target_type:  'all_visited',
+        scheduled_at: scheduledAt,
+      });
+      // 백엔드가 정책 응답 메시지를 같이 줌 — UX 일관성 위해 그대로 노출.
+      const backendMsg = res?.message;
+      const status     = res?.notification?.status;
+      // quota 다시 로드 (방금 차감되진 않지만, 신규 매장 첫 결제 직후 등 갱신 케이스)
+      await loadQuota(facilityId);
 
-    setShowSuccessModal(true);
+      if (status === 'unpaid') {
+        // 결제 부족 → 결제 유도 모달
+        showAlert(backendMsg || '발송 수량이 부족합니다. 결제 후 활성화됩니다.');
+        return;
+      }
+      if (status === 'review') {
+        showAlert(backendMsg || '운영팀 검토 후 발송됩니다.');
+        setShowSuccessModal(true);
+        return;
+      }
+      // pending — 정상 예약
+      setShowSuccessModal(true);
+    } catch (err) {
+      showAlert(err?.message || '알림 신청에 실패했습니다.');
+    }
   };
 
   const closeSuccess = () => {

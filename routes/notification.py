@@ -357,6 +357,25 @@ def cancel_notification(fid, nid):
 # `POST /api/admin/notifications/<nid>/dispatch` 로 대체.
 
 
+# ── 사장 quota 조회 (P11) ────────────────────────────────────────────────
+@notification_bp.route('/api/facilities/<int:fid>/notifications/quota', methods=['GET'])
+@require_facility_actor(roles=['owner', 'admin'])
+def get_my_notification_quota(fid):
+    """사장 본인의 푸시 quota 잔량 + 사용 통계.
+
+    응답: ``{purchased, used, available, expired}``
+    """
+    account_id = g.auth['owner_account_id']
+    db = get_db()
+    if not _owned_facility(db, fid, account_id):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+    summary = quota_summary(db, account_id)
+    db.close()
+    return jsonify({'success': True, 'quota': summary})
+
+
 # ── 사용자 인박스 ────────────────────────────────────────────────────────────
 
 @notification_bp.route('/api/users/me/notifications', methods=['GET'])
