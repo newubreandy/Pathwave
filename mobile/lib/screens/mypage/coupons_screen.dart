@@ -139,6 +139,7 @@ class _CouponListState extends State<_CouponList> {
             status: widget.status,
             dismissed: _dismissed,
             onDismiss: (id) => setState(() => _dismissed.add(id)),
+            onReload: widget.onRetry,
           );
         },
       ),
@@ -152,11 +153,13 @@ class _CouponListBody extends StatefulWidget {
   final String status;
   final Set<dynamic> dismissed;
   final void Function(dynamic id) onDismiss;
+  final Future<void> Function() onReload;
   const _CouponListBody({
     required this.list,
     required this.status,
     required this.dismissed,
     required this.onDismiss,
+    required this.onReload,
   });
 
   @override
@@ -220,7 +223,11 @@ class _CouponListBodyState extends State<_CouponListBody> {
           final item = widget.list[i];
           return Padding(
             padding: EdgeInsets.only(top: i == 0 ? 0 : 12),
-            child: _CouponCard(data: item, status: widget.status),
+            child: _CouponCard(
+              data: item,
+              status: widget.status,
+              onReload: widget.onReload,
+            ),
           );
         }),
       ],
@@ -295,7 +302,12 @@ class _WelcomeCard extends StatelessWidget {
 class _CouponCard extends StatelessWidget {
   final Map<String, dynamic> data;
   final String status;
-  const _CouponCard({required this.data, required this.status});
+  final Future<void> Function() onReload;
+  const _CouponCard({
+    required this.data,
+    required this.status,
+    required this.onReload,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -489,10 +501,25 @@ class _CouponCard extends StatelessWidget {
             onPressed: () async {
               ctx.pop();
               final id = data['id'] as int?;
-              if (id != null) {
-                try {
-                  await CouponService().useCoupon(id);
-                } catch (_) {}
+              if (id == null) return;
+              try {
+                await CouponService().useCoupon(id);
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(t.t(
+                    'coupon.use_done',
+                    defaultValue: '쿠폰이 사용되었습니다.',
+                  ))),
+                );
+                await onReload(); // 목록 갱신 — 사용 완료 상태로 이동
+              } catch (e) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(t.t(
+                    'coupon.use_failed',
+                    defaultValue: '쿠폰 사용에 실패했습니다. 잠시 후 다시 시도해 주세요.',
+                  ))),
+                );
               }
             },
             child: Text(t.t('coupon.use_btn', defaultValue: '사용하기')),

@@ -1,52 +1,60 @@
 /**
  * CouponService — 쿠폰 발급/사용 백엔드 연동.
  *
- * 백엔드: routes/coupon.py — /api/coupons/*
- *   GET    /api/coupons                — 시설별 쿠폰 목록
- *   POST   /api/coupons                — 쿠폰 정책 생성/발급
- *   PATCH  /api/coupons/<id>           — 쿠폰 정책 수정
- *   DELETE /api/coupons/<id>           — 쿠폰 정책 삭제
- *   POST   /api/coupons/redeem         — 쿠폰 사용 처리 (직원이 매장 카운터에서)
- *   GET    /api/coupons/<id>/redemptions — 사용 이력
+ * 백엔드: routes/coupon.py
+ *   POST   /api/facilities/<fid>/coupons         — 시설에서 쿠폰 발급
+ *   GET    /api/facilities/<fid>/coupons         — 시설별 발급 쿠폰 목록 (시설 측)
+ *   GET    /api/coupons/<cid>                    — 쿠폰 단건 조회
+ *   PATCH  /api/coupons/<cid>                    — 쿠폰 정보 수정 (만료일 등)
+ *   DELETE /api/coupons/<cid>                    — 쿠폰 회수 (revoke)
+ *   POST   /api/coupons/<cid>/use                — 쿠폰 사용 처리 (직원 카운터)
+ *
+ * ⚠ apiClient 는 응답 본문을 그대로 반환 — res.coupons / res.coupon
  */
 import apiClient from '../apiClient';
 
 const CouponService = {
-  /** 매장별 쿠폰 목록 */
-  list(facilityId) {
-    const q = facilityId ? `?facility_id=${encodeURIComponent(facilityId)}` : '';
-    return apiClient.get(`/api/coupons${q}`);
+  /**
+   * 시설별 발급 쿠폰 목록.
+   * @param {number|string} facilityId
+   * @param {Object} [opts] — { status: 'active'|'used'|'expired'|'all' }
+   */
+  list(facilityId, { status } = {}) {
+    const params = new URLSearchParams();
+    if (status) params.set('status', status);
+    const qs = params.toString();
+    return apiClient.get(
+      `/api/facilities/${facilityId}/coupons${qs ? `?${qs}` : ''}`
+    );
+  },
+
+  /** 쿠폰 단건 조회 */
+  get(couponId) {
+    return apiClient.get(`/api/coupons/${couponId}`);
   },
 
   /**
-   * 쿠폰 정책/발급 생성.
-   * @param {Object} payload — { facility_id, title, benefit, valid_from, valid_until, conditions, ... }
+   * 쿠폰 발급 (시설 → 사용자).
+   * @param {number|string} facilityId
+   * @param {Object} payload — { user_id, title, benefit, expires_at, ... }
    */
-  create(payload) {
-    return apiClient.post('/api/coupons', payload);
+  issue(facilityId, payload) {
+    return apiClient.post(`/api/facilities/${facilityId}/coupons`, payload);
   },
 
-  /** 쿠폰 정책 수정 */
+  /** 쿠폰 정보 수정 (만료일·혜택 등) */
   update(couponId, payload) {
     return apiClient.patch(`/api/coupons/${couponId}`, payload);
   },
 
-  /** 쿠폰 정책 삭제 */
-  remove(couponId) {
+  /** 쿠폰 회수 (revoke) */
+  revoke(couponId) {
     return apiClient.delete(`/api/coupons/${couponId}`);
   },
 
-  /**
-   * 쿠폰 사용 처리 (직원이 카운터에서 코드 입력 또는 스캔).
-   * @param {Object} payload — { code }  또는  { coupon_id, user_id }
-   */
-  redeem(payload) {
-    return apiClient.post('/api/coupons/redeem', payload);
-  },
-
-  /** 사용 이력 */
-  redemptions(couponId) {
-    return apiClient.get(`/api/coupons/${couponId}/redemptions`);
+  /** 쿠폰 사용 처리 — 직원 카운터에서 호출 */
+  use(couponId) {
+    return apiClient.post(`/api/coupons/${couponId}/use`, {});
   },
 };
 

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, Minus, Plus, X } from 'lucide-react';
 import StampService from '../services/stamp/StampService';
-import { findMockStamp } from '../services/stamp/mockStamps';
+import StoreService from '../services/store/StoreService';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
@@ -19,6 +19,9 @@ const StampForm = () => {
 
 
   const getTodayStr = () => new Date().toISOString().split('T')[0];
+
+  // 1계정 1매장 — 마운트 시 fid 확보 후 정책 로드/저장
+  const [fid, setFid] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -69,35 +72,59 @@ const StampForm = () => {
     });
   };
 
-  // 상세/수정 진입 시 데이터 로드.
-  // 백엔드 미연동 환경 — mock 사용. 연동 후 StampService.list() / get(id) 로 교체.
+  // 매장 정보 + 정책 로드 (edit/view 모드).
+  // 백엔드 모델: stamp_policy 1개/매장. id 파라미터는 url 일관성용이며 실제 조회는 fid 기준.
   useEffect(() => {
-    const loadStampData = async () => {
-      if (action === 'edit' || action === 'view') {
-        if (id) {
-          const stamp = findMockStamp(id);
-          if (stamp) {
-            setFormData({
-              name: stamp.name,
-              accumStart: stamp.accumStart,
-              accumEnd: stamp.accumEnd,
-              paymentAmount: stamp.paymentAmount,
-              benefits: stamp.benefits || [{ id: 1, count: '10회차', desc: '' }],
-            });
+    let alive = true;
+    (async () => {
+      try {
+        const res = await StoreService.list();
+        const f = (res.facilities ?? [])[0];
+        if (!alive) return;
+        if (!f) {
+          showAlert('등록된 매장이 없습니다.', () => navigate('/dashboard/stamps'));
+          return;
+        }
+        setFid(f.id);
+
+        if (action === 'edit' || action === 'view') {
+          const r = await StampService.getPolicy(f.id);
+          const p = r.policy;
+          if (!alive) return;
+          if (p) {
+            setFormData((prev) => ({
+              ...prev,
+              name: p.reward_description || p.reward_coupon_title || '',
+              autoStamp: !!p.auto_stamp_enabled,
+              cooldownMinutes: p.auto_stamp_cooldown_minutes || 0,
+              expiresDays: p.expires_days || 0,
+              benefits: [{
+                id: 1,
+                count: `${p.reward_threshold || 10}회차`,
+                desc: p.reward_coupon_benefit || p.reward_coupon_title || '',
+              }],
+            }));
           } else {
             showAlert('스탬프 정보를 불러오지 못했습니다.', () => navigate('/dashboard/stamps'));
           }
         }
-      } else {
-        // Show pass purchase modal on new creation to simulate the flow
-        showConfirmModal(
-          t('stamp.modal_pass_title', '스탬프 이용권 구매'),
-          t('stamp.modal_pass_desc', '이용권이 없어 스탬프 기능을 이용할 수 없습니다.\n스탬프 이용권을 구매하시겠습니까?'),
-          () => closeModal() // Normally would redirect to purchase
-        );
+        // 'new' 모드: 신규 등록 — 별도 결제 흐름은 별도 PR(P22)에서.
+      } catch (err) {
+        if (alive) {
+          // 404(정책 없음)는 'new' 흐름과 동일 — view/edit 인데 없으면 알림 후 목록 복귀
+          if ((action === 'edit' || action === 'view')
+              && String(err?.message || '').includes('찾을 수 없')) {
+            showAlert('스탬프 정책이 없습니다. 새로 등록해 주세요.',
+                      () => navigate('/dashboard/stamps'));
+          } else if (action === 'edit' || action === 'view') {
+            showAlert(err?.message || '스탬프 정보를 불러오지 못했습니다.',
+                      () => navigate('/dashboard/stamps'));
+          }
+        }
       }
-    };
-    loadStampData();
+    })();
+    return () => { alive = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [action, id]);
 
 
@@ -163,17 +190,29 @@ const StampForm = () => {
 
   const handleSave = () => {
     if (!validate()) return;
+    if (!fid) {
+      showAlert('매장 정보가 로드되지 않았습니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
 
     showConfirmModal(
       '',
       t('stamp.modal_issue_desc', '발행된 스탬프는 기간내 종료 또는 수정할 수 없습니다.\n해당 내역으로 스탬프 혜택을 발행하시겠습니까?'),
       async () => {
         try {
-          await StampService.createStamp({
-            title: formData.name,
-            startDate: formData.accumStart,
-            endDate: formData.accumEnd,
-            benefits: formData.benefits.map(b => ({ item: b.desc }))
+          // "10회차" 형식에서 숫자 추출 (백엔드 reward_threshold)
+          const countStr = (formData.benefits[0]?.count || '').toString();
+          const m = countStr.match(/\d+/);
+          const threshold = m ? parseInt(m[0], 10) : 10;
+          await StampService.upsertPolicy(fid, {
+            reward_threshold:               threshold,
+            reward_description:             formData.name,
+            reward_coupon_title:            formData.benefits[0]?.desc || formData.name,
+            reward_coupon_benefit:          formData.benefits[0]?.desc || '',
+            reward_coupon_validity_days:    30,
+            expires_days:                   formData.expiresDays || null,
+            auto_stamp_enabled:             !!formData.autoStamp,
+            auto_stamp_cooldown_minutes:    formData.cooldownMinutes || null,
           });
           showAlert(t('stamp.alert_save_success', '저장이 완료되었습니다.'), () => navigate('/dashboard/stamps'));
         } catch (error) {

@@ -5,6 +5,7 @@ import { ChevronLeft, Search, Plus, Minus, X, Camera, Trash2 } from 'lucide-reac
 import BottomActionBar from '../components/common/BottomActionBar';
 import Button from '../components/common/Button';
 import ConfirmModal from '../components/common/ConfirmModal';
+import CouponService from '../services/coupon/CouponService';
 import './CouponForm.css';
 
 const CouponForm = () => {
@@ -50,10 +51,22 @@ const CouponForm = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDeleteDone, setShowDeleteDone] = useState(false);
 
-  const handleDelete = () => {
-    // TODO: 실 API 연동 시 DELETE /api/coupons/<id> 호출
+  const handleDelete = async () => {
     setShowDeleteConfirm(false);
-    setShowDeleteDone(true);
+    if (!isEditMode || !id) {
+      // 신규 모드에선 삭제할 대상이 없으므로 안내만 닫기
+      setShowDeleteDone(true);
+      return;
+    }
+    try {
+      await CouponService.revoke(id);
+      setShowDeleteDone(true);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('coupon revoke failed', err);
+      // 사용자에게 노출 — 단순 alert (ConfirmModal 재사용 불가, 별도 모달 추가는 후속)
+      window.alert(err?.message || '쿠폰 회수에 실패했습니다.');
+    }
   };
 
   useEffect(() => {
