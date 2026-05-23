@@ -483,20 +483,48 @@ def report_battery(bid: int):
 
 # ── P17 — iOS .mobileconfig 다건 설치 ──────────────────────────────────────
 
+def _decode_user_token_from_request() -> dict | None:
+    """Authorization 헤더 또는 ?token= 쿼리에서 사용자 토큰 디코드 (P16 추가).
+
+    iOS Safari 가 .mobileconfig 다운로드 시 헤더를 못 보내므로 쿼리 토큰도 허용.
+    """
+    from routes.auth import SECRET_KEY
+    import jwt as _jwt
+    auth = request.headers.get('Authorization', '')
+    if auth.startswith('Bearer '):
+        tok = auth.split(' ', 1)[1]
+    else:
+        tok = (request.args.get('token') or '').strip()
+    if not tok:
+        return None
+    try:
+        payload = _jwt.decode(tok, SECRET_KEY, algorithms=['HS256'])
+    except Exception:
+        return None
+    if payload.get('kind', 'access') != 'access':
+        return None
+    if payload.get('sub_type', 'user') != 'user':
+        return None
+    return payload
+
+
 @beacon_bp.route('/wifi/venue/<int:fid>.mobileconfig', methods=['GET'])
-@require_auth(sub_type='user')
 def venue_mobileconfig(fid: int):
     """매장 active WiFi 전체를 1개 .mobileconfig (Apple Configuration Profile)
     파일로 묶어 다운로드. iOS 가 1회 설치 → 모든 WiFi 자동 등록 → 무중단 로밍.
 
-    인증: 사용자 토큰 필수 (게스트 차단). 미성년자 + adult_only 시설은 거부.
+    인증: 사용자 토큰 — Authorization 헤더 또는 ?token= 쿼리 (iOS Safari 호환).
+    미성년자 + adult_only 시설은 거부.
 
     응답: Content-Type 'application/x-apple-aspen-config'.
           Content-Disposition: attachment.
     """
     from services.mobileconfig import generate_mobileconfig
 
-    user_id = g.auth['user_id']
+    payload = _decode_user_token_from_request()
+    if not payload:
+        return jsonify({'success': False, 'message': '인증이 필요합니다.'}), 401
+    user_id = payload['user_id']
     db = get_db()
     facility = db.execute(
         "SELECT id, name, adult_only FROM facilities WHERE id=? AND active=1",
