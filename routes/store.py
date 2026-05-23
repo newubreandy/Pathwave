@@ -21,6 +21,7 @@ import os
 from flask import Blueprint, request, jsonify, g
 
 from models.database import get_db
+from models.crypto import encrypt_secret, decrypt_secret
 from models.translator import get_translator, TranslatorError
 from routes.auth import require_facility_actor
 
@@ -824,3 +825,245 @@ def trigger_auto_translate(fid):
     db.commit()
     db.close()
     return jsonify({'success': True, 'auto_translation': result})
+
+
+# ── P15b — 매장 WiFi 목록/수정/비활성 + 비콘↔WiFi 매핑 ─────────────────────
+
+_WIFI_UPDATE_FIELDS = {
+    'ssid', 'password', 'scope', 'unit_id', 'credential_mode',
+    'bssid', 'country', 'active',
+}
+
+
+def _row_to_wifi(row, *, include_password: bool = False) -> dict:
+    out = {
+        'id':              row['id'],
+        'facility_id':     row['facility_id'],
+        'ssid':            row['ssid'],
+        'scope':           row['scope'] or 'public',
+        'unit_id':         row['unit_id'],
+        'credential_mode': row['credential_mode'] or 'static',
+        'bssid':           row['bssid'],
+        'country':         row['country'] or 'KR',
+        'active':          bool(row['active']),
+        'created_at':      row['created_at'],
+        'updated_at':      row['updated_at'] if 'updated_at' in row.keys() else None,
+    }
+    if include_password:
+        try:
+            out['password'] = decrypt_secret(row['password'])
+        except Exception:
+            out['password'] = None
+    return out
+
+
+@store_bp.route('/<int:fid>/wifis', methods=['GET'])
+@require_facility_actor()
+def list_wifis(fid):
+    """매장 WiFi 목록 (사장/admin/staff). ``?include_password=1`` 시 평문 포함 (owner/admin only)."""
+    account_id = g.auth['owner_account_id']
+    include_password = (request.args.get('include_password') or '') in ('1', 'true', 'yes')
+    if include_password and g.auth.get('actor_role') not in ('owner', 'admin'):
+        return jsonify({'success': False, 'message': 'password 조회 권한 없음.'}), 403
+    db = get_db()
+    if not _owned_facility(db, fid, account_id):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+    rows = db.execute(
+        "SELECT * FROM wifi_profiles WHERE facility_id=? ORDER BY active DESC, id ASC",
+        (fid,)
+    ).fetchall()
+    db.close()
+    return jsonify({
+        'success': True,
+        'facility_id': fid,
+        'wifis': [_row_to_wifi(r, include_password=include_password) for r in rows],
+    })
+
+
+@store_bp.route('/<int:fid>/wifis/<int:wid>', methods=['PATCH'])
+@require_facility_actor(roles=['owner', 'admin'])
+def update_wifi(fid, wid):
+    """WiFi 부분 수정. 보낸 필드만 갱신.
+
+    password 가 들어오면 AES 암호화 후 저장.
+    """
+    account_id = g.auth['owner_account_id']
+    data = request.get_json(silent=True) or {}
+    db = get_db()
+    if not _owned_facility(db, fid, account_id):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+    row = db.execute(
+        "SELECT * FROM wifi_profiles WHERE id=? AND facility_id=?",
+        (wid, fid)
+    ).fetchone()
+    if not row:
+        db.close()
+        return jsonify({'success': False, 'message': 'WiFi 를 찾을 수 없습니다.'}), 404
+
+    sets, vals = [], []
+    for k, raw in data.items():
+        if k not in _WIFI_UPDATE_FIELDS:
+            continue
+        if k == 'password':
+            sets.append('password=?'); vals.append(encrypt_secret(raw or ''))
+        elif k == 'active':
+            sets.append('active=?');   vals.append(1 if raw else 0)
+        elif k == 'scope':
+            v = (raw or 'public').strip().lower()
+            if v not in ('public', 'private'):
+                db.close()
+                return jsonify({'success': False, 'message': "scope: public|private"}), 400
+            sets.append('scope=?'); vals.append(v)
+        elif k == 'credential_mode':
+            v = (raw or 'static').strip().lower()
+            if v not in ('static', 'managed', 'radius'):
+                db.close()
+                return jsonify({'success': False, 'message': "credential_mode: static|managed|radius"}), 400
+            sets.append('credential_mode=?'); vals.append(v)
+        elif k == 'ssid':
+            v = (raw or '').strip()
+            if not v:
+                db.close()
+                return jsonify({'success': False, 'message': 'ssid 는 비울 수 없음.'}), 400
+            sets.append('ssid=?'); vals.append(v)
+        elif k == 'country':
+            sets.append('country=?'); vals.append((raw or 'KR').strip().upper())
+        else:   # unit_id, bssid
+            sets.append(f'{k}=?'); vals.append(raw if raw != '' else None)
+
+    if not sets:
+        db.close()
+        return jsonify({'success': False, 'message': '수정할 필드가 없습니다.'}), 400
+    sets.append("updated_at=datetime('now')")
+    vals.append(wid)
+    db.execute(f"UPDATE wifi_profiles SET {', '.join(sets)} WHERE id=?", vals)
+    new_row = db.execute("SELECT * FROM wifi_profiles WHERE id=?", (wid,)).fetchone()
+    db.commit(); db.close()
+    return jsonify({'success': True, 'wifi': _row_to_wifi(new_row)})
+
+
+@store_bp.route('/<int:fid>/wifis/<int:wid>', methods=['DELETE'])
+@require_facility_actor(roles=['owner', 'admin'])
+def delete_wifi(fid, wid):
+    """WiFi 비활성 (soft delete — active=0). 비콘 매핑은 그대로 보존."""
+    account_id = g.auth['owner_account_id']
+    db = get_db()
+    if not _owned_facility(db, fid, account_id):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+    cur = db.execute(
+        "UPDATE wifi_profiles SET active=0, updated_at=datetime('now') WHERE id=? AND facility_id=?",
+        (wid, fid)
+    )
+    db.commit()
+    affected = cur.rowcount
+    db.close()
+    if affected == 0:
+        return jsonify({'success': False, 'message': 'WiFi 를 찾을 수 없습니다.'}), 404
+    return jsonify({'success': True})
+
+
+@store_bp.route('/<int:fid>/beacons/<int:bid>/wifis', methods=['GET'])
+@require_facility_actor()
+def list_beacon_wifis(fid, bid):
+    """비콘에 매핑된 WiFi 목록."""
+    account_id = g.auth['owner_account_id']
+    db = get_db()
+    if not _owned_facility(db, fid, account_id):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+    # 비콘 소유 검증
+    own = db.execute(
+        "SELECT 1 FROM beacons WHERE id=? AND facility_id=?", (bid, fid)
+    ).fetchone()
+    if not own:
+        db.close()
+        return jsonify({'success': False, 'message': '비콘을 찾을 수 없습니다.'}), 404
+    rows = db.execute(
+        """SELECT wp.*, bw.priority
+           FROM wifi_profiles wp
+           JOIN beacon_wifi bw ON bw.wifi_profile_id = wp.id
+           WHERE bw.beacon_id=?
+           ORDER BY bw.priority ASC, wp.id ASC""",
+        (bid,)
+    ).fetchall()
+    db.close()
+    return jsonify({'success': True, 'beacon_id': bid,
+                    'wifis': [_row_to_wifi(r) for r in rows]})
+
+
+@store_bp.route('/<int:fid>/beacons/<int:bid>/wifis', methods=['PUT'])
+@require_facility_actor(roles=['owner', 'admin'])
+def set_beacon_wifis(fid, bid):
+    """비콘 ↔ WiFi 매핑 일괄 교체 (set).
+
+    body: ``{wifi_profile_ids: [int, ...]}``
+    기존 매핑 삭제 → 신규 매핑 INSERT. 순서대로 priority 0,1,2,...
+    """
+    account_id = g.auth['owner_account_id']
+    data = request.get_json(silent=True) or {}
+    ids = data.get('wifi_profile_ids')
+    if not isinstance(ids, list) or not all(isinstance(i, int) and i > 0 for i in ids):
+        return jsonify({'success': False,
+                        'message': 'wifi_profile_ids 는 양의 정수 배열이어야 합니다.'}), 400
+
+    db = get_db()
+    if not _owned_facility(db, fid, account_id):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+    if not db.execute("SELECT 1 FROM beacons WHERE id=? AND facility_id=?", (bid, fid)).fetchone():
+        db.close()
+        return jsonify({'success': False, 'message': '비콘을 찾을 수 없습니다.'}), 404
+
+    # 매장 소유 wifi 만 허용 (다른 매장 wifi 매핑 차단)
+    if ids:
+        placeholders = ','.join('?' * len(ids))
+        owned_ids = {r['id'] for r in db.execute(
+            f"SELECT id FROM wifi_profiles WHERE facility_id=? AND id IN ({placeholders})",
+            [fid, *ids]
+        ).fetchall()}
+        bad = [i for i in ids if i not in owned_ids]
+        if bad:
+            db.close()
+            return jsonify({'success': False,
+                            'message': f'해당 매장의 WiFi 가 아닙니다: {bad}'}), 400
+
+    # 일괄 교체
+    db.execute("DELETE FROM beacon_wifi WHERE beacon_id=?", (bid,))
+    for i, wp_id in enumerate(ids):
+        db.execute(
+            "INSERT INTO beacon_wifi (beacon_id, wifi_profile_id, priority) VALUES (?,?,?)",
+            (bid, wp_id, i)
+        )
+    db.commit()
+    db.close()
+    return jsonify({'success': True, 'beacon_id': bid, 'wifi_profile_ids': ids})
+
+
+@store_bp.route('/<int:fid>/beacons/<int:bid>/wifis/<int:wpid>', methods=['DELETE'])
+@require_facility_actor(roles=['owner', 'admin'])
+def unset_beacon_wifi(fid, bid, wpid):
+    """단일 비콘↔WiFi 매핑 해제."""
+    account_id = g.auth['owner_account_id']
+    db = get_db()
+    if not _owned_facility(db, fid, account_id):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+    cur = db.execute(
+        "DELETE FROM beacon_wifi WHERE beacon_id=? AND wifi_profile_id=?",
+        (bid, wpid)
+    )
+    db.commit()
+    affected = cur.rowcount
+    db.close()
+    if affected == 0:
+        return jsonify({'success': False, 'message': '매핑을 찾을 수 없습니다.'}), 404
+    return jsonify({'success': True})
