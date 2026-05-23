@@ -18,6 +18,7 @@ import ChatMonitor from './pages/ChatMonitor.jsx';
 import StaffMonitor from './pages/StaffMonitor.jsx';
 import AbuseReports from './pages/AbuseReports.jsx';
 import Support from './pages/Support.jsx';
+import Notifications from './pages/Notifications.jsx';
 import Faq from './pages/Faq.jsx';
 import SupportStats from './pages/SupportStats.jsx';
 import CompanyInfo from './pages/CompanyInfo.jsx';
@@ -44,6 +45,7 @@ export default function App() {
           <Route path="/dashboard/approvals" element={<Approvals />} />
           <Route path="/dashboard/battery" element={<Battery />} />
           <Route path="/dashboard/announcements" element={<Announcements />} />
+          <Route path="/dashboard/notifications" element={<Notifications />} />
           <Route path="/dashboard/payments" element={<Payments />} />
           <Route path="/dashboard/policies" element={<Policies />} />
           <Route path="/dashboard/coupon-stats" element={<CouponStats />} />
