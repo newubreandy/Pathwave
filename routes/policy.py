@@ -41,6 +41,20 @@ from routes.auth import require_super_admin
 
 policy_bp = Blueprint('policy', __name__)
 
+
+# P12 — 약관은 사용자 정책상 ko/en 두 언어만 유지.
+# 디바이스 언어 ko → ko, 그 외 모두 → en (자동 fallback).
+# 어드민 라우트는 명시 lang 그대로 (편집 용도라 fallback X).
+#
+# 누락(빈 값) → ko (legacy 호환). 클라이언트는 디바이스 lang 을 명시해 호출하는 게 원칙.
+# 명시한 값이 ko 면 ko, 그 외(en/ja/zh-CN/…) 모두 en 으로 정규화.
+def _normalize_user_policy_lang(raw: str | None) -> str:
+    code = (raw or '').strip().lower()
+    if not code:
+        return 'ko'
+    return 'ko' if code == 'ko' else 'en'
+
+
 KIND_LABELS = {
     'age14':       '만 14세 이상입니다',
     'terms':       '서비스 이용약관 동의',
@@ -60,9 +74,12 @@ KIND_LABELS = {
 
 @policy_bp.route('/api/policies', methods=['GET'])
 def list_policies():
-    """전체 동의 항목 메타 + 현재 시행 버전. 가입 동의 화면용."""
+    """전체 동의 항목 메타 + 현재 시행 버전. 가입 동의 화면용.
+
+    P12 — 약관은 ko/en 두 언어만 유지. 그 외 lang 은 자동 en 으로 정규화.
+    """
     sub_type = (request.args.get('sub_type') or 'user').strip().lower()
-    lang = (request.args.get('lang') or 'ko').strip().lower()
+    lang = _normalize_user_policy_lang(request.args.get('lang'))
     db = get_db()
     try:
         items = []
@@ -82,10 +99,13 @@ def list_policies():
 
 @policy_bp.route('/api/policies/<kind>', methods=['GET'])
 def get_policy(kind: str):
-    """현재 시행 정책 본문."""
+    """현재 시행 정책 본문.
+
+    P12 — lang 은 ko/en 만. 그 외 자동 en.
+    """
     if kind not in VALID_KINDS:
         return jsonify({'success': False, 'message': '알 수 없는 정책 항목입니다.'}), 404
-    lang = (request.args.get('lang') or 'ko').strip().lower()
+    lang = _normalize_user_policy_lang(request.args.get('lang'))
     db = get_db()
     try:
         active = get_active(db, kind, lang)
@@ -108,10 +128,13 @@ def get_policy(kind: str):
 
 @policy_bp.route('/api/policies/<kind>/versions', methods=['GET'])
 def list_policy_versions(kind: str):
-    """이전 버전 보기 — 모든 버전 (시행/예약 모두)."""
+    """이전 버전 보기 — 모든 버전 (시행/예약 모두).
+
+    P12 — lang 은 ko/en 만.
+    """
     if kind not in VALID_KINDS:
         return jsonify({'success': False, 'message': '알 수 없는 정책 항목입니다.'}), 404
-    lang = (request.args.get('lang') or 'ko').strip().lower()
+    lang = _normalize_user_policy_lang(request.args.get('lang'))
     db = get_db()
     try:
         rows = list_versions(db, kind, lang)

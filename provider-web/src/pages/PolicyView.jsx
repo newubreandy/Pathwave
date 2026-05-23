@@ -3,6 +3,10 @@ import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft } from 'lucide-react';
 import apiClient from '../services/apiClient';
+import { getProviderLang } from '../services/translation/TranslationService';
+
+// P12 — 약관은 ko/en 만. 한국어 단말 → ko, 그 외 → en.
+const policyLang = () => (getProviderLang() === 'ko' ? 'ko' : 'en');
 
 /**
  * PolicyView — 공개 약관 본문 뷰어.
@@ -33,7 +37,7 @@ export default function PolicyView() {
 
   useEffect(() => {
     setLoading(true); setError('');
-    apiClient.get(`/api/policies/${kind}?lang=ko`)
+    apiClient.get(`/api/policies/${kind}?lang=${policyLang()}`)
       .then((d) => setData(d.policy || d))
       .catch((e) => setError(e.message || t('policy.load_failed', '약관을 불러오지 못했습니다.')))
       .finally(() => setLoading(false));

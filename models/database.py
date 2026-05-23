@@ -304,11 +304,28 @@ def init_db():
             sender_actor_role TEXT,                        -- 'owner'|'admin'|'staff' (facility 측만)
             sender_actor_id   INTEGER,
             body          TEXT    NOT NULL,
+            body_lang     TEXT,                            -- 원문 언어 (lang_hint, P8b). NULL=미상
             read_at       TEXT,
             created_at    TEXT    DEFAULT (datetime('now')),
             FOREIGN KEY (room_id) REFERENCES chat_rooms(id)
         );
         CREATE INDEX IF NOT EXISTS idx_chat_messages_room ON chat_messages(room_id);
+
+        -- P8b — 채팅 메시지 번역 캐시. (message_id, lang) UNIQUE.
+        -- lazy 번역: viewer 의 lang 으로 처음 요청될 때 1회 번역 후 영구 캐시.
+        -- facility_translations 와 동일한 캐시 패턴.
+        CREATE TABLE IF NOT EXISTS chat_message_translations (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            message_id      INTEGER NOT NULL,
+            lang            TEXT    NOT NULL,              -- viewer 언어 (ko/en/ja/zh-CN/...)
+            translated_text TEXT    NOT NULL,
+            provider        TEXT,                          -- 'stub'|'google'|'deepl' (감사용)
+            created_at      TEXT    DEFAULT (datetime('now')),
+            UNIQUE (message_id, lang),
+            FOREIGN KEY (message_id) REFERENCES chat_messages(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_chat_msg_translations_message
+            ON chat_message_translations(message_id);
 
         -- 알림 발송 (SRS FR-NOTI-001/002)
         -- status: pending(예약 대기) / sent(발송 완료) / failed / canceled
@@ -342,6 +359,42 @@ def init_db():
         );
         CREATE INDEX IF NOT EXISTS idx_notification_recipients_user
             ON notification_recipients(user_id);
+
+        -- P11 — 알림 부가서비스 수량(quota) 관리 (사장 결제 단위로 1 row).
+        -- 결제 시 INSERT, 발송마다 quantity_used += 1. expires_at 도래 시 만료.
+        -- 사장이 동일 service_type 으로 여러 번 결제하면 row 가 누적.
+        CREATE TABLE IF NOT EXISTS notification_quota (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            facility_account_id INTEGER NOT NULL,
+            subscription_id     INTEGER,                       -- service_subscriptions.id
+            payment_id          INTEGER,                       -- payments.id (감사용)
+            quantity_purchased  INTEGER NOT NULL,
+            quantity_used       INTEGER NOT NULL DEFAULT 0,
+            expires_at          TEXT,                          -- NULL=무기한 (출시 v1 은 항상 명시)
+            created_at          TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (facility_account_id) REFERENCES facility_accounts(id),
+            FOREIGN KEY (subscription_id)     REFERENCES service_subscriptions(id),
+            FOREIGN KEY (payment_id)          REFERENCES payments(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_notification_quota_owner
+            ON notification_quota(facility_account_id);
+        CREATE INDEX IF NOT EXISTS idx_notification_quota_expires
+            ON notification_quota(expires_at);
+
+        -- P11 — 어드민이 관리하는 금칙어 블록리스트.
+        -- AI 검토 1차 단계: term 이 알림 title/body 에 포함되면 severity 따라 분기:
+        --   'block' = 자동 reject, 'flag' = review 큐로 (수동 승인 대기).
+        CREATE TABLE IF NOT EXISTS notification_blocklist (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            term                TEXT    NOT NULL,
+            severity            TEXT    NOT NULL DEFAULT 'flag',  -- 'block' | 'flag'
+            note                TEXT,                              -- 어드민 메모
+            created_by_admin_id INTEGER,                           -- super_admin_accounts.id
+            created_at          TEXT    DEFAULT (datetime('now')),
+            UNIQUE (term)
+        );
+        CREATE INDEX IF NOT EXISTS idx_notification_blocklist_severity
+            ON notification_blocklist(severity);
 
         -- 매장 다국어 캐시 (SRS FR-I18N-002)
         -- 매장명/주소/설명을 언어별로 캐시. (facility_id, language) UNIQUE.
@@ -484,11 +537,26 @@ def init_db():
             sender      TEXT    NOT NULL,         -- 'user' | 'admin'
             sender_admin_id INTEGER,              -- super_admin_accounts.id (sender=admin)
             body        TEXT    NOT NULL,
+            body_lang   TEXT,                     -- 원문 언어 (lang_hint, P8b). NULL=미상
             created_at  TEXT    DEFAULT (datetime('now')),
             FOREIGN KEY (ticket_id) REFERENCES support_tickets(id)
         );
         CREATE INDEX IF NOT EXISTS idx_support_messages_ticket
             ON support_messages(ticket_id);
+
+        -- P8b — 사용자 문의 메시지 번역 캐시. chat_message_translations 와 동일 패턴.
+        CREATE TABLE IF NOT EXISTS support_message_translations (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            message_id      INTEGER NOT NULL,
+            lang            TEXT    NOT NULL,
+            translated_text TEXT    NOT NULL,
+            provider        TEXT,
+            created_at      TEXT    DEFAULT (datetime('now')),
+            UNIQUE (message_id, lang),
+            FOREIGN KEY (message_id) REFERENCES support_messages(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_support_msg_translations_message
+            ON support_message_translations(message_id);
 
         -- 어드민이 카테고리 마스터를 직접 관리 (label 은 i18n key)
         CREATE TABLE IF NOT EXISTS support_categories (
@@ -679,6 +747,32 @@ def init_db():
         "CREATE INDEX IF NOT EXISTS idx_beacons_major_minor ON beacons(major, minor)"
     )
 
+    # P8b — 채팅/사용자 문의 메시지 원문 언어 컬럼 (기존 DB 마이그레이션).
+    # 신규 테이블(chat_message_translations / support_message_translations)은
+    # 위 executescript 의 CREATE TABLE IF NOT EXISTS 로 멱등 생성.
+    _add_column_if_missing(db, 'chat_messages',    'body_lang', 'body_lang TEXT')
+    _add_column_if_missing(db, 'support_messages', 'body_lang', 'body_lang TEXT')
+
+    # P8c — 푸시 알림 본문 다국어 (announcements / notifications).
+    # 작성자의 원문 언어 저장 → 수신자 토큰 lang 으로 자동 번역(P8b push_to_users 통합).
+    _add_column_if_missing(db, 'announcements',  'body_lang', 'body_lang TEXT')
+    _add_column_if_missing(db, 'notifications',  'body_lang', 'body_lang TEXT')
+
+    # P11 — 알림 부가서비스 어드민 워크플로 (기존 DB 마이그레이션).
+    # ai_review_status: null | 'auto_pass' | 'flagged' | 'blocked'
+    # status 확장: 기존 'pending' | 'sent' | 'failed' | 'canceled' 에 더해
+    #             'unpaid'(quota 부족) | 'review'(어드민 수동 승인 대기) 추가.
+    # 신규 테이블(notification_quota / notification_blocklist) 은 위 executescript
+    # CREATE TABLE IF NOT EXISTS 로 멱등 생성.
+    _add_column_if_missing(db, 'notifications', 'ai_review_status',
+                           'ai_review_status TEXT')
+    _add_column_if_missing(db, 'notifications', 'ai_review_reason',
+                           'ai_review_reason TEXT')
+    _add_column_if_missing(db, 'notifications', 'approved_by_admin_id',
+                           'approved_by_admin_id INTEGER')
+    _add_column_if_missing(db, 'notifications', 'approved_at',
+                           'approved_at TEXT')
+
     # 비콘 배터리 시계열 (PR #34)
     db.executescript("""
         CREATE TABLE IF NOT EXISTS beacon_battery_history (
@@ -775,6 +869,20 @@ _POLICY_KIND_TITLES = {
     'third_party':  '제3자 정보 제공 동의',
 }
 
+# P12 — 약관은 사용자 정책상 ko/en 두 언어만 유지.
+# 디바이스 언어 한국어 → ko, 그 외 모두 → en (자동 fallback).
+_POLICY_KIND_TITLES_EN = {
+    'terms':        'Terms of Service',
+    'privacy':      'Privacy Policy',
+    'location':     'Location Information Consent',
+    'age14':        'Age 14+ Consent',
+    'camera':       'Camera Permission',
+    'storage':      'Storage Permission',
+    'push':         'Push Notification Consent',
+    'marketing':    'Marketing Communication Consent',
+    'third_party':  'Third-Party Information Sharing',
+}
+
 
 def _bootstrap_policies(db) -> None:
     """static/policies/<kind>.ko.md 를 v0.1 로 자동 등록 (idempotent).
@@ -814,9 +922,30 @@ def _bootstrap_policies(db) -> None:
             (kind, title, body, effective_at)
         )
         inserted += 1
+
+        # P12 — 영어 v0.1 자동 시드. DeepL 키 있으면 실 번역, 없으면 stub.
+        #       어드민이 admin-web 에서 본문 교체 가능.
+        existing_en = db.execute(
+            "SELECT id FROM policies WHERE kind=? AND lang='en' AND version='0.1'",
+            (kind,)
+        ).fetchone()
+        if not existing_en:
+            try:
+                from services.translation_ai import translate as _tx
+                en_body  = _tx(body, target_lang='en', source_lang='ko')
+            except Exception:
+                en_body = f'[en] {body}'  # 안전 fallback
+            en_title = _POLICY_KIND_TITLES_EN.get(kind, title)
+            db.execute(
+                """INSERT INTO policies
+                     (kind, lang, version, title, body, change_log, effective_at)
+                   VALUES (?, 'en', '0.1', ?, ?, 'Auto-translated from ko v0.1', ?)""",
+                (kind, en_title, en_body, effective_at)
+            )
+
     if inserted:
         from models.log import logger as _lg
-        _lg.info('[policies] Bootstrapped %d policy versions (v0.1)', inserted)
+        _lg.info('[policies] Bootstrapped %d policy versions (v0.1 ko+en)', inserted)
 
 
 def _bootstrap_super_admin(db) -> None:

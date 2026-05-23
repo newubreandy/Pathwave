@@ -56,17 +56,7 @@ export const getCustomerLang = (chat, messages) => {
   return detectLang(customerMsgs[customerMsgs.length - 1].text);
 };
 
-export const translateText = async (text, from = 'ko', to = 'en') => {
-  if (!text || !text.trim()) return null;
-  try {
-    const apiTo = LANG_CONFIG[to]?.apiCode || to;
-    // TODO: 운영 서버 배포 시 Google Translate API로 교체
-    const res = await fetch(
-      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${apiTo}`
-    );
-    const data = await res.json();
-    const t = data?.responseData?.translatedText;
-    if (!t || t.toUpperCase() === text.toUpperCase()) return null;
-    return t;
-  } catch { return null; }
-};
+// P8b — 클라이언트 사이드 MyMemory 번역 제거.
+// 채팅 번역은 백엔드 캐시(`chat_message_translations`)가 단일 진실이며,
+// `ChatService.listMessages` / SSE 응답의 `translated_text` 필드로 전달된다.
+// 외부 호출이 필요한 다른 도메인이 생기면 별도 백엔드 endpoint 로 라우팅하자.
