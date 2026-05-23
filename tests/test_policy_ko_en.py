@@ -8,7 +8,7 @@
 
 검증
 ----
-1) DB 부트스트랩: 9 kind × ko/en 자동 시드 (DeepL 키 없으면 stub)
+1) DB 부트스트랩: 13 kind × ko/en 자동 시드 (DeepL 키 없으면 stub)
 2) 공개 라우트 lang fallback:
    - ?lang=ko → ko
    - ?lang=en → en
@@ -43,15 +43,15 @@ def _ok(label, cond, payload=None):
     assert cond
 
 
-# ── 1. DB 부트스트랩 — 9 kind × ko/en ────────────────────────────────────
-print('\n[1] DB 부트스트랩 — 9 kind × ko/en v0.1 자동 시드')
+# ── 1. DB 부트스트랩 — 13 kind × ko/en ────────────────────────────────────
+print('\n[1] DB 부트스트랩 — 13 kind × ko/en v0.1 자동 시드')
 db = sqlite3.connect(tmp.name); db.row_factory = sqlite3.Row
 rows = db.execute(
     "SELECT kind, lang FROM policies WHERE version='0.1' ORDER BY kind, lang"
 ).fetchall()
 db.close()
-_ok(f'총 row 수 == 18 (9 kind × ko/en) (실제 {len(rows)})',
-    len(rows) == 18)
+_ok(f'총 row 수 == 26 (13 kind × ko/en) (실제 {len(rows)})',
+    len(rows) == 26)
 by_kind = {}
 for r in rows:
     by_kind.setdefault(r['kind'], set()).add(r['lang'])
