@@ -609,30 +609,42 @@ def build_services_costs():
     ws2['A1'].font = Font(name=FONT, bold=True, size=14, color='1F4E78')
     ws2.merge_cells('A1:F1')
     ws2.append([])
-    # 가정 입력 행
-    ws2.append(['매장당 평균 사용자 (가정)', 50, '', '매장당 매출 (가정, ₩/월)', 10000, ''])
-    for c, col_letter in [(2, 'B'), (5, 'E')]:
-        ws2.cell(row=3, column=c).font = INPUT_FONT
-        ws2.cell(row=3, column=c).fill = ASSUME_FILL
-    ws2.cell(row=3, column=5).number_format = KRW_FMT
-    for c in (1, 4):
-        ws2.cell(row=3, column=c).font = Font(name=FONT, bold=True)
+    # 가정 입력 행 (2줄)
+    ws2.append(['매장당 평균 사용자 (가정)', 300, '', '매장당 매출 (가정, ₩/월)', 10000, ''])
+    ws2.append(['매장당 비콘 개수 (가정)',   2,   '', '비콘 단가 (₩/개, 배송 포함)', 10000, ''])
+    for r in (3, 4):
+        for c in (2, 5):
+            ws2.cell(row=r, column=c).font = INPUT_FONT
+            ws2.cell(row=r, column=c).fill = ASSUME_FILL
+        ws2.cell(row=r, column=5).number_format = KRW_FMT
+        for c in (1, 4):
+            ws2.cell(row=r, column=c).font = Font(name=FONT, bold=True)
     ws2.append([])
 
-    ws2.append(['항목', '매장 10 (초기)', '매장 100 (Y1 목표)', '매장 500 (Y2~3)', '매장 1000 (Y3+)', '비고'])
+    ws2.append(['항목', '매장 10 (초기)', '매장 10,000 (Y1 목표)', '매장 30,000 (Y2~3)', '매장 70,000 (Y3+)', '비고'])
     header_row2 = ws2.max_row
-    # 자동 계산 행 — MAU
-    ws2.append(['매장 수',          10,         100,        500,        1000,       ''])
-    ws2.append(['MAU (매장×평균)',  '=B6*$B$3', '=C6*$B$3', '=D6*$B$3', '=E6*$B$3', ''])
-    ws2.append(['월 매출 (매장×$E$3)', '=B6*$E$3', '=C6*$E$3', '=D6*$E$3', '=E6*$E$3', ''])
-    for r in (6, 7, 8):
+    # 정보 행 (매장수·MAU·매출·비콘 CAPEX)
+    ws2.append(['매장 수',                  10,         10000,        30000,        70000,        ''])
+    ws2.append(['MAU (매장×평균)',           '=B7*$B$3', '=C7*$B$3',   '=D7*$B$3',   '=E7*$B$3',   ''])
+    ws2.append(['월 매출 (매장×매장당매출)',  '=B7*$E$3', '=C7*$E$3',   '=D7*$E$3',   '=E7*$E$3',   ''])
+    ws2.append(['비콘 누적 CAPEX (매장×개수×단가)',
+                '=B7*$B$4*$E$4', '=C7*$B$4*$E$4', '=D7*$B$4*$E$4', '=E7*$B$4*$E$4',
+                '매장 가입 시 1회 — 매장당 매출 ₩10K 기준 2개월 회수'])
+    for r in (7, 8, 9, 10):
         for c in (2, 3, 4, 5):
-            if r == 6:
+            if r == 7:
                 ws2.cell(row=r, column=c).font = INPUT_FONT
+                ws2.cell(row=r, column=c).number_format = '#,##0'
+            elif r == 8:
+                ws2.cell(row=r, column=c).font = LINK_FONT
+                ws2.cell(row=r, column=c).number_format = '#,##0'
             else:
                 ws2.cell(row=r, column=c).font = LINK_FONT
-                ws2.cell(row=r, column=c).number_format = KRW_FMT if r == 8 else '#,##0'
+                ws2.cell(row=r, column=c).number_format = KRW_FMT
         ws2.cell(row=r, column=1).font = Font(name=FONT, bold=True)
+        if r == 10:
+            for c in (2, 3, 4, 5):
+                ws2.cell(row=r, column=c).fill = PatternFill('solid', start_color='FFE4E1')
     # 비용 항목
     cost_start = ws2.max_row + 1
     scen = [
@@ -671,10 +683,10 @@ def build_services_costs():
     ws2.cell(row=total_row, column=1).fill = ASSUME_FILL
     # 손익
     ws2.append(['월 손익 (매출 − 비용)',
-                f'=B8-B{total_row}',
-                f'=C8-C{total_row}',
-                f'=D8-D{total_row}',
-                f'=E8-E{total_row}',
+                f'=B9-B{total_row}',
+                f'=C9-C{total_row}',
+                f'=D9-D{total_row}',
+                f'=E9-E{total_row}',
                 ''])
     pl_row = ws2.max_row
     for c in (2, 3, 4, 5):
@@ -695,10 +707,10 @@ def build_services_costs():
     ws_bep.merge_cells('A1:E1')
     ws_bep.append([])
     ws_bep.append(['시나리오', '월 운영비', '매장 수 (실제)', '월 매출', '월 손익'])
-    ws_bep.append(['매장 10 (초기)',    f"='월별 운영비 시나리오'!B{total_row}", 10,    "=C4*'월별 운영비 시나리오'!$E$3", '=D4-B4'])
-    ws_bep.append(['매장 100 (Y1 목표)', f"='월별 운영비 시나리오'!C{total_row}", 100,   "=C5*'월별 운영비 시나리오'!$E$3", '=D5-B5'])
-    ws_bep.append(['매장 500 (Y2~3)',    f"='월별 운영비 시나리오'!D{total_row}", 500,   "=C6*'월별 운영비 시나리오'!$E$3", '=D6-B6'])
-    ws_bep.append(['매장 1000 (Y3+)',    f"='월별 운영비 시나리오'!E{total_row}", 1000,  "=C7*'월별 운영비 시나리오'!$E$3", '=D7-B7'])
+    ws_bep.append(['매장 10 (초기)',         f"='월별 운영비 시나리오'!B{total_row}", 10,    "=C4*'월별 운영비 시나리오'!$E$3", '=D4-B4'])
+    ws_bep.append(['매장 10,000 (Y1 목표)',  f"='월별 운영비 시나리오'!C{total_row}", 10000, "=C5*'월별 운영비 시나리오'!$E$3", '=D5-B5'])
+    ws_bep.append(['매장 30,000 (Y2~3)',     f"='월별 운영비 시나리오'!D{total_row}", 30000, "=C6*'월별 운영비 시나리오'!$E$3", '=D6-B6'])
+    ws_bep.append(['매장 70,000 (Y3+)',      f"='월별 운영비 시나리오'!E{total_row}", 70000, "=C7*'월별 운영비 시나리오'!$E$3", '=D7-B7'])
     for r in (3,):
         for c in (1, 2, 3, 4, 5):
             ws_bep.cell(row=r, column=c).font = HEADER_FONT
@@ -718,10 +730,10 @@ def build_services_costs():
     ws_bep.append([])
     ws_bep.append(['BEP 매장 수 (운영비 ÷ 매장당 매출)', '', '', '', ''])
     ws_bep.cell(row=ws_bep.max_row, column=1).font = Font(name=FONT, bold=True, color='1F4E78')
-    ws_bep.append(['매장 10 시나리오 — BEP',   "=B4/'월별 운영비 시나리오'!$E$3", '', '', '운영비 ÷ 1만원'])
-    ws_bep.append(['매장 100 시나리오 — BEP',  "=B5/'월별 운영비 시나리오'!$E$3", '', '', ''])
-    ws_bep.append(['매장 500 시나리오 — BEP',  "=B6/'월별 운영비 시나리오'!$E$3", '', '', ''])
-    ws_bep.append(['매장 1000 시나리오 — BEP', "=B7/'월별 운영비 시나리오'!$E$3", '', '', ''])
+    ws_bep.append(['매장 10 시나리오 — BEP',         "=B4/'월별 운영비 시나리오'!$E$3", '', '', '운영비 ÷ 1만원'])
+    ws_bep.append(['매장 10,000 시나리오 — BEP',     "=B5/'월별 운영비 시나리오'!$E$3", '', '', ''])
+    ws_bep.append(['매장 30,000 시나리오 — BEP',     "=B6/'월별 운영비 시나리오'!$E$3", '', '', ''])
+    ws_bep.append(['매장 70,000 시나리오 — BEP',     "=B7/'월별 운영비 시나리오'!$E$3", '', '', ''])
     for r in range(ws_bep.max_row - 3, ws_bep.max_row + 1):
         for c in (1, 2, 3, 4, 5):
             ws_bep.cell(row=r, column=c).border = BORDER
