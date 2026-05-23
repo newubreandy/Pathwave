@@ -105,15 +105,17 @@ def _direct_code(email):
 
 
 _USER_CONSENTS = [
-    {'kind': 'age14',    'version': 'v1', 'accepted': True},
-    {'kind': 'terms',    'version': 'v1', 'accepted': True},
-    {'kind': 'privacy',  'version': 'v1', 'accepted': True},
-    {'kind': 'location', 'version': 'v1', 'accepted': True},
-    {'kind': 'marketing','version': 'v1', 'accepted': False},
+    # C-2-4d — user 가입 필수
+    {'kind': 'age14',         'version': 'v1', 'accepted': True},
+    {'kind': 'terms_user',    'version': 'v1', 'accepted': True},
+    {'kind': 'privacy_user',  'version': 'v1', 'accepted': True},
+    {'kind': 'location',      'version': 'v1', 'accepted': True},
+    {'kind': 'marketing',     'version': 'v1', 'accepted': False},
 ]
 _FACILITY_CONSENTS = [
-    {'kind': 'terms',   'version': 'v1', 'accepted': True},
-    {'kind': 'privacy', 'version': 'v1', 'accepted': True},
+    # C-2-4d — facility 가입 필수
+    {'kind': 'terms_facility',   'version': 'v1', 'accepted': True},
+    {'kind': 'privacy_facility', 'version': 'v1', 'accepted': True},
 ]
 
 
