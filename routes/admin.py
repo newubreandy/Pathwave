@@ -300,6 +300,14 @@ def update_beacon(bid):
             return jsonify({'success': False,
                             'message': 'uuid 형식이 올바르지 않습니다.'}), 400
         sets.append('uuid=?'); vals.append(uu)
+    # P15b — 비콘 role (wifi 핸드오프 | cashier 계산대 트리거)
+    if 'role' in data:
+        rv = (data['role'] or '').strip().lower()
+        if rv not in ('wifi', 'cashier'):
+            db.close()
+            return jsonify({'success': False,
+                            'message': "role 은 'wifi' 또는 'cashier'."}), 400
+        sets.append('role=?'); vals.append(rv)
     if not sets:
         db.close()
         return jsonify({'success': False, 'message': '수정할 필드가 없습니다.'}), 400

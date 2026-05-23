@@ -429,6 +429,7 @@ function EditModal({ beacon, onClose, onSaved }) {
         battery_pct:  beacon.battery_pct ?? '',
         status:       beacon.status,
         uuid:         beacon.uuid || '',
+        role:         beacon.role || 'wifi',
       });
       setError('');
     }
@@ -441,6 +442,7 @@ function EditModal({ beacon, onClose, onSaved }) {
       payload.battery_pct = Number(form.battery_pct);
     if (form.status !== beacon.status) payload.status = form.status;
     if (form.uuid !== beacon.uuid) payload.uuid = form.uuid;
+    if (form.role !== (beacon.role || 'wifi')) payload.role = form.role;
 
     if (Object.keys(payload).length === 0) {
       setError('변경된 필드가 없습니다.');
@@ -480,6 +482,17 @@ function EditModal({ beacon, onClose, onSaved }) {
               onChange={(e) => setForm((f) => ({ ...f, uuid: e.target.value.toUpperCase() }))}
               disabled={busy}
             />
+          </label>
+          <label className="form-label">
+            <span>역할</span>
+            <select
+              value={form.role || 'wifi'}
+              onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
+              disabled={busy}
+            >
+              <option value="wifi">WiFi (BLE→WiFi 핸드오프)</option>
+              <option value="cashier">계산대 (결제/스탬프 트리거)</option>
+            </select>
           </label>
           <label className="form-label">
             <span>펌웨어 버전</span>
