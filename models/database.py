@@ -91,13 +91,82 @@ def init_db():
         -- idx_beacons_major_minor 인덱스는 ALTER TABLE ADD COLUMN 이후 별도 생성 (Phase C 마이그레이션).
 
         CREATE TABLE IF NOT EXISTS wifi_profiles (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            facility_id     INTEGER NOT NULL,
+            ssid            TEXT    NOT NULL,
+            password        TEXT    NOT NULL,              -- AES 암호화 저장
+            -- P14 — WiFi 로밍 확장 (B 풀 스코프 선반영, 일부 v1 미사용·flag)
+            scope           TEXT    DEFAULT 'public',      -- 'public'|'private'
+            unit_id         INTEGER,                       -- units.id (private)
+            credential_mode TEXT    DEFAULT 'static',      -- 'static'|'managed'|'radius'
+            bssid           TEXT,                          -- AP MAC 검증용 (선택)
+            country         TEXT    DEFAULT 'KR',          -- .mobileconfig 용
+            active          INTEGER DEFAULT 1,
+            created_at      TEXT    DEFAULT (datetime('now')),
+            updated_at      TEXT    DEFAULT (datetime('now'))
+        );
+
+        -- P14 — 비콘 ↔ WiFi 매핑 (N:N).
+        CREATE TABLE IF NOT EXISTS beacon_wifi (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            beacon_id       INTEGER NOT NULL,
+            wifi_profile_id INTEGER NOT NULL,
+            priority        INTEGER DEFAULT 0,
+            created_at      TEXT    DEFAULT (datetime('now')),
+            UNIQUE (beacon_id, wifi_profile_id),
+            FOREIGN KEY (beacon_id)       REFERENCES beacons(id),
+            FOREIGN KEY (wifi_profile_id) REFERENCES wifi_profiles(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_beacon_wifi_beacon ON beacon_wifi(beacon_id);
+        CREATE INDEX IF NOT EXISTS idx_beacon_wifi_wifi   ON beacon_wifi(wifi_profile_id);
+
+        -- P14 — 기간제 공간 단위 (호실/자리/주차구역).
+        CREATE TABLE IF NOT EXISTS units (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             facility_id INTEGER NOT NULL,
-            ssid        TEXT    NOT NULL,
-            password    TEXT    NOT NULL,              -- AES 암호화 저장
+            name        TEXT    NOT NULL,                  -- '301호' / 'A-12'
+            type        TEXT    NOT NULL DEFAULT 'room',   -- 'room'|'seat'|'parking'
+            description TEXT,
             active      INTEGER DEFAULT 1,
-            created_at  TEXT    DEFAULT (datetime('now'))
+            created_at  TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (facility_id) REFERENCES facilities(id)
         );
+        CREATE INDEX IF NOT EXISTS idx_units_facility ON units(facility_id);
+
+        -- P14 — WiFi 접근 권한 (시간제).
+        CREATE TABLE IF NOT EXISTS wifi_access_grant (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id     INTEGER NOT NULL,
+            target_type TEXT    NOT NULL,                  -- 'unit'|'facility'
+            target_id   INTEGER NOT NULL,
+            valid_from  TEXT    NOT NULL,
+            valid_until TEXT,                              -- NULL = 무기한
+            source      TEXT    DEFAULT 'manual',          -- 'check_in'|'manual'|'qr'
+            granted_by_actor_role TEXT,
+            granted_by_actor_id   INTEGER,
+            revoked_at  TEXT,                              -- soft revoke
+            created_at  TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_wifi_grant_user   ON wifi_access_grant(user_id);
+        CREATE INDEX IF NOT EXISTS idx_wifi_grant_target ON wifi_access_grant(target_type, target_id);
+        CREATE INDEX IF NOT EXISTS idx_wifi_grant_valid  ON wifi_access_grant(valid_until);
+
+        -- P14 — 사용자/사장 디바이스 (앱·노트북·태블릿).
+        CREATE TABLE IF NOT EXISTS devices (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            account_kind TEXT    NOT NULL,                 -- 'user'|'facility'|'staff'
+            account_id   INTEGER NOT NULL,
+            device_id    TEXT    NOT NULL,                 -- 앱이 생성한 UUID
+            device_label TEXT,
+            platform     TEXT,                             -- 'ios'|'android'|'web'|'desktop'
+            kind         TEXT    DEFAULT 'app',            -- 'app'|'portal'|'browser'
+            last_seen_at TEXT    DEFAULT (datetime('now')),
+            created_at   TEXT    DEFAULT (datetime('now')),
+            UNIQUE (account_kind, account_id, device_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_devices_account  ON devices(account_kind, account_id);
+        CREATE INDEX IF NOT EXISTS idx_devices_lastseen ON devices(last_seen_at);
 
         CREATE TABLE IF NOT EXISTS user_wifi_logs (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -746,6 +815,26 @@ def init_db():
     db.execute(
         "CREATE INDEX IF NOT EXISTS idx_beacons_major_minor ON beacons(major, minor)"
     )
+
+    # P14 — WiFi 로밍 데이터 모델 (기존 DB 마이그레이션).
+    # 신규 테이블(beacon_wifi/units/wifi_access_grant/devices)은 위 executescript 의
+    # CREATE TABLE IF NOT EXISTS 로 멱등 생성.
+    _add_column_if_missing(db, 'wifi_profiles', 'scope',
+                           "scope TEXT DEFAULT 'public'")
+    _add_column_if_missing(db, 'wifi_profiles', 'unit_id',
+                           'unit_id INTEGER')
+    _add_column_if_missing(db, 'wifi_profiles', 'credential_mode',
+                           "credential_mode TEXT DEFAULT 'static'")
+    _add_column_if_missing(db, 'wifi_profiles', 'bssid',
+                           'bssid TEXT')
+    _add_column_if_missing(db, 'wifi_profiles', 'country',
+                           "country TEXT DEFAULT 'KR'")
+    # SQLite ADD COLUMN 은 non-constant default 불가 → default 없이 추가 (기존 row=NULL).
+    # 신규 row 는 위 CREATE TABLE 의 datetime('now') default 적용.
+    _add_column_if_missing(db, 'wifi_profiles', 'updated_at', 'updated_at TEXT')
+    # beacons.role — wifi / cashier (계산대 비콘 - cashier 는 결제·스탬프 트리거)
+    _add_column_if_missing(db, 'beacons', 'role',
+                           "role TEXT DEFAULT 'wifi'")
 
     # P8b — 채팅/사용자 문의 메시지 원문 언어 컬럼 (기존 DB 마이그레이션).
     # 신규 테이블(chat_message_translations / support_message_translations)은
