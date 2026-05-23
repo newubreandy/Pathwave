@@ -360,6 +360,42 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_notification_recipients_user
             ON notification_recipients(user_id);
 
+        -- P11 — 알림 부가서비스 수량(quota) 관리 (사장 결제 단위로 1 row).
+        -- 결제 시 INSERT, 발송마다 quantity_used += 1. expires_at 도래 시 만료.
+        -- 사장이 동일 service_type 으로 여러 번 결제하면 row 가 누적.
+        CREATE TABLE IF NOT EXISTS notification_quota (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            facility_account_id INTEGER NOT NULL,
+            subscription_id     INTEGER,                       -- service_subscriptions.id
+            payment_id          INTEGER,                       -- payments.id (감사용)
+            quantity_purchased  INTEGER NOT NULL,
+            quantity_used       INTEGER NOT NULL DEFAULT 0,
+            expires_at          TEXT,                          -- NULL=무기한 (출시 v1 은 항상 명시)
+            created_at          TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (facility_account_id) REFERENCES facility_accounts(id),
+            FOREIGN KEY (subscription_id)     REFERENCES service_subscriptions(id),
+            FOREIGN KEY (payment_id)          REFERENCES payments(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_notification_quota_owner
+            ON notification_quota(facility_account_id);
+        CREATE INDEX IF NOT EXISTS idx_notification_quota_expires
+            ON notification_quota(expires_at);
+
+        -- P11 — 어드민이 관리하는 금칙어 블록리스트.
+        -- AI 검토 1차 단계: term 이 알림 title/body 에 포함되면 severity 따라 분기:
+        --   'block' = 자동 reject, 'flag' = review 큐로 (수동 승인 대기).
+        CREATE TABLE IF NOT EXISTS notification_blocklist (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            term                TEXT    NOT NULL,
+            severity            TEXT    NOT NULL DEFAULT 'flag',  -- 'block' | 'flag'
+            note                TEXT,                              -- 어드민 메모
+            created_by_admin_id INTEGER,                           -- super_admin_accounts.id
+            created_at          TEXT    DEFAULT (datetime('now')),
+            UNIQUE (term)
+        );
+        CREATE INDEX IF NOT EXISTS idx_notification_blocklist_severity
+            ON notification_blocklist(severity);
+
         -- 매장 다국어 캐시 (SRS FR-I18N-002)
         -- 매장명/주소/설명을 언어별로 캐시. (facility_id, language) UNIQUE.
         CREATE TABLE IF NOT EXISTS facility_translations (
@@ -716,6 +752,21 @@ def init_db():
     # 위 executescript 의 CREATE TABLE IF NOT EXISTS 로 멱등 생성.
     _add_column_if_missing(db, 'chat_messages',    'body_lang', 'body_lang TEXT')
     _add_column_if_missing(db, 'support_messages', 'body_lang', 'body_lang TEXT')
+
+    # P11 — 알림 부가서비스 어드민 워크플로 (기존 DB 마이그레이션).
+    # ai_review_status: null | 'auto_pass' | 'flagged' | 'blocked'
+    # status 확장: 기존 'pending' | 'sent' | 'failed' | 'canceled' 에 더해
+    #             'unpaid'(quota 부족) | 'review'(어드민 수동 승인 대기) 추가.
+    # 신규 테이블(notification_quota / notification_blocklist) 은 위 executescript
+    # CREATE TABLE IF NOT EXISTS 로 멱등 생성.
+    _add_column_if_missing(db, 'notifications', 'ai_review_status',
+                           'ai_review_status TEXT')
+    _add_column_if_missing(db, 'notifications', 'ai_review_reason',
+                           'ai_review_reason TEXT')
+    _add_column_if_missing(db, 'notifications', 'approved_by_admin_id',
+                           'approved_by_admin_id INTEGER')
+    _add_column_if_missing(db, 'notifications', 'approved_at',
+                           'approved_at TEXT')
 
     # 비콘 배터리 시계열 (PR #34)
     db.executescript("""

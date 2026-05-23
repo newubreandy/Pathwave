@@ -224,9 +224,22 @@ def create_subscription():
          receipt_email,
          datetime.utcnow().isoformat() if ok else None)
     )
+    pid = cur2.lastrowid
+
+    # P11 — notification 부가서비스 결제 성공 시 quota 부여.
+    # 1 quantity = 1 푸시 건 (provider-web UI 정책과 일치).
+    # 유효기간 = service_subscriptions.ends_at 미러 (구독 만료 = 미사용 quota 만료).
+    if ok and service_type == 'notification':
+        db.execute(
+            """INSERT INTO notification_quota
+                 (facility_account_id, subscription_id, payment_id,
+                  quantity_purchased, expires_at)
+               VALUES (?,?,?,?,?)""",
+            (account_id, sid, pid, quantity, ends_at)
+        )
 
     sub_row = db.execute("SELECT * FROM service_subscriptions WHERE id=?", (sid,)).fetchone()
-    pay_row = db.execute("SELECT * FROM payments WHERE id=?", (cur2.lastrowid,)).fetchone()
+    pay_row = db.execute("SELECT * FROM payments WHERE id=?", (pid,)).fetchone()
     db.commit()
     db.close()
     return jsonify({'success': True,
@@ -325,7 +338,20 @@ def extend_subscription(sid):
          ).fetchone()['email'],
          datetime.utcnow().isoformat() if ok else None)
     )
-    pay_row = db.execute("SELECT * FROM payments WHERE id=?", (cur.lastrowid,)).fetchone()
+    pid = cur.lastrowid
+
+    # P11 — notification 부가서비스 연장 시 추가 quota row 생성 (감사 추적용).
+    # 기존 row 의 quantity_purchased 를 += 하지 않고 별도 row 로 누적해 결제 단위로 보존.
+    if ok and row['service_type'] == 'notification':
+        db.execute(
+            """INSERT INTO notification_quota
+                 (facility_account_id, subscription_id, payment_id,
+                  quantity_purchased, expires_at)
+               VALUES (?,?,?,?,?)""",
+            (account_id, sid, pid, row['quantity'], new_ends)
+        )
+
+    pay_row = db.execute("SELECT * FROM payments WHERE id=?", (pid,)).fetchone()
     sub_row = db.execute("SELECT * FROM service_subscriptions WHERE id=?", (sid,)).fetchone()
     db.commit()
     db.close()
