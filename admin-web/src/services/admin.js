@@ -68,6 +68,10 @@ export const adminApi = {
     apiClient.get(`/api/policies/${kind}?lang=${lang}`),
   createPolicy: (payload) =>
     apiClient.post('/api/admin/policies', payload),
+  // C-2-4b — ko + en 동시 등록 (한 트랜잭션, 같은 버전·effective_at).
+  // payload: {kind, version, effective_at, ko:{title?,body,change_log?}, en:{title?,body,change_log?}}
+  createPolicyMultilang: (payload) =>
+    apiClient.post('/api/admin/policies/multilang', payload),
   updatePolicy: (pid, payload) =>
     apiClient.patch(`/api/admin/policies/${pid}`, payload),
   deletePolicy: (pid) =>
