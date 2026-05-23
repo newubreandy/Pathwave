@@ -753,6 +753,11 @@ def init_db():
     _add_column_if_missing(db, 'chat_messages',    'body_lang', 'body_lang TEXT')
     _add_column_if_missing(db, 'support_messages', 'body_lang', 'body_lang TEXT')
 
+    # P8c — 푸시 알림 본문 다국어 (announcements / notifications).
+    # 작성자의 원문 언어 저장 → 수신자 토큰 lang 으로 자동 번역(P8b push_to_users 통합).
+    _add_column_if_missing(db, 'announcements',  'body_lang', 'body_lang TEXT')
+    _add_column_if_missing(db, 'notifications',  'body_lang', 'body_lang TEXT')
+
     # P11 — 알림 부가서비스 어드민 워크플로 (기존 DB 마이그레이션).
     # ai_review_status: null | 'auto_pass' | 'flagged' | 'blocked'
     # status 확장: 기존 'pending' | 'sent' | 'failed' | 'canceled' 에 더해
