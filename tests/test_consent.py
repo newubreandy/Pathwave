@@ -41,9 +41,15 @@ r = c.get('/api/policies?sub_type=user')
 js = r.get_json()
 _ok('200 OK', r.status_code == 200, js)
 _ok('items 존재', isinstance(js.get('items'), list))
+# C-2-4d — legacy terms/privacy 는 신규 가입 화면 비노출. user 는 terms_user/privacy_user 사용.
+visible_user = {it['kind'] for it in js['items']}
+_ok(f'사용자 화면에 legacy terms/privacy 미노출 — visible={sorted(visible_user)}',
+    'terms' not in visible_user and 'privacy' not in visible_user)
+_ok('사용자 화면에 terms_facility/privacy_facility 미노출',
+    'terms_facility' not in visible_user and 'privacy_facility' not in visible_user)
 required_user = [it['kind'] for it in js['items'] if it['required']]
-_ok(f'사용자 필수 항목 4개 (age14/terms/privacy/location) — got {required_user}',
-    set(required_user) == {'age14', 'terms', 'privacy', 'location'})
+_ok(f'사용자 필수 항목 (age14/terms_user/privacy_user/location) — got {sorted(required_user)}',
+    set(required_user) == {'age14', 'terms_user', 'privacy_user', 'location'})
 
 
 # ── [2] 정책 본문 조회 (placeholder) ─────────────────────────────────────
@@ -92,11 +98,12 @@ s, j = _post('/api/auth/register', {
     'password': 'StrongPw1!',
     'birth_year': 1990,   # PR #47 — 성인 회원으로 가입
     'consents': [
-        {'kind': 'age14',   'version': '2026-05-05', 'accepted': True},
-        {'kind': 'terms',   'version': '2026-05-05', 'accepted': True},
-        {'kind': 'privacy', 'version': '2026-05-05', 'accepted': True},
-        {'kind': 'location','version': '2026-05-05', 'accepted': True},
-        {'kind': 'marketing','version': '2026-05-05', 'accepted': False},
+        # C-2-4d — terms_user/privacy_user 가 필수
+        {'kind': 'age14',         'version': '2026-05-05', 'accepted': True},
+        {'kind': 'terms_user',    'version': '2026-05-05', 'accepted': True},
+        {'kind': 'privacy_user',  'version': '2026-05-05', 'accepted': True},
+        {'kind': 'location',      'version': '2026-05-05', 'accepted': True},
+        {'kind': 'marketing',     'version': '2026-05-05', 'accepted': False},
     ],
 })
 _ok(f'200 + 토큰 (status={s})', s == 200, j)
@@ -112,6 +119,8 @@ db.close()
 kinds = {r['kind']: r['accepted'] for r in rows}
 _ok(f'5건 저장 (got {len(rows)})', len(rows) == 5)
 _ok('age14 accepted=1', kinds.get('age14') == 1)
+_ok('terms_user accepted=1', kinds.get('terms_user') == 1)
+_ok('privacy_user accepted=1', kinds.get('privacy_user') == 1)
 _ok('marketing accepted=0', kinds.get('marketing') == 0)
 
 
