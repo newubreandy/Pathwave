@@ -10,7 +10,9 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
 # ─────────── 공통 스타일 ─────────────────────────────────────────────────────
-FONT = 'Arial'
+# 한글 글리프 포함 폰트 (Korean Windows·Mac Office 표준).
+# 시스템에 없으면 Excel/Numbers 가 시스템 한글 폰트로 자동 대체.
+FONT = '맑은 고딕'
 HEADER_FONT = Font(name=FONT, bold=True, color='FFFFFF', size=11)
 HEADER_FILL = PatternFill('solid', start_color='1F4E78')
 INPUT_FONT  = Font(name=FONT, color='0000FF')           # 파랑 — 사용자 입력
@@ -27,6 +29,19 @@ WRAP = Alignment(wrap_text=True, vertical='top')
 KRW_FMT = '₩#,##0;(₩#,##0);-'
 PCT_FMT = '0.0%;-0.0%;-'
 DATE_FMT = 'yyyy-mm-dd'
+
+
+def force_workbook_font(wb, font_name=None):
+    """워크북 전 셀에 한글 폰트 강제. 기존 bold/color/italic/size 보존."""
+    fn = font_name or FONT
+    for ws in wb.worksheets:
+        for row in ws.iter_rows():
+            for cell in row:
+                if cell.value is None and not cell.font.bold and not cell.fill.fgColor.rgb:
+                    continue
+                f = cell.font
+                cell.font = Font(name=fn, size=f.size, bold=f.bold, italic=f.italic,
+                                 color=f.color, underline=f.underline, strike=f.strike)
 
 
 def apply_table(ws, header_row, last_row, last_col, freeze=True):
@@ -268,6 +283,7 @@ def build_dev_checklist():
         ws3.cell(row=ws3.max_row, column=1).font = Font(name=FONT, color='505050')
 
     out = 'docs/exports/pathwave_dev_checklist.xlsx'
+    force_workbook_font(wb)
     wb.save(out)
     return out
 
@@ -580,6 +596,7 @@ def build_services_costs():
         ws_sum.cell(row=ws_sum.max_row, column=1).font = Font(name=FONT, color='505050')
 
     out = 'docs/exports/pathwave_services_and_costs.xlsx'
+    force_workbook_font(wb)
     wb.save(out)
     return out
 
