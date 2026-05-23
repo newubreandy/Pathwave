@@ -54,6 +54,35 @@ SUPPORTED_LANGS = (
 )
 
 
+def normalize_supported_lang(code: str | None, fallback: str = 'en') -> str:
+    """디바이스/토큰/쿼리 언어 코드를 ``SUPPORTED_LANGS`` 안으로 정규화 (P8b 공통).
+
+    Rules
+    -----
+    - 정확 일치 우선 (예 ``ko``, ``zh-CN``)
+    - ``zh-Hant`` / ``-TW`` → ``zh-TW``, 그 외 ``zh*`` → ``zh-CN``
+    - 언어 prefix(예 ``en-US`` → ``en``) 매칭
+    - 매칭 실패 → ``fallback`` (P8b 정책: 영어)
+
+    사용처: ``routes/chat.py`` viewer_lang, ``models/push.py`` token lang.
+    """
+    if not code:
+        return fallback
+    code = code.strip()
+    if not code:
+        return fallback
+    if code in SUPPORTED_LANGS:
+        return code
+    if code.startswith('zh'):
+        if 'Hant' in code or 'TW' in code:
+            return 'zh-TW' if 'zh-TW' in SUPPORTED_LANGS else fallback
+        return 'zh-CN' if 'zh-CN' in SUPPORTED_LANGS else fallback
+    prefix = code.split('-', 1)[0]
+    if prefix in SUPPORTED_LANGS:
+        return prefix
+    return fallback
+
+
 def deepl_configured() -> bool:
     return bool(os.environ.get('DEEPL_API_KEY', '').strip())
 

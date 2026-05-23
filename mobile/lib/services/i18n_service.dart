@@ -103,7 +103,7 @@ class I18nService {
   /// - 완전 일치 우선
   /// - `zh` prefix → `zh-CN`
   /// - 언어 코드만(예: `en-US` → `en`) 로 매칭
-  /// - 없으면 `ko` (기본값)
+  /// - 없으면 `en` (P8b 정책: 지원 외 언어 사용자는 영어로 통일)
   String _resolveLang(String code) {
     // 완전 일치
     if (_supportedLangs.contains(code)) return code;
@@ -118,7 +118,8 @@ class I18nService {
     final prefix = code.length >= 2 ? code.substring(0, 2) : code;
     if (_supportedLangs.contains(prefix)) return prefix;
 
-    return 'ko';
+    // P8b — 지원 외 언어는 영어로 fallback (한국어 X). 3개 콘솔 정책 통일.
+    return 'en';
   }
 
   bool _isCacheValid(SharedPreferences prefs, String lang) {

@@ -259,31 +259,93 @@ def get_push_provider() -> PushProvider:
     return StubPushProvider()
 
 
+# ── 푸시 본문 번역 (P8b) ──────────────────────────────────────────────────────
+#
+# push_tokens.language 컬럼에 저장된 디바이스 언어로 title/body 자동 번역.
+# 같은 (text, source, target) 조합은 in-memory memoize 로 1회만 호출 (비용 절감).
+# 채팅처럼 같은 시스템 문구("새 메시지", "쿠폰 도착" 등) 가 반복 발송될 때 효과적.
+
+_PUSH_TRANSLATION_MEMO: dict[tuple[str, str, str], str] = {}
+_PUSH_FALLBACK_LANG = 'en'
+
+
+def _translate_push_text(text: str, source: str, target: str) -> str:
+    """푸시 텍스트 번역 (메모이즈). 실패/같은 언어면 원문 그대로."""
+    if not text or source == target:
+        return text
+    key = (text, source, target)
+    cached = _PUSH_TRANSLATION_MEMO.get(key)
+    if cached is not None:
+        return cached
+    try:
+        from models.translator import get_translator, TranslatorError
+        translator = get_translator()
+        try:
+            translated = translator.translate(text, source=source, target=target)
+        except TranslatorError:
+            return text
+    except Exception:
+        return text
+    if not translated:
+        return text
+    _PUSH_TRANSLATION_MEMO[key] = translated
+    return translated
+
+
+def _resolve_push_target_lang(raw: str | None) -> str:
+    """``push_tokens.language`` 값 → 화이트리스트 내 코드 (지원 외/NULL → 'en')."""
+    try:
+        from services.translation_ai import normalize_supported_lang
+    except Exception:
+        return _PUSH_FALLBACK_LANG
+    return normalize_supported_lang(raw, fallback=_PUSH_FALLBACK_LANG)
+
+
 def push_to_users(db, user_ids: list[int], *, title: str, body: str,
-                  data: dict | None = None) -> dict:
+                  data: dict | None = None,
+                  title_lang: str | None = None,
+                  body_lang: str | None = None) -> dict:
     """user_ids 에 등록된 모든 토큰으로 푸시 발송. platform 별 자동 분기.
 
     Provider 선택:
       - PUSH_PROVIDER=stub|fcm|apns: 단일 (mismatched platform 토큰은 실패)
       - PUSH_PROVIDER=multi: platform 별 자동 라우팅 (운영 권장)
+
+    P8b — 토큰별 자동 번역
+    ----------------------
+    ``title_lang`` / ``body_lang`` 이 명시되면, 각 토큰의
+    ``push_tokens.language`` 가 다를 경우 자동으로 번역해 발송한다.
+    NULL/None 이면 해당 필드는 번역하지 않고 원문 그대로 발송 (기존 호환).
+
+    예시 — 채팅 새 메시지 푸시 (sender 가 ko 로 보냄):
+        push_to_users(db, [user_id], title='새 메시지', body=body,
+                      title_lang='ko', body_lang='ko')
     """
     if not user_ids:
         return {'sent': 0, 'failed': 0, 'no_tokens': 0}
     placeholders = ','.join('?' * len(user_ids))
     rows = db.execute(
-        f"SELECT user_id, token, platform FROM push_tokens WHERE user_id IN ({placeholders})",
+        f"SELECT user_id, token, platform, language FROM push_tokens "
+        f"WHERE user_id IN ({placeholders})",
         user_ids
     ).fetchall()
     tokens_by_user = {}
     for r in rows:
-        tokens_by_user.setdefault(r['user_id'], []).append((r['token'], r['platform']))
+        tokens_by_user.setdefault(r['user_id'], []).append(
+            (r['token'], r['platform'], r['language'])
+        )
     sent, failed = 0, 0
     no_tokens = sum(1 for u in user_ids if u not in tokens_by_user)
     provider = get_push_provider()
     for uid, tokens in tokens_by_user.items():
-        for token, platform in tokens:
+        for token, platform, raw_lang in tokens:
+            target_lang = _resolve_push_target_lang(raw_lang)
+            t_title = (_translate_push_text(title, title_lang, target_lang)
+                       if title_lang else title)
+            t_body  = (_translate_push_text(body,  body_lang,  target_lang)
+                       if body_lang else body)
             res = provider.send(token=token, platform=platform,
-                                title=title, body=body, data=data)
+                                title=t_title, body=t_body, data=data)
             if res.get('success'):
                 sent += 1
             else:

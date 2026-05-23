@@ -1,89 +1,104 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, ChevronLeft, Send, Paperclip, MoreVertical, Loader2, Trash2, CheckCheck, X, Info, CheckCircle2 } from 'lucide-react';
 import GroupCard, { GroupCardItem } from '../components/common/GroupCard';
 import ReportService, { REPORT_REASONS } from '../services/ReportService';
+import ChatService from '../services/chat/ChatService';
 import './CustomerChat.css';
 
-import { LANG_CONFIG, getPhotoText, getProviderLang, detectLang, getCustomerLang, translateText } from '../services/translation/TranslationService';
+import { LANG_CONFIG, getPhotoText, getProviderLang } from '../services/translation/TranslationService';
 
-/* ── 더미 데이터 ── */
-const DUMMY_CHATS = [
-  {
-    id: 1, customerUserId: 1001, customerName: '김민준', avatar: '김', customerLang: 'ko',
-    lastMessage: '와이파이 비밀번호가 변경되었나요?', time: '방금 전',
-    unread: 2, status: 'online', dateGroup: 'today', sortKey: Date.now() - 0,
-    messages: [
-      { id: 1, from: 'customer', text: '안녕하세요, 문의드립니다.', time: '14:20' },
-      { id: 2, from: 'provider', text: '네, 안녕하세요! 무엇을 도와드릴까요?', time: '14:21', read: true },
-      { id: 3, from: 'customer', text: '와이파이 비밀번호가 변경되었나요?', time: '14:22' },
-    ],
-  },
-  {
-    id: 2, customerUserId: 1002, customerName: 'James Miller', avatar: 'J', customerLang: 'en',
-    lastMessage: 'Is Wi-Fi free to use?', time: '3분 전',
-    unread: 1, status: 'online', dateGroup: 'today', sortKey: Date.now() - 3 * 60 * 1000,
-    messages: [
-      { id: 1, from: 'customer', text: 'Hello! I have a question.', incomingTranslation: '안녕하세요! 질문이 있어요.', time: '14:30' },
-      { id: 2, from: 'provider', text: '안녕하세요! 무엇을 도와드릴까요?', translation: 'Hello! How can I help you?', translationLang: 'en', time: '14:31', read: true },
-      { id: 3, from: 'customer', text: 'Is Wi-Fi free to use?', incomingTranslation: 'Wi-Fi는 무료로 이용 가능한가요?', time: '14:32' },
-    ],
-  },
-  {
-    id: 3, customerUserId: 1003, customerName: '田中花子', avatar: '田', customerLang: 'ja',
-    lastMessage: 'Wi-Fiは無料ですか？', time: '10분 전',
-    unread: 2, status: 'online', dateGroup: 'today', sortKey: Date.now() - 10 * 60 * 1000,
-    messages: [
-      { id: 1, from: 'customer', text: 'こんにちは！質問があります。', incomingTranslation: '안녕하세요! 질문이 있습니다.', time: '14:35' },
-      { id: 2, from: 'provider', text: '안녕하세요! 무엇을 도와드릴까요?', translation: 'こんにちは！何かお手伝いできますか？', translationLang: 'ja', time: '14:36', read: true },
-      { id: 3, from: 'customer', text: 'Wi-Fiは無料ですか？', incomingTranslation: 'Wi-Fi는 무료인가요?', time: '14:38' },
-    ],
-  },
-  {
-    id: 4, customerUserId: 1004, customerName: '王伟 (간체)', avatar: '王', customerLang: 'zh',
-    lastMessage: 'Wi-Fi是免费的吗？', time: '15분 전',
-    unread: 1, status: 'online', dateGroup: 'today', sortKey: Date.now() - 15 * 60 * 1000,
-    messages: [
-      { id: 1, from: 'customer', text: '您好，我想问一下。', incomingTranslation: '안녕하세요, 질문이 있습니다.', time: '14:20' },
-      { id: 2, from: 'provider', text: '안녕하세요! 무엇을 도와드릴까요?', translation: '您好！请问有什么可以帮助您？', translationLang: 'zh', time: '14:21', read: true },
-      { id: 3, from: 'customer', text: 'Wi-Fi是免费的吗？', incomingTranslation: 'Wi-Fi는 무료인가요?', time: '14:22' },
-    ],
-  },
-  {
-    id: 5, customerUserId: 1005, customerName: '陳美玲 (번체)', avatar: '陳', customerLang: 'zh-TW',
-    lastMessage: '請問有提供Wi-Fi嗎？', time: '4월 23일 (목) 14:02',
-    unread: 0, status: 'offline', dateGroup: 'yesterday', sortKey: Date.now() - 26 * 60 * 60 * 1000,
-    messages: [
-      { id: 1, from: 'customer', text: '您好，我想請問一下。', incomingTranslation: '안녕하세요, 질문이 있습니다.', time: '4월 23일 (목) 14:00' },
-      { id: 2, from: 'provider', text: '안녕하세요! 무엇을 도와드릴까요?', translation: '您好！請問有什麼可以幫助您？', translationLang: 'zh-TW', time: '4월 23일 (목) 14:01', read: true },
-      { id: 3, from: 'customer', text: '請問有提供Wi-Fi嗎？', incomingTranslation: 'Wi-Fi를 제공하시나요?', time: '4월 23일 (목) 14:02' },
-      { id: 4, from: 'provider', text: '네, 무료로 이용 가능합니다!', translation: '是的，可以免費使用！', translationLang: 'zh-TW', time: '4월 23일 (목) 14:05', read: true },
-    ],
-  },
-  {
-    id: 6, customerUserId: 1006, customerName: '黃志明 (홍콩)', avatar: '黃', customerLang: 'zh-HK',
-    lastMessage: '請問有冇Wi-Fi用？', time: '4월 23일 (목) 13:32',
-    unread: 0, status: 'offline', dateGroup: 'yesterday', sortKey: Date.now() - 27 * 60 * 60 * 1000,
-    messages: [
-      { id: 1, from: 'customer', text: '你好，請問有冇Wi-Fi用？', incomingTranslation: '안녕하세요, Wi-Fi를 사용할 수 있나요?', time: '4월 23일 (목) 13:30' },
-      { id: 2, from: 'provider', text: '안녕하세요! 무엇을 도와드릴까요?', translation: '你好！請問有什麼可以幫到你？', translationLang: 'zh-HK', time: '4월 23일 (목) 13:31', read: true },
-      { id: 3, from: 'customer', text: '謝謝！', incomingTranslation: '감사합니다!', time: '4월 23일 (목) 13:32' },
-    ],
-  },
-  {
-    id: 7, customerUserId: 1007, customerName: 'Sophie Dubois', avatar: 'S', customerLang: 'fr',
-    lastMessage: 'Est-ce que le Wi-Fi est gratuit ?', time: '4월 23일 (목) 12:02',
-    unread: 0, status: 'offline', dateGroup: 'yesterday', sortKey: Date.now() - 28 * 60 * 60 * 1000,
-    messages: [
-      { id: 1, from: 'customer', text: "Bonjour ! J'ai une question.", incomingTranslation: '안녕하세요! 질문이 있습니다.', time: '4월 23일 (목) 12:00' },
-      { id: 2, from: 'provider', text: '안녕하세요! 무엇을 도와드릴까요?', translation: 'Bonjour ! Comment puis-je vous aider ?', translationLang: 'fr', time: '4월 23일 (목) 12:01', read: true },
-      { id: 3, from: 'customer', text: 'Est-ce que le Wi-Fi est gratuit ?', incomingTranslation: 'Wi-Fi는 무료인가요?', time: '4월 23일 (목) 12:02' },
-    ],
-  },
-];
+/* ── 유틸: 백엔드 room 객체 → UI 채팅방 형태 변환 ── */
+function formatTime(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  if (isNaN(d)) return isoStr;
+  const now = new Date();
+  const diffMs = now - d;
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffH = Math.floor(diffMs / 3600000);
+  const isToday =
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday =
+    d.getFullYear() === yesterday.getFullYear() &&
+    d.getMonth() === yesterday.getMonth() &&
+    d.getDate() === yesterday.getDate();
 
-/* ── 채팅방 ── */
+  if (diffMin < 1) return '방금 전';
+  if (diffMin < 60) return `${diffMin}분 전`;
+  if (isToday)
+    return d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+  if (isYesterday) {
+    const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+    return `${d.getMonth() + 1}월 ${d.getDate()}일 (${weekdays[d.getDay()]}) ${d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`;
+  }
+  const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+  return `${d.getMonth() + 1}월 ${d.getDate()}일 (${weekdays[d.getDay()]}) ${d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`;
+}
+
+function roomToChat(r) {
+  const now = new Date();
+  const lastAt = r.last_message_at ? new Date(r.last_message_at) : new Date(r.created_at);
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const isToday =
+    lastAt.getFullYear() === now.getFullYear() &&
+    lastAt.getMonth() === now.getMonth() &&
+    lastAt.getDate() === now.getDate();
+  const isYesterday =
+    lastAt.getFullYear() === yesterday.getFullYear() &&
+    lastAt.getMonth() === yesterday.getMonth() &&
+    lastAt.getDate() === yesterday.getDate();
+
+  const emailOrName = r.user_email || `손님 #${r.user_id}`;
+  const displayName = emailOrName.includes('@')
+    ? emailOrName.split('@')[0]
+    : emailOrName;
+  const avatar = displayName[0]?.toUpperCase() || '?';
+
+  return {
+    id: r.id,
+    roomId: r.id,
+    customerUserId: r.user_id,
+    customerName: displayName,
+    avatar,
+    customerLang: 'ko', // 백엔드가 아직 언어 정보를 안 줌 → 기본값
+    lastMessage: r.last_body || '',
+    time: formatTime(r.last_message_at || r.created_at),
+    unread: r.unread || 0,
+    status: 'offline',
+    dateGroup: isToday ? 'today' : isYesterday ? 'yesterday' : 'older',
+    sortKey: lastAt.getTime(),
+    messages: [], // 방 선택 시 별도 로드
+  };
+}
+
+function msgToUi(m) {
+  // P8b — 백엔드가 viewer 언어(매장 측 ?lang=) 로 번역해서 ``translated_text`` 필드를 줌.
+  // 표시 정책: 매장 본인 메시지(provider)는 한국어 원문만, 손님 메시지는 한국어 번역 + 원문 sub.
+  const isFromCustomer  = m.sender_type !== 'facility';
+  const hasTranslation  = !!m.translated_text && m.translated_text !== m.body;
+  return {
+    id: m.id,
+    from: m.sender_type === 'facility' ? 'provider' : 'customer',
+    text: m.body,
+    bodyLang: m.body_lang || undefined,
+    time: formatTime(m.created_at),
+    read: !!m.read_at,
+    // 손님 외국어 메시지를 매장 viewer 언어(=ko 보통) 로 번역한 결과.
+    incomingTranslation: (isFromCustomer && hasTranslation) ? m.translated_text : undefined,
+    incomingTranslationLang: (isFromCustomer && hasTranslation) ? m.translated_lang : undefined,
+    // 클라이언트 사이드 번역은 사용하지 않음 — 백엔드 캐시가 단일 진실(P8b).
+    translation: undefined,
+  };
+}
+
+/* ── 채팅방 컴포넌트 ── */
 const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeaveChat, onBlockUser }) => {
   const { t } = useTranslation();
   const [input, setInput] = useState('');
@@ -126,22 +141,20 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
 
   const handleSend = () => {
     const trimmed = input.trim();
-    if (!trimmed && !attachment) return; // 이미지나 텍스트 둘 중 하나는 있어야 전송
-    
-    // 추가 페이로드 (답장, 이미지)
+    if (!trimmed && !attachment) return;
     const payload = {};
     if (replyingTo) payload.replyToId = replyingTo.id;
     if (attachment) payload.image = attachment;
 
     onSend(chat.id, trimmed, payload);
-    
+
     setInput('');
     setReplyingTo(null);
     setAttachment(null);
     if (cameraRef.current) cameraRef.current.value = '';
     if (galleryRef.current) galleryRef.current.value = '';
 
-    setTimeout(scrollToBottom, 50); // 이미지 렌더링 시간 확보
+    setTimeout(scrollToBottom, 50);
   };
 
   const handleImageSelect = (e) => {
@@ -386,7 +399,7 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
                   <div className={`chat-avatar xs ${chat.status}`}>{chat.avatar}</div>
                 )}
                 <div className="message-bubble-wrap" style={{ position: 'relative' }}>
-                  <div 
+                  <div
                     className={`message-bubble ${msg.from === 'provider' ? 'mine' : 'theirs'} ${msg.isDeleted ? 'deleted' : ''}`}
                     onClick={() => !msg.isDeleted && setActiveMsgId(activeMsgId === msg.id ? null : msg.id)}
                     style={{ cursor: msg.isDeleted ? 'default' : 'pointer' }}
@@ -401,9 +414,7 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
                       const parentMsg = chat.messages.find(m => m.id === msg.replyToId);
                       if (!parentMsg) return null;
                       return (
-                        <div className="quoted-reply-inline" onClick={() => {
-                          // 원본 메시지로 스크롤 이동 로직을 추가할 수 있습니다.
-                        }}>
+                        <div className="quoted-reply-inline">
                           <div className={`chat-avatar xs ${parentMsg.from === 'customer' ? chat.status : ''}`}>
                             {parentMsg.from === 'provider' ? '나' : chat.avatar}
                           </div>
@@ -413,8 +424,8 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
                             </span>
                             {(parentMsg.translation || parentMsg.incomingTranslation || (parentMsg.image && !parentMsg.text && chat.customerLang !== 'ko')) && (
                               <span className="quote-text-sub">
-                                {parentMsg.image && !parentMsg.text 
-                                  ? (parentMsg.from === 'provider' ? getPhotoText(chat.customerLang) : '사진') 
+                                {parentMsg.image && !parentMsg.text
+                                  ? (parentMsg.from === 'provider' ? getPhotoText(chat.customerLang) : '사진')
                                   : (parentMsg.translation || parentMsg.incomingTranslation)}
                               </span>
                             )}
@@ -459,7 +470,6 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
                       </span>
                     )}
                     <span className="message-time">
-                      {/* 어제/과거는 날짜 이미 divider로 표시 → 시간만 */}
                       {msg.time.replace(/^\d+월\s*\d+일\s*\([^)]+\)\s*/, '')}
                     </span>
                   </div>
@@ -479,8 +489,8 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
               <div className="preview-content">
                 <span className="preview-label">{replyingTo.from === 'provider' ? '나' : chat.customerName}에게 답장</span>
                 <p className="preview-text">
-                  {replyingTo.image && !replyingTo.text 
-                    ? '사진' 
+                  {replyingTo.image && !replyingTo.text
+                    ? '사진'
                     : (replyingTo.from === 'customer' && replyingTo.incomingTranslation ? replyingTo.incomingTranslation : replyingTo.text)}
                 </p>
               </div>
@@ -508,7 +518,6 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
         <button className="chat-attach-btn" onClick={() => setShowAttachSheet(true)} aria-label="사진 첨부">
           <Paperclip size={18} />
         </button>
-        {/* iOS/Android 모두: capture 속성으로 카메라 직접 호출 */}
         <input
           type="file"
           accept="image/*"
@@ -517,7 +526,6 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
           style={{ display: 'none' }}
           onChange={handleImageSelect}
         />
-        {/* capture 미지정 → 갤러리 (사진 보관함) */}
         <input
           type="file"
           accept="image/*"
@@ -544,7 +552,7 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
         </button>
       </div>
 
-      {/* 첨부 옵션 시트 (사진 찍기 / 사진 첨부) */}
+      {/* 첨부 옵션 시트 */}
       {showAttachSheet && (
         <div className="attach-sheet-overlay" onClick={() => setShowAttachSheet(false)}>
           <div className="attach-sheet" onClick={(e) => e.stopPropagation()}>
@@ -580,28 +588,30 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
 
 /* ── 메인 ── */
 const CustomerChat = () => {
-  const [chats, setChats] = useState(DUMMY_CHATS);
+  const [chats, setChats] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [translatingId, setTranslatingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
-  const [connStatus, setConnStatus] = useState('connected'); // 'connected' | 'syncing'
+  const [connStatus, setConnStatus] = useState('connected'); // 'connected' | 'syncing' | 'error'
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [blockedUsers, setBlockedUsers] = useState([]);
   const [showBlockList, setShowBlockList] = useState(false);
+  const [roomsLoading, setRoomsLoading] = useState(true);
+  const [roomsError, setRoomsError] = useState('');
+  const [msgLoading, setMsgLoading] = useState(false);
+  const [msgError, setMsgError] = useState('');
+
+  // SSE EventSource ref — 방 전환 시 이전 구독 정리용
+  const esRef = useRef(null);
 
   // GNB 의 "채팅" 메뉴를 다시 탭하면 리스트로 복귀.
-  // 같은 path 라도 NavLink 클릭은 location.key 를 갱신 → 이 effect 가 트리거됨.
-  // 단, chat row 클릭 시 setSelectedId 는 location 을 안 바꾸므로 여기 영향 없음.
   const location = useLocation();
   useEffect(() => {
     setSelectedId(null);
   }, [location.key]);
 
-  // 채팅 상세 화면 진입 시 레이아웃 전환은 CSS hidden-panel로 처리
-
-
-  // PC 화면 전체 스크롤 방지 및 하단 고정을 위한 바디 클래스 제어
+  // PC 화면 전체 스크롤 방지
   useEffect(() => {
     document.body.classList.add('chat-pc-layout');
     return () => {
@@ -609,55 +619,144 @@ const CustomerChat = () => {
     };
   }, []);
 
-  // ── Visibility API + focus: 페이지 복귀 시 갱신 ──
+  /* ── 채팅방 목록 로드 ── */
+  const loadRooms = useCallback(async () => {
+    setConnStatus('syncing');
+    try {
+      const res = await ChatService.listRooms();
+      const rooms = (res.rooms || []).map(roomToChat);
+      setChats(rooms);
+      setRoomsError('');
+      setLastUpdated(new Date());
+      setConnStatus('connected');
+    } catch (err) {
+      setRoomsError(err?.message || '채팅방 목록을 불러올 수 없습니다.');
+      setConnStatus('error');
+    } finally {
+      setRoomsLoading(false);
+    }
+  }, []);
+
+  // 마운트 시 최초 로드
   useEffect(() => {
-    const onVisible = () => { if (document.visibilityState === 'visible') syncChats(); };
+    loadRooms();
+  }, [loadRooms]);
+
+  // Visibility API + focus: 페이지 복귀 시 목록 갱신
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === 'visible') loadRooms(); };
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('focus', onVisible);
     return () => {
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', onVisible);
     };
-  }, []);
+  }, [loadRooms]);
 
-  // ── 30초 폴링 (Firebase 연동 전 임시) ──
+  // 30초 폴링 (방 목록 갱신)
   useEffect(() => {
-    const t = setInterval(syncChats, 30_000);
-    return () => clearInterval(t);
+    const interval = setInterval(loadRooms, 30_000);
+    return () => clearInterval(interval);
+  }, [loadRooms]);
+
+  /* ── 방 선택 시 메시지 로드 + markRead + SSE 구독 ── */
+  const loadMessages = useCallback(async (roomId) => {
+    setMsgLoading(true);
+    setMsgError('');
+    try {
+      const res = await ChatService.listMessages(roomId);
+      const messages = (res.messages || []).map(msgToUi);
+      setChats((prev) =>
+        prev.map((c) => (c.id === roomId ? { ...c, messages, unread: 0 } : c))
+      );
+    } catch (err) {
+      setMsgError(err?.message || '메시지를 불러올 수 없습니다.');
+    } finally {
+      setMsgLoading(false);
+    }
+
+    // 읽음 처리 (실패해도 UI 차단 안 함)
+    ChatService.markRead(roomId).catch(() => {});
   }, []);
 
-  // TODO: Firebase onSnapshot 연동 시 이 함수를 구독 로직으로 교체
-  const syncChats = () => {
-    setConnStatus('syncing');
-    setTimeout(() => {
-      setLastUpdated(new Date());
-      setConnStatus('connected');
-    }, 700);
-  };
+  /* ── SSE 구독 관리 ── */
+  const subscribeRoom = useCallback((roomId) => {
+    // 기존 구독 정리
+    if (esRef.current) {
+      esRef.current.close();
+      esRef.current = null;
+    }
+    const es = ChatService.subscribe(roomId);
+    esRef.current = es;
+
+    es.addEventListener('message', (e) => {
+      try {
+        const rawMsg = JSON.parse(e.data);
+        const newMsg = msgToUi(rawMsg);
+        setChats((prev) =>
+          prev.map((c) => {
+            if (c.id !== roomId) return c;
+            // 중복 방지: 이미 있는 메시지면 무시
+            if (c.messages.some((m) => m.id === newMsg.id)) return c;
+            return {
+              ...c,
+              messages: [...c.messages, newMsg],
+              lastMessage: newMsg.text || '[사진]',
+              time: '방금 전',
+              dateGroup: 'today',
+              sortKey: Date.now(),
+            };
+          })
+        );
+        // 새 메시지가 고객 발신이면 즉시 읽음 처리
+        if (rawMsg.sender_type === 'user') {
+          ChatService.markRead(roomId).catch(() => {});
+        }
+      } catch (_) {
+        // JSON 파싱 실패 무시
+      }
+    });
+
+    es.onerror = () => {
+      // SSE 연결 오류 시 조용히 닫음 — 폴링이 보완
+      es.close();
+      if (esRef.current === es) esRef.current = null;
+    };
+  }, []);
+
+  // 언마운트 시 SSE 정리
+  useEffect(() => {
+    return () => {
+      if (esRef.current) {
+        esRef.current.close();
+        esRef.current = null;
+      }
+    };
+  }, []);
 
   const selectedChat = chats.find((c) => c.id === selectedId);
 
-  // 검색 + 최신 메시지 기준 정렬 (내림차순)
+  // 검색 + 최신 메시지 기준 정렬
   const filteredChats = chats
     .filter((c) => c.customerName.includes(searchQuery) || c.lastMessage.includes(searchQuery))
     .sort((a, b) => (b.sortKey || 0) - (a.sortKey || 0));
 
-  // 오늘 / 어제 그룹 분리 (정렬 순서 유지)
-  const todayChats     = filteredChats.filter((c) => c.dateGroup === 'today');
+  const todayChats = filteredChats.filter((c) => c.dateGroup === 'today');
   const yesterdayChats = filteredChats.filter((c) => c.dateGroup === 'yesterday');
+  const olderChats = filteredChats.filter((c) => c.dateGroup === 'older');
 
-  const totalUnread = chats.reduce((acc, c) => acc + c.unread, 0);
+  const totalUnread = chats.reduce((acc, c) => acc + (c.unread || 0), 0);
 
   const handleSelect = (id) => {
-    setChats((prev) => prev.map((c) => (c.id === id ? { ...c, unread: 0 } : c)));
-    setSelectedId(id);
     setDeletingId(null);
+    setSelectedId(id);
+    loadMessages(id);
+    subscribeRoom(id);
   };
 
   const handleDelete = (e, id) => {
     e.stopPropagation();
     if (deletingId === id) {
-      // 확인 → 실제 삭제
       setChats((prev) => prev.filter((c) => c.id !== id));
       if (selectedId === id) setSelectedId(null);
       setDeletingId(null);
@@ -668,14 +767,20 @@ const CustomerChat = () => {
 
   const handleLeaveChat = (id) => {
     setChats((prev) => prev.filter((c) => c.id !== id));
-    if (selectedId === id) setSelectedId(null);
+    if (selectedId === id) {
+      setSelectedId(null);
+      if (esRef.current) {
+        esRef.current.close();
+        esRef.current = null;
+      }
+    }
   };
 
   const handleBlockUser = (id) => {
     const chatToBlock = chats.find(c => c.id === id);
     if (chatToBlock) {
       setBlockedUsers(prev => [...prev, { id: chatToBlock.id, name: chatToBlock.customerName }]);
-      handleLeaveChat(id); // 차단 시 방도 나감
+      handleLeaveChat(id);
     }
   };
 
@@ -684,69 +789,97 @@ const CustomerChat = () => {
   };
 
   const handleSend = async (chatId, text, payload = {}) => {
+    if (!text && !payload.image) return;
+
     const now = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-    const msgId = Date.now();
-    const newMsg = { id: msgId, from: 'provider', text, time: now, read: false, ...payload };
+    // 낙관적 UI: 임시 음수 id로 즉시 추가
+    const tempId = -Date.now();
+    const optimisticMsg = {
+      id: tempId,
+      from: 'provider',
+      text,
+      time: now,
+      read: false,
+      ...payload,
+    };
 
     setChats((prev) =>
       prev.map((c) =>
         c.id === chatId
           ? {
               ...c,
-              messages: [...c.messages, newMsg],
+              messages: [...c.messages, optimisticMsg],
               lastMessage: payload.image && !text ? '[사진]' : text,
               time: '방금 전',
-              dateGroup: 'today',   // 메시지 전송 → 오늘 그룹으로 이동
-              sortKey: Date.now(),  // 최신 기준 정렬 키
+              dateGroup: 'today',
+              sortKey: Date.now(),
             }
           : c
       )
     );
 
-    const chat = chats.find((c) => c.id === chatId);
-    if (!chat) return;
-    const customerLang = getCustomerLang(chat, [...chat.messages, newMsg]);
-    if (customerLang === 'ko') return;
+    // 실 API 전송 (이미지는 현재 백엔드 미지원 — 텍스트만 전송)
+    if (text) {
+      try {
+        const res = await ChatService.sendMessage(chatId, text);
+        const saved = msgToUi(res.message);
+        // 임시 메시지를 서버 응답으로 교체
+        setChats((prev) =>
+          prev.map((c) =>
+            c.id === chatId
+              ? {
+                  ...c,
+                  messages: c.messages.map((m) => (m.id === tempId ? saved : m)),
+                }
+              : c
+          )
+        );
+      } catch (err) {
+        // 전송 실패 시 임시 메시지에 에러 표시
+        setChats((prev) =>
+          prev.map((c) =>
+            c.id === chatId
+              ? {
+                  ...c,
+                  messages: c.messages.map((m) =>
+                    m.id === tempId
+                      ? { ...m, sendError: true, text: `${text} (전송 실패)` }
+                      : m
+                  ),
+                }
+              : c
+          )
+        );
+        return;
+      }
+    }
 
-    setTranslatingId(msgId);
-    const translated = await translateText(text, 'ko', customerLang);
-    setTranslatingId(null);
-    if (!translated) return;
-
-    setChats((prev) =>
-      prev.map((c) =>
-        c.id === chatId
-          ? {
-              ...c,
-              messages: c.messages.map((m) =>
-                m.id === msgId ? { ...m, translation: translated, translationLang: customerLang } : m
-              ),
-            }
-          : c
-      )
-    );
+    // P8b — 외국어 고객 메시지 번역은 백엔드가 viewer 언어(?lang=) 로 처리한다.
+    // 클라이언트 사이드 MyMemory 번역은 제거 (비용/일관성/캐시 단일화).
   };
 
   const handleDeleteMessage = (chatId, msgId) => {
     setChats((prev) =>
       prev.map((c) => {
-        if (c.id === chatId) {
-          const newMessages = c.messages.map((m) =>
-            m.id === msgId ? { ...m, isDeleted: true, text: '삭제된 메시지입니다.', image: null, translation: null, incomingTranslation: null, replyToId: null } : m
-          );
-          const lastMsg = newMessages[newMessages.length - 1];
-          return {
-            ...c,
-            messages: newMessages,
-            lastMessage: lastMsg ? (lastMsg.isDeleted ? '삭제된 메시지입니다.' : (lastMsg.image && !lastMsg.text ? '[사진]' : lastMsg.text)) : '',
-          };
-        }
-        return c;
+        if (c.id !== chatId) return c;
+        const newMessages = c.messages.map((m) =>
+          m.id === msgId
+            ? { ...m, isDeleted: true, text: '삭제된 메시지입니다.', image: null, translation: null, incomingTranslation: null, replyToId: null }
+            : m
+        );
+        const lastMsg = newMessages[newMessages.length - 1];
+        return {
+          ...c,
+          messages: newMessages,
+          lastMessage: lastMsg
+            ? (lastMsg.isDeleted ? '삭제된 메시지입니다.' : (lastMsg.image && !lastMsg.text ? '[사진]' : lastMsg.text))
+            : '',
+        };
       })
     );
   };
 
-  /* ── 채팅 리스트 아이템 렌더 (GroupCardItem inset row) ── */
+  /* ── 채팅 리스트 아이템 렌더 ── */
   const renderChatItem = (chat) => {
     const langCfg = LANG_CONFIG[chat.customerLang] || {};
     const isDeleting = deletingId === chat.id;
@@ -775,7 +908,6 @@ const CustomerChat = () => {
           </div>
         </div>
 
-        {/* 삭제 버튼 */}
         <button
           className={`delete-chat-btn ${isDeleting ? 'confirm' : ''}`}
           onClick={(e) => handleDelete(e, chat.id)}
@@ -789,8 +921,6 @@ const CustomerChat = () => {
 
   return (
     <div className={`chat-page-wrapper ${selectedId ? 'is-room-open' : ''}`}>
-      {/* 페이지 헤더 — 다른 페이지(스탬프/쿠폰/알림/결제관리)와 동일 가이드:
-          h1.page-title + p.sub-title. 답변대기 카운트와 동기화 시각은 sub-title 에 통합. */}
       <div className={`page-header-section ${selectedId ? 'hidden-panel' : ''}`}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--pw-space-4)' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -799,7 +929,11 @@ const CustomerChat = () => {
               답변 대기 <strong style={{ color: 'var(--pw-text)' }}>{totalUnread > 0 ? totalUnread : 0}건</strong>
               <span className="conn-status-inline">
                 <span className={`conn-dot ${connStatus}`} />
-                {connStatus === 'syncing' ? '동기화 중...' : `업데이트 ${lastUpdated.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`}
+                {connStatus === 'syncing'
+                  ? '동기화 중...'
+                  : connStatus === 'error'
+                  ? '연결 오류'
+                  : `업데이트 ${lastUpdated.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`}
               </span>
             </p>
           </div>
@@ -811,75 +945,124 @@ const CustomerChat = () => {
 
       <div className="customer-chat-container" onClick={() => setDeletingId(null)}>
 
-      {/* 리스트 패널 */}
-      <div className={`chat-list-panel ${selectedId ? 'hidden-panel' : ''}`} onClick={(e) => e.stopPropagation()}>
-        <div className="chat-list-header" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <div className="chat-search-box" style={{ flex: 1 }}>
-            <input
-              type="text"
-              className="chat-search-input"
-              placeholder="고객명 또는 메시지 검색"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+        {/* 리스트 패널 */}
+        <div className={`chat-list-panel ${selectedId ? 'hidden-panel' : ''}`} onClick={(e) => e.stopPropagation()}>
+          <div className="chat-list-header" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <div className="chat-search-box" style={{ flex: 1 }}>
+              <input
+                type="text"
+                className="chat-search-input"
+                placeholder="고객명 또는 메시지 검색"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <button className="chat-search-action-btn" title="검색">
+              <Search size={18} />
+            </button>
           </div>
-          <button className="chat-search-action-btn" title="검색">
-            <Search size={18} />
-          </button>
+
+          <div className="chat-list">
+            {roomsLoading ? (
+              <div className="chat-empty" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Loader2 size={16} className="spin-icon" /> 채팅방 목록 로딩 중...
+              </div>
+            ) : roomsError ? (
+              <div className="chat-empty" style={{ color: 'var(--pw-danger, #F87171)' }}>
+                {roomsError}
+                <button
+                  onClick={loadRooms}
+                  style={{ marginLeft: '0.5rem', fontSize: '0.8rem', color: 'var(--pw-primary)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                >
+                  다시 시도
+                </button>
+              </div>
+            ) : filteredChats.length === 0 ? (
+              <div className="chat-empty">
+                {searchQuery ? '검색 결과가 없습니다.' : '아직 채팅이 없습니다.'}
+              </div>
+            ) : (
+              <>
+                {todayChats.length > 0 && (
+                  <GroupCard
+                    variant="container"
+                    title="오늘"
+                    subtitle={`${todayChats.length}건`}
+                    collapsible={false}
+                    className="chat-date-group"
+                  >
+                    {todayChats.map(renderChatItem)}
+                  </GroupCard>
+                )}
+
+                {yesterdayChats.length > 0 && (
+                  <GroupCard
+                    variant="container"
+                    title="어제"
+                    subtitle={`${yesterdayChats.length}건`}
+                    defaultCollapsed={false}
+                    className="chat-date-group"
+                  >
+                    {yesterdayChats.map(renderChatItem)}
+                  </GroupCard>
+                )}
+
+                {olderChats.length > 0 && (
+                  <GroupCard
+                    variant="container"
+                    title="이전"
+                    subtitle={`${olderChats.length}건`}
+                    defaultCollapsed={true}
+                    className="chat-date-group"
+                  >
+                    {olderChats.map(renderChatItem)}
+                  </GroupCard>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
-        <div className="chat-list">
-          {filteredChats.length === 0 && (
-            <div className="chat-empty">검색 결과가 없습니다.</div>
-          )}
-
-          {/* 오늘 — GroupCard 컨테이너 (RePlan 스타일) */}
-          {todayChats.length > 0 && (
-            <GroupCard
-              variant="container"
-              title="오늘"
-              subtitle={`${todayChats.length}건`}
-              collapsible={false}
-              className="chat-date-group"
-            >
-              {todayChats.map(renderChatItem)}
-            </GroupCard>
-          )}
-
-          {/* 어제 */}
-          {yesterdayChats.length > 0 && (
-            <GroupCard
-              variant="container"
-              title="어제"
-              subtitle={`${yesterdayChats.length}건`}
-              defaultCollapsed={false}
-              className="chat-date-group"
-            >
-              {yesterdayChats.map(renderChatItem)}
-            </GroupCard>
+        {/* 채팅 패널 */}
+        <div className={`chat-room-panel ${!selectedId ? 'hidden-panel' : ''}`}>
+          {selectedChat ? (
+            msgLoading ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '0.5rem', color: 'var(--pw-text-secondary)' }}>
+                <Loader2 size={20} className="spin-icon" /> 메시지 로딩 중...
+              </div>
+            ) : msgError ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '0.75rem', color: 'var(--pw-danger, #F87171)' }}>
+                <span>{msgError}</span>
+                <button
+                  onClick={() => loadMessages(selectedId)}
+                  style={{ fontSize: '0.85rem', color: 'var(--pw-primary)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                >
+                  다시 시도
+                </button>
+              </div>
+            ) : (
+              <ChatRoom
+                chat={selectedChat}
+                onBack={() => {
+                  setSelectedId(null);
+                  if (esRef.current) {
+                    esRef.current.close();
+                    esRef.current = null;
+                  }
+                }}
+                onSend={handleSend}
+                onDeleteMessage={handleDeleteMessage}
+                translatingId={translatingId}
+                onLeaveChat={handleLeaveChat}
+                onBlockUser={handleBlockUser}
+              />
+            )
+          ) : (
+            <div className="chat-empty-state" />
           )}
         </div>
       </div>
 
-      {/* 채팅 패널 */}
-      <div className={`chat-room-panel ${!selectedId ? 'hidden-panel' : ''}`}>
-        {selectedChat ? (
-          <ChatRoom
-            chat={selectedChat}
-            onBack={() => setSelectedId(null)}
-            onSend={handleSend}
-            onDeleteMessage={handleDeleteMessage}
-            translatingId={translatingId}
-            onLeaveChat={handleLeaveChat}
-            onBlockUser={handleBlockUser}
-          />
-        ) : (
-          <div className="chat-empty-state">
-            {/* 우측 안내 멘트 삭제 */}
-          </div>
-        )}
-      </div>
-    </div>
       {/* 차단 관리 모달 */}
       {showBlockList && (
         <div className="block-modal-overlay" onClick={() => setShowBlockList(false)}>
