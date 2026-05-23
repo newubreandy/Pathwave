@@ -869,6 +869,20 @@ _POLICY_KIND_TITLES = {
     'third_party':  '제3자 정보 제공 동의',
 }
 
+# P12 — 약관은 사용자 정책상 ko/en 두 언어만 유지.
+# 디바이스 언어 한국어 → ko, 그 외 모두 → en (자동 fallback).
+_POLICY_KIND_TITLES_EN = {
+    'terms':        'Terms of Service',
+    'privacy':      'Privacy Policy',
+    'location':     'Location Information Consent',
+    'age14':        'Age 14+ Consent',
+    'camera':       'Camera Permission',
+    'storage':      'Storage Permission',
+    'push':         'Push Notification Consent',
+    'marketing':    'Marketing Communication Consent',
+    'third_party':  'Third-Party Information Sharing',
+}
+
 
 def _bootstrap_policies(db) -> None:
     """static/policies/<kind>.ko.md 를 v0.1 로 자동 등록 (idempotent).
@@ -908,9 +922,30 @@ def _bootstrap_policies(db) -> None:
             (kind, title, body, effective_at)
         )
         inserted += 1
+
+        # P12 — 영어 v0.1 자동 시드. DeepL 키 있으면 실 번역, 없으면 stub.
+        #       어드민이 admin-web 에서 본문 교체 가능.
+        existing_en = db.execute(
+            "SELECT id FROM policies WHERE kind=? AND lang='en' AND version='0.1'",
+            (kind,)
+        ).fetchone()
+        if not existing_en:
+            try:
+                from services.translation_ai import translate as _tx
+                en_body  = _tx(body, target_lang='en', source_lang='ko')
+            except Exception:
+                en_body = f'[en] {body}'  # 안전 fallback
+            en_title = _POLICY_KIND_TITLES_EN.get(kind, title)
+            db.execute(
+                """INSERT INTO policies
+                     (kind, lang, version, title, body, change_log, effective_at)
+                   VALUES (?, 'en', '0.1', ?, ?, 'Auto-translated from ko v0.1', ?)""",
+                (kind, en_title, en_body, effective_at)
+            )
+
     if inserted:
         from models.log import logger as _lg
-        _lg.info('[policies] Bootstrapped %d policy versions (v0.1)', inserted)
+        _lg.info('[policies] Bootstrapped %d policy versions (v0.1 ko+en)', inserted)
 
 
 def _bootstrap_super_admin(db) -> None:
