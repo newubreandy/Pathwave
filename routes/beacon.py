@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
-from flask import Blueprint, request, jsonify, g
+from flask import Blueprint, request, jsonify, g, Response
 from models.database import get_db
 from models.crypto import encrypt_secret, decrypt_secret
 from models.rate_limit import limiter
-from routes.auth import require_facility_actor, require_super_admin
+from routes.auth import require_auth, require_facility_actor, require_super_admin
 
 beacon_bp = Blueprint('beacon', __name__, url_prefix='/api/beacon')
 
@@ -479,3 +479,83 @@ def report_battery(bid: int):
     db.commit(); db.close()
     return jsonify({'success': True, 'message': '배터리 상태가 기록되었습니다.',
                     'beacon': {'id': bid, 'battery_pct': pct}}), 200
+
+
+# ── P17 — iOS .mobileconfig 다건 설치 ──────────────────────────────────────
+
+@beacon_bp.route('/wifi/venue/<int:fid>.mobileconfig', methods=['GET'])
+@require_auth(sub_type='user')
+def venue_mobileconfig(fid: int):
+    """매장 active WiFi 전체를 1개 .mobileconfig (Apple Configuration Profile)
+    파일로 묶어 다운로드. iOS 가 1회 설치 → 모든 WiFi 자동 등록 → 무중단 로밍.
+
+    인증: 사용자 토큰 필수 (게스트 차단). 미성년자 + adult_only 시설은 거부.
+
+    응답: Content-Type 'application/x-apple-aspen-config'.
+          Content-Disposition: attachment.
+    """
+    from services.mobileconfig import generate_mobileconfig
+
+    user_id = g.auth['user_id']
+    db = get_db()
+    facility = db.execute(
+        "SELECT id, name, adult_only FROM facilities WHERE id=? AND active=1",
+        (fid,)
+    ).fetchone()
+    if not facility:
+        db.close()
+        return jsonify({'success': False, 'message': '매장을 찾을 수 없습니다.'}), 404
+
+    # 미성년자 차단 (PR #47 adult_only 일관)
+    if facility['adult_only']:
+        u = db.execute("SELECT age_group FROM users WHERE id=?", (user_id,)).fetchone()
+        if u and u['age_group'] == 'minor_14_18':
+            db.close()
+            return jsonify({'success': False,
+                            'message': '본 시설은 만 19세 이상만 이용 가능합니다.',
+                            'reason': 'adult_only_minor_blocked'}), 403
+
+    rows = db.execute(
+        """SELECT id, ssid, password, scope, credential_mode, bssid, country
+           FROM wifi_profiles WHERE facility_id=? AND active=1
+           ORDER BY id ASC""",
+        (fid,)
+    ).fetchall()
+    if not rows:
+        db.close()
+        return jsonify({'success': False,
+                        'message': '등록된 WiFi 가 없습니다.'}), 404
+
+    wifis = []
+    for r in rows:
+        try:
+            password = decrypt_secret(r['password'])
+        except Exception:
+            password = ''
+        wifis.append({
+            'id':              r['id'],
+            'ssid':            r['ssid'],
+            'password':        password,
+            'scope':           r['scope'],
+            'credential_mode': r['credential_mode'],
+            'bssid':           r['bssid'],
+            'country':         r['country'],
+        })
+    db.close()
+
+    try:
+        blob = generate_mobileconfig(
+            facility={'id': facility['id'], 'name': facility['name']},
+            wifis=wifis,
+        )
+    except ValueError as e:
+        return jsonify({'success': False, 'message': str(e)}), 404
+
+    return Response(
+        blob,
+        mimetype='application/x-apple-aspen-config',
+        headers={
+            'Content-Disposition': f'attachment; filename="pathwave-{fid}.mobileconfig"',
+            'Cache-Control': 'no-store',
+        },
+    )
