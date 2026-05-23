@@ -2,8 +2,13 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Bell, Check, X, Send, RefreshCw, Shield, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { notificationApi } from '../services/notification.js';
-import { useDialog } from '../components/DialogProvider.jsx';
 import './Beacons.css';
+
+// P11 — main 머지 과정에서 DialogProvider 가 빠진 상태라 window 표준 dialog 로 fallback.
+const useDialog = () => ({
+  alert:   (msg) => window.alert(msg),
+  confirm: (msg) => Promise.resolve(window.confirm(msg)),
+});
 
 /**
  * P11 — 알림 부가서비스 어드민 인박스.
