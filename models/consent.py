@@ -12,14 +12,20 @@
 # required: True = 동의 안 하면 가입 거부, False = 선택 (마케팅 등)
 CONSENT_KINDS = {
     'age14':       {'required_for': {'user'}},                        # 만 14세 이상
-    'terms':       {'required_for': {'user', 'facility', 'staff'}},   # 이용약관
-    'privacy':     {'required_for': {'user', 'facility', 'staff'}},   # 개인정보 수집·이용
+    'terms':       {'required_for': {'user', 'facility', 'staff'}},   # 이용약관 (legacy 공용)
+    'privacy':     {'required_for': {'user', 'facility', 'staff'}},   # 개인정보 (legacy 공용)
     'location':    {'required_for': {'user'}},                        # 위치 정보 (BLE 핵심 동작)
     'camera':      {'required_for': set()},                           # 선택
     'storage':     {'required_for': set()},                           # 선택
     'push':        {'required_for': set()},                           # 선택
     'marketing':   {'required_for': set()},                           # 선택
     'third_party': {'required_for': set()},                           # 선택 (사장 정산 PG 등)
+    # C-2-4 — user / facility 분리 약관. 신규 가입은 이걸 사용 (C-2-4d 에서 클라이언트 전환).
+    # 지금 required_for=set() (선택) — 클라이언트 전환 후 _user 는 'user', _facility 는 'facility'/'staff' 필수로 변경.
+    'terms_user':       {'required_for': set()},
+    'terms_facility':   {'required_for': set()},
+    'privacy_user':     {'required_for': set()},
+    'privacy_facility': {'required_for': set()},
 }
 
 VALID_KINDS = set(CONSENT_KINDS.keys())

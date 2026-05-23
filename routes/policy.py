@@ -236,6 +236,84 @@ def admin_create_policy():
         db.close()
 
 
+@policy_bp.route('/api/admin/policies/multilang', methods=['POST'])
+@require_super_admin()
+def admin_create_policy_multilang():
+    """C-2-4b — 한 버전을 ko + en 동시 등록 (트랜잭션 1개).
+
+    body
+    ----
+        {
+          kind:         str,     # 'terms_user' / 'terms_facility' / 'privacy_user' 등
+          version:      str,
+          effective_at: str,     # ISO 8601
+          ko: { title?, body, change_log? },
+          en: { title?, body, change_log? }
+        }
+
+    응답: ``{ko: <row>, en: <row>}`` (두 row 동시 INSERT)
+    중복(kind, lang, version) 검사 — 한 lang 이라도 중복이면 전체 거부.
+    """
+    data = request.get_json(silent=True) or {}
+    kind = (data.get('kind') or '').strip()
+    if kind not in VALID_KINDS:
+        return jsonify({'success': False,
+                        'message': f"kind 는 {sorted(VALID_KINDS)} 중 하나여야 합니다."}), 400
+    version      = (data.get('version') or '').strip()
+    effective_at = (data.get('effective_at') or '').strip()
+    if not version:
+        return jsonify({'success': False, 'message': 'version 이 필요합니다.'}), 400
+    if not effective_at:
+        return jsonify({'success': False, 'message': 'effective_at 이 필요합니다.'}), 400
+
+    ko = data.get('ko') or {}
+    en = data.get('en') or {}
+    if not isinstance(ko, dict) or not isinstance(en, dict):
+        return jsonify({'success': False,
+                        'message': 'ko 와 en 은 객체여야 합니다.'}), 400
+    ko_body = (ko.get('body') or '').strip()
+    en_body = (en.get('body') or '').strip()
+    if not ko_body or not en_body:
+        return jsonify({'success': False,
+                        'message': 'ko 와 en 둘 다 본문이 필요합니다.'}), 400
+
+    db = get_db()
+    try:
+        # 중복 검사 — 한 lang 이라도 있으면 전체 거부
+        for lang in ('ko', 'en'):
+            if db.execute(
+                "SELECT 1 FROM policies WHERE kind=? AND lang=? AND version=?",
+                (kind, lang, version)
+            ).fetchone():
+                return jsonify({'success': False,
+                                'message': f'같은 버전이 이미 존재합니다 (lang={lang}).'}), 409
+
+        admin_id = g.auth['user_id']
+
+        ko_pid = policy_insert(
+            db, kind=kind, lang='ko', version=version,
+            title=(ko.get('title') or '').strip() or None,
+            body=ko_body,
+            change_log=(ko.get('change_log') or '').strip() or None,
+            effective_at=effective_at, admin_id=admin_id,
+        )
+        en_pid = policy_insert(
+            db, kind=kind, lang='en', version=version,
+            title=(en.get('title') or '').strip() or None,
+            body=en_body,
+            change_log=(en.get('change_log') or '').strip() or None,
+            effective_at=effective_at, admin_id=admin_id,
+        )
+        db.commit()
+        return jsonify({
+            'success': True,
+            'ko': get_by_id(db, ko_pid),
+            'en': get_by_id(db, en_pid),
+        }), 201
+    finally:
+        db.close()
+
+
 @policy_bp.route('/api/admin/policies/<int:pid>', methods=['PATCH'])
 @require_super_admin()
 def admin_update_policy(pid: int):
