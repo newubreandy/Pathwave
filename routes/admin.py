@@ -154,6 +154,8 @@ def _row_to_beacon(row) -> dict:
         'status':       row['status'],
         'battery_pct':  row['battery_pct'],
         'firmware_ver': row['firmware_ver'],
+        # P15 — 비콘 role (wifi 핸드오프 | cashier 계산대 트리거).
+        'role':         row['role'] if 'role' in keys else 'wifi',
         'created_at':   row['created_at'],
     }
 
