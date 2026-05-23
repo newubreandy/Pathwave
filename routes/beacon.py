@@ -86,15 +86,44 @@ def handshake():
                 'reason': 'adult_only_minor_blocked',
             }), 403
 
-    # WiFi 프로필 조회
-    wifi = db.execute(
-        "SELECT ssid, password FROM wifi_profiles WHERE facility_id=? AND active=1 LIMIT 1",
-        (facility_id,)
-    ).fetchone()
+    # P15 — WiFi 프로필 묶음 조회 (N:N).
+    # beacon['id'] 기준 beacon_wifi 매핑이 있으면 그 묶음만,
+    # 매핑 없으면 facility 전체로 fallback. LIMIT 1 제거 (다건).
+    wifi_rows = db.execute(
+        """SELECT wp.id, wp.ssid, wp.password, wp.scope, wp.credential_mode,
+                  wp.bssid, wp.country
+           FROM wifi_profiles wp
+           JOIN beacon_wifi bw ON bw.wifi_profile_id = wp.id
+           WHERE bw.beacon_id=? AND wp.facility_id=? AND wp.active=1
+           ORDER BY bw.priority ASC, wp.id ASC""",
+        (beacon['id'], facility_id)
+    ).fetchall()
+    if not wifi_rows:
+        wifi_rows = db.execute(
+            """SELECT id, ssid, password, scope, credential_mode, bssid, country
+               FROM wifi_profiles WHERE facility_id=? AND active=1
+               ORDER BY id ASC""",
+            (facility_id,)
+        ).fetchall()
 
-    if not wifi:
+    if not wifi_rows:
         db.close()
         return jsonify({'success': False, 'message': 'WiFi 프로필이 등록되지 않았습니다.'}), 404
+
+    # backward-compat: 단일 `wifi` 필드는 첫 번째. 신규 `wifis` 배열은 묶음 전체.
+    wifi = {'ssid': wifi_rows[0]['ssid'], 'password': wifi_rows[0]['password']}
+    wifis = [
+        {
+            'id':              r['id'],
+            'ssid':            r['ssid'],
+            'password':        r['password'],
+            'scope':           r['scope'] or 'public',
+            'credential_mode': r['credential_mode'] or 'static',
+            'bssid':           r['bssid'],
+            'country':         r['country'] or 'KR',
+        }
+        for r in wifi_rows
+    ]
 
     # 접속 로그 기록 + 자동 스탬프 적립 + 환영 쿠폰 + 보상 쿠폰
     granted_stamp = None
@@ -140,6 +169,19 @@ def handshake():
             'ssid':     wifi['ssid'],
             'password': decrypt_secret(wifi['password']),  # AES-GCM 복호화
         },
+        # P15 — N:N 묶음 (mobile WiFi 클라이언트가 BSSID 검증·핸드오프에 사용).
+        'wifis': [
+            {
+                'id':              w['id'],
+                'ssid':            w['ssid'],
+                'password':        decrypt_secret(w['password']),
+                'scope':           w['scope'],
+                'credential_mode': w['credential_mode'],
+                'bssid':           w['bssid'],
+                'country':         w['country'],
+            }
+            for w in wifis
+        ],
         'granted_stamp': granted_stamp,
         'auto_stamp_skipped_reason': auto_stamp_skipped_reason,
         'granted_coupons': granted_coupons,
@@ -284,15 +326,35 @@ def register_wifi():
     """시설 WiFi 프로필 등록/교체 (시설 사장님 전용). SRS FR-WIFI-001.
 
     비밀번호는 AES-256-GCM으로 암호화해 저장한다.
+
+    P15 — 확장 필드 (모두 선택, default 적용):
+      - scope           'public' (기본) | 'private'
+      - unit_id         private 시 unit FK
+      - credential_mode 'static' (기본) | 'managed' | 'radius'
+      - bssid           AP MAC (BSSID 검증용)
+      - country         'KR' (기본)
+      - multi=true      여러 WiFi 다중 허용 (기존 active 유지). default false (legacy: 기존 비활성+신규).
     """
     account_id  = g.auth['owner_account_id']
     data        = request.get_json(silent=True) or {}
     facility_id = data.get('facility_id')
     ssid        = (data.get('ssid')     or '').strip()
     password    = data.get('password')  or ''
+    # P15 확장
+    scope           = (data.get('scope') or 'public').strip().lower()
+    unit_id         = data.get('unit_id')
+    credential_mode = (data.get('credential_mode') or 'static').strip().lower()
+    bssid           = (data.get('bssid') or '').strip() or None
+    country         = (data.get('country') or 'KR').strip().upper()
+    multi           = bool(data.get('multi'))
 
     if not facility_id or not ssid or not password:
         return jsonify({'success': False, 'message': 'facility_id, ssid, password는 필수입니다.'}), 400
+    if scope not in ('public', 'private'):
+        return jsonify({'success': False, 'message': "scope 는 'public' 또는 'private'."}), 400
+    if credential_mode not in ('static', 'managed', 'radius'):
+        return jsonify({'success': False,
+                        'message': "credential_mode 는 'static'|'managed'|'radius'."}), 400
 
     db = get_db()
     if not _ensure_facility_owned(db, facility_id, account_id):
@@ -300,15 +362,22 @@ def register_wifi():
         return jsonify({'success': False, 'message': '해당 시설에 권한이 없습니다.'}), 403
 
     enc = encrypt_secret(password)
-    db.execute('UPDATE wifi_profiles SET active=0 WHERE facility_id=?', (facility_id,))
-    db.execute(
-        """INSERT INTO wifi_profiles (facility_id, ssid, password, active)
-           VALUES (?,?,?,1)""",
-        (facility_id, ssid, enc),
+    if not multi:
+        # legacy: 기존 active 모두 비활성 → 단일 WiFi 모드
+        db.execute('UPDATE wifi_profiles SET active=0 WHERE facility_id=?', (facility_id,))
+    cur = db.execute(
+        """INSERT INTO wifi_profiles
+             (facility_id, ssid, password, scope, unit_id,
+              credential_mode, bssid, country, active, updated_at)
+           VALUES (?,?,?,?,?,?,?,?,1, datetime('now'))""",
+        (facility_id, ssid, enc, scope, unit_id, credential_mode, bssid, country),
     )
+    new_id = cur.lastrowid
     db.commit()
     db.close()
-    return jsonify({'success': True, 'message': 'WiFi 프로필이 등록되었습니다.'})
+    return jsonify({'success': True,
+                    'message': 'WiFi 프로필이 등록되었습니다.',
+                    'wifi_profile_id': new_id})
 
 
 @beacon_bp.route('/status', methods=['GET'])
