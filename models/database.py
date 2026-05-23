@@ -942,6 +942,12 @@ def init_db():
     # (idempotent — 이미 있으면 skip)
     _bootstrap_policies(db)
 
+    # ── FAQ 초기 시드 (C-2-3) ────────────────────────────────────────────
+    # 출시 직후 빈 FAQ 화면을 피하기 위해 사용자 5건 + 사장 5건 × ko/en = 20행.
+    # 슈퍼어드민이 admin-web /faq 에서 수정/추가/비활성화 가능.
+    # (idempotent — 같은 kind+lang+question 이 이미 있으면 skip)
+    _bootstrap_faqs(db)
+
     db.commit()
     db.close()
 
@@ -1046,6 +1052,89 @@ def _bootstrap_policies(db) -> None:
     if inserted:
         from models.log import logger as _lg
         _lg.info('[policies] Bootstrapped %d policy versions (v0.1 ko+en)', inserted)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# C-2-3 — FAQ 초기 시드.
+# 출시 직후 화면이 비어 보이지 않도록 사용자/사장 각 5건씩 ko/en 자동 등록.
+# 운영자는 admin-web 의 FAQ 관리 화면에서 자유 수정/추가/비활성화.
+# ──────────────────────────────────────────────────────────────────────────────
+_FAQ_SEEDS = [
+    # (kind, category, sort_order, ko_question, ko_answer, en_question, en_answer)
+    ('user', 'account', 10,
+     '회원가입은 어떻게 하나요?',
+     '앱 첫 화면에서 "회원가입"을 누르고 이메일·비밀번호·필수 약관 동의를 진행하면 됩니다. 만 14세 미만은 보호자 동의가 필요합니다.',
+     'How do I sign up?',
+     'Tap "Sign up" on the first screen, then enter your email, password, and accept the required terms. Users under 14 need a guardian\'s consent.'),
+    ('user', 'account', 20,
+     '비밀번호를 잊어버렸어요.',
+     '로그인 화면의 "비밀번호 찾기"에서 가입한 이메일을 입력하면 재설정 링크를 보내드립니다.',
+     'I forgot my password.',
+     'Tap "Forgot password" on the login screen and enter your registered email. We\'ll send you a reset link.'),
+    ('user', 'feature', 30,
+     '스탬프는 어떻게 적립되나요?',
+     '매장에 방문해 비콘이 감지되거나 매장에서 발급한 QR을 직원이 스캔하면 적립됩니다. 매장별 정책(1일 1회 등)이 다를 수 있습니다.',
+     'How do I earn stamps?',
+     'Stamps are credited when our beacon detects your visit or a staff member scans the store\'s QR code. Each store may have its own rules (e.g. once a day).'),
+    ('user', 'feature', 40,
+     '쿠폰은 어떻게 사용하나요?',
+     '"쿠폰" 메뉴에서 사용할 쿠폰을 선택해 QR을 표시한 뒤 매장 직원에게 보여주면 됩니다. 만료일이 지나면 사용할 수 없습니다.',
+     'How do I use a coupon?',
+     'Open the "Coupons" menu, select the coupon you want to use, and show the QR code to a staff member. Coupons cannot be used after expiry.'),
+    ('user', 'connectivity', 50,
+     '매장 WiFi 자동 연결이 안 됩니다.',
+     '위치/블루투스 권한이 켜져 있는지 확인해 주세요. iOS는 설치된 프로파일을 사용하므로 처음 1회 설치 동의가 필요합니다. 그래도 안 되면 매장 직원에게 문의해 주세요.',
+     'WiFi auto-connect doesn\'t work.',
+     'Please make sure Location and Bluetooth permissions are enabled. iOS requires a one-time profile installation. If it still doesn\'t work, please contact the store.'),
+
+    ('provider', 'onboarding', 10,
+     '매장 가입 승인은 얼마나 걸리나요?',
+     '사업자등록증 검증 후 보통 영업일 기준 1~2일 안에 승인 처리됩니다. 추가 자료가 필요한 경우 가입 이메일로 안내드립니다.',
+     'How long does store approval take?',
+     'After verifying your business registration, approval usually completes within 1–2 business days. We\'ll email you if additional documents are required.'),
+    ('provider', 'beacon', 20,
+     '비콘은 어떻게 등록하나요?',
+     'PathWave에서 발송한 비콘을 받으신 뒤, 운영자 페이지의 "비콘"에서 동봉된 비콘 ID를 입력하면 매장에 활성화됩니다.',
+     'How do I register beacons?',
+     'After receiving the beacons from PathWave, open "Beacons" in the operator console and enter the beacon ID printed on the unit to activate it for your store.'),
+    ('provider', 'wifi', 30,
+     'WiFi 비밀번호는 안전하게 저장되나요?',
+     '네. 모든 WiFi 비밀번호는 서버에 저장되기 전 AES-256-GCM으로 암호화되며, 운영자 본인 외에는 평문으로 노출되지 않습니다.',
+     'Is my WiFi password stored securely?',
+     'Yes. Every WiFi password is encrypted with AES-256-GCM before being stored, and is never shown in plain text to anyone except you.'),
+    ('provider', 'billing', 40,
+     '구독 결제는 언제 정산되나요?',
+     '매월 정해진 결제일에 자동 결제가 진행됩니다. 결제 실패 시 3일 유예 후 매장 노출이 제한됩니다. 영수증은 "결제" 메뉴에서 확인할 수 있습니다.',
+     'When is the subscription billed?',
+     'Subscriptions auto-renew on the same date each month. If a payment fails, your store will be hidden after a 3-day grace period. Receipts are available in the "Billing" menu.'),
+    ('provider', 'staff', 50,
+     '직원을 어떻게 초대하나요?',
+     '"직원" 메뉴에서 초대 코드를 발급해 직원에게 전달하세요. 직원은 코드로 가입하면 QR 스캔·채팅 응대 등 일부 기능을 사용할 수 있습니다.',
+     'How do I invite staff?',
+     'Open "Staff" and issue an invitation code, then send it to the staff member. Once they sign up using the code, they can scan QR codes and respond to chats.'),
+]
+
+
+def _bootstrap_faqs(db) -> None:
+    """초기 FAQ 자동 등록 (idempotent — 같은 kind+lang+question 이 이미 있으면 skip)."""
+    inserted = 0
+    for kind, category, sort_order, q_ko, a_ko, q_en, a_en in _FAQ_SEEDS:
+        for lang, q, a in (('ko', q_ko, a_ko), ('en', q_en, a_en)):
+            existing = db.execute(
+                "SELECT id FROM faqs WHERE kind=? AND lang=? AND question=?",
+                (kind, lang, q),
+            ).fetchone()
+            if existing:
+                continue
+            db.execute(
+                """INSERT INTO faqs (kind, category, question, answer, lang, sort_order, active)
+                   VALUES (?,?,?,?,?,?,1)""",
+                (kind, category, q, a, lang, sort_order),
+            )
+            inserted += 1
+    if inserted:
+        from models.log import logger as _lg
+        _lg.info('[faqs] Bootstrapped %d FAQ entries (user/provider × ko/en)', inserted)
 
 
 def _bootstrap_super_admin(db) -> None:
