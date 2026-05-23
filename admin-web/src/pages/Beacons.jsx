@@ -102,6 +102,7 @@ export default function Beacons() {
               <th>시리얼</th>
               <th>UUID</th>
               <th>상태</th>
+              <th>역할</th>
               <th>할당 매장</th>
               <th>배터리</th>
               <th>Major</th>
@@ -113,10 +114,10 @@ export default function Beacons() {
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={11} className="row-empty">로딩 중...</td></tr>
+              <tr><td colSpan={12} className="row-empty">로딩 중...</td></tr>
             )}
             {!loading && beacons.length === 0 && (
-              <tr><td colSpan={11} className="row-empty">
+              <tr><td colSpan={12} className="row-empty">
                 비콘이 없습니다. 우측 상단 "입고" 버튼으로 등록하세요.
               </td></tr>
             )}
@@ -128,6 +129,17 @@ export default function Beacons() {
                 <td>
                   <span className={`status-badge ${badgeClass(b.status)}`}>
                     {STATUS_LABEL[b.status] || b.status}
+                  </span>
+                </td>
+                <td>
+                  {/* P15 — 비콘 역할 (wifi 기본 / cashier 계산대 트리거). */}
+                  <span
+                    className="status-badge"
+                    style={b.role === 'cashier'
+                      ? { background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.35)' }
+                      : { background: 'rgba(59,130,246,0.15)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.35)' }}
+                  >
+                    {b.role === 'cashier' ? '계산대' : 'WiFi'}
                   </span>
                 </td>
                 <td>
