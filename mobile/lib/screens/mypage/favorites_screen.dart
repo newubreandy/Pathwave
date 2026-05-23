@@ -41,7 +41,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PwAppBar(title: const Text('즐겨찾기')),
-      body: RefreshIndicator(
+      body: SafeArea(child: RefreshIndicator(
         onRefresh: _reload,
         child: FutureBuilder<List<Map<String, dynamic>>>(
           future: _future,
@@ -77,7 +77,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             );
           },
         ),
-      ),
+      )),
     );
   }
 }

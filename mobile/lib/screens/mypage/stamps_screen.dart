@@ -33,7 +33,7 @@ class _StampsScreenState extends State<StampsScreen> {
       appBar: PwAppBar(
         title: Text(_t.t('stamp.title', defaultValue: '내 스탬프')),
       ),
-      body: RefreshIndicator(
+      body: SafeArea(child: RefreshIndicator(
         onRefresh: _reload,
         child: FutureBuilder<List<Map<String, dynamic>>>(
           future: _future,
@@ -65,7 +65,7 @@ class _StampsScreenState extends State<StampsScreen> {
             );
           },
         ),
-      ),
+      )),
     );
   }
 }

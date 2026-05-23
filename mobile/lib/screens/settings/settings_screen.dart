@@ -21,7 +21,7 @@ class SettingsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: PwAppBar(title: const Text('설정')),
-      body: ListView(
+      body: SafeArea(child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           _section(context, '계정', [
@@ -90,7 +90,7 @@ class SettingsScreen extends StatelessWidget {
           const PwFooter(),
           const SizedBox(height: 24),
         ],
-      ),
+      )),
     );
   }
 

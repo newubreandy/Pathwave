@@ -52,7 +52,7 @@ class _WifiConnectScreenState extends State<WifiConnectScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PwAppBar(title: const Text('WiFi 자동 연결')),
-      body: Padding(
+      body: SafeArea(child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -149,7 +149,7 @@ class _WifiConnectScreenState extends State<WifiConnectScreen> {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 }

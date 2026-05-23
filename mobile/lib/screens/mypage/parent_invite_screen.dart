@@ -48,12 +48,12 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PwAppBar(title: const Text('자녀 초대 코드 발급')),
-      body: Padding(
+      body: SafeArea(child: Padding(
         padding: const EdgeInsets.all(20),
         child: _result != null
           ? _SuccessView(result: _result!, onClose: () => Navigator.of(context).pop())
           : _buildForm(),
-      ),
+      )),
     );
   }
 

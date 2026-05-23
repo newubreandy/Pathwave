@@ -169,7 +169,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               },
             ),
       ),
-      body: Padding(
+      body: SafeArea(child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -212,7 +212,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ],
           ],
         ),
-      ),
+      )),
     );
   }
 

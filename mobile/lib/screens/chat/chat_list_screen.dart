@@ -29,7 +29,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PwAppBar(title: const Text('매장 채팅')),
-      body: RefreshIndicator(
+      body: SafeArea(child: RefreshIndicator(
         onRefresh: _reload,
         child: FutureBuilder<List<Map<String, dynamic>>>(
           future: _future,
@@ -59,7 +59,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
             );
           },
         ),
-      ),
+      )),
     );
   }
 }
