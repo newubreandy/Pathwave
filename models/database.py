@@ -947,29 +947,40 @@ def init_db():
 
 
 _POLICY_KIND_TITLES = {
-    'terms':        '서비스 이용약관',
-    'privacy':      '개인정보 수집·이용 동의',
-    'location':     '위치 정보 이용 동의',
-    'age14':        '만 14세 이상 동의',
-    'camera':       '카메라 접근 권한',
-    'storage':      '저장공간 접근 권한',
-    'push':         '푸시 알림 동의',
-    'marketing':    '마케팅 정보 수신 동의',
-    'third_party':  '제3자 정보 제공 동의',
+    # legacy 공용 — 신규 가입은 _user / _facility 분리본을 사용 (C-2-4a)
+    'terms':            '서비스 이용약관',
+    'privacy':          '개인정보 수집·이용 동의',
+    'location':         '위치 정보 이용 동의',
+    'age14':            '만 14세 이상 동의',
+    'camera':           '카메라 접근 권한',
+    'storage':          '저장공간 접근 권한',
+    'push':             '푸시 알림 동의',
+    'marketing':        '마케팅 정보 수신 동의',
+    'third_party':      '제3자 정보 제공 동의',
+    # C-2-4a — user / facility 별도 약관 (terms / privacy 만 분리, 나머지 7종은 공용)
+    'terms_user':       '서비스 이용약관 (사용자)',
+    'terms_facility':   '서비스 이용약관 (사장)',
+    'privacy_user':     '개인정보 수집·이용 동의 (사용자)',
+    'privacy_facility': '개인정보 수집·이용 동의 (사장)',
 }
 
 # P12 — 약관은 사용자 정책상 ko/en 두 언어만 유지.
 # 디바이스 언어 한국어 → ko, 그 외 모두 → en (자동 fallback).
 _POLICY_KIND_TITLES_EN = {
-    'terms':        'Terms of Service',
-    'privacy':      'Privacy Policy',
-    'location':     'Location Information Consent',
-    'age14':        'Age 14+ Consent',
-    'camera':       'Camera Permission',
-    'storage':      'Storage Permission',
-    'push':         'Push Notification Consent',
-    'marketing':    'Marketing Communication Consent',
-    'third_party':  'Third-Party Information Sharing',
+    'terms':            'Terms of Service',
+    'privacy':          'Privacy Policy',
+    'location':         'Location Information Consent',
+    'age14':            'Age 14+ Consent',
+    'camera':           'Camera Permission',
+    'storage':          'Storage Permission',
+    'push':             'Push Notification Consent',
+    'marketing':        'Marketing Communication Consent',
+    'third_party':      'Third-Party Information Sharing',
+    # C-2-4a — user / facility 별도 약관
+    'terms_user':       'Terms of Service (User)',
+    'terms_facility':   'Terms of Service (Provider)',
+    'privacy_user':     'Privacy Policy (User)',
+    'privacy_facility': 'Privacy Policy (Provider)',
 }
 
 
