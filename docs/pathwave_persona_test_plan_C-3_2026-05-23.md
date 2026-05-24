@@ -12,15 +12,29 @@
 
 | 항목 | 상태 | 비고 |
 |---|---|---|
-| 백엔드 회귀 sweep (15개 테스트) | ✅ | C-2-4e 머지 후 통과 |
+| 백엔드 회귀 sweep (27개 테스트) | ✅ | 2026-05-24 main 위에서 모두 통과 (기존 2건 non-blocker) |
 | admin-web build | ✅ | |
 | provider-web build | ✅ | |
 | mobile flutter analyze | ✅ | No issues found |
-| C-1b SafeArea / C-1c 접근성 | ✅ | mobile 대상 완료 |
-| C-1d provider/admin 키보드+WCAG | ⏳ | 페르소나 테스트 전 권장 |
+| C-1b SafeArea / C-1c 접근성 | ✅ | mobile 완료 |
+| C-1d provider/admin 키보드+WCAG | ✅ | B-2a 모달 a11y + B-2b 아이콘 aria-label + B-2c 색상대비 (#170~#172) |
+| C-2-3 FAQ 시드 | ✅ | B-1 — 20행 자동 시드 (#169) |
 | C-2-4 약관 user/facility 분리 | ✅ | |
-| C-2-1~3,5 (버전/알림/FAQ/UI 간소화) | ⏳ | 페르소나 테스트 중 발견 항목 함께 정리 |
-| 롤백 백업 (DB snapshot + git tag) | 🔲 | 테스트 시작 직전 생성 |
+| C-2-1, 2, 5 (버전강제/알림/UI 간소화) | ⏳ | 필요 시 R2 매뉴얼 검증으로 흡수 |
+| 롤백 백업 (DB snapshot + git tag) | 🔲 | R2 시작 직전 생성 |
+| **R1 자동화 페르소나 테스트** | ✅ | **83/83 PASS** — 자세한 결과는 `r1_persona_test_report_2026-05-24.md` |
+
+### R1 결과 요약 (2026-05-24 완료)
+
+| 페르소나 | 테스트 파일 | 통과 | PR |
+|---|---|---|---|
+| P6 슈퍼어드민 | `tests/test_persona_p6.py` | 25/25 | #173 |
+| P3 소규모 사장 | `tests/test_persona_p3.py` | 22/22 | #174 |
+| P4+P5 사장+직원 | `tests/test_persona_p4p5_staff.py` | 18/18 | #175 |
+| P2+P1 한국인+외국인 | `tests/test_persona_p2p1_user.py` | 18/18 | #176 |
+| Cross X3+X5 | `tests/test_persona_cross.py` | 12/12 | #177 |
+
+다음은 **R2** — 단계 3 (외부 서비스 신청 + 실 키 sandbox + 테스트계정).
 
 ---
 
