@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>계정 삭제 안내 | PathWave</title>
+  <style>
+    :root {
+      --bg: #ffffff; --text: #111; --muted: #555;
+      --accent: #2563EB; --border: #e5e7eb; --danger: #dc2626;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0b0b0f; --text: #f2f3f7; --muted: #b3b9cb; --border: #1e1e28; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+           font: 16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+    .container { max-width: 720px; margin: 0 auto; padding: 32px 20px 80px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 20px; margin: 32px 0 12px; }
+    .lang-toggle { float: right; }
+    .lang-toggle a { color: var(--muted); text-decoration: none; margin-left: 12px; }
+    .lang-toggle a.active { color: var(--accent); font-weight: 600; }
+    .lead { color: var(--muted); margin: 8px 0 24px; }
+    .card { border: 1px solid var(--border); border-radius: 10px;
+            padding: 20px; margin: 16px 0; }
+    .danger { color: var(--danger); }
+    code { background: rgba(127,127,127,.12); padding: 2px 6px; border-radius: 4px;
+           font: 14px/1.4 ui-monospace,Menlo,Consolas,monospace; }
+    a.btn { display: inline-block; padding: 12px 20px; border-radius: 8px;
+            background: var(--accent); color: #fff; text-decoration: none;
+            font-weight: 600; }
+    ol li, ul li { margin-bottom: 6px; }
+    footer { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border);
+             color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="lang-toggle">
+      <a class="active">한국어</a>
+      <a href="/legal/account-deletion-en.html">English</a>
+    </div>
+
+    <h1>PathWave 계정 삭제 안내</h1>
+    <p class="lead">
+      이 페이지는 Apple App Store 정책 5.1.1(v) 및 Google Play 정책에 따라
+      앱을 설치하지 않고도 계정을 삭제하고 데이터 처리를 요청하실 수 있도록 마련되었습니다.
+    </p>
+
+    <h2>1. 앱 안에서 직접 삭제 (권장)</h2>
+    <div class="card">
+      <ol>
+        <li>PathWave 앱 실행 → 우측 하단 <strong>설정</strong></li>
+        <li><strong>계정 관리</strong> → <strong>계정 삭제</strong> 선택</li>
+        <li>현재 비밀번호 재입력 → 확인</li>
+        <li>즉시 로그아웃되며 계정이 비활성화됩니다.</li>
+      </ol>
+      <p class="lead">소셜 가입(카카오/구글/애플)은 비밀번호 입력 단계가 생략됩니다.</p>
+    </div>
+
+    <h2>2. 이메일로 요청 (앱을 사용할 수 없는 경우)</h2>
+    <div class="card">
+      <p>아래 이메일로 가입 이메일·이름·요청 사유를 보내 주세요. 영업일 기준 <strong>3일 이내</strong>에 처리하고 결과를 회신해 드립니다.</p>
+      <p><a class="btn" href="mailto:privacy@pathwave.app?subject=%5B%EA%B3%84%EC%A0%95%20%EC%82%AD%EC%A0%9C%20%EC%9A%94%EC%B2%AD%5D">privacy@pathwave.app 으로 메일 보내기</a></p>
+      <p class="lead">본인 확인을 위해 가입 시 사용한 이메일에서 보내 주시면 절차가 빨라집니다.</p>
+    </div>
+
+    <h2>3. 삭제되는 데이터</h2>
+    <ul>
+      <li>이메일·이름·전화번호·프로필 사진</li>
+      <li>위치 사용 이력 / 비콘 감지 이력</li>
+      <li>푸시 알림 토큰 (즉시 알림 차단)</li>
+      <li>스탬프·쿠폰·즐겨찾기 등 본인 활동 데이터</li>
+      <li>1:1 매장 채팅 메시지 — 본인 측 발신은 30일 후 익명화 / 매장 측 보존 (감사 목적)</li>
+    </ul>
+
+    <h2>4. 보존되는 데이터 (법령 의무)</h2>
+    <ul>
+      <li><strong>결제·환불 내역</strong>: 전자상거래법 5년</li>
+      <li><strong>로그인 기록</strong>: 통신비밀보호법 3개월</li>
+      <li><strong>부정이용 신고 처리 기록</strong>: 정보통신망법 6개월</li>
+    </ul>
+
+    <h2>5. 처리 흐름 (요약)</h2>
+    <div class="card">
+      <ol>
+        <li>요청 접수 → <code>users.deleted_at</code> 즉시 기록 (소프트 삭제)</li>
+        <li>이메일 익명화 — 같은 주소로 재가입 가능</li>
+        <li>푸시 토큰 즉시 삭제 → 알림 중단</li>
+        <li>30일 grace 기간 (재로그인 시 복구 가능)</li>
+        <li>30일 경과 → 보존 의무 데이터 외 영구 삭제</li>
+      </ol>
+    </div>
+
+    <h2>6. 문의</h2>
+    <p>본 절차 또는 처리 결과에 이의가 있으신 경우 아래로 연락 주십시오.</p>
+    <ul>
+      <li>이메일: <a href="mailto:privacy@pathwave.app">privacy@pathwave.app</a></li>
+      <li>개인정보 보호책임자: PathWave 개인정보팀</li>
+    </ul>
+
+    <footer>
+      <p>
+        <strong>PathWave</strong> · 운영: 트리거소프트 · 본 페이지는 Apple App Store 5.1.1(v) /
+        Google Play / 개인정보보호법(2024 개정) 대응을 위해 제공됩니다.
+      </p>
+      <p>최종 업데이트: 2026-05-24</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Account Deletion | PathWave</title>
+  <style>
+    :root {
+      --bg: #ffffff; --text: #111; --muted: #555;
+      --accent: #2563EB; --border: #e5e7eb;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0b0b0f; --text: #f2f3f7; --muted: #b3b9cb; --border: #1e1e28; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+           font: 16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+    .container { max-width: 720px; margin: 0 auto; padding: 32px 20px 80px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 20px; margin: 32px 0 12px; }
+    .lang-toggle { float: right; }
+    .lang-toggle a { color: var(--muted); text-decoration: none; margin-left: 12px; }
+    .lang-toggle a.active { color: var(--accent); font-weight: 600; }
+    .lead { color: var(--muted); margin: 8px 0 24px; }
+    .card { border: 1px solid var(--border); border-radius: 10px;
+            padding: 20px; margin: 16px 0; }
+    a.btn { display: inline-block; padding: 12px 20px; border-radius: 8px;
+            background: var(--accent); color: #fff; text-decoration: none;
+            font-weight: 600; }
+    ol li, ul li { margin-bottom: 6px; }
+    code { background: rgba(127,127,127,.12); padding: 2px 6px; border-radius: 4px;
+           font: 14px/1.4 ui-monospace,Menlo,Consolas,monospace; }
+    footer { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border);
+             color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="lang-toggle">
+      <a href="/legal/account-deletion.html">한국어</a>
+      <a class="active">English</a>
+    </div>
+
+    <h1>Delete your PathWave Account</h1>
+    <p class="lead">
+      This page exists so you can delete your account and request data handling
+      without installing or signing in to the app, as required by Apple App Store
+      Guideline 5.1.1(v) and Google Play policies.
+    </p>
+
+    <h2>1. Delete from inside the app (recommended)</h2>
+    <div class="card">
+      <ol>
+        <li>Open the PathWave app and tap <strong>Settings</strong>.</li>
+        <li>Tap <strong>Account</strong> → <strong>Delete account</strong>.</li>
+        <li>Re-enter your current password and confirm.</li>
+        <li>You'll be signed out immediately and your account will be deactivated.</li>
+      </ol>
+      <p class="lead">For social sign-ins (Kakao / Google / Apple) the password step is skipped.</p>
+    </div>
+
+    <h2>2. Request by email (if you can't access the app)</h2>
+    <div class="card">
+      <p>Send an email below with your registered email, full name, and reason.
+         We process and reply within <strong>3 business days</strong>.</p>
+      <p><a class="btn" href="mailto:privacy@pathwave.app?subject=%5BAccount%20Deletion%20Request%5D">Email privacy@pathwave.app</a></p>
+      <p class="lead">Sending from the address used to register will speed up verification.</p>
+    </div>
+
+    <h2>3. Data that will be deleted</h2>
+    <ul>
+      <li>Email, name, phone, profile picture</li>
+      <li>Location and beacon detection history</li>
+      <li>Push notification tokens (immediate notification cutoff)</li>
+      <li>Your activity data: stamps, coupons, favourites, etc.</li>
+      <li>1:1 chat messages with stores — your messages anonymized after 30 days;
+          the store-side copy is retained for audit.</li>
+    </ul>
+
+    <h2>4. Data we must retain (legal obligation)</h2>
+    <ul>
+      <li><strong>Payment / refund records</strong>: 5 years (Korean e-commerce act)</li>
+      <li><strong>Login history</strong>: 3 months (Communications Privacy Act)</li>
+      <li><strong>Abuse / report handling</strong>: 6 months (ICT Network Act)</li>
+    </ul>
+
+    <h2>5. Process (summary)</h2>
+    <div class="card">
+      <ol>
+        <li>Request received → <code>users.deleted_at</code> is set immediately (soft delete).</li>
+        <li>Email is anonymized so you can re-register with the same address.</li>
+        <li>Push tokens are removed — notifications stop right away.</li>
+        <li>30-day grace period — sign-in restores the account.</li>
+        <li>After 30 days → permanent erasure except legally retained data.</li>
+      </ol>
+    </div>
+
+    <h2>6. Contact</h2>
+    <p>If you have questions or wish to appeal a decision:</p>
+    <ul>
+      <li>Email: <a href="mailto:privacy@pathwave.app">privacy@pathwave.app</a></li>
+      <li>Privacy Officer: PathWave Privacy Team</li>
+    </ul>
+
+    <footer>
+      <p>
+        <strong>PathWave</strong> · operated by Triggersoft Inc. · This page exists to
+        comply with Apple App Store 5.1.1(v), Google Play, and the Korean Personal
+        Information Protection Act (2024 revision).
+      </p>
+      <p>Last updated: 2026-05-24</p>
+    </footer>
+  </div>
+</body>
+</html>
