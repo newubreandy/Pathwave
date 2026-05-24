@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Radio, UserCheck, Battery, Megaphone, CreditCard,
   FileText, LogOut, Search, Languages, Ticket, MessageSquare, Users,
   HelpCircle, BookOpen, BarChart2, ChevronDown, ChevronRight, Building2,
-  Flag, Bell,
+  Flag, Bell, Smartphone,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { adminLogout, getCurrentAdmin } from '../services/auth.js';
@@ -70,6 +70,7 @@ const NAV_GROUPS = [
     defaultOpen: false,
     items: [
       { to: '/dashboard/company-info', icon: Building2, labelKey: 'nav.company_info', labelDefault: '법인 정보' },
+      { to: '/dashboard/app-versions', icon: Smartphone, labelKey: 'nav.app_versions', labelDefault: '앱 버전' },
       { to: '/dashboard/i18n',         icon: Languages, labelKey: 'nav.i18n' },
     ],
   },

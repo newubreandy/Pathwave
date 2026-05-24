@@ -21,6 +21,7 @@ import Notifications from './pages/Notifications.jsx';
 import Faq from './pages/Faq.jsx';
 import SupportStats from './pages/SupportStats.jsx';
 import CompanyInfo from './pages/CompanyInfo.jsx';
+import AppVersions from './pages/AppVersions.jsx';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -55,6 +56,7 @@ export default function App() {
           <Route path="/dashboard/faq" element={<Faq />} />
           <Route path="/dashboard/support/stats" element={<SupportStats />} />
           <Route path="/dashboard/company-info" element={<CompanyInfo />} />
+          <Route path="/dashboard/app-versions" element={<AppVersions />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

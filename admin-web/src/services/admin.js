@@ -78,6 +78,13 @@ export const adminApi = {
     apiClient.delete(`/api/admin/policies/${pid}`),
   notifyPolicy: (pid, subType = 'all') =>
     apiClient.post(`/api/admin/policies/${pid}/notify`, { sub_type: subType }),
+
+  // 앱 버전 강제 업데이트 (B/PR #180)
+  // platform = 'ios' | 'android'
+  // payload  = { min_supported, latest, store_url?, force_message? }
+  listAppVersions: () => apiClient.get('/api/admin/app-versions'),
+  upsertAppVersion: (platform, payload) =>
+    apiClient.put(`/api/admin/app-versions/${platform}`, payload),
 };
 
 export default adminApi;
