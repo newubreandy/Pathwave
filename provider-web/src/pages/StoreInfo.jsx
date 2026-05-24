@@ -359,7 +359,7 @@ const StoreInfo = () => {
           {isEditing && (
             <>
               {editData.images.length > 0 && (
-                <button className="img-delete-btn" onClick={() => removeImage(activeImageIndex)}><X size={16} /></button>
+                <button className="img-delete-btn" onClick={() => removeImage(activeImageIndex)} aria-label="이미지 삭제"><X size={16} aria-hidden="true" /></button>
               )}
               <div className="image-overlay" onClick={() => fileInputRef.current.click()}>
                 <Camera size={32} />

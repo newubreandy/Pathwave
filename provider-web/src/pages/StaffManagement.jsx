@@ -98,7 +98,7 @@ const InviteModal = ({ onClose, onInvite }) => {
       <div className="settings-modal staff-invite-modal" onClick={e => e.stopPropagation()}>
         <div className="settings-modal-header">
           <h3 className="settings-modal-title">{t('staff_mgmt.invite_btn')}</h3>
-          <button className="settings-modal-close" onClick={onClose}><X size={20} /></button>
+          <button className="settings-modal-close" onClick={onClose} aria-label="닫기"><X size={20} aria-hidden="true" /></button>
         </div>
 
         <div className="staff-invite-form">
@@ -194,7 +194,7 @@ const StaffActionModal = ({ member, onClose, onRoleChange, onDisable, onRemove, 
       <div className="settings-modal staff-action-modal" onClick={e => e.stopPropagation()}>
         <div className="settings-modal-header">
           <h3 className="settings-modal-title">{t('staff_mgmt.title')}</h3>
-          <button className="settings-modal-close" onClick={onClose}><X size={20} /></button>
+          <button className="settings-modal-close" onClick={onClose} aria-label="닫기"><X size={20} aria-hidden="true" /></button>
         </div>
 
         <div className="staff-action-info">
@@ -228,7 +228,7 @@ const StaffActionModal = ({ member, onClose, onRoleChange, onDisable, onRemove, 
           )}
 
           {isInvited && (
-            <button className="staff-action-btn" onClick={() => onResend(member.id)}>
+            <button className="staff-action-btn" onClick={() => onResend(member.id)} aria-label="초대 메일 재발송">
               <Mail size={16} />
               {isExpired
                 ? `${t('staff_mgmt.invite_resend')} (${t('staff_mgmt.status_expired')})`
@@ -274,7 +274,7 @@ const EditModal = ({ title, fields, onClose, onSave }) => {
       <div className="settings-modal" onClick={e => e.stopPropagation()}>
         <div className="settings-modal-header">
           <h3 className="settings-modal-title">{title}</h3>
-          <button className="settings-modal-close" onClick={onClose}><X size={20} /></button>
+          <button className="settings-modal-close" onClick={onClose} aria-label="닫기"><X size={20} aria-hidden="true" /></button>
         </div>
         <div className="settings-modal-body">
           {fields.map(f => (
@@ -500,7 +500,7 @@ const StaffManagement = () => {
     <div className="common-form-page">
       {/* 공통 헤더 */}
       <header className="common-form-header" style={{ marginBottom: 0 }}>
-        <button className="back-btn d-md-none" onClick={() => navigate('/dashboard')}>
+        <button className="back-btn d-md-none" aria-label="뒤로 가기" onClick={() => navigate('/dashboard')}>
           <ChevronLeft size={24} />
         </button>
         <h1>{activeTab === 'staff' ? t('staff_mgmt.title') : '회원정보'}</h1>
@@ -540,7 +540,7 @@ const StaffManagement = () => {
                 <span className="staff-count-label">{t('staff_mgmt.status_pending')}</span>
               </span>
             </div>
-            <button className="staff-invite-btn" onClick={() => setShowInvite(true)}>
+            <button className="staff-invite-btn" onClick={() => setShowInvite(true)} aria-label="직원 초대">
               <Plus size={18} />
               <span>{t('staff_mgmt.invite_btn')}</span>
             </button>
@@ -585,7 +585,7 @@ const StaffManagement = () => {
                         )}
                       </div>
                     </div>
-                    <button className="staff-card-action" onClick={(e) => { e.stopPropagation(); setSelectedMember(member); }}>
+                    <button className="staff-card-action" onClick={(e) => { e.stopPropagation(); setSelectedMember(member); }} aria-label="직원 작업 더 보기">
                       <MoreVertical size={18} />
                     </button>
                   </div>
