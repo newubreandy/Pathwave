@@ -186,9 +186,11 @@ class _FakeDb:
         return self._rows
 
 fake_db = _FakeDb([
-    _FakeRow({'user_id': 1, 'token': 'fcm-tok-aaaa', 'platform': 'fcm'}),
-    _FakeRow({'user_id': 1, 'token': 'apns-tok-bbbb', 'platform': 'apns'}),
-    _FakeRow({'user_id': 2, 'token': 'apns-tok-cccc', 'platform': 'apns'}),
+    # push_tokens 스키마: user_id, token, platform, language (None 허용)
+    # production push.py 의 SELECT 가 language 컬럼을 함께 가져오므로 stub 도 동일하게 제공.
+    _FakeRow({'user_id': 1, 'token': 'fcm-tok-aaaa',  'platform': 'fcm',  'language': 'ko'}),
+    _FakeRow({'user_id': 1, 'token': 'apns-tok-bbbb', 'platform': 'apns', 'language': 'ko'}),
+    _FakeRow({'user_id': 2, 'token': 'apns-tok-cccc', 'platform': 'apns', 'language': None}),
 ])
 
 # 양쪽 다 200 mock
