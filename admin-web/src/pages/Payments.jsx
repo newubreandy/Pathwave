@@ -130,7 +130,7 @@ function PaymentsTab() {
             onChange={(e) => setFilter((f) => ({ ...f, date_to: e.target.value }))}
           />
         </div>
-        <button className="btn btn-ghost" onClick={reload} disabled={loading}>
+        <button className="btn btn-ghost" onClick={reload} disabled={loading} aria-label="새로고침">
           <RefreshCw size={16} className={loading ? 'spin' : ''} />
         </button>
       </div>
@@ -278,7 +278,7 @@ function SubscriptionsTab() {
             ))}
           </select>
         </div>
-        <button className="btn btn-ghost" onClick={reload} disabled={loading}>
+        <button className="btn btn-ghost" onClick={reload} disabled={loading} aria-label="새로고침">
           <RefreshCw size={16} className={loading ? 'spin' : ''} />
         </button>
       </div>

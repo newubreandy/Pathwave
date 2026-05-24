@@ -51,11 +51,11 @@ export default function Beacons() {
             </p>
           </div>
           <div className="header-actions">
-            <button className="btn btn-ghost" onClick={reload} disabled={loading}>
+            <button className="btn btn-ghost" onClick={reload} disabled={loading} aria-label="새로고침">
               <RefreshCw size={16} className={loading ? 'spin' : ''} />
               <span>새로고침</span>
             </button>
-            <button className="btn btn-primary" onClick={() => setImportOpen(true)}>
+            <button className="btn btn-primary" onClick={() => setImportOpen(true)} aria-label="비콘 입고">
               <Plus size={16} />
               <span>입고</span>
             </button>

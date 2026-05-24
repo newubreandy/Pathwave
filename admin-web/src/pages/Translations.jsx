@@ -79,11 +79,11 @@ export default function Translations() {
             </p>
           </div>
           <div className="header-actions">
-            <button className="btn btn-ghost" onClick={reload} disabled={loading}>
+            <button className="btn btn-ghost" onClick={reload} disabled={loading} aria-label="새로고침">
               <RefreshCw size={16} className={loading ? 'spin' : ''} />
               <span>새로고침</span>
             </button>
-            <button className="btn btn-primary" onClick={() => setAddOpen(true)}>
+            <button className="btn btn-primary" onClick={() => setAddOpen(true)} aria-label="번역 추가">
               <Plus size={16} />
               <span>키 추가</span>
             </button>

@@ -157,7 +157,7 @@ const ServiceApplyFlow = ({ onBack, onComplete }) => {
   return (
     <div className="common-form-page">
       <header className="common-form-header" style={{ marginBottom: 0 }}>
-        <button className="back-btn d-md-none" onClick={onBack}>
+        <button className="back-btn d-md-none" aria-label="뒤로 가기" onClick={onBack}>
           <ChevronLeft size={24} />
         </button>
         <h1>서비스 신청</h1>
@@ -411,7 +411,7 @@ function CardChangeModal({ currentCard, onClose }) {
         <div className="settings-modal-header">
           <h2 className="settings-modal-title">카드 교체</h2>
           <button className="settings-modal-close" onClick={onClose} aria-label="닫기">
-            <X size={20} />
+            <X size={20} aria-hidden="true" />
           </button>
         </div>
 

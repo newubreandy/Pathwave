@@ -186,7 +186,7 @@ const StampForm = () => {
   return (
     <div className="common-form-page">
       <div className="common-form-header">
-        <button className="back-btn" onClick={() => navigate('/dashboard/stamps')}>
+        <button className="back-btn" aria-label="뒤로 가기" onClick={() => navigate('/dashboard/stamps')}>
           <ChevronLeft size={24} />
         </button>
         <h1>
@@ -264,13 +264,13 @@ const StampForm = () => {
               ) : (
                 <>
                   {!isViewMode && (
-                    <button className="counter-btn" onClick={() => setFormData(prev => ({...prev, paymentAmount: Math.max(0, prev.paymentAmount - 1000)}))}>
+                    <button className="counter-btn" onClick={() => setFormData(prev => ({...prev, paymentAmount: Math.max(0, prev.paymentAmount - 1000)}))} aria-label="결제 금액 1000원 감소">
                       <Minus size={16} />
                     </button>
                   )}
                   <span className="counter-value" style={{ minWidth: '80px' }}>{formData.paymentAmount.toLocaleString()}원</span>
                   {!isViewMode && (
-                    <button className="counter-btn" onClick={() => setFormData(prev => ({...prev, paymentAmount: prev.paymentAmount + 1000}))}>
+                    <button className="counter-btn" onClick={() => setFormData(prev => ({...prev, paymentAmount: prev.paymentAmount + 1000}))} aria-label="결제 금액 1000원 증가">
                       <Plus size={16} />
                     </button>
                   )}

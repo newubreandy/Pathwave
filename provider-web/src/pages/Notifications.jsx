@@ -294,7 +294,7 @@ const Notifications = () => {
     return (
       <div className="common-form-page">
         <header className="common-form-header">
-          <button className="back-btn" onClick={() => setView('list')}>
+          <button className="back-btn" aria-label="뒤로 가기" onClick={() => setView('list')}>
             <ChevronLeft size={24} />
           </button>
           <h1>

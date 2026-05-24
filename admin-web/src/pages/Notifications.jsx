@@ -113,7 +113,7 @@ export default function Notifications() {
               <Shield size={16} />
               <span style={{ marginLeft: 4 }}>금칙어 관리</span>
             </button>
-            <button className="btn btn-ghost" onClick={reload} disabled={loading}>
+            <button className="btn btn-ghost" onClick={reload} disabled={loading} aria-label="새로고침">
               <RefreshCw size={16} className={loading ? 'spin' : ''} />
             </button>
           </div>
@@ -374,7 +374,7 @@ function BlocklistModal({ onClose }) {
             <Shield size={18} style={{ verticalAlign: 'middle', marginRight: 6, color: 'var(--accent)' }} />
             금칙어 관리
           </h2>
-          <button className="btn btn-ghost" onClick={onClose}><X size={16} /></button>
+          <button className="btn btn-ghost" onClick={onClose} aria-label="닫기"><X size={16} aria-hidden="true" /></button>
         </div>
 
         {/* 추가 폼 */}

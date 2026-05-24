@@ -68,7 +68,7 @@ export default function CouponStats() {
             <p className="sub-title">{t('coupon.admin_stats_subtitle')}</p>
           </div>
           <div className="header-actions">
-            <button className="btn btn-ghost" onClick={reload} disabled={loading}>
+            <button className="btn btn-ghost" onClick={reload} disabled={loading} aria-label="새로고침">
               <RefreshCw size={16} className={loading ? 'spin' : ''} />
               <span>{t('coupon.admin_stats_refresh')}</span>
             </button>

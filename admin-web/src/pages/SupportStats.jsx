@@ -54,7 +54,7 @@ export default function SupportStats() {
             <p className="sub-title">문의 현황 · 평균 응답 시간 · 종류별 분포</p>
           </div>
           <div className="header-actions">
-            <button className="btn btn-ghost" onClick={reload} disabled={loading}>
+            <button className="btn btn-ghost" onClick={reload} disabled={loading} aria-label="새로고침">
               <RefreshCw size={16} className={loading ? 'spin' : ''} />
               <span>새로고침</span>
             </button>

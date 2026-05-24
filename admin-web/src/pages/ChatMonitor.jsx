@@ -39,7 +39,7 @@ export default function ChatMonitor() {
             <p className="sub-title">{t('chat.admin_monitor_subtitle')}</p>
           </div>
           <div className="header-actions">
-            <button className="btn btn-ghost" onClick={reload} disabled={loading}>
+            <button className="btn btn-ghost" onClick={reload} disabled={loading} aria-label="새로고침">
               <RefreshCw size={16} className={loading ? 'spin' : ''} />
               <span>{t('chat.admin_monitor_refresh')}</span>
             </button>
