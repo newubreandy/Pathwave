@@ -28,7 +28,7 @@
   --pw-gray-700: #1B1B25;
   --pw-gray-600: #25252F;
   --pw-gray-500: #3A3A46;
-  --pw-gray-400: #5A6072;   /* hint */
+  --pw-gray-400: #7C8090;   /* hint — C-1d/B-2c: WCAG AA 4.66:1 on bg-3 (was #5A6072 = 2.92:1) */
   --pw-gray-300: #8A91A3;   /* secondary text */
   --pw-gray-200: #B6BCC9;
   --pw-gray-100: #DBDFE7;
@@ -77,7 +77,7 @@
   --pw-text:           var(--pw-gray-50);     /* #F2F3F7 */
   --pw-text-secondary: #B3B9CB;               /* WCAG AA — 이전 #8A91A3 → 밝게 */
   --pw-text-muted:     #9CA3B5;               /* 중간 뮤트 텍스트 */
-  --pw-text-hint:      var(--pw-gray-400);    /* #5A6072 */
+  --pw-text-hint:      var(--pw-gray-400);    /* #7C8090 — WCAG AA */
   --pw-text-disabled:  var(--pw-gray-500);
   --pw-text-inverse:   var(--pw-gray-900);
 

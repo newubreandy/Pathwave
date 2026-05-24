@@ -23,7 +23,7 @@
   --text:           #F2F3F7;
   --text-secondary: #B3B9CB;   /* WCAG AA on --bg-3 */
   --text-muted:     #9CA3B5;   /* WCAG AA on --bg-2 */
-  --text-hint:      #5C6170;
+  --text-hint:      #7C8090;   /* C-1d/B-2c: WCAG AA — 4.67:1 on --bg-3 (was #5C6170 = 2.97:1) */
 
   /* ── 포인트 컬러 — 녹색만 ───────────────────────────────── */
   --accent:        #2563EB;
