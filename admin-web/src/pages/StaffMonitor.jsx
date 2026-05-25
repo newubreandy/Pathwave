@@ -1,17 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { RefreshCw, Users, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import apiClient from '../services/apiClient.js';
+import { adminApi } from '../services/admin.js';
 import './Beacons.css';
 
+// D 번들2 — /api/admin/staff/reports 백엔드 신설 후 실제 데이터 연동.
 async function fetchStaffReports() {
-  try {
-    const data = await apiClient.get('/api/admin/staff/reports');
-    return data.reports || data || [];
-  } catch (_) {
-    // 엔드포인트 미구현 — placeholder 모드
-    return null;
-  }
+  const data = await adminApi.adminStaffReports();
+  return data.reports || [];
 }
 
 export default function StaffMonitor() {

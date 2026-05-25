@@ -1,17 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { RefreshCw, MessageSquare, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import apiClient from '../services/apiClient.js';
+import { adminApi } from '../services/admin.js';
 import './Beacons.css';
 
+// D 번들2 — /api/admin/chat/rooms 백엔드 신설 후 실제 채팅방 목록 연동.
+// (이전엔 /api/chat/reports 가정 placeholder 였음)
 async function fetchReportedRooms() {
-  try {
-    const data = await apiClient.get('/api/chat/reports');
-    return data.rooms || data || [];
-  } catch (_) {
-    // 엔드포인트 미구현 — placeholder 모드
-    return null;
-  }
+  const data = await adminApi.adminChatRooms(100);
+  return data.rooms || [];
 }
 
 export default function ChatMonitor() {

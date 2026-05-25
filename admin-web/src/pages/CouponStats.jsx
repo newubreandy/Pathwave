@@ -1,22 +1,18 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { RefreshCw, Ticket, CheckCircle, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import apiClient from '../services/apiClient.js';
+import { adminApi } from '../services/admin.js';
 import './Beacons.css';
 
+// D 번들2 — /api/admin/coupons 백엔드 신설 후 실제 집계 사용.
 async function fetchCouponStats() {
-  try {
-    // 백엔드 /api/admin/coupons 가 생기면 여기서 집계
-    const data = await apiClient.get('/api/admin/coupons');
-    const coupons = data.coupons || data || [];
-    const issued  = coupons.length;
-    const used    = coupons.filter((c) => c.used_at || c.status === 'used').length;
-    const expired = coupons.filter((c) => c.status === 'expired').length;
-    return { issued, used, expired };
-  } catch (_) {
-    // API 미구현 시 placeholder 반환
-    return null;
-  }
+  const data = await adminApi.adminListCoupons();
+  // 백엔드가 이미 summary 를 계산해 줌 (issued/used/active/expired)
+  return data.summary || {
+    issued:  (data.coupons || []).length,
+    used:    0,
+    expired: 0,
+  };
 }
 
 export default function CouponStats() {
