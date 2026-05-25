@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Youth Protection Policy | PathWave</title>
+  <style>
+    :root { --bg:#fff; --text:#111; --muted:#555; --accent:#2563EB; --border:#e5e7eb; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#0b0b0f; --text:#f2f3f7; --muted:#b3b9cb; --border:#1e1e28; }
+    }
+    body { margin:0; background:var(--bg); color:var(--text);
+           font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+    .container { max-width:720px; margin:0 auto; padding:32px 20px 80px; }
+    h1 { font-size:28px; margin:0 0 8px; }
+    h2 { font-size:20px; margin:32px 0 12px; }
+    .lang-toggle { float:right; }
+    .lang-toggle a { color:var(--muted); text-decoration:none; margin-left:12px; }
+    .lang-toggle a.active { color:var(--accent); font-weight:600; }
+    .lead { color:var(--muted); }
+    .card { border:1px solid var(--border); border-radius:10px; padding:20px; margin:16px 0; }
+    table { width:100%; border-collapse:collapse; margin:8px 0; }
+    th, td { border:1px solid var(--border); padding:8px 12px; text-align:left; }
+    th { background:rgba(127,127,127,.08); }
+    footer { margin-top:40px; padding-top:24px; border-top:1px solid var(--border);
+             color:var(--muted); font-size:14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="lang-toggle">
+      <a href="/legal/youth-protection.html">한국어</a>
+      <a class="active">English</a>
+    </div>
+
+    <h1>PathWave Youth Protection Policy</h1>
+    <p class="lead">
+      This policy is provided under the Korean ICT Network Act §42-2 and the
+      Youth Protection Act to protect underage users — including children under
+      14 — using PathWave.
+    </p>
+
+    <h2>1. Age 14 Restriction</h2>
+    <div class="card">
+      <p>Birth year is required at sign-up. Users under 14 are blocked.</p>
+      <ul>
+        <li>Auto-rejected at sign-up with a "Guardian consent required" notice.</li>
+        <li>Guardian must consent via their own email before the child can register.</li>
+        <li>The age threshold may change if Korean law changes.</li>
+      </ul>
+    </div>
+
+    <h2>2. Guardian Consent Flow</h2>
+    <div class="card">
+      <ol>
+        <li>User under 14 attempts to sign up → enters guardian email.</li>
+        <li>We email the guardian a consent request (valid 24 hours).</li>
+        <li>Guardian clicks the link and consents → child's account is activated.</li>
+        <li>If guardian declines, sign-up is blocked.</li>
+      </ol>
+    </div>
+
+    <h2>3. Harmful Content Filtering</h2>
+    <ul>
+      <li>Alcohol / adult-only stores are tagged (<code>adult_only=1</code>).</li>
+      <li>Adult-only listings are auto-excluded for users under 14.</li>
+      <li>Chat messages with offensive language are flagged automatically. One report triggers immediate review.</li>
+    </ul>
+
+    <h2>4. Extra Protection of Personal Data</h2>
+    <ul>
+      <li>Data of users under 14 is collected only within the scope of guardian consent.</li>
+      <li>Marketing consent is auto-disabled for users under 14.</li>
+      <li>Location data is used only for BLE beacon detection and is never shared externally.</li>
+    </ul>
+
+    <h2>5. Youth Protection Officer</h2>
+    <div class="card">
+      <table>
+        <tr><th>Field</th><th>Value</th></tr>
+        <tr><td>Officer</td><td>PathWave Youth Protection</td></tr>
+        <tr><td>Email</td><td><a href="mailto:youth@pathwave.app">youth@pathwave.app</a></td></tr>
+        <tr><td>Hours</td><td>Weekdays 10:00–18:00 KST. Replies within 1 business day.</td></tr>
+      </table>
+    </div>
+
+    <h2>6. Reporting</h2>
+    <p>If you encounter harmful content or an inappropriate user/store:</p>
+    <ul>
+      <li>In-app: open the chat or store, tap ⋮ → "Report" → choose a reason.</li>
+      <li>Email: <a href="mailto:youth@pathwave.app">youth@pathwave.app</a></li>
+    </ul>
+
+    <h2>7. External Reporting (Korea)</h2>
+    <ul>
+      <li>Korea Communications Standards Commission Youth Center: ☎ 1377</li>
+      <li>National Police Cyber Bureau: ☎ 182</li>
+      <li>Korea Youth Counseling & Welfare Institute: ☎ 1388</li>
+    </ul>
+
+    <footer>
+      <p><strong>PathWave</strong> · operated by Triggersoft Inc.</p>
+      <p>Last updated: 2026-05-25</p>
+    </footer>
+  </div>
+</body>
+</html>

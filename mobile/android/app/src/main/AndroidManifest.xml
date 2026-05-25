@@ -20,7 +20,12 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- 카메라 / 미디어 -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!--
+        Android 13+ Photo Picker 사용 — image_picker 1.1+ 가 시스템 Photo Picker
+        를 기본 호출하므로 READ_MEDIA_IMAGES 광범위 권한 불필요.
+        (Photo Picker = 사용자가 선택한 사진만 일회성 접근, 권한 다이얼로그 X)
+        Google Play "Sensitive Permissions Declaration" form 면제 효과.
+    -->
 
     <application
         android:label="pathwave_app"

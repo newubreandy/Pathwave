@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>청소년 보호 정책 | PathWave</title>
+  <style>
+    :root { --bg:#fff; --text:#111; --muted:#555; --accent:#2563EB; --border:#e5e7eb; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#0b0b0f; --text:#f2f3f7; --muted:#b3b9cb; --border:#1e1e28; }
+    }
+    body { margin:0; background:var(--bg); color:var(--text);
+           font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+    .container { max-width:720px; margin:0 auto; padding:32px 20px 80px; }
+    h1 { font-size:28px; margin:0 0 8px; }
+    h2 { font-size:20px; margin:32px 0 12px; }
+    .lang-toggle { float:right; }
+    .lang-toggle a { color:var(--muted); text-decoration:none; margin-left:12px; }
+    .lang-toggle a.active { color:var(--accent); font-weight:600; }
+    .lead { color:var(--muted); }
+    .card { border:1px solid var(--border); border-radius:10px; padding:20px; margin:16px 0; }
+    table { width:100%; border-collapse:collapse; margin:8px 0; }
+    th, td { border:1px solid var(--border); padding:8px 12px; text-align:left; }
+    th { background:rgba(127,127,127,.08); }
+    footer { margin-top:40px; padding-top:24px; border-top:1px solid var(--border);
+             color:var(--muted); font-size:14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="lang-toggle">
+      <a class="active">한국어</a>
+      <a href="/legal/youth-protection-en.html">English</a>
+    </div>
+
+    <h1>PathWave 청소년 보호 정책</h1>
+    <p class="lead">
+      본 정책은 「정보통신망 이용촉진 및 정보보호 등에 관한 법률」 제42조의2
+      및 「청소년 보호법」 에 따라 PathWave 가 만 14세 미만 아동을 포함한
+      미성년 사용자를 보호하기 위해 운영하는 방침입니다.
+    </p>
+
+    <h2>1. 만 14세 미만 가입 제한</h2>
+    <div class="card">
+      <p>회원 가입 시 출생년도를 입력받아 만 14세 미만은 가입을 거부합니다.</p>
+      <ul>
+        <li>가입 단계에서 자동 거부 → "보호자 동의가 필요합니다" 안내</li>
+        <li>보호자가 본인 이메일로 동의해야만 가입 가능 (별도 보호자 초대 흐름)</li>
+        <li>법령 개정 시 본 기준은 변경될 수 있습니다.</li>
+      </ul>
+    </div>
+
+    <h2>2. 보호자 동의 절차</h2>
+    <div class="card">
+      <ol>
+        <li>만 14세 미만 사용자가 가입 시도 → 보호자 이메일 입력</li>
+        <li>보호자에게 동의 요청 메일 발송 (24시간 유효)</li>
+        <li>보호자가 링크 클릭 + 동의 → 자녀 가입 완료</li>
+        <li>보호자 거절 시 가입 차단</li>
+      </ol>
+    </div>
+
+    <h2>3. 청소년 유해 정보 차단</h2>
+    <ul>
+      <li>주류 / 성인 전용 매장은 별도 분류 (<code>adult_only=1</code>)</li>
+      <li>만 14세 미만 사용자에게는 성인 매장 목록 자동 제외</li>
+      <li>채팅 메시지에 유해 표현 자동 필터 (욕설/혐오) + 신고 1건 즉시 검토 큐 진입</li>
+    </ul>
+
+    <h2>4. 개인정보 추가 보호</h2>
+    <ul>
+      <li>만 14세 미만 사용자 정보는 보호자 동의 범위 내로 한정</li>
+      <li>마케팅 정보 수신 동의는 만 14세 미만 → 자동 비활성</li>
+      <li>위치 정보는 BLE 비콘 감지에만 사용, 외부 공유 X</li>
+    </ul>
+
+    <h2>5. 청소년 보호 책임자</h2>
+    <div class="card">
+      <table>
+        <tr><th>구분</th><th>내용</th></tr>
+        <tr><td>책임자</td><td>PathWave 청소년 보호 담당</td></tr>
+        <tr><td>이메일</td><td><a href="mailto:youth@pathwave.app">youth@pathwave.app</a></td></tr>
+        <tr><td>운영 시간</td><td>평일 10:00 ~ 18:00 (영업일 기준 24시간 내 회신)</td></tr>
+      </table>
+    </div>
+
+    <h2>6. 신고 및 문의</h2>
+    <p>청소년 유해 정보 / 부적절한 사용자 또는 매장 발견 시:</p>
+    <ul>
+      <li>앱 안: 채팅 / 매장 상세 우상단 ⋮ → "신고" → 사유 선택 후 제출</li>
+      <li>이메일: <a href="mailto:youth@pathwave.app">youth@pathwave.app</a></li>
+    </ul>
+
+    <h2>7. 외부 신고 채널</h2>
+    <ul>
+      <li>방송통신심의위원회 청소년보호센터 (☎ 1377)</li>
+      <li>경찰청 사이버수사국 (☎ 182)</li>
+      <li>한국청소년상담복지개발원 (☎ 1388)</li>
+    </ul>
+
+    <footer>
+      <p><strong>PathWave</strong> · 운영: 트리거소프트</p>
+      <p>최종 업데이트: 2026-05-25</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cookie Policy | PathWave</title>
+  <style>
+    :root { --bg:#fff; --text:#111; --muted:#555; --accent:#2563EB; --border:#e5e7eb; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#0b0b0f; --text:#f2f3f7; --muted:#b3b9cb; --border:#1e1e28; }
+    }
+    body { margin:0; background:var(--bg); color:var(--text);
+           font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+    .container { max-width:720px; margin:0 auto; padding:32px 20px 80px; }
+    h1 { font-size:28px; margin:0 0 8px; }
+    h2 { font-size:20px; margin:32px 0 12px; }
+    .lang-toggle { float:right; }
+    .lang-toggle a { color:var(--muted); text-decoration:none; margin-left:12px; }
+    .lang-toggle a.active { color:var(--accent); font-weight:600; }
+    .lead { color:var(--muted); }
+    table { width:100%; border-collapse:collapse; margin:8px 0; }
+    th, td { border:1px solid var(--border); padding:8px 12px; text-align:left;
+             vertical-align:top; }
+    th { background:rgba(127,127,127,.08); }
+    code { background:rgba(127,127,127,.12); padding:2px 6px; border-radius:4px; }
+    footer { margin-top:40px; padding-top:24px; border-top:1px solid var(--border);
+             color:var(--muted); font-size:14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="lang-toggle">
+      <a href="/legal/cookie-policy.html">한국어</a>
+      <a class="active">English</a>
+    </div>
+
+    <h1>PathWave Cookie Policy</h1>
+    <p class="lead">
+      This document describes the cookies, local storage, and similar tracking
+      technologies used by the PathWave web consoles (admin-web / provider-web).
+      Our mobile apps (iOS/Android) use OS-standard storage only and are not
+      covered by this cookie policy.
+    </p>
+
+    <h2>1. Scope</h2>
+    <ul>
+      <li>Super-admin console (admin-web)</li>
+      <li>Store owner console (provider-web)</li>
+      <li>Static policy pages (this site)</li>
+    </ul>
+
+    <h2>2. Tracking technologies used</h2>
+    <table>
+      <tr><th>Type</th><th>Name</th><th>Purpose</th><th>Retention</th></tr>
+      <tr>
+        <td>HttpOnly cookie</td>
+        <td><code>session_id</code></td>
+        <td>Login session (essential)</td>
+        <td>Until session ends</td>
+      </tr>
+      <tr>
+        <td>LocalStorage</td>
+        <td><code>access_token</code> / <code>refresh_token</code></td>
+        <td>JWT authentication (essential)</td>
+        <td>Until logout or expiry</td>
+      </tr>
+      <tr>
+        <td>LocalStorage</td>
+        <td><code>i18nextLng</code></td>
+        <td>Remember language (essential)</td>
+        <td>Until changed</td>
+      </tr>
+      <tr>
+        <td>LocalStorage</td>
+        <td><code>theme</code> / <code>ui-prefs</code></td>
+        <td>UI preferences (optional)</td>
+        <td>Until changed</td>
+      </tr>
+    </table>
+
+    <h2>3. Ads / analytics tracking</h2>
+    <p>PathWave <strong>does not use any ad networks or external analytics
+       trackers</strong> (no Google Analytics, no Facebook Pixel, no ad SDKs).</p>
+    <p>This is reflected in our iOS Privacy Manifest where
+       <code>NSPrivacyTracking</code> is <code>false</code>.</p>
+
+    <h2>4. Refusing cookies</h2>
+    <ul>
+      <li>Refusing essential cookies (session, JWT) makes login impossible.</li>
+      <li>Refusing optional cookies (UI prefs) just resets your preferences each visit.</li>
+    </ul>
+
+    <h2>5. Third-party cookies</h2>
+    <p>When you enter the Toss Payments flow, cookies issued by Toss domains are
+       governed by Toss Payments' own privacy policy.</p>
+
+    <h2>6. Notice of changes</h2>
+    <p>If this policy changes, you will see a notice when you next access the
+       admin or provider console, and we will announce changes 7 days in advance.</p>
+
+    <h2>7. Contact</h2>
+    <p>Email: <a href="mailto:privacy@pathwave.app">privacy@pathwave.app</a></p>
+
+    <footer>
+      <p><strong>PathWave</strong> · operated by Triggersoft Inc.</p>
+      <p>Last updated: 2026-05-25</p>
+    </footer>
+  </div>
+</body>
+</html>
