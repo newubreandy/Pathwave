@@ -788,6 +788,20 @@ def init_db():
             updated_at      TEXT    DEFAULT (datetime('now'))
         );
 
+        -- 매장 업종 카테고리 (DB 시드 + admin CRUD).
+        -- 국세청 100대 생활업종 기준 시드. 사장이 자유 입력 금지 (파편화 방지).
+        CREATE TABLE IF NOT EXISTS store_categories (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            name        TEXT    UNIQUE NOT NULL,
+            group_name  TEXT,                            -- '음식' | '소매' | '서비스/숙박' | ...
+            sort_order  INTEGER DEFAULT 0,
+            active      INTEGER DEFAULT 1,
+            created_at  TEXT    DEFAULT (datetime('now')),
+            updated_at  TEXT    DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_store_categories_active
+            ON store_categories(active, group_name, sort_order);
+
         -- 외부 AI API 사용량/비용 로그 (D-4-pre: 비용 모니터링).
         -- DeepL / Anthropic / Google Cloud Vision / 기타 외부 호출마다 기록.
         -- 월 합계로 임계점 ($100/월 = ₩151,020) 추적 → 슈퍼어드민 알림.
@@ -1023,6 +1037,11 @@ def init_db():
     # (idempotent — 같은 kind+lang+question 이 이미 있으면 skip)
     _bootstrap_faqs(db)
 
+    # ── 매장 업종 카테고리 초기 시드 ────────────────────────────────────
+    # 국세청 100대 생활업종 기준. 사장 가입 시 자유 입력 금지 (파편화 방지).
+    # 슈퍼어드민이 admin-web /categories 에서 추가/수정/비활성화 가능.
+    _bootstrap_categories(db)
+
     db.commit()
     db.close()
 
@@ -1210,6 +1229,76 @@ def _bootstrap_faqs(db) -> None:
     if inserted:
         from models.log import logger as _lg
         _lg.info('[faqs] Bootstrapped %d FAQ entries (user/provider × ko/en)', inserted)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 매장 업종 카테고리 초기 시드 — 국세청 100대 생활업종 기반.
+# (사장 가입 시 자유 입력 금지 → DB 파편화 방지. 슈퍼어드민이 admin-web 에서
+#  추가/수정/비활성화 가능.)
+# ──────────────────────────────────────────────────────────────────────────────
+_CATEGORY_SEEDS = [
+    ('음식', [
+        '한식전문점', '중식전문점', '일식전문점', '서양식전문점', '기타외국식전문점',
+        '분식점', '패스트푸드점', '치킨전문점', '제과점', '아이스크림가게',
+        '커피음료점', '호프/주점', '구내식당', '도시락전문점', '출장뷔페',
+    ]),
+    ('소매', [
+        '슈퍼마켓', '편의점', '식료품가게', '정육점', '과일채소가게',
+        '생선가게', '건어물가게', '반찬가게', '건강보조식품점', '옷가게',
+        '신발가게', '가방가게', '화장품가게', '안경점', '시계귀금속점',
+        '서점', '문구점', '철물점', '가구점', '가전제품가게',
+        '컴퓨터판매점', '핸드폰가게', '꽃집', '애완동물샵', '장난감가게',
+        '악기가게', '자전거가게', '스포츠용품점', '캠핑용품점', '주류전문점',
+    ]),
+    ('서비스/숙박', [
+        '미용실', '이발소', '피부관리업', '네일샵', '목욕탕/사우나',
+        '마사지샵', '세탁소', '사진관', '부동산중개업', '여행사',
+        '결혼상담소', '예식장', '장례식장', '인테리어/설비', '청소/방역업',
+        '이삿짐센터', '카센터', '세차장', '주유소/충전소', '렌터카',
+        '여관/모텔', '호텔/리조트', '펜션/민박', '게스트하우스',
+    ]),
+    ('오락/스포츠', [
+        '노래방', 'PC방', '당구장', '골프연습장', '스크린골프장',
+        '볼링장', '헬스클럽', '요가/필라테스', '수영장', '탁구장',
+        '키즈카페', '보드게임카페', '방탈출카페', '만화방', '영화관/공연장',
+    ]),
+    ('교육', [
+        '입시학원', '외국어학원', '예체능학원', '기술/직업학원', '자동차운전학원',
+        '교습소/공부방', '독서실', '스터디카페', '어린이집/유치원', '요리/제빵학원',
+    ]),
+    ('의료/보건', [
+        '종합병원', '내과/소아과', '치과', '한의원', '안과',
+        '이비인후과', '피부과/비뇨기과', '산부인과', '정형외과/신경외과', '정신건강의학과',
+        '기타의원', '약국', '동물병원', '산후조리원', '요양원/실버타운',
+    ]),
+    ('기타', [
+        '공유오피스', '변호사/법무사', '회계사/세무사', '건축사/설계사', '기타전문직',
+    ]),
+]
+
+
+def _bootstrap_categories(db) -> None:
+    """초기 카테고리 자동 등록 (idempotent — 같은 name 이 이미 있으면 skip)."""
+    inserted = 0
+    sort_base = 0
+    for group_name, names in _CATEGORY_SEEDS:
+        for name in names:
+            sort_base += 10
+            existing = db.execute(
+                "SELECT id FROM store_categories WHERE name=?", (name,)
+            ).fetchone()
+            if existing:
+                continue
+            db.execute(
+                """INSERT INTO store_categories (name, group_name, sort_order, active)
+                   VALUES (?, ?, ?, 1)""",
+                (name, group_name, sort_base),
+            )
+            inserted += 1
+    if inserted:
+        from models.log import logger as _lg
+        _lg.info('[categories] Bootstrapped %d store categories (국세청 100대 생활업종)',
+                 inserted)
 
 
 def _bootstrap_super_admin(db) -> None:

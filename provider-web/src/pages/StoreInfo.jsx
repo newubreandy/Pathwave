@@ -65,6 +65,18 @@ const StoreInfo = () => {
 
   const [categoriesDB, setCategoriesDB] = useState(CategoryService.getCategories());
 
+  // 백엔드 카테고리 fetch (D-polish: API 전환)
+  useEffect(() => {
+    let alive = true;
+    CategoryService.load()
+      .then(() => { if (alive) setCategoriesDB(CategoryService.getCategories()); })
+      .catch(() => {
+        // 폴백: 마지막 캐시 (또는 빈 배열) — 가입 흐름 깨지지 않게
+        if (alive) setCategoriesDB(CategoryService.getCategories());
+      });
+    return () => { alive = false; };
+  }, []);
+
   // ── 비콘 관리 state ──
   const [beacons, setBeacons] = useState([]);
   const [beaconSn, setBeaconSn] = useState('');

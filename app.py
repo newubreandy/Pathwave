@@ -19,6 +19,7 @@ from routes.report   import report_bp
 from routes.billing  import billing_bp
 from routes.search   import search_bp
 from routes.menu     import menu_bp
+from routes.categories import categories_bp
 from routes.admin    import admin_bp
 from routes.invitation import invitation_bp
 from routes.announcement import announcement_bp
@@ -174,6 +175,7 @@ app.register_blueprint(report_bp)
 app.register_blueprint(billing_bp)
 app.register_blueprint(search_bp)
 app.register_blueprint(menu_bp)
+app.register_blueprint(categories_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(invitation_bp)
 app.register_blueprint(announcement_bp)

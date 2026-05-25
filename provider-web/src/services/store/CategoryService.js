@@ -1,83 +1,80 @@
-// TODO: [백엔드 연동 및 DB 업데이트 필요]
-// 현재는 임시로 구성한 국세청 100대 생활업종 모의(Mock) 데이터입니다.
-// 추후 실제 백엔드 API 연동 시, 서버에서 관리하는 공식 업종 DB 목록으로 교체 및 업데이트해야 합니다.
-// (자유 입력에 의한 DB 파편화 방지를 위해 사용자의 직접 추가 기능은 제한되었습니다.)
-
-// 국세청 기준 100대 생활업종 기반 모의 데이터베이스
-const initialCategories = [
-  // 음식
-  '한식전문점', '중식전문점', '일식전문점', '서양식전문점', '기타외국식전문점', 
-  '분식점', '패스트푸드점', '치킨전문점', '제과점', '아이스크림가게', 
-  '커피음료점', '호프/주점', '구내식당', '도시락전문점', '출장뷔페',
-  
-  // 소매
-  '슈퍼마켓', '편의점', '식료품가게', '정육점', '과일채소가게', 
-  '생선가게', '건어물가게', '반찬가게', '건강보조식품점', '옷가게', 
-  '신발가게', '가방가게', '화장품가게', '안경점', '시계귀금속점', 
-  '서점', '문구점', '철물점', '가구점', '가전제품가게', 
-  '컴퓨터판매점', '핸드폰가게', '꽃집', '애완동물샵', '장난감가게', 
-  '악기가게', '자전거가게', '스포츠용품점', '캠핑용품점', '주류전문점',
-  
-  // 서비스/숙박
-  '미용실', '이발소', '피부관리업', '네일샵', '목욕탕/사우나', 
-  '마사지샵', '세탁소', '사진관', '부동산중개업', '여행사', 
-  '결혼상담소', '예식장', '장례식장', '인테리어/설비', '청소/방역업', 
-  '이삿짐센터', '카센터', '세차장', '주유소/충전소', '렌터카', 
-  '여관/모텔', '호텔/리조트', '펜션/민박', '게스트하우스',
-  
-  // 오락/스포츠
-  '노래방', 'PC방', '당구장', '골프연습장', '스크린골프장', 
-  '볼링장', '헬스클럽', '요가/필라테스', '수영장', '탁구장', 
-  '키즈카페', '보드게임카페', '방탈출카페', '만화방', '영화관/공연장',
-  
-  // 교육
-  '입시학원', '외국어학원', '예체능학원', '기술/직업학원', '자동차운전학원', 
-  '교습소/공부방', '독서실', '스터디카페', '어린이집/유치원', '요리/제빵학원',
-  
-  // 의료/보건
-  '종합병원', '내과/소아과', '치과', '한의원', '안과', 
-  '이비인후과', '피부과/비뇨기과', '산부인과', '정형외과/신경외과', '정신건강의학과', 
-  '기타의원', '약국', '동물병원', '산후조리원', '요양원/실버타운',
-  
-  // 기타 
-  '공유오피스', '변호사/법무사', '회계사/세무사', '건축사/설계사', '기타전문직'
-];
+/**
+ * CategoryService — 매장 업종 카테고리 (백엔드 API 연동).
+ *
+ * 백엔드: routes/categories.py
+ *   GET /api/categories — active 카테고리 + group 분류
+ *
+ * 사장 가입 시 자유 입력 금지 (백엔드가 제공하는 목록만 사용).
+ * 슈퍼어드민이 admin-web 에서 카테고리 추가/수정/비활성화.
+ *
+ * 캐싱
+ * ----
+ * 한 번 fetch 한 결과는 메모리에 유지. 새로고침 강제 시 refresh().
+ * 자유 입력 (addCategory) 은 더 이상 지원 안 함 — 신규 카테고리는 슈퍼어드민 요청.
+ */
+import apiClient from '../apiClient';
 
 class CategoryService {
   constructor() {
-    this.categories = [...initialCategories];
+    this._cache    = null;   // [{id, name, group, ...}]
+    this._loading  = null;   // 진행 중 Promise (중복 fetch 방지)
   }
 
   /**
-   * 전체 업종 리스트 반환
+   * 전체 카테고리 fetch (캐시). active 만.
+   * @returns {Promise<{categories: Array, groups: Object}>}
    */
-  getCategories() {
-    return this.categories;
-  }
-
-  /**
-   * 신규 업종 추가
-   * @param {string} category 추가할 업종명
-   */
-  addCategory(category) {
-    if (!category || typeof category !== 'string') return;
-    const trimmed = category.trim();
-    if (trimmed && !this.categories.includes(trimmed)) {
-      // 새로운 업종을 배열 맨 앞에 추가하여 바로 보이도록 함
-      this.categories.unshift(trimmed);
+  async load() {
+    if (this._cache) return this._cache;
+    if (!this._loading) {
+      this._loading = apiClient.get('/api/categories')
+        .then((data) => {
+          this._cache = {
+            categories: data.categories || [],
+            groups:     data.groups || {},
+          };
+          return this._cache;
+        })
+        .catch((err) => {
+          this._loading = null;
+          throw err;
+        });
     }
+    return this._loading;
   }
 
-  /**
-   * 업종 검색 (키워드 기반 필터링)
-   * @param {string} keyword 검색어
-   */
+  /** 강제 새로고침 (관리자가 추가 후 또는 명시적 리로드) */
+  async refresh() {
+    this._cache = null;
+    this._loading = null;
+    return this.load();
+  }
+
+  /** 전체 카테고리 이름 배열 (동기 — load() 이후 호출) */
+  getCategories() {
+    return (this._cache?.categories || []).map((c) => c.name);
+  }
+
+  /** 그룹별 분류 (예: {'음식': ['한식전문점', ...], ...}) */
+  getGroups() {
+    return this._cache?.groups || {};
+  }
+
+  /** 키워드 검색 (소문자 부분 일치) */
   searchCategories(keyword) {
-    if (!keyword) return this.categories;
-    const lowerKeyword = keyword.toLowerCase();
-    return this.categories.filter(cat => cat.toLowerCase().includes(lowerKeyword));
+    const all = this.getCategories();
+    if (!keyword) return all;
+    const k = keyword.toLowerCase();
+    return all.filter((c) => c.toLowerCase().includes(k));
+  }
+
+  /** ⚠️ 자유 입력 차단 — 신규 카테고리는 슈퍼어드민에 요청해야 함. */
+  addCategory(_category) {
+    console.warn(
+      '[CategoryService] 자유 입력 차단됨. 신규 카테고리는 슈퍼어드민에 요청해 주세요.'
+    );
   }
 }
 
-// 싱글톤 인스턴스 내보내기
+// 싱글톤
 export default new CategoryService();
