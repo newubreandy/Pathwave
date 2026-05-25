@@ -1,6 +1,15 @@
 import apiClient from './apiClient.js';
 
 export const adminApi = {
+  // 본인 (A-024 / A-023)
+  me: () => apiClient.get('/api/admin/me'),
+  changeMyPassword: (currentPassword, newPassword) =>
+    apiClient.post('/api/admin/change-password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  systemHealth: () => apiClient.get('/api/admin/system/health'),
+
   // 통계
   statsOverview: () => apiClient.get('/api/admin/stats/overview'),
   statsPayments: (params = {}) => {

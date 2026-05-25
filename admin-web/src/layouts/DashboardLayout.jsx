@@ -4,11 +4,12 @@ import {
   LayoutDashboard, Radio, UserCheck, Battery, Megaphone, CreditCard,
   FileText, LogOut, Search, Languages, Ticket, MessageSquare, Users,
   HelpCircle, BookOpen, BarChart2, ChevronDown, ChevronRight, Building2,
-  Flag, Bell, Smartphone,
+  Flag, Bell, Smartphone, KeyRound, Activity,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { adminLogout, getCurrentAdmin } from '../services/auth.js';
 import PwFooter from '../components/common/PwFooter.jsx';
+import ChangePasswordModal from '../components/ChangePasswordModal.jsx';
 import './DashboardLayout.css';
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -71,6 +72,7 @@ const NAV_GROUPS = [
     items: [
       { to: '/dashboard/company-info', icon: Building2, labelKey: 'nav.company_info', labelDefault: '법인 정보' },
       { to: '/dashboard/app-versions', icon: Smartphone, labelKey: 'nav.app_versions', labelDefault: '앱 버전' },
+      { to: '/dashboard/system-health', icon: Activity, labelKey: 'nav.system_health', labelDefault: '시스템 점검' },
       { to: '/dashboard/i18n',         icon: Languages, labelKey: 'nav.i18n' },
     ],
   },
@@ -99,6 +101,8 @@ export default function DashboardLayout() {
     NAV_GROUPS.forEach((g) => { init[g.id] = g.defaultOpen || g.id === activeGroup; });
     return init;
   });
+
+  const [pwModalOpen, setPwModalOpen] = useState(false);
 
   function toggleGroup(id) {
     setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -172,12 +176,25 @@ export default function DashboardLayout() {
               </div>
             </div>
           )}
-          <button className="logout-btn" onClick={handleLogout}>
-            <LogOut size={14} />
-            <span>{t('nav.logout')}</span>
-          </button>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button className="logout-btn" type="button"
+                    onClick={() => setPwModalOpen(true)}
+                    aria-label="비밀번호 변경"
+                    style={{ flex: '0 0 auto', padding: '8px 10px' }}>
+              <KeyRound size={14} aria-hidden="true" />
+            </button>
+            <button className="logout-btn" onClick={handleLogout}
+                    style={{ flex: 1 }}>
+              <LogOut size={14} aria-hidden="true" />
+              <span>{t('nav.logout')}</span>
+            </button>
+          </div>
         </div>
       </aside>
+      <ChangePasswordModal
+        open={pwModalOpen}
+        onClose={() => setPwModalOpen(false)}
+      />
 
       <main className="admin-main">
         <Outlet />
