@@ -68,6 +68,7 @@ const DashboardLayout = () => {
     { path: '/dashboard/chat', label: t('menu.chat', '채팅') },
     { path: '/dashboard/store', label: t('menu.store', '매장안내') },
     { path: '/dashboard/store-translations', label: t('menu.storeTranslations', '매장 다국어') },
+    { path: '/dashboard/menu', label: t('menu.menuManagement', '메뉴 관리') },
     { path: '/dashboard/wifi', label: t('menu.wifi', '와이파이') },
     { path: '/dashboard/stamps', label: t('menu.stamps', '스탬프') },
     { path: '/dashboard/coupons', label: t('menu.coupons', '쿠폰') },

@@ -344,11 +344,11 @@ ROWS = [
      '백엔드 /api/facilities/{fid}/translations[/auto] 활용 (D번들3-B)'),
 
     ('Provider', '매장', '매장 메뉴 OCR', '', '', '매장 메뉴 사진 OCR + 자동번역',
-     'P-026', '#190',
-     True, False, False, False, False, False, True, 50,
-     '백엔드 완료 — POST /menu/upload (이미지 b64) + GET /menu?lang= + items CRUD. 가격 KRW 강제. provider UI / mobile USER 화면은 4-b/c 에서.',
-     'routes/menu.py + models/menu_ocr_provider.py',
-     'C-4 USP. GCV provider (월 1000장 무료, 키 없으면 stub). 비용 자동 record_usage'),
+     'P-026', '#190,#191',
+     True, False, False, False, False, False, True, 100,
+     '백엔드 + provider UI 완료. 파일 picker → OCR → 인라인 표 (수정/추가/삭제 + 정렬) + replace 옵션. 가격 KRW 안내문.',
+     'MenuManagement.jsx + MenuService.js',
+     'C-4 USP. GCV provider (월 1000장 무료, 키 없으면 stub). mobile USER 화면 U-027 별도 (4-c)'),
 
     ('Admin', '운영', '회원 관리', '', '', '회원 관리 (사용자 조회)',
      'A-022', '#187',
