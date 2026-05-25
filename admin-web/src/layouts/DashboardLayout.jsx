@@ -4,12 +4,13 @@ import {
   LayoutDashboard, Radio, UserCheck, Battery, Megaphone, CreditCard,
   FileText, LogOut, Search, Languages, Ticket, MessageSquare, Users,
   HelpCircle, BookOpen, BarChart2, ChevronDown, ChevronRight, Building2,
-  Flag, Bell, Smartphone, KeyRound, Activity,
+  Flag, Bell, Smartphone, KeyRound, Activity, DollarSign,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { adminLogout, getCurrentAdmin } from '../services/auth.js';
 import PwFooter from '../components/common/PwFooter.jsx';
 import ChangePasswordModal from '../components/ChangePasswordModal.jsx';
+import CriticalAdminAlert from '../components/CriticalAdminAlert.jsx';
 import './DashboardLayout.css';
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -74,6 +75,7 @@ const NAV_GROUPS = [
       { to: '/dashboard/company-info', icon: Building2, labelKey: 'nav.company_info', labelDefault: '법인 정보' },
       { to: '/dashboard/app-versions', icon: Smartphone, labelKey: 'nav.app_versions', labelDefault: '앱 버전' },
       { to: '/dashboard/system-health', icon: Activity, labelKey: 'nav.system_health', labelDefault: '시스템 점검' },
+      { to: '/dashboard/cost-monitor',  icon: DollarSign, labelKey: 'nav.cost_monitor',  labelDefault: 'AI 비용 모니터' },
       { to: '/dashboard/i18n',         icon: Languages, labelKey: 'nav.i18n' },
     ],
   },
@@ -196,6 +198,7 @@ export default function DashboardLayout() {
         open={pwModalOpen}
         onClose={() => setPwModalOpen(false)}
       />
+      <CriticalAdminAlert />
 
       <main className="admin-main">
         <Outlet />

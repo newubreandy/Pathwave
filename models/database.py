@@ -746,6 +746,40 @@ def init_db():
             hosting         TEXT,           -- 호스팅 제공자
             updated_at      TEXT    DEFAULT (datetime('now'))
         );
+
+        -- 외부 AI API 사용량/비용 로그 (D-4-pre: 비용 모니터링).
+        -- DeepL / Anthropic / Google Cloud Vision / 기타 외부 호출마다 기록.
+        -- 월 합계로 임계점 ($100/월 = ₩151,020) 추적 → 슈퍼어드민 알림.
+        CREATE TABLE IF NOT EXISTS ai_usage_logs (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            provider      TEXT    NOT NULL,                -- 'deepl' | 'anthropic' | 'gcv' | 'sendgrid' | ...
+            operation     TEXT    NOT NULL,                -- 'translate' | 'ocr' | 'image-analyze' | 'email-send'
+            units         INTEGER DEFAULT 0,               -- chars (DeepL), tokens (Anthropic), pages (OCR), emails (SendGrid)
+            cost_usd      REAL    DEFAULT 0.0,             -- 추정 비용 (USD)
+            status        TEXT    DEFAULT 'ok',            -- 'ok' | 'error' | 'cached'
+            facility_id   INTEGER,                         -- 매장 컨텍스트 (있다면)
+            user_id       INTEGER,                         -- 사용자 컨텍스트 (있다면)
+            actor_role    TEXT,                            -- 'user'|'facility'|'super_admin'|'system'
+            created_at    TEXT    DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_ai_usage_logs_created
+            ON ai_usage_logs(created_at);
+        CREATE INDEX IF NOT EXISTS idx_ai_usage_logs_provider
+            ON ai_usage_logs(provider, created_at);
+
+        -- 슈퍼어드민 알림 snooze (D-4-pre).
+        -- (admin_id, alert_id) 별 snoozed_until 시각 기록.
+        -- 비용 임계점 50/80/100 외 향후 다른 critical 알림 (서버 다운 등) 재사용.
+        CREATE TABLE IF NOT EXISTS admin_alert_dismissals (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            admin_id      INTEGER NOT NULL,
+            alert_id      TEXT    NOT NULL,                -- 'cost-50' | 'cost-80' | 'cost-100' | ...
+            snoozed_until TEXT    NOT NULL,                -- ISO datetime
+            created_at    TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (admin_id) REFERENCES super_admin_accounts(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_admin_alert_dismissals_admin_alert
+            ON admin_alert_dismissals(admin_id, alert_id);
     """)
 
     # ── 마이그레이션: 기존 DB에 없는 컬럼은 ADD COLUMN ────────────────────────

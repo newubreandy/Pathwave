@@ -111,6 +111,18 @@ export const adminApi = {
   listAppVersions: () => apiClient.get('/api/admin/app-versions'),
   upsertAppVersion: (platform, payload) =>
     apiClient.put(`/api/admin/app-versions/${platform}`, payload),
+
+  // D-4-pre 비용 모니터링 + 슈퍼어드민 알림
+  costMonitor: (year, month) => {
+    const q = new URLSearchParams();
+    if (year)  q.set('year',  year);
+    if (month) q.set('month', month);
+    const s = q.toString();
+    return apiClient.get(`/api/admin/cost-monitor${s ? '?' + s : ''}`);
+  },
+  criticalAlerts: () => apiClient.get('/api/admin/critical-alerts'),
+  dismissAlert: (alertId, hours) =>
+    apiClient.post(`/api/admin/alerts/${alertId}/dismiss`, { hours }),
 };
 
 export default adminApi;
