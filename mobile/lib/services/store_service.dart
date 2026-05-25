@@ -41,6 +41,21 @@ class StoreService {
     return (data['images'] as List?)?.cast<Map<String, dynamic>>() ?? [];
   }
 
+  // ── 시설 메뉴 (D-4-c: C-4 USP — 외국어 자동번역 폴백) ─────────────────
+  //   lang 인자에 따라 백엔드가 fallback:
+  //     - 해당 lang 캐시 → cache
+  //     - ko 원본 → 자동 번역 (translated)
+  //     - 임계점 초과 시 → ko 원본만 (fallback_blocked)
+  //   가격은 항상 KRW (원). 외국 통화 표시 금지.
+  Future<Map<String, dynamic>> menu(int facilityId, {String lang = 'ko'}) async {
+    final data = await _api.get('/api/facilities/$facilityId/menu?lang=$lang');
+    return {
+      'items':    (data['items'] as List?)?.cast<Map<String, dynamic>>() ?? const [],
+      'source':   data['source'] ?? 'cache',
+      'language': data['language'] ?? lang,
+    };
+  }
+
   // ── 다국어 번역 ─────────────────────────────────────────────────────────
   Future<Map<String, dynamic>> translate(int facilityId, String lang) async {
     return _api.get('/api/facilities/$facilityId/translate?lang=$lang');
