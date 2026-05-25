@@ -37,6 +37,7 @@ const NAV_GROUPS = [
       { to: '/dashboard/battery',       icon: Battery,        labelKey: 'nav.battery'        },
       { to: '/dashboard/announcements', icon: Megaphone,      labelKey: 'nav.announcements'  },
       { to: '/dashboard/notifications', icon: Bell,           labelKey: 'nav.notifications', labelDefault: '알림 검토' },
+      { to: '/dashboard/users',         icon: Users,          labelKey: 'nav.users',         labelDefault: '회원 관리' },
       { to: '/dashboard/staff-monitor', icon: Users,          labelKey: 'nav.staff_monitor'  },
       { to: '/dashboard/chat-monitor',  icon: MessageSquare,  labelKey: 'nav.chat_monitor'   },
       { to: '/dashboard/abuse-reports', icon: Flag,           labelKey: 'nav.abuse_reports'  },

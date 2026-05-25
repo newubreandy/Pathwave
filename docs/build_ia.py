@@ -337,11 +337,11 @@ ROWS = [
      'C-4 핵심 USP. OCR 라이브러리 + provider UI + mobile USER 화면 모두 필요'),
 
     ('Admin', '운영', '회원 관리', '', '', '회원 관리 (사용자 조회)',
-     'A-022', '',
-     True, False, False, False, False, False, True, 0,
-     '가입 사용자 목록 / 검색 / 정지 / 강제 탈퇴 / 신고 이력',
-     '(미구현 — 신규 페이지 필요)',
-     '백엔드 /api/admin/users 라우트 + admin-web 페이지 모두 신규'),
+     'A-022', '#187',
+     True, False, False, False, False, False, True, 100,
+     '검색 + 필터(status/provider) + 페이지네이션 + 신고/채팅 카운트 + 강제 탈퇴 모달',
+     'Users.jsx',
+     'GET /api/admin/users + POST /users/{id}/force-delete 신규 (D번들3-A). Apple 5.1.1(v) 준수 soft-delete + 이메일 anonymize'),
 
     ('Admin', '시스템', '시스템 환경 점검', '', '', '시스템 환경 점검',
      'A-023', '#185',
