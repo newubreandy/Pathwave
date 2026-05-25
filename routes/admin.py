@@ -320,6 +320,126 @@ def admin_staff_reports():
         db.close()
 
 
+# D-4-pre — 비용 모니터링 + 슈퍼어드민 알림
+@admin_bp.route('/cost-monitor', methods=['GET'])
+@require_super_admin()
+def admin_cost_monitor():
+    """외부 AI API 월 비용 + 임계점 + 활성 알림.
+
+    ?year=YYYY · ?month=MM (기본 = 현재 월)
+    """
+    from models.ai_cost import (
+        month_total_usd, threshold_usd, krw_per_usd,
+        usd_to_krw, compute_alerts,
+    )
+    now = datetime.utcnow()
+    year  = request.args.get('year',  type=int) or now.year
+    month = request.args.get('month', type=int) or now.month
+    db = get_db()
+    try:
+        agg = month_total_usd(db, year, month)
+        th_usd = threshold_usd()
+        pct = round(agg['total_usd'] / th_usd * 100, 2) if th_usd > 0 else 0.0
+        alerts = compute_alerts(agg['total_usd'])
+        return jsonify({
+            'success':   True,
+            'year':      year,
+            'month':     month,
+            'threshold': {
+                'usd':         th_usd,
+                'krw':         usd_to_krw(th_usd),
+                'krw_per_usd': krw_per_usd(),
+            },
+            'monthly':   agg,
+            'percent':   pct,
+            'alerts':    alerts,
+            'translation_blocked': agg['total_usd'] >= th_usd,
+        })
+    finally:
+        db.close()
+
+
+@admin_bp.route('/critical-alerts', methods=['GET'])
+@require_super_admin()
+def admin_critical_alerts():
+    """현재 슈퍼어드민에게 보여줄 활성 알림 (snooze 안 된 것만).
+
+    admin-web 이 매 1분 polling. 활성 알림 = 임계점 도달 + 본인 snooze 만료.
+    """
+    from models.ai_cost import month_total_usd, compute_alerts
+    admin_id = g.auth['user_id']
+    now = datetime.utcnow()
+    db = get_db()
+    try:
+        agg = month_total_usd(db, now.year, now.month)
+        alerts = compute_alerts(agg['total_usd'])
+
+        # snooze 적용
+        snoozes = {
+            r['alert_id']: r['snoozed_until']
+            for r in db.execute(
+                """SELECT alert_id, snoozed_until FROM admin_alert_dismissals
+                    WHERE admin_id=? AND snoozed_until > ?""",
+                (admin_id, now.isoformat())
+            ).fetchall()
+        }
+        active = []
+        for a in alerts:
+            if a.get('kind') != 'popup':
+                continue  # 배지 only 알림은 critical 응답에 안 포함
+            if a['id'] in snoozes:
+                continue
+            active.append(a)
+        return jsonify({'success': True, 'alerts': active})
+    finally:
+        db.close()
+
+
+@admin_bp.route('/alerts/<alert_id>/dismiss', methods=['POST'])
+@require_super_admin()
+def admin_dismiss_alert(alert_id: str):
+    """알림 snooze (본인만). body: {hours: int}.
+
+    snooze_hours 는 compute_alerts 에서 정의 — 50%: N/A, 80%: 24h, 100%: 2h.
+    클라이언트가 명시한 hours 가 우선 적용.
+    """
+    if not alert_id or len(alert_id) > 64:
+        return jsonify({'success': False, 'message': '알림 ID 가 유효하지 않습니다.'}), 400
+    data = request.get_json(silent=True) or {}
+    try:
+        hours = int(data.get('hours') or 0)
+    except (TypeError, ValueError):
+        hours = 0
+    if hours <= 0 or hours > 168:  # 최대 7일
+        return jsonify({'success': False,
+                        'message': 'hours 는 1~168 정수.'}), 400
+
+    admin_id = g.auth['user_id']
+    until = (datetime.utcnow() + timedelta(hours=hours)).isoformat()
+    db = get_db()
+    try:
+        # 같은 admin_id + alert_id 가 이미 있으면 갱신
+        existing = db.execute(
+            "SELECT id FROM admin_alert_dismissals WHERE admin_id=? AND alert_id=?",
+            (admin_id, alert_id),
+        ).fetchone()
+        if existing:
+            db.execute(
+                "UPDATE admin_alert_dismissals SET snoozed_until=? WHERE id=?",
+                (until, existing['id']),
+            )
+        else:
+            db.execute(
+                """INSERT INTO admin_alert_dismissals (admin_id, alert_id, snoozed_until)
+                   VALUES (?,?,?)""",
+                (admin_id, alert_id, until),
+            )
+        db.commit()
+        return jsonify({'success': True, 'snoozed_until': until})
+    finally:
+        db.close()
+
+
 # A-022 — 회원(사용자) 관리
 @admin_bp.route('/users', methods=['GET'])
 @require_super_admin()

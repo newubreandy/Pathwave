@@ -314,6 +314,20 @@ ROWS = [
      True, False, False, False, False, False, True, 100,
      'i18n 키 관리 + DeepL 자동', 'Translations.jsx', ''),
 
+    # ─── D 번들4-pre — 외부 AI 비용 모니터링 (2026-05-25) ─────────
+    ('Admin', '시스템', 'AI 비용 모니터', '', '', 'AI 비용 모니터',
+     'A-025', '#189',
+     True, False, False, False, False, False, True, 100,
+     '월 누적 USD/KRW + 임계점 진행률 바 + provider/operation 분류 + 활성 알림',
+     'CostMonitor.jsx',
+     'GET /api/admin/cost-monitor. 임계점 $100 ($1=₩1510.20)'),
+    ('Admin', '시스템', 'AI 비용 모니터', '글로벌 알림', '', '글로벌 임계점 알림 모달',
+     'A-026', '#189',
+     False, False, True, False, False, False, True, 100,
+     '슈퍼어드민 전용 critical 모달. 80%/100% 도달 시 자동 표시. 닫기=snooze (80%=24h / 100%=2h). 1분 polling',
+     'CriticalAdminAlert.jsx',
+     'GET /api/admin/critical-alerts + POST /alerts/{id}/dismiss. 가이드 docs/translation_cost_runaway_plan.md'),
+
     # ─── 누락 — 구현 필요 항목 (2026-05-25 IA 정확도 감사 후 추가) ────
     ('USER', '매장', '매장 상세', '메뉴 자동 번역', '', '메뉴 자동 번역 보기',
      'U-027', '',
