@@ -73,6 +73,7 @@ const NAV_GROUPS = [
     defaultOpen: false,
     items: [
       { to: '/dashboard/company-info', icon: Building2, labelKey: 'nav.company_info', labelDefault: '법인 정보' },
+      { to: '/dashboard/categories',   icon: BookOpen,  labelKey: 'nav.categories',   labelDefault: '업종 카테고리' },
       { to: '/dashboard/app-versions', icon: Smartphone, labelKey: 'nav.app_versions', labelDefault: '앱 버전' },
       { to: '/dashboard/system-health', icon: Activity, labelKey: 'nav.system_health', labelDefault: '시스템 점검' },
       { to: '/dashboard/cost-monitor',  icon: DollarSign, labelKey: 'nav.cost_monitor',  labelDefault: 'AI 비용 모니터' },

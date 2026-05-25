@@ -123,6 +123,14 @@ export const adminApi = {
   criticalAlerts: () => apiClient.get('/api/admin/critical-alerts'),
   dismissAlert: (alertId, hours) =>
     apiClient.post(`/api/admin/alerts/${alertId}/dismiss`, { hours }),
+
+  // 매장 업종 카테고리 (polish 작업)
+  listCategories: () => apiClient.get('/api/admin/categories'),
+  createCategory: (payload) => apiClient.post('/api/admin/categories', payload),
+  updateCategory: (cid, payload) =>
+    apiClient.patch(`/api/admin/categories/${cid}`, payload),
+  deactivateCategory: (cid) => apiClient.delete(`/api/admin/categories/${cid}`),
+  hardDeleteCategory: (cid) => apiClient.delete(`/api/admin/categories/${cid}?hard=1`),
 };
 
 export default adminApi;

@@ -313,6 +313,12 @@ ROWS = [
     ('Admin', '시스템', '다국어', '', '', '다국어 관리', 'A-021', '',
      True, False, False, False, False, False, True, 100,
      'i18n 키 관리 + DeepL 자동', 'Translations.jsx', ''),
+    ('Admin', '시스템', '업종 카테고리', '', '', '업종 카테고리 관리',
+     'A-027', '#193',
+     True, False, False, False, False, False, True, 100,
+     '국세청 100대 생활업종 시드 + 검색/그룹/상태 필터 + 신규/수정/비활성/완전삭제. 사장 가입 시 자유 입력 차단 (DB 파편화 방지).',
+     'Categories.jsx',
+     'GET /api/categories(공개) + admin CRUD. provider CategoryService 도 백엔드 fetch 로 전환 (polish)'),
 
     # ─── D 번들4-pre — 외부 AI 비용 모니터링 (2026-05-25) ─────────
     ('Admin', '시스템', 'AI 비용 모니터', '', '', 'AI 비용 모니터',
