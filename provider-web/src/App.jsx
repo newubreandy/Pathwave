@@ -8,6 +8,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import StoreInfo from './pages/StoreInfo';
 import StoreTranslations from './pages/StoreTranslations';
+import MenuManagement from './pages/MenuManagement';
 import WifiSettings from './pages/WifiSettings';
 import Facilities from './pages/Facilities';
 import CustomerChat from './pages/CustomerChat';
@@ -90,6 +91,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/store" element={<StoreInfo />} />
           <Route path="/dashboard/store-translations" element={<StoreTranslations />} />
+          <Route path="/dashboard/menu" element={<MenuManagement />} />
           <Route path="/dashboard/report" element={<ReportManagement />} />
           <Route path="/dashboard/wifi" element={<WifiSettings />} />
           <Route path="/dashboard/service-request" element={<ServiceRequest />} />
