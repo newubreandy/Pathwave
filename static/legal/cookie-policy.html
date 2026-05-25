@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>쿠키 정책 | PathWave</title>
+  <style>
+    :root { --bg:#fff; --text:#111; --muted:#555; --accent:#2563EB; --border:#e5e7eb; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#0b0b0f; --text:#f2f3f7; --muted:#b3b9cb; --border:#1e1e28; }
+    }
+    body { margin:0; background:var(--bg); color:var(--text);
+           font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+    .container { max-width:720px; margin:0 auto; padding:32px 20px 80px; }
+    h1 { font-size:28px; margin:0 0 8px; }
+    h2 { font-size:20px; margin:32px 0 12px; }
+    .lang-toggle { float:right; }
+    .lang-toggle a { color:var(--muted); text-decoration:none; margin-left:12px; }
+    .lang-toggle a.active { color:var(--accent); font-weight:600; }
+    .lead { color:var(--muted); }
+    table { width:100%; border-collapse:collapse; margin:8px 0; }
+    th, td { border:1px solid var(--border); padding:8px 12px; text-align:left;
+             vertical-align:top; }
+    th { background:rgba(127,127,127,.08); }
+    code { background:rgba(127,127,127,.12); padding:2px 6px; border-radius:4px; }
+    footer { margin-top:40px; padding-top:24px; border-top:1px solid var(--border);
+             color:var(--muted); font-size:14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="lang-toggle">
+      <a class="active">한국어</a>
+      <a href="/legal/cookie-policy-en.html">English</a>
+    </div>
+
+    <h1>PathWave 쿠키 정책</h1>
+    <p class="lead">
+      본 정책은 PathWave 웹사이트(슈퍼어드민 / 사장 콘솔) 가 사용하는
+      쿠키·로컬 스토리지 등 추적 기술에 대한 안내입니다.
+      모바일 앱(iOS/Android) 은 OS 표준 스토리지 만 사용하며, 본 쿠키 정책 대상이 아닙니다.
+    </p>
+
+    <h2>1. 적용 범위</h2>
+    <ul>
+      <li>슈퍼어드민 콘솔 (admin-web)</li>
+      <li>매장 사장 콘솔 (provider-web)</li>
+      <li>본 페이지가 포함된 정책 문서 (static)</li>
+    </ul>
+
+    <h2>2. 사용하는 추적 기술</h2>
+    <table>
+      <tr><th>종류</th><th>이름</th><th>용도</th><th>보존 기간</th></tr>
+      <tr>
+        <td>HttpOnly 쿠키</td>
+        <td><code>session_id</code></td>
+        <td>로그인 세션 유지 (필수)</td>
+        <td>세션 종료 시</td>
+      </tr>
+      <tr>
+        <td>LocalStorage</td>
+        <td><code>access_token</code> / <code>refresh_token</code></td>
+        <td>JWT 인증 (필수)</td>
+        <td>로그아웃 또는 만료 시</td>
+      </tr>
+      <tr>
+        <td>LocalStorage</td>
+        <td><code>i18nextLng</code></td>
+        <td>언어 설정 기억 (필수)</td>
+        <td>변경 시까지</td>
+      </tr>
+      <tr>
+        <td>LocalStorage</td>
+        <td><code>theme</code> / <code>ui-prefs</code></td>
+        <td>UI 환경설정 (선택)</td>
+        <td>변경 시까지</td>
+      </tr>
+    </table>
+
+    <h2>3. 광고 / 분석 트래킹</h2>
+    <p>PathWave 는 <strong>광고 / 외부 분석 트래커 (Google Analytics / Facebook Pixel 등) 를 사용하지 않습니다.</strong></p>
+    <p>iOS 앱 Privacy Manifest 의 <code>NSPrivacyTracking=false</code> 도 동일 정책을 반영합니다.</p>
+
+    <h2>4. 쿠키 거부 시</h2>
+    <ul>
+      <li>필수 쿠키 (session, JWT) 거부 → 로그인 불가</li>
+      <li>선택 쿠키 (UI 환경) 거부 → 환경 설정이 기본값으로 매번 초기화</li>
+    </ul>
+
+    <h2>5. 제3자 쿠키</h2>
+    <p>외부 결제(토스페이먼츠) 흐름 진입 시 토스 도메인에서 발급하는 쿠키는 토스페이먼츠 정책을 따릅니다.</p>
+
+    <h2>6. 변경 통지</h2>
+    <p>본 정책이 변경되면 admin/provider 콘솔 진입 시 알림이 표시되며, 7일 전 사전 공지합니다.</p>
+
+    <h2>7. 문의</h2>
+    <p>이메일: <a href="mailto:privacy@pathwave.app">privacy@pathwave.app</a></p>
+
+    <footer>
+      <p><strong>PathWave</strong> · 운영: 트리거소프트</p>
+      <p>최종 업데이트: 2026-05-25</p>
+    </footer>
+  </div>
+</body>
+</html>
