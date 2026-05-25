@@ -482,6 +482,47 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_facility_translations_facility
             ON facility_translations(facility_id);
 
+        -- C-4 USP — 매장 메뉴 OCR + 자동 번역 (D-4-a).
+        -- facility_menu_uploads: 사장이 업로드한 원본 메뉴 이미지 + OCR 상태/raw 결과.
+        -- facility_menu_items:   OCR 또는 수동 등록 메뉴 항목 (lang 별 번역 캐시).
+        --   - price 는 항상 KRW 단위 ("9,000원" / "₩9,000"). 외국 통화 금지.
+        --   - 자동 번역 대상 = name / description 만. price 는 원본 유지.
+        CREATE TABLE IF NOT EXISTS facility_menu_uploads (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            facility_id INTEGER NOT NULL,
+            image_url   TEXT    NOT NULL,
+            ocr_status  TEXT    DEFAULT 'pending',    -- 'pending' | 'success' | 'failed'
+            ocr_provider TEXT,                        -- 'stub' | 'gcv' | 'claude' | 'clova'
+            ocr_result  TEXT,                         -- JSON: provider raw 결과
+            uploaded_by_actor_role TEXT,
+            uploaded_by_actor_id   INTEGER,
+            created_at  TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (facility_id) REFERENCES facilities(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_facility_menu_uploads_facility
+            ON facility_menu_uploads(facility_id);
+
+        CREATE TABLE IF NOT EXISTS facility_menu_items (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            facility_id     INTEGER NOT NULL,
+            language        TEXT    NOT NULL,         -- 'ko' (원본) | 'en' | 'ja' | ...
+            name            TEXT    NOT NULL,
+            price           TEXT,                     -- 항상 KRW (예: '9,000원')
+            description     TEXT,
+            sort_order      INTEGER DEFAULT 0,
+            source          TEXT    DEFAULT 'manual', -- 'ocr' | 'manual' | 'deepl' | 'translated'
+            upload_id       INTEGER,                  -- OCR origin (있다면)
+            base_item_id    INTEGER,                  -- 자동 번역 시 원본 item (lang!=ko) 추적
+            active          INTEGER DEFAULT 1,
+            created_at      TEXT    DEFAULT (datetime('now')),
+            updated_at      TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (facility_id)  REFERENCES facilities(id),
+            FOREIGN KEY (upload_id)    REFERENCES facility_menu_uploads(id),
+            FOREIGN KEY (base_item_id) REFERENCES facility_menu_items(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_facility_menu_items_facility_lang
+            ON facility_menu_items(facility_id, language, active);
+
         -- 매장 다중 이미지 (SRS FR-STORE-001)
         -- facilities.image_url은 대표 이미지의 URL을 미러링한다 (핸드셰이크 호환).
         CREATE TABLE IF NOT EXISTS facility_images (
