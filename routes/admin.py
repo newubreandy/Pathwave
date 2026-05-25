@@ -12,6 +12,7 @@
 - POST /api/admin/refresh    refresh 토큰 → access 새로 발급
 """
 from datetime import datetime, timedelta
+import os
 
 import bcrypt
 import jwt
@@ -90,6 +91,106 @@ def admin_me():
     if not row:
         return jsonify({'success': False, 'message': '계정을 찾을 수 없습니다.'}), 404
     return jsonify({'success': True, 'admin': _row_to_admin(row)})
+
+
+# A-024 — 운영자 본인 비밀번호 변경 (B/D 시리즈)
+@admin_bp.route('/change-password', methods=['POST'])
+@require_super_admin()
+@limiter.limit('5 per minute')
+def admin_change_password():
+    """슈퍼어드민 본인 비밀번호 변경.
+
+    body: {current_password, new_password}
+    - 현재 비번 재확인 → 신규 비번 bcrypt 해시 저장
+    - 부트스트랩 초기 비번 사용 중인 경우 운영 환경 진입 전 강제 변경 가능
+    """
+    from routes.auth import password_complexity_error
+    data = request.get_json(silent=True) or {}
+    cur  = data.get('current_password') or ''
+    new  = data.get('new_password') or ''
+    if not cur or not new:
+        return jsonify({'success': False,
+                        'message': '현재/신규 비밀번호 모두 입력해 주세요.'}), 400
+    if cur == new:
+        return jsonify({'success': False,
+                        'message': '새 비밀번호가 기존과 같습니다.'}), 400
+    pw_err = password_complexity_error(new)
+    if pw_err:
+        return jsonify({'success': False, 'message': pw_err}), 400
+
+    db = get_db()
+    row = db.execute(
+        "SELECT id, password FROM super_admin_accounts WHERE id=? AND active=1",
+        (g.auth['user_id'],)
+    ).fetchone()
+    if not row:
+        db.close()
+        return jsonify({'success': False, 'message': '계정을 찾을 수 없습니다.'}), 404
+    if not bcrypt.checkpw(cur.encode(), row['password'].encode()):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '현재 비밀번호가 일치하지 않습니다.'}), 401
+    hashed = bcrypt.hashpw(new.encode(), bcrypt.gensalt()).decode()
+    db.execute(
+        "UPDATE super_admin_accounts SET password=? WHERE id=?",
+        (hashed, row['id'])
+    )
+    db.commit()
+    db.close()
+    return jsonify({'success': True, 'message': '비밀번호가 변경되었습니다.'})
+
+
+# A-023 — 외부 서비스 환경 점검 (외부 키 미설정 경고)
+@admin_bp.route('/system/health', methods=['GET'])
+@require_super_admin()
+def admin_system_health():
+    """외부 서비스 (Firebase/DeepL/SendGrid/Toss 등) 키 설정 + 모드 진단.
+
+    각 항목: {key, configured: bool, mode: 'live'|'stub'|'missing', detail}
+    - configured: 환경변수에 키가 설정되어 있는가
+    - mode: live (실 키) / stub (개발 모드) / missing (미설정)
+    - 실제 ping 은 R2/R3 단계에서 추가
+    """
+    def _check(env_name, *, label, stub_default=False):
+        val = os.environ.get(env_name, '').strip()
+        if val and val not in ('dummy', 'placeholder', 'stub'):
+            return {'key': env_name, 'label': label,
+                    'configured': True, 'mode': 'live',
+                    'detail': f'설정됨 ({len(val)}자)'}
+        if stub_default:
+            return {'key': env_name, 'label': label,
+                    'configured': False, 'mode': 'stub',
+                    'detail': '개발 모드 (stub 동작)'}
+        return {'key': env_name, 'label': label,
+                'configured': False, 'mode': 'missing',
+                'detail': '미설정 — 운영 전 등록 필요'}
+
+    services = [
+        _check('FIREBASE_CREDENTIALS_PATH',
+               label='Firebase (FCM + 소셜)',  stub_default=True),
+        _check('DEEPL_API_KEY',
+               label='DeepL (번역)',           stub_default=True),
+        _check('ANTHROPIC_API_KEY',
+               label='Anthropic (요약/번역 백업)', stub_default=True),
+        _check('SENDGRID_API_KEY',
+               label='SendGrid (이메일)',      stub_default=True),
+        _check('TOSS_API_KEY',
+               label='토스페이먼츠 (결제)',     stub_default=True),
+        _check('SENTRY_DSN',
+               label='Sentry (에러 모니터링)',  stub_default=True),
+        _check('GOOGLE_MAPS_API_KEY',
+               label='Google Maps (매장 위치)', stub_default=True),
+        _check('BOOTSTRAP_SUPER_ADMIN_EMAIL',
+               label='부트스트랩 슈퍼어드민',    stub_default=False),
+    ]
+    summary = {
+        'live':    sum(1 for s in services if s['mode'] == 'live'),
+        'stub':    sum(1 for s in services if s['mode'] == 'stub'),
+        'missing': sum(1 for s in services if s['mode'] == 'missing'),
+    }
+    return jsonify({'success': True,
+                    'services': services,
+                    'summary':  summary})
 
 
 @admin_bp.route('/refresh', methods=['POST'])

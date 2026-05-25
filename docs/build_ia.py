@@ -343,18 +343,18 @@ ROWS = [
      '백엔드 /api/admin/users 라우트 + admin-web 페이지 모두 신규'),
 
     ('Admin', '시스템', '시스템 환경 점검', '', '', '시스템 환경 점검',
-     'A-023', '',
-     True, False, False, False, False, False, True, 10,
-     '외부 키 (Firebase/DeepL/SendGrid/Toss) 연결 상태 + ping',
-     '(미구현 — 백엔드 로그만 있음)',
-     '백엔드 /api/admin/system/health 라우트 + admin UI 모두 신규'),
+     'A-023', '#185',
+     True, False, False, False, False, False, True, 100,
+     '외부 키 (Firebase/DeepL/Anthropic/SendGrid/Toss/Sentry/Maps) 설정 상태 + 모드 (live/stub/missing) 카드 그리드',
+     'SystemHealth.jsx',
+     'GET /api/admin/system/health + admin 페이지 신규 (D번들1)'),
 
     ('Admin', '시스템', '운영자 비밀번호 변경', '', '', '운영자 비밀번호 변경',
-     'A-024', '',
-     False, False, True, False, False, False, True, 0,
-     '슈퍼어드민 본인 비밀번호 변경 (현재 비번 + 새 비번 + 확인)',
-     '(미구현 — 신규 모달/라우트)',
-     '백엔드 /api/admin/change-password + admin UI 모두 신규. 부트스트랩 비번 강제 변경 정책과 연계'),
+     'A-024', '#185',
+     False, False, True, False, False, False, True, 100,
+     '슈퍼어드민 본인 비밀번호 변경 (사이드바 키 아이콘 → 모달, 현재 비번 재확인)',
+     'ChangePasswordModal.jsx',
+     'POST /api/admin/change-password + 모달 신규 (D번들1). bcrypt + 비번 정책 검증 + rate limit'),
 ]
 
 
