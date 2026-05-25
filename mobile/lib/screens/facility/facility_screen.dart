@@ -20,6 +20,8 @@ class FacilityScreen extends StatefulWidget {
 class _FacilityScreenState extends State<FacilityScreen> {
   late Future<Map<String, dynamic>> _detail;
   late Future<List<Map<String, dynamic>>> _images;
+  late Future<Map<String, dynamic>> _menu;
+  String _menuLang = 'ko';
 
   bool _isFavorite = false;
   bool _favLoading = false;
@@ -33,14 +35,26 @@ class _FacilityScreenState extends State<FacilityScreen> {
     _loadFavoriteState();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 디바이스 lang 으로 메뉴 fetch 갱신 (ko 외에는 백엔드가 자동 번역 fallback)
+    final newLang = Localizations.localeOf(context).languageCode;
+    if (newLang != _menuLang) {
+      _menuLang = newLang;
+      _menu = StoreService().menu(_id, lang: _menuLang);
+    }
+  }
+
   void _reload() {
     _detail = StoreService().get(_id);
     _images = StoreService().images(_id);
+    _menu   = StoreService().menu(_id, lang: _menuLang);
   }
 
   Future<void> _refresh() async {
     setState(() { _reload(); });
-    await Future.wait([_detail, _images]);
+    await Future.wait([_detail, _images, _menu]);
   }
 
   Future<void> _loadFavoriteState() async {
@@ -109,6 +123,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 _buildAppBar(f),
                 SliverToBoxAdapter(child: _buildHeader(f)),
                 SliverToBoxAdapter(child: _buildImages()),
+                SliverToBoxAdapter(child: _buildMenu()),
                 SliverToBoxAdapter(child: _buildHours(f)),
                 SliverToBoxAdapter(child: _buildContact(f)),
                 SliverToBoxAdapter(child: _buildActions(f)),
@@ -238,6 +253,123 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 );
               },
             ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMenu() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _menu,
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(child: SizedBox(width: 24, height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2))),
+          );
+        }
+        if (snap.hasError) return const SizedBox.shrink();
+        final data = snap.data ?? const {};
+        final items = (data['items'] as List?)?.cast<Map<String, dynamic>>() ?? const [];
+        if (items.isEmpty) return const SizedBox.shrink();
+        final source = (data['source'] as String?) ?? 'cache';
+        final isTranslated = source == 'translated';
+        final isFallback = source == 'fallback_blocked';
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.menu_book_outlined,
+                    size: 18, color: AppTheme.textSecondary),
+                  const SizedBox(width: 6),
+                  Text('메뉴', style: Theme.of(context).textTheme.titleMedium),
+                  if (isTranslated) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text('자동 번역', style: TextStyle(
+                        fontSize: 10, color: AppTheme.primary,
+                        fontWeight: FontWeight.w600,
+                      )),
+                    ),
+                  ],
+                ],
+              ),
+              if (isFallback)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    '※ 자동 번역 일시 중단 — 원본 표시',
+                    style: TextStyle(fontSize: 11,
+                      color: AppTheme.textHint, fontStyle: FontStyle.italic),
+                  ),
+                ),
+              const SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppTheme.border),
+                ),
+                child: Column(
+                  children: [
+                    for (int i = 0; i < items.length; i++) ...[
+                      if (i > 0) const Divider(height: 1,
+                        color: AppTheme.border, indent: 12, endIndent: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    (items[i]['name'] ?? '').toString(),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600),
+                                  ),
+                                  if ((items[i]['description'] ?? '').toString().isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: Text(
+                                        items[i]['description'].toString(),
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppTheme.textSecondary),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            // 가격은 항상 KRW (백엔드 정규화) — 환산/단위 변경 X
+                            Text(
+                              (items[i]['price'] ?? '').toString(),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
         );
       },

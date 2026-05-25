@@ -330,11 +330,11 @@ ROWS = [
 
     # ─── 누락 — 구현 필요 항목 (2026-05-25 IA 정확도 감사 후 추가) ────
     ('USER', '매장', '매장 상세', '메뉴 자동 번역', '', '메뉴 자동 번역 보기',
-     'U-027', '',
-     False, False, False, False, True, True, False, 30,
-     '외국인 사용자가 매장 메뉴를 ja/en/zh 등 자동 번역으로 보기 (USP)',
-     'facility_screen.dart 내 섹션',
-     'C-4 USP. 백엔드 store /translations 라우트만 있음, OCR 미구현'),
+     'U-027', '#192',
+     False, False, False, False, True, True, False, 100,
+     '매장 상세 안 메뉴 섹션 — Localizations.localeOf 자동 lang + 백엔드 fallback (cache/translated/fallback_blocked) + 가격 KRW 보존 + 자동번역 배지',
+     'facility_screen.dart _buildMenu',
+     'C-4 USP. lang 변경 시 didChangeDependencies 로 재fetch. 가격은 환산/단위변경 없이 원본 그대로'),
 
     ('Provider', '매장', '매장 다국어', '', '', '매장 다국어 관리',
      'P-025', '#188',
