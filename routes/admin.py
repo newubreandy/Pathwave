@@ -193,6 +193,175 @@ def admin_system_health():
                     'summary':  summary})
 
 
+# A-015 — 쿠폰 통계 (admin)
+@admin_bp.route('/coupons', methods=['GET'])
+@require_super_admin()
+def admin_list_coupons():
+    """전체 쿠폰 목록 + 발급/사용/만료 집계.
+
+    ?status=all|active|used|expired (기본 all)
+    ?facility_id=N 으로 매장 한정 가능.
+    """
+    status = (request.args.get('status') or 'all').strip().lower()
+    facility_id = request.args.get('facility_id', type=int)
+    db = get_db()
+    try:
+        where, params = [], []
+        if facility_id:
+            where.append("c.facility_id=?"); params.append(facility_id)
+        where_sql = ('WHERE ' + ' AND '.join(where)) if where else ''
+        rows = db.execute(
+            f"""SELECT c.*, f.name AS facility_name,
+                       u.email AS user_email
+                FROM coupons c
+                LEFT JOIN facilities f ON c.facility_id = f.id
+                LEFT JOIN users      u ON c.user_id     = u.id
+                {where_sql}
+                ORDER BY c.id DESC""",
+            params,
+        ).fetchall()
+
+        def _status(r):
+            if r['used']:
+                return 'used'
+            if r['expires_at']:
+                try:
+                    if datetime.fromisoformat(r['expires_at']) < datetime.utcnow():
+                        return 'expired'
+                except ValueError:
+                    pass
+            return 'active'
+
+        coupons = []
+        for r in rows:
+            coupons.append({
+                'id':            r['id'],
+                'facility_id':   r['facility_id'],
+                'facility_name': r['facility_name'],
+                'user_id':       r['user_id'],
+                'user_email':    r['user_email'],
+                'title':         r['title'],
+                'benefit':       r['benefit'],
+                'expires_at':    r['expires_at'],
+                'used':          bool(r['used']),
+                'used_at':       r['used_at'],
+                'created_at':    r['created_at'],
+                'status':        _status(r),
+            })
+        if status != 'all':
+            if status not in ('active', 'used', 'expired'):
+                return jsonify({'success': False,
+                                'message': "status는 active/used/expired/all 중 하나."}), 400
+            coupons = [c for c in coupons if c['status'] == status]
+
+        summary = {
+            'issued':  len(coupons),
+            'used':    sum(1 for c in coupons if c['status'] == 'used'),
+            'active':  sum(1 for c in coupons if c['status'] == 'active'),
+            'expired': sum(1 for c in coupons if c['status'] == 'expired'),
+        }
+        return jsonify({'success': True,
+                        'count':   len(coupons),
+                        'coupons': coupons,
+                        'summary': summary})
+    finally:
+        db.close()
+
+
+# A-009 — 직원 모니터링 (admin)
+@admin_bp.route('/staff/reports', methods=['GET'])
+@require_super_admin()
+def admin_staff_reports():
+    """전체 staff_accounts + 매장 매핑 + 가입/활동 요약.
+
+    각 row: {id, email, role, name, phone, facility_id, facility_name,
+            invitation_status, created_at}
+    """
+    db = get_db()
+    try:
+        rows = db.execute(
+            """SELECT s.id, s.email, s.role, s.name, s.phone,
+                      s.facility_account_id, s.created_at,
+                      fa.email AS owner_email,
+                      f.id   AS facility_id,
+                      f.name AS facility_name,
+                      i.status AS invitation_status,
+                      i.accepted_at
+                 FROM staff_accounts s
+                 LEFT JOIN facility_accounts fa ON s.facility_account_id = fa.id
+                 LEFT JOIN facilities         f ON f.owner_id = s.facility_account_id
+                 LEFT JOIN staff_invitations  i ON s.invitation_id = i.id
+                 ORDER BY s.id DESC"""
+        ).fetchall()
+        reports = [{
+            'id':            r['id'],
+            'email':         r['email'],
+            'role':          r['role'],
+            'name':          r['name'],
+            'phone':         r['phone'],
+            'facility_id':   r['facility_id'],
+            'facility_name': r['facility_name'],
+            'owner_email':   r['owner_email'],
+            'invitation_status': r['invitation_status'],
+            'accepted_at':   r['accepted_at'],
+            'created_at':    r['created_at'],
+        } for r in rows]
+
+        summary = {
+            'total':     len(reports),
+            'by_role':   {role: sum(1 for x in reports if x['role'] == role)
+                          for role in ('owner', 'admin', 'staff')},
+        }
+        return jsonify({'success': True,
+                        'count':    len(reports),
+                        'reports':  reports,
+                        'summary':  summary})
+    finally:
+        db.close()
+
+
+# A-010 — 채팅 모니터링 (admin)
+@admin_bp.route('/chat/rooms', methods=['GET'])
+@require_super_admin()
+def admin_chat_rooms():
+    """전체 chat_rooms + 매장명/사용자 이메일 + 메시지 수 + 마지막 메시지 시각.
+
+    ?limit=N (기본 100, 최대 500)
+    """
+    limit = min(max(request.args.get('limit', type=int) or 100, 1), 500)
+    db = get_db()
+    try:
+        rows = db.execute(
+            """SELECT cr.id, cr.facility_id, cr.user_id, cr.last_message_at,
+                      cr.created_at,
+                      f.name  AS facility_name,
+                      u.email AS user_email,
+                      (SELECT COUNT(*) FROM chat_messages WHERE room_id=cr.id)
+                          AS message_count
+                 FROM chat_rooms cr
+                 LEFT JOIN facilities f ON cr.facility_id = f.id
+                 LEFT JOIN users      u ON cr.user_id     = u.id
+                 ORDER BY COALESCE(cr.last_message_at, cr.created_at) DESC
+                 LIMIT ?""",
+            (limit,)
+        ).fetchall()
+        rooms = [{
+            'id':              r['id'],
+            'facility_id':     r['facility_id'],
+            'facility_name':   r['facility_name'],
+            'user_id':         r['user_id'],
+            'user_email':      r['user_email'],
+            'message_count':   r['message_count'],
+            'last_message_at': r['last_message_at'],
+            'created_at':      r['created_at'],
+        } for r in rows]
+        return jsonify({'success': True,
+                        'count': len(rooms),
+                        'rooms': rooms})
+    finally:
+        db.close()
+
+
 @admin_bp.route('/refresh', methods=['POST'])
 def admin_refresh():
     """Super Admin refresh — 다른 sub_type 토큰은 거부."""

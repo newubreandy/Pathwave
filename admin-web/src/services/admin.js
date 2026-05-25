@@ -10,6 +10,15 @@ export const adminApi = {
     }),
   systemHealth: () => apiClient.get('/api/admin/system/health'),
 
+  // 모니터링 (A-009/A-010/A-015 — D 번들2)
+  adminListCoupons: (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return apiClient.get(`/api/admin/coupons${q ? '?' + q : ''}`);
+  },
+  adminStaffReports: () => apiClient.get('/api/admin/staff/reports'),
+  adminChatRooms: (limit = 100) =>
+    apiClient.get(`/api/admin/chat/rooms?limit=${limit}`),
+
   // 통계
   statsOverview: () => apiClient.get('/api/admin/stats/overview'),
   statsPayments: (params = {}) => {
