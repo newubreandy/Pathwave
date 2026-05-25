@@ -320,6 +320,119 @@ def admin_staff_reports():
         db.close()
 
 
+# A-022 — 회원(사용자) 관리
+@admin_bp.route('/users', methods=['GET'])
+@require_super_admin()
+def admin_list_users():
+    """사용자 목록. 검색/필터/페이지네이션.
+
+    ?q=email_prefix · ?status=active|deleted|all · ?provider=email|google|kakao|...
+    ?age_group=adult|minor · ?limit=50 (기본, 최대 500) · ?offset=0
+    """
+    q          = (request.args.get('q') or '').strip()
+    status     = (request.args.get('status') or 'active').strip().lower()
+    provider   = (request.args.get('provider') or '').strip().lower()
+    age_group  = (request.args.get('age_group') or '').strip().lower()
+    limit      = min(max(request.args.get('limit', type=int) or 50, 1), 500)
+    offset     = max(request.args.get('offset', type=int) or 0, 0)
+
+    if status not in ('active', 'deleted', 'all'):
+        return jsonify({'success': False,
+                        'message': "status는 active/deleted/all 중 하나."}), 400
+
+    db = get_db()
+    try:
+        where, params = [], []
+        if status == 'active':
+            where.append('u.deleted_at IS NULL')
+        elif status == 'deleted':
+            where.append('u.deleted_at IS NOT NULL')
+        if provider:
+            where.append('u.provider=?'); params.append(provider)
+        if age_group:
+            where.append('u.age_group=?'); params.append(age_group)
+        if q:
+            where.append('u.email LIKE ?'); params.append(f'%{q}%')
+        where_sql = ('WHERE ' + ' AND '.join(where)) if where else ''
+
+        total = db.execute(
+            f'SELECT COUNT(*) AS n FROM users u {where_sql}',
+            params,
+        ).fetchone()['n']
+
+        rows = db.execute(
+            f"""SELECT u.id, u.email, u.provider, u.language,
+                       u.birth_year, u.age_group,
+                       u.deleted_at, u.created_at,
+                       u.invited_via_code,
+                       (SELECT COUNT(*) FROM abuse_reports
+                          WHERE target_kind='user' AND target_id=u.id) AS reported_count,
+                       (SELECT COUNT(*) FROM chat_rooms
+                          WHERE user_id=u.id) AS chat_rooms_count
+                  FROM users u
+                  {where_sql}
+                  ORDER BY u.id DESC
+                  LIMIT ? OFFSET ?""",
+            [*params, limit, offset],
+        ).fetchall()
+        users = [{
+            'id':               r['id'],
+            'email':            r['email'],
+            'provider':         r['provider'],
+            'language':         r['language'],
+            'birth_year':       r['birth_year'],
+            'age_group':        r['age_group'],
+            'deleted_at':       r['deleted_at'],
+            'created_at':       r['created_at'],
+            'invited_via_code': r['invited_via_code'],
+            'reported_count':   r['reported_count'],
+            'chat_rooms_count': r['chat_rooms_count'],
+        } for r in rows]
+        return jsonify({'success': True,
+                        'total':  total,
+                        'limit':  limit,
+                        'offset': offset,
+                        'users':  users})
+    finally:
+        db.close()
+
+
+@admin_bp.route('/users/<int:uid>/force-delete', methods=['POST'])
+@require_super_admin()
+def admin_force_delete_user(uid: int):
+    """운영자 강제 탈퇴 (예: 신고 누적 / 부정 이용 확정).
+
+    DELETE /api/auth/me 와 동일한 soft-delete + 이메일 anonymize 적용.
+    body: {reason?: str} — 감사 로그용.
+    """
+    data = request.get_json(silent=True) or {}
+    reason = (data.get('reason') or '').strip() or 'admin force-delete'
+
+    db = get_db()
+    try:
+        row = db.execute(
+            'SELECT id, email, deleted_at FROM users WHERE id=?', (uid,)
+        ).fetchone()
+        if not row:
+            return jsonify({'success': False, 'message': '사용자를 찾을 수 없습니다.'}), 404
+        if row['deleted_at']:
+            return jsonify({'success': False, 'message': '이미 탈퇴된 사용자입니다.'}), 409
+        # soft delete + 이메일 익명화 (재가입 시 UNIQUE 충돌 방지)
+        anonymized = f'{uid}+deleted@deleted.local'
+        db.execute(
+            "UPDATE users SET deleted_at=datetime('now'), email=? WHERE id=?",
+            (anonymized, uid),
+        )
+        # 즉시 알림 차단
+        db.execute('DELETE FROM push_tokens WHERE user_id=?', (uid,))
+        db.commit()
+        return jsonify({'success': True,
+                        'message': '강제 탈퇴 처리되었습니다.',
+                        'reason':  reason})
+    finally:
+        db.close()
+
+
 # A-010 — 채팅 모니터링 (admin)
 @admin_bp.route('/chat/rooms', methods=['GET'])
 @require_super_admin()

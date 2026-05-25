@@ -23,6 +23,7 @@ import SupportStats from './pages/SupportStats.jsx';
 import CompanyInfo from './pages/CompanyInfo.jsx';
 import AppVersions from './pages/AppVersions.jsx';
 import SystemHealth from './pages/SystemHealth.jsx';
+import Users from './pages/Users.jsx';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/dashboard/company-info" element={<CompanyInfo />} />
           <Route path="/dashboard/app-versions" element={<AppVersions />} />
           <Route path="/dashboard/system-health" element={<SystemHealth />} />
+          <Route path="/dashboard/users" element={<Users />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

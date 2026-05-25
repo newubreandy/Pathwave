@@ -19,6 +19,14 @@ export const adminApi = {
   adminChatRooms: (limit = 100) =>
     apiClient.get(`/api/admin/chat/rooms?limit=${limit}`),
 
+  // A-022 회원(사용자) 관리 (D 번들3-A)
+  adminListUsers: (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return apiClient.get(`/api/admin/users${q ? '?' + q : ''}`);
+  },
+  adminForceDeleteUser: (uid, reason = '') =>
+    apiClient.post(`/api/admin/users/${uid}/force-delete`, { reason }),
+
   // 통계
   statsOverview: () => apiClient.get('/api/admin/stats/overview'),
   statsPayments: (params = {}) => {
