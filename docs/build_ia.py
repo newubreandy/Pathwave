@@ -323,11 +323,11 @@ ROWS = [
      'C-4 USP. 백엔드 store /translations 라우트만 있음, OCR 미구현'),
 
     ('Provider', '매장', '매장 다국어', '', '', '매장 다국어 관리',
-     'P-025', '',
-     True, False, False, False, False, False, True, 30,
-     '매장명/주소/설명을 외국어로 등록 또는 자동 번역 호출',
-     '(미구현 — Translations 페이지 신규 필요)',
-     '백엔드 /api/facilities/{fid}/translations[/auto] 이미 존재, provider UI 없음'),
+     'P-025', '#188',
+     True, False, False, False, False, False, True, 100,
+     '6개 언어 탭 (en/ja/zh/zh-TW/fr/th) + 수동 편집 + 자동 번역 (force 옵션) + 삭제',
+     'StoreTranslations.jsx',
+     '백엔드 /api/facilities/{fid}/translations[/auto] 활용 (D번들3-B)'),
 
     ('Provider', '매장', '매장 메뉴 OCR', '', '', '매장 메뉴 사진 OCR + 자동번역',
      'P-026', '',

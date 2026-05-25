@@ -66,6 +66,26 @@ const StoreService = {
   listBeacons(fid) {
     return apiClient.get(`/api/store/${fid}/beacons`);
   },
+
+  // ── P-025 매장 다국어 캐시 (D 번들3-B) ─────────────────────────────────
+  // 백엔드: GET/PUT/DELETE /api/facilities/<fid>/translations[/<lang>]
+  //         POST /api/facilities/<fid>/translations/auto
+  /** 매장의 캐시된 번역 전체 (lang 별 name/address/description) */
+  listTranslations(fid) {
+    return apiClient.get(`/api/facilities/${fid}/translations`);
+  },
+  /** 특정 lang 의 번역 upsert */
+  upsertTranslation(fid, lang, payload) {
+    return apiClient.put(`/api/facilities/${fid}/translations/${lang}`, payload);
+  },
+  /** 특정 lang 번역 삭제 (다음 조회 시 fallback / 자동 재생성) */
+  deleteTranslation(fid, lang) {
+    return apiClient.delete(`/api/facilities/${fid}/translations/${lang}`);
+  },
+  /** 자동 번역 트리거 (DeepL 등 외부 provider — stub 모드 가능) */
+  autoTranslate(fid, payload = {}) {
+    return apiClient.post(`/api/facilities/${fid}/translations/auto`, payload);
+  },
 };
 
 export default StoreService;
