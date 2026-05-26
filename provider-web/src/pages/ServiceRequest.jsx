@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, Minus, HelpCircle, X, Camera, Image as ImageIcon, Loader2, Edit3, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, Minus, HelpCircle, X, Camera, Image as ImageIcon, Edit3, Trash2 } from 'lucide-react';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
@@ -82,32 +82,9 @@ const makeEmptyWifi = (idSeed) => ({
 const isWifiItemFilled = (item) =>
   !!(item.location && item.ssid && item.password && item.startDate && item.endDate);
 
-// OCR 텍스트 패턴 추출 (실 OCR 도입 시 텍스트 인풋만 넘기면 됨)
-// TODO: 실제 OCR 라이브러리(Tesseract.js) 또는 백엔드 API 연동 후
-//       extractWifiInfoFromText(rawText) 호출하도록 교체
-const SSID_PATTERNS = [
-  /SSID[:\s]+([^\s\n\r]+)/i,
-  /Wi[-\s]?Fi\s*(?:ID|Name)[:\s]+([^\s\n\r]+)/i,
-  /Network\s*Name[:\s]+([^\s\n\r]+)/i,
-];
-const PW_PATTERNS = [
-  /(?:Password|PW|비밀번호|패스워드)[:\s]+([^\s\n\r]+)/i,
-  /Wi[-\s]?Fi\s*(?:Password|PW)[:\s]+([^\s\n\r]+)/i,
-];
-const extractWifiInfoFromText = (rawText) => {
-  if (!rawText) return { ssid: '', password: '' };
-  let ssid = '';
-  let password = '';
-  for (const re of SSID_PATTERNS) {
-    const m = rawText.match(re);
-    if (m && m[1]) { ssid = m[1]; break; }
-  }
-  for (const re of PW_PATTERNS) {
-    const m = rawText.match(re);
-    if (m && m[1]) { password = m[1]; break; }
-  }
-  return { ssid, password };
-};
+// P6 (2026-05-26): 미사용 OCR 패턴 추출 헬퍼 (SSID_PATTERNS / PW_PATTERNS /
+// extractWifiInfoFromText) 제거. 실 OCR 도입 시 (Phase 2+) Tesseract.js
+// 또는 백엔드 OCR API 응답을 그대로 사용.
 
 const ServiceRequest = () => {
   const location = useLocation();
@@ -151,10 +128,7 @@ const ServiceRequest = () => {
   const [nextConfirmOpen, setNextConfirmOpen] = useState(false); // 신청내역 진입 1차 확인
   const [showApplicationModal, setShowApplicationModal] = useState(false);
 
-  // 카드별 OCR 상태
-  const [ocrLoadingIdx, setOcrLoadingIdx] = useState(null);
-  const [ocrDoneIdx, setOcrDoneIdx] = useState(null);
-  const [ocrErrorIdx, setOcrErrorIdx] = useState(null);
+  // P6 (2026-05-26): mock OCR 제거 — 정직한 수동입력. SSID/PW 는 점주가 직접 입력.
 
   // 결제 단계 (mock)
   const [card] = useState({
@@ -251,8 +225,6 @@ const ServiceRequest = () => {
           : it
       )
     );
-    setOcrDoneIdx((cur) => (cur === idx ? null : cur));
-    setOcrErrorIdx((cur) => (cur === idx ? null : cur));
     setResetConfirmIdx(null);
   };
 
@@ -314,56 +286,20 @@ const ServiceRequest = () => {
     }, 0);
   };
 
-  // ── OCR / 사진 자동입력 ──
-  const runOcrForCard = async (idx, imageUrl) => {
-    console.log('[OCR mock] start', idx, imageUrl);
-    setOcrErrorIdx(null);
-    setOcrLoadingIdx(idx);
-    try {
-      // TODO: 실 OCR — Tesseract.js 또는 백엔드 API 호출 후
-      //       extractWifiInfoFromText(rawText) 로 SSID/PW 추출
-      await new Promise((r) => setTimeout(r, 1000));
-      // mock 결과 (실 OCR 도입 전까지)
-      const mockResult = {
-        ssid: 'kt5G_AUTO' + Math.floor(Math.random() * 9000 + 1000),
-        password: 'Ezddd1@' + Math.floor(Math.random() * 9000 + 1000),
-      };
-      console.log('[OCR mock] result', mockResult);
-      setWifiItems((prev) =>
-        prev.map((item, i) => {
-          if (i !== idx) return item;
-          const next = { ...item, ssid: mockResult.ssid, password: mockResult.password };
-          if (next.status === 'empty' || next.status === 'completed' || next.status === 'error') {
-            next.status = 'editing';
-          }
-          return next;
-        })
-      );
-      setOcrLoadingIdx(null);
-      setOcrDoneIdx(idx);
-      setTimeout(() => setOcrDoneIdx((cur) => (cur === idx ? null : cur)), 2500);
-    } catch (err) {
-      console.warn('[OCR mock] failed', err);
-      setOcrLoadingIdx(null);
-      setOcrErrorIdx(idx);
-      setTimeout(() => setOcrErrorIdx((cur) => (cur === idx ? null : cur)), 3500);
-    }
-  };
-
-  const handleImageChangeForCard = (idx) => async (e) => {
+  // ── 사진 선택 / 제거 ──
+  // P6 (2026-05-26): mock OCR 자동입력 제거. 사진은 참고용으로만 저장하고
+  // SSID / 비밀번호는 점주가 직접 입력. 실 OCR 도입 시 (Phase 2+) 별도 PR.
+  const handleImageChangeForCard = (idx) => (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
     setWifiItems((prev) => prev.map((it, i) => (i === idx ? { ...it, imageUrl: url } : it)));
     const inputEl = e.target;
     setTimeout(() => { if (inputEl) inputEl.value = ''; }, 0);
-    await runOcrForCard(idx, url);
   };
 
   const handleRemoveImage = (idx) => {
     setWifiItems((prev) => prev.map((it, i) => (i === idx ? { ...it, imageUrl: null } : it)));
-    setOcrDoneIdx((cur) => (cur === idx ? null : cur));
-    setOcrErrorIdx((cur) => (cur === idx ? null : cur));
   };
 
   // 다음 → 1차 확인 알럿 → 신청내역 팝업
@@ -516,7 +452,6 @@ const ServiceRequest = () => {
               <div className="sr-individual">
                 {wifiItems.map((item, idx) => {
                   const isOpen = expandedIndex === idx;
-                  const ocrLoading = ocrLoadingIdx === idx;
                   return (
                     <div key={item.id} className={`sr-acc-card ${isOpen ? 'open' : ''} sr-acc-status-${item.status}`}>
                       <div
@@ -613,41 +548,30 @@ const ServiceRequest = () => {
 
                           {/* 사진 액션 — 사진 영역 아래 (기존 화면과 동일) */}
                           <div className="wifi-photo-actions sr-acc-photo">
-                            <label className={`wifi-photo-action ${ocrLoading ? 'is-disabled' : ''}`}>
+                            <label className="wifi-photo-action">
                               <ImageIcon size={16} /> 앨범에서 선택
                               <input
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/gif"
                                 onChange={handleImageChangeForCard(idx)}
-                                disabled={ocrLoading}
                                 className="wifi-photo-action-input"
                               />
                             </label>
-                            <label className={`wifi-photo-action ${ocrLoading ? 'is-disabled' : ''}`}>
+                            <label className="wifi-photo-action">
                               <Camera size={16} /> 카메라 촬영
                               <input
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
                                 capture="environment"
                                 onChange={handleImageChangeForCard(idx)}
-                                disabled={ocrLoading}
                                 className="wifi-photo-action-input"
                               />
                             </label>
                           </div>
-                          {ocrLoading && (
+                          {/* P6: OCR 자동입력 제거 — SSID/PW 는 수동 입력 (사진은 참고용) */}
+                          {item.imageUrl && (
                             <div className="wifi-ocr-status sr-acc-ocr">
-                              <Loader2 size={14} className="wifi-ocr-spin" /> 사진에서 와이파이 정보 인식 중...
-                            </div>
-                          )}
-                          {ocrDoneIdx === idx && (
-                            <div className="wifi-ocr-status done sr-acc-ocr">
-                              ✓ 사진에서 ID / PW 자동 입력했습니다. 확인 후 수정해주세요.
-                            </div>
-                          )}
-                          {ocrErrorIdx === idx && (
-                            <div className="wifi-ocr-status error sr-acc-ocr">
-                              ⚠ 사진에서 정보를 인식하지 못했습니다. 직접 입력해주세요.
+                              ⓘ 사진은 참고용입니다. ID 와 비밀번호는 아래에 직접 입력해 주세요.
                             </div>
                           )}
 

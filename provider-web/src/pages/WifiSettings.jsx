@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Camera, Plus, X, ChevronLeft, ChevronRight, Search,
-  Image as ImageIcon, Loader2,
+  Image as ImageIcon,
   Wifi, Package, Truck, FileCheck2, PauseCircle, XCircle, ClipboardList,
   Clock,
 } from 'lucide-react';
@@ -200,8 +200,7 @@ const WifiSettings = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [saveConfirmMsg, setSaveConfirmMsg] = useState(null); // 저장 시 안내 (ID/PW + enabled)
   const [errorMsg, setErrorMsg] = useState(null);             // 검증 실패 모달
-  const [ocrLoading, setOcrLoading] = useState(false);
-  const [ocrDone, setOcrDone] = useState(false);
+  // P6: OCR mock 제거 — 정직한 수동 입력 (SSID/PW 직접 입력)
 
   const [formData, setFormData] = useState({
     name: '', ssid: '', password: '', image: null
@@ -327,34 +326,17 @@ const WifiSettings = () => {
     setView('list');
   };
 
-  // ── 사진 선택 + OCR (자동 ID/PW 추출) ──
-  // TODO: 실제 OCR 연동 (백엔드 API 또는 Tesseract.js). 현재는 1초 후 mock 결과 자동 입력
-  const runOcrMock = async (imageUrl) => {
-    console.log('[OCR mock] start', imageUrl);
-    setOcrLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    const mockResult = {
-      ssid: 'kt5G_AUTO' + Math.floor(Math.random() * 9000 + 1000),
-      password: 'Ezddd1@' + Math.floor(Math.random() * 9000 + 1000),
-    };
-    console.log('[OCR mock] result', mockResult);
-    // 함수형 업데이트로 stale state 방지
-    setFormData((prev) => ({ ...prev, ssid: mockResult.ssid, password: mockResult.password }));
-    setOcrLoading(false);
-    setOcrDone(true);
-    setTimeout(() => setOcrDone(false), 2500);
-  };
-
-  const handleImageChange = async (e) => {
+  // ── 사진 선택 ──
+  // P6 (2026-05-26): mock OCR 자동입력 제거. 사진은 참고용으로만 보관하고
+  // SSID / 비밀번호는 점주가 직접 입력. 실 OCR 도입 시 (Phase 2+) 별도 PR.
+  const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
-    // 같은 파일 재선택 가능하도록 reset (OCR 시작 전에 처리)
+    // 같은 파일 재선택 가능하도록 reset
     const inputEl = e.target;
     setTimeout(() => { if (inputEl) inputEl.value = ''; }, 0);
-    // 사진 선택 시 자동 OCR 실행
-    await runOcrMock(url);
   };
 
   const removeImage = () => {
@@ -998,24 +980,22 @@ const WifiSettings = () => {
             accept 을 명시적 이미지 MIME 로 좁혀 파일 선택 옵션 최소화 */}
         {canEdit && (
           <div className="wifi-photo-actions">
-            <label className={`wifi-photo-action ${ocrLoading ? 'is-disabled' : ''}`}>
+            <label className="wifi-photo-action">
               <ImageIcon size={14} /> 앨범에서 선택
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/gif"
                 onChange={handleImageChange}
-                disabled={ocrLoading}
                 className="wifi-photo-action-input"
               />
             </label>
-            <label className={`wifi-photo-action ${ocrLoading ? 'is-disabled' : ''}`}>
+            <label className="wifi-photo-action">
               <Camera size={14} /> 카메라 촬영
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
                 capture="environment"
                 onChange={handleImageChange}
-                disabled={ocrLoading}
                 className="wifi-photo-action-input"
               />
             </label>
@@ -1029,15 +1009,10 @@ const WifiSettings = () => {
           </div>
         )}
 
-        {/* OCR 인식 안내 */}
-        {ocrLoading && (
+        {/* P6: OCR 자동 입력 제거 — SSID/PW 는 수동 입력 (사진은 참고용으로만 보관) */}
+        {canEdit && previewUrl && (
           <div className="wifi-ocr-status">
-            <Loader2 size={14} className="wifi-ocr-spin" /> 사진에서 와이파이 정보 인식 중...
-          </div>
-        )}
-        {ocrDone && (
-          <div className="wifi-ocr-status done">
-            ✓ 사진에서 ID / PW 자동 입력했습니다. 확인 후 수정해주세요.
+            ⓘ 사진은 참고용입니다. SSID 와 비밀번호는 아래에 직접 입력해 주세요.
           </div>
         )}
 
