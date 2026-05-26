@@ -169,11 +169,17 @@ const StampForm = () => {
       t('stamp.modal_issue_desc', '발행된 스탬프는 기간내 종료 또는 수정할 수 없습니다.\n해당 내역으로 스탬프 혜택을 발행하시겠습니까?'),
       async () => {
         try {
+          // P22-d (2026-05-27): 적립 모드 (auto/staff) + 쿨다운 + 만료 백엔드 전달.
+          // - auto_stamp_enabled=true  → BLE 비콘 자동 적립
+          // - auto_stamp_enabled=false → 점주 수동 적립 (회원 QR 스캔 후 grant)
           await StampService.createStamp({
             title: formData.name,
             startDate: formData.accumStart,
             endDate: formData.accumEnd,
-            benefits: formData.benefits.map(b => ({ item: b.desc }))
+            benefits: formData.benefits.map(b => ({ item: b.desc })),
+            auto_stamp_enabled:         formData.autoStamp ? 1 : 0,
+            auto_stamp_cooldown_minutes: Number(formData.cooldownMinutes) || 0,
+            expires_days:               Number(formData.expiresDays) || 0,
           });
           showAlert(t('stamp.alert_save_success', '저장이 완료되었습니다.'), () => navigate('/dashboard/stamps'));
         } catch (error) {
@@ -314,7 +320,7 @@ const StampForm = () => {
               </span>
             </label>
           </div>
-          <div className="form-hint">{t('stamp.policy_auto_hint', '※ 활성화 시 고객이 비콘 범위에 입장하면 자동으로 스탬프가 적립됩니다.')}</div>
+          <div className="form-hint">{t('stamp.policy_auto_hint', '※ ON: 고객이 비콘 범위에 입장하면 자동으로 스탬프 적립.\n※ OFF: 점주가 회원 QR 을 스캔해서 수동 적립 (점주 모드).')}</div>
         </div>
       </div>
 
