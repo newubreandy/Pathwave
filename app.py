@@ -25,6 +25,7 @@ from routes.invitation import invitation_bp
 from routes.announcement import announcement_bp
 from routes.policy   import policy_bp
 from routes.favorite import favorite_bp
+from routes.checkin  import checkin_bp
 from routes.i18n     import i18n_bp
 from routes.social_kakao import social_kakao_bp
 from routes.social_naver import social_naver_bp
@@ -181,6 +182,7 @@ app.register_blueprint(invitation_bp)
 app.register_blueprint(announcement_bp)
 app.register_blueprint(policy_bp)
 app.register_blueprint(favorite_bp)
+app.register_blueprint(checkin_bp)
 app.register_blueprint(i18n_bp)
 app.register_blueprint(social_kakao_bp)
 app.register_blueprint(social_naver_bp)

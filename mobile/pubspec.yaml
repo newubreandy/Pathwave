@@ -55,6 +55,9 @@ dependencies:
     sdk: flutter
   intl: ^0.20.2
 
+  # ── QR (P22 회원 QR / 친구초대) ───────────────────
+  qr_flutter: ^4.1.0
+
   # ── 위치 정보 ────────────────────────────────────
   geolocator: ^13.0.2
   google_maps_flutter: ^2.12.1

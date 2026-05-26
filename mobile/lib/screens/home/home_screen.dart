@@ -281,6 +281,8 @@ class _MyPageTab extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           // context.push 사용 — 스택 보존으로 시스템 백 제스처 + AppBar back arrow 동작 보장 (iOS HIG / Material 3).
+          // P22-a (2026-05-26): 회원 QR — 점주 스캔으로 스탬프/쿠폰 자동 처리
+          _MenuTile(icon: Icons.qr_code_2,                    title: '내 회원 QR', onTap: () => context.push('/mypage/member-qr')),
           _MenuTile(icon: Icons.local_activity_outlined, title: '내 스탬프', onTap: () => context.push('/mypage/stamps')),
           _MenuTile(icon: Icons.confirmation_number_outlined, title: '내 쿠폰', onTap: () => context.push('/mypage/coupons')),
           _MenuTile(icon: Icons.favorite_outline, title: '즐겨찾기', onTap: () => context.push('/mypage/favorites')),
