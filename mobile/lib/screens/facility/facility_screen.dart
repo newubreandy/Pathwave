@@ -394,9 +394,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(children: [
-              Icon(Icons.access_time, size: 16, color: AppTheme.textSecondary),
-              SizedBox(width: 6),
+            Row(children: [
+              const Icon(Icons.access_time, size: 16, color: AppTheme.textSecondary),
+              const SizedBox(width: 6),
               Text(context.t('mobile.facility.business_hours', defaultValue: '영업시간'),
                 style: const TextStyle(fontWeight: FontWeight.w600)),
             ]),

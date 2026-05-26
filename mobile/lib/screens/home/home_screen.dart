@@ -166,12 +166,12 @@ class _HomeTab extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: AppTheme.border),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.wifi_off, color: AppTheme.textHint),
-                      SizedBox(width: 12),
+                      const Icon(Icons.wifi_off, color: AppTheme.textHint),
+                      const SizedBox(width: 12),
                       Expanded(child: Text(context.t('mobile.home.no_beacon', defaultValue: '아직 감지된 비콘이 없습니다.'),
-                        style: TextStyle(color: AppTheme.textSecondary))),
+                        style: const TextStyle(color: AppTheme.textSecondary))),
                     ],
                   ),
                 ),

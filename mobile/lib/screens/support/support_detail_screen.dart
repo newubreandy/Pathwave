@@ -123,10 +123,10 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
               // ── 대화 thread ────────────────────────────────────────
               Expanded(
                 child: messages.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(context.t('mobile.support.no_messages',
                             defaultValue: '아직 메시지가 없습니다.'),
-                            style: TextStyle(color: AppTheme.textSecondary)),
+                            style: const TextStyle(color: AppTheme.textSecondary)),
                       )
                     : ListView.builder(
                         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
