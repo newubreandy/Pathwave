@@ -144,18 +144,70 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 
 ## 6. 진행 상태
 
-⬜ 대기 · 🔄 진행중 · 🔎 검토 · ✅ 완료
+⬜ 대기 · 🔄 진행중 · ◑ 부분 머지 · 🔎 검토 · ✅ 완료
+
+**최종 갱신**: 2026-05-26 (실제 머지 PR 코드 검증 기반)
 
 | PR | 상태 | PR | 상태 | PR | 상태 |
 |---|---|---|---|---|---|
-| P1 | ⬜ | P8 | ⬜ | P15 | ⬜ |
-| P2 | ⬜ | P9 | ⬜ | P16 | ⬜ |
-| P3 | ⬜ | P10 | ⬜ | P17 | ⬜ |
-| P4 | ⬜ | P11 | ⬜ | P18 | ⬜ |
-| P5 | ⬜ | P12 | ⬜ | P19 | ⬜ |
-| P6 | ⬜ | P13 | ⬜ | P20 | ⬜ |
-| P7 | ⬜ | P14 | ⬜ | P21 | ⬜ |
+| P1 | ✅ | P8 | ◑ | P15 | ✅ |
+| P2 | ⬜ | P9 | ⬜ | P16 | ◑ |
+| P3 | ⬜ | P10 | ⬜ | P17 | ✅ |
+| P4 | ◑ | P11 | ✅ | P18 | ⬜ |
+| P5 | ⬜ | P12 | ✅ | P19 | ⬜ |
+| P6 | ⬜ | P13 | ⬜ | P20 | ✅ |
+| P7 | ✅ | P14 | ✅ | P21 | ✅ |
 | P22 | ⬜ |  |  |  |  |
+
+### 6.1 머지 PR 매핑 (실제 head branch + PR #)
+
+| P# | 상태 | 머지 PR | 비고 |
+|---|---|---|---|
+| P1 | ✅ | #114 (auth-unify-3-consoles), #115 (design-unify-3-consoles) | 인증 + 디자인 통일 |
+| P2 | ⬜ | — | mobile i18n 인프라 (ko 시드 550 완료, ARB/l10n.yaml/I18nService 미적용) |
+| P3 | ⬜ | — | ⚠️ ConfirmModal 미선행 — P11 머지 의존성 우회된 듯, 회수 필요 |
+| P4 | ◑ | #70 (provider-web-remove-preview-bar) | DevPreviewBar 만 처리. DEV_AUTO_LOGIN / 게스트 / forgot-password 잔여 |
+| P5 | ⬜ | — | 매장·회사정보 실연동 |
+| P6 | ⬜ | — | OCR 허위 제거 |
+| P7 | ✅ | #122 (phase-g-billing-subscription-staff), #39 (admin-web-payments) | 결제·구독·직원 |
+| P8 | ◑ | #146 (P8c push 다국어), #151 (P8d 이메일 다국어). **P8b 채팅번역 OPEN**, 본체 (provider CustomerChat + admin ChatMonitor) 미머지 |
+| P9 | ⬜ | — | 쿠폰·스탬프 실연동 |
+| P10 | ⬜ | — | 알림 mobile/provider |
+| P11 | ✅ | #145 (p11-notification-admin-workflow), #150 (p-series-clean) | admin Notifications + Staff + CouponStats |
+| P12 | ✅ | #147 (p12-policy-ko-en-only), #150 | 약관 ko/en 두 언어만 + fallback |
+| P13 | ⬜ | — | 약관 3종 (환불·청소년·쿠키 KIND). 환불/청소년/쿠키 페이지는 PR #181, #195 에서 일부 처리됨 |
+| P14 | ✅ | #152 (p14-wifi-data-model) | wifi_profiles 확장 + beacon_wifi + units + wifi_access_grant |
+| P15 | ✅ | #153 (P15a), #154 (P15b-1), #155 (P15b-3a), #157 (P15b-3b) | WiFi 등록·연동 (BE + provider + admin) |
+| P16 | ◑ | #158 (P16-a mobile .mobileconfig 트리거) | **P16-b BLE 무중단 핸드오프 미머지** (물리 비콘 도착 후) |
+| P17 | ✅ | #156 (p17-mobileconfig) | iOS .mobileconfig 다건 설치 |
+| P18 | ⬜ | — | credential_mode managed (feature flag, v1 비공개 OK) |
+| P19 | ⬜ | — | units/grant 관리 화면 (feature flag, v1 비공개 OK) |
+| P20 | ✅ | #127 (Phase K), #180 (b-app-versions-ui) | 앱 버전 강제 업데이트 + admin UI |
+| P21 | ✅ | #181 (c-store-review-audit), #194 (ios-privacy-manifest), #195 (medium-policies-photo-picker) | Privacy Manifest + 청소년·쿠키 + Photo Picker + 계정삭제 웹 URL |
+| P22 | ⬜ | — | 회원 QR + 친구초대 (P9 후) |
+
+### 6.2 의존성 검증 결과 (⚠️ 갭)
+
+- **P3 ⬜ + P11 ✅**: ConfirmModal 의존성 우회된 듯. P3 머지 시 P11 회수 필요할 수 있음.
+- **P5/P6 ⬜ + P7 ✅**: 매장·OCR 미머지 상태에서 결제 머지. P5/P6 머지 시 결제 회수 확인 필요.
+- **P9 → P22**: 둘 다 미머지. 순서 유지.
+- **P14 → P18/P19**: P14 머지됨, P18/P19 는 feature flag 로 v1 비공개 OK.
+
+### 6.3 잔여 작업 (10개)
+
+순서 (의존성 + 우선순위):
+1. **P2** — mobile i18n 인프라 (의존 없음, 깔끔)
+2. **P3** — 웹 디자인·ConfirmModal (의존 깨짐 회수)
+3. **P5** — 매장·회사정보 실연동
+4. **P6** — OCR 허위 제거
+5. **P9** — 쿠폰·스탬프 실연동
+6. **P10** — 알림 mobile/provider
+7. **P13** — 약관 3종 (환불·청소년·쿠키 KIND)
+8. **P22** — 회원 QR + 친구초대 (P9 후)
+9. **P16-b** — mobile BLE 무중단 핸드오프 (비콘 도착 후)
+10. **P8b** — 채팅번역 (현재 PR OPEN, 머지 후 완료)
+11. **(선택) P8 본체** — provider CustomerChat + admin ChatMonitor + mobile SSE
+12. **(Phase 2 검토) P18, P19** — feature flag v1 비공개
 
 ---
 
