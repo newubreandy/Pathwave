@@ -9,7 +9,7 @@ import BottomActionBar from '../components/common/BottomActionBar';
 import CardAvatar from '../components/common/CardAvatar';
 import GroupCard, { GroupCardItem } from '../components/common/GroupCard';
 import SectionTabs from '../components/common/SectionTabs';
-import { MOCK_INBOX, NOTIFICATION_CATEGORIES } from '../services/notification/mockInbox';
+import { NOTIFICATION_CATEGORIES } from '../services/notification/mockInbox';
 import './Notifications.css';
 
 const Notifications = () => {
@@ -624,7 +624,8 @@ const Notifications = () => {
       {/* 탭 — 공통 SectionTabs (사용자 요구 2026-05-10: 와이파이/리포트와 동일 톤) */}
       <SectionTabs
         tabs={[
-          { key: 'inbox', label: '알림리스트', count: MOCK_INBOX.filter(n => !n.read_at).length },
+          // P10 (2026-05-26): MOCK_INBOX count 제거 — 실시간 count 는 NotificationInbox 내부에서 처리.
+          { key: 'inbox', label: '알림리스트' },
           { key: 'send',  label: '알림발송관리' },
         ]}
         value={tab}
@@ -764,7 +765,31 @@ const Notifications = () => {
    날짜 그룹핑 + 카테고리별 아이콘 + 읽음 처리 + important 상단 고정.
    ══════════════════════════════════════════════ */
 function NotificationInbox() {
-  const [items, setItems] = useState(MOCK_INBOX);
+  // P10 (2026-05-26): MOCK_INBOX 제거 — 백엔드 listNotifications(fid) 실연동.
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const fid = await NotificationService.loadMyFacilityId();
+        if (!fid) {
+          if (alive) { setItems([]); setLoading(false); }
+          return;
+        }
+        const res = await NotificationService.listNotifications(fid);
+        const list = res?.notifications || res?.data || res || [];
+        if (alive) setItems(Array.isArray(list) ? list : []);
+      } catch (err) {
+        console.error('NotificationInbox load failed', err);
+        if (alive) setItems([]);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
 
   const unreadCount = items.filter((n) => !n.read_at).length;
 

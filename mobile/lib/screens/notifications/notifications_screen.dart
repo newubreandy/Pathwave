@@ -138,7 +138,36 @@ class _InboxItem extends StatelessWidget {
         onTap: () async {
           final id = data['id'] as int?;
           if (id != null) await NotificationService().markRead(id);
-          // TODO: kind 별 라우팅 — coupon → /mypage/coupons, chat → /chat 등
+          // P10 (2026-05-26): kind 별 라우팅 구현 — 알림 클릭 시 관련 화면 이동.
+          if (!mounted) return;
+          final fid = data['facility_id'];
+          final roomId = data['room_id'];
+          switch (kind) {
+            case 'coupon':
+              context.go('/mypage/coupons');
+              break;
+            case 'stamp':
+              context.go('/mypage/stamps');
+              break;
+            case 'chat':
+              if (roomId != null) {
+                context.push('/chat/$roomId');
+              } else {
+                context.go('/chat');
+              }
+              break;
+            case 'announcement':
+            case 'facility':
+              if (fid != null) {
+                context.push('/facility/$fid');
+              }
+              break;
+            case 'notice':
+            case 'system':
+            default:
+              // 안내성 알림 — 읽음 처리만, 라우팅 X
+              break;
+          }
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
