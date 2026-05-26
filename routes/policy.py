@@ -56,15 +56,19 @@ def _normalize_user_policy_lang(raw: str | None) -> str:
 
 
 KIND_LABELS = {
-    'age14':       '만 14세 이상입니다',
-    'terms':       '서비스 이용약관 동의',
-    'privacy':     '개인정보 수집·이용 동의',
-    'location':    '위치 정보 이용 동의',
-    'camera':      '카메라 접근 동의',
-    'storage':     '저장공간 접근 동의',
-    'push':        '푸시 알림 수신 동의',
-    'marketing':   '마케팅 정보 수신 동의',
-    'third_party': '제3자 정보 제공 동의',
+    'age14':            '만 14세 이상입니다',
+    'terms':            '서비스 이용약관 동의',
+    'privacy':          '개인정보 수집·이용 동의',
+    'location':         '위치 정보 이용 동의',
+    'camera':           '카메라 접근 동의',
+    'storage':          '저장공간 접근 동의',
+    'push':             '푸시 알림 수신 동의',
+    'marketing':        '마케팅 정보 수신 동의',
+    'third_party':      '제3자 정보 제공 동의',
+    # P13 (2026-05-26) — 환불·청소년·쿠키
+    'refund':           '환불 정책',
+    'youth_protection': '청소년 보호 정책',
+    'cookie':           '쿠키 정책',
 }
 
 
