@@ -16,6 +16,7 @@ import '../screens/mypage/coupons_screen.dart';
 import '../screens/mypage/parent_invite_screen.dart';
 import '../screens/mypage/delete_account_screen.dart';
 import '../screens/mypage/favorites_screen.dart';
+import '../screens/mypage/member_qr_screen.dart';
 import '../screens/notifications/notifications_screen.dart';
 import '../screens/chat/chat_list_screen.dart';
 import '../screens/chat/chat_detail_screen.dart';
@@ -88,6 +89,8 @@ class AppRouter {
               builder: (_, _) => const DeleteAccountScreen()),
       GoRoute(path: '/mypage/favorites',
               builder: (_, _) => const FavoritesScreen()),
+      GoRoute(path: '/mypage/member-qr',
+              builder: (_, _) => const MemberQrScreen()),
 
       // ── 알림 ────────────────────────────────────────────────────
       GoRoute(path: '/notifications', builder: (_, _) => const NotificationsScreen()),
