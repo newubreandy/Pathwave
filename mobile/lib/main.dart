@@ -10,6 +10,9 @@ import 'services/ble_service.dart';
 import 'utils/app_router.dart';
 import 'utils/neu_theme.dart';
 import 'widgets/dev_preview_bar.dart';
+// P2 — Flutter 표준 ARB (코어 string + DB fetch 실패 시 fallback).
+// 실제 운영 텍스트는 I18nService(DB-driven).
+import 'l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,8 +62,11 @@ class _PathWaveAppState extends State<PathWaveApp> {
         routerConfig: _router,
         builder: (context, child) => DevPreviewBar(child: child!),
 
-        // 다국어 설정
+        // 다국어 설정 — P2 단일화 (I18nService 의 23 언어와 통일)
+        // 실제 운영 텍스트 = DB-driven I18nService (lib/services/i18n_service.dart)
+        // ARB = 코어 string + Material/Cupertino fallback
         localizationsDelegates: const [
+          AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
@@ -68,17 +74,46 @@ class _PathWaveAppState extends State<PathWaveApp> {
         supportedLocales: const [
           Locale('ko'),           // 한국어
           Locale('en'),           // 영어
-          Locale('ja'),           // 일본어
           Locale('zh', 'CN'),     // 중국어 간체
+          Locale('ja'),           // 일본어
           Locale('zh', 'TW'),     // 중국어 번체
-          Locale('zh', 'HK'),     // 광둥어
+          Locale('vi'),           // 베트남어
+          Locale('th'),           // 태국어
+          Locale('tl'),           // 타갈로그
+          Locale('id'),           // 인도네시아어
+          Locale('ms'),           // 말레이어
+          // Phase 2 확장 13개
+          Locale('ru'),           // 러시아어
+          Locale('hi'),           // 힌디어
+          Locale('es'),           // 스페인어
+          Locale('de'),           // 독일어
           Locale('fr'),           // 프랑스어
+          Locale('pt'),           // 포르투갈어
+          Locale('it'),           // 이탈리아어
+          Locale('nl'),           // 네덜란드어
+          Locale('pl'),           // 폴란드어
+          Locale('ar'),           // 아랍어
+          Locale('tr'),           // 터키어
+          Locale('he'),           // 히브리어
+          Locale('sv'),           // 스웨덴어
         ],
         localeResolutionCallback: (locale, supportedLocales) {
+          // zh-* / zh-CN-* / zh-TW-* 처리 — countryCode 도 매칭
+          for (final supported in supportedLocales) {
+            if (supported.languageCode == locale?.languageCode &&
+                supported.countryCode == locale?.countryCode) {
+              return supported;
+            }
+          }
+          // 동일 languageCode 의 첫 supported (지역 무관)
           for (final supported in supportedLocales) {
             if (supported.languageCode == locale?.languageCode) {
               return supported;
             }
+          }
+          // 광둥어(zh-HK) → 번체(zh-TW) fallback
+          if (locale?.languageCode == 'zh' && locale?.countryCode == 'HK') {
+            return const Locale('zh', 'TW');
           }
           return const Locale('en'); // 기본값 영어
         },

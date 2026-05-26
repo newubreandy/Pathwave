@@ -1,0 +1,46 @@
+{
+  "@@locale": "en",
+  "@@comment": "Pathwave mobile — core ARB (template). Runtime UI strings use DB-driven I18nService (GET /api/i18n/<lang>). This ARB covers boot-time + fallback strings only.",
+
+  "appName": "PathWave",
+  "@appName": { "description": "App title shown on launch / system" },
+
+  "loading": "Loading…",
+  "@loading": { "description": "Generic loading indicator" },
+
+  "retry": "Retry",
+  "@retry": {},
+
+  "cancel": "Cancel",
+  "@cancel": {},
+
+  "confirm": "Confirm",
+  "@confirm": {},
+
+  "save": "Save",
+  "@save": {},
+
+  "delete": "Delete",
+  "@delete": {},
+
+  "close": "Close",
+  "@close": {},
+
+  "back": "Back",
+  "@back": {},
+
+  "next": "Next",
+  "@next": {},
+
+  "errorGeneric": "Something went wrong. Please try again.",
+  "@errorGeneric": { "description": "Generic error fallback" },
+
+  "errorNetwork": "No internet connection.",
+  "@errorNetwork": {},
+
+  "errorServer": "Server is unreachable.",
+  "@errorServer": {},
+
+  "i18nFetchFailed": "Failed to load translations. Using cached version.",
+  "@i18nFetchFailed": { "description": "Shown when DB i18n fetch fails and cache fallback is used" }
+}

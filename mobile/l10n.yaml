@@ -1,0 +1,18 @@
+# Flutter localization 빌드 설정 (P2 인프라)
+#
+# 실제 운영 텍스트는 백엔드 DB 기반 I18nService 사용
+# (lib/services/i18n_service.dart, GET /api/i18n/{lang}).
+#
+# 본 ARB 는 Flutter 표준 Material/Widgets/Cupertino 외에 부팅 시 필요한
+# 코어 string + DB fetch 실패 시 fallback 용도.
+#
+# 빌드: flutter pub get (자동 생성됨, lib/l10n/AppLocalizations 등)
+
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false
+synthetic-package: false
+output-dir: lib/l10n
+preferred-supported-locales: ['ko', 'en']
