@@ -1,17 +1,6 @@
 # spec/ — 정교한 개발 스펙
 
-`architecture.md` §12 인덱스 참조. 각 .md 파일은 **사용자 요청 시** 작성/채움.
-한꺼번에 작성하지 않음 (토큰 효율 + 정확성 우선).
-
-## 작성 우선순위
-
-1. `data-architecture.md` — 마스터 DB / read 인덱스 / 환경 분리
-2. `beacon-protocol.md` + `wifi-roaming.md` — Phase B 핵심 USP
-3. `function-spec.md` — 3 콘솔 기능 (가장 큼, 분할 가능)
-4. `i18n-strategy.md` — 23개 언어
-5. `payment-integration.md` — 결제 + 면세
-6. `automation-roadmap.md` — 자동화
-7. `store-review-compliance.md` — 심의 가이드
+`architecture.md` §12 인덱스 참조. 각 .md 파일은 코드와 1:1 매핑.
 
 ## 작성 규칙
 
@@ -23,7 +12,19 @@
 
 ## 현재 상태 (2026-05-26)
 
-- ✅ `data-architecture.md` v0.1 (PR 진행 중)
-- ✅ `beacon-protocol.md` v0.1 (PR 진행 중)
-- ✅ `wifi-roaming.md` v0.1 (PR 진행 중)
-- ⏳ 나머지 5개 TBD — 사용자 요청 시 작성
+| spec | 상태 | 주요 내용 |
+|---|---|---|
+| `data-architecture.md` | ✅ v0.1 | 마스터 DB / read 인덱스 / 환경 분리 / 55 테이블 분류 |
+| `beacon-protocol.md` | ✅ v0.1 | BLE 5.x + handshake + DB 스키마 + 보안 위협 모델 |
+| `wifi-roaming.md` | ✅ v0.1 | 방식 C 비콘 주도 / iOS .mobileconfig + Android suggestion |
+| `i18n-strategy.md` | ✅ v0.1 | 23개 언어 DB i18n + DeepL + 자동번역 (메뉴/채팅/푸시) |
+| `subscription-billing.md` | ✅ v0.1 | provider 구독료 only (토스 빌링키). 사용자결제·면세 X |
+| `store-review-compliance.md` | ✅ v0.1 | Apple HIG / Material 3 / Privacy Manifest / UGC / 법적 |
+| `automation-roadmap.md` | ✅ v0.1 | Stage 1~3 (**출시 후**). 챗봇 / SNS / 광고 / CRM |
+| `function-spec.md` | ✅ v0.1 | 3 콘솔 화면 81개 + API + 권한 매트릭스 |
+
+## 갱신 정책
+
+- 각 spec 은 PR 머지 후 / 사용자 정책 변경 시 갱신.
+- v0.x → v1.x 는 출시 직전 한 차례 정리.
+- 사용자 결정으로 분량 폭증한 spec 은 분할 (예: `function-spec-mobile.md` 등).
