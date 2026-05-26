@@ -17,6 +17,7 @@ import '../screens/mypage/parent_invite_screen.dart';
 import '../screens/mypage/delete_account_screen.dart';
 import '../screens/mypage/favorites_screen.dart';
 import '../screens/mypage/member_qr_screen.dart';
+import '../screens/mypage/friend_invite_qr_screen.dart';
 import '../screens/notifications/notifications_screen.dart';
 import '../screens/chat/chat_list_screen.dart';
 import '../screens/chat/chat_detail_screen.dart';
@@ -91,6 +92,8 @@ class AppRouter {
               builder: (_, _) => const FavoritesScreen()),
       GoRoute(path: '/mypage/member-qr',
               builder: (_, _) => const MemberQrScreen()),
+      GoRoute(path: '/mypage/friend-invite',
+              builder: (_, _) => const FriendInviteQrScreen()),
 
       // ── 알림 ────────────────────────────────────────────────────
       GoRoute(path: '/notifications', builder: (_, _) => const NotificationsScreen()),

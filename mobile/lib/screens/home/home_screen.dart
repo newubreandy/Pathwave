@@ -289,6 +289,8 @@ class _MyPageTab extends StatelessWidget {
           _MenuTile(icon: Icons.confirmation_number_outlined, title: '내 쿠폰', onTap: () => context.push('/mypage/coupons')),
           _MenuTile(icon: Icons.favorite_outline, title: '즐겨찾기', onTap: () => context.push('/mypage/favorites')),
           _MenuTile(icon: Icons.family_restroom,            title: '자녀 초대', onTap: () => context.push('/mypage/parent-invite')),
+          // P22-c (2026-05-27): 친구 초대 QR — 가입 시 invited_via_code 추적
+          _MenuTile(icon: Icons.person_add_alt,             title: '친구 초대', onTap: () => context.push('/mypage/friend-invite')),
           _MenuTile(icon: Icons.chat_bubble_outline,        title: '매장 채팅', onTap: () => context.push('/chat')),
           _MenuTile(icon: Icons.headset_mic_outlined,        title: '고객센터', onTap: () => context.push('/support')),
           _MenuTile(icon: Icons.settings_outlined,          title: '설정', onTap: () => context.push('/settings')),
