@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/i18n_context.dart';
 import '../../widgets/pw.dart';
 
 /// 회원 탈퇴 화면 (PR #55) — Apple 5.1.1(v) / Google Play 정책.
@@ -61,7 +62,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
     final isEmailUser = (auth.user?['provider']?.toString() ?? 'email') == 'email';
 
     return Scaffold(
-      appBar: PwAppBar(title: const Text('회원 탈퇴')),
+      appBar: PwAppBar(title: Text(context.t('mobile.mypage.delete_account.title', defaultValue: '회원 탈퇴'))),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -72,7 +73,8 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
               const Icon(Icons.warning_amber_rounded,
                 size: 48, color: AppTheme.warning),
               const SizedBox(height: 12),
-              Text('정말 탈퇴하시겠습니까?',
+              Text(context.t('mobile.mypage.delete_account.confirm_question',
+                  defaultValue: '정말 탈퇴하시겠습니까?'),
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 24),
@@ -97,7 +99,8 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
               const SizedBox(height: 16),
 
               if (isEmailUser) ...[
-                Text('비밀번호 확인',
+                Text(context.t('mobile.mypage.delete_account.password_check',
+                    defaultValue: '비밀번호 확인'),
                   style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 PwTextField(
@@ -152,13 +155,13 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                 variant: PwButtonVariant.danger,
                 onPressed: _submit,
                 loading: _busy,
-                child: const Text('탈퇴하기'),
+                child: Text(context.t('mobile.mypage.delete_account.button', defaultValue: '탈퇴하기')),
               ),
               const SizedBox(height: 8),
               PwButton(
                 variant: PwButtonVariant.text,
                 onPressed: _busy ? null : () => context.pop(),
-                child: const Text('취소'),
+                child: Text(context.t('mobile.common.cancel', defaultValue: '취소')),
               ),
             ],
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../services/policy_service.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/i18n_context.dart';
 import '../../widgets/pw.dart';
 
 /// 동의 항목 입력 화면. register_screen 의 마지막 단계로 사용.
@@ -66,7 +67,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snap.hasError) {
-          return Center(child: Text('동의 항목을 불러오지 못했습니다: ${snap.error}'));
+          return Center(child: Text('${context.t('mobile.auth.consent.load_failed', defaultValue: '동의 항목을 불러오지 못했습니다')}: ${snap.error}'));
         }
         final items = snap.data ?? [];
         final canSubmit = _allAcceptedForItems(items) && !widget.busy;
@@ -74,9 +75,10 @@ class _ConsentScreenState extends State<ConsentScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('약관 및 동의', style: Theme.of(context).textTheme.headlineMedium),
+            Text(context.t('mobile.auth.consent.title', defaultValue: '약관 및 동의'),
+              style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 4),
-            const Text('필수 항목에 모두 동의해야 가입할 수 있습니다.',
+            Text(context.t('mobile.auth.consent.required_notice', defaultValue: '필수 항목에 모두 동의해야 가입할 수 있습니다.'),
               style: TextStyle(color: AppTheme.textSecondary)),
             const SizedBox(height: 16),
 
@@ -104,7 +106,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
             PwButton(
               onPressed: canSubmit ? () => _submit(items) : null,
               loading: widget.busy,
-              child: const Text('가입 완료'),
+              child: Text(context.t('mobile.auth.consent.signup_complete', defaultValue: '가입 완료')),
             ),
           ],
         );
@@ -139,7 +141,7 @@ class _AllAgreeRow extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             const Expanded(
-              child: Text('전체 동의 (선택 항목 포함)',
+              child: Text(context.t('mobile.auth.consent.agree_all', defaultValue: '전체 동의 (선택 항목 포함)'),
                 style: TextStyle(fontWeight: FontWeight.w600)),
             ),
           ],
@@ -214,7 +216,7 @@ class _ConsentItem extends StatelessWidget {
             variant: PwButtonVariant.text,
             fullWidth: false,
             onPressed: () => _showPolicy(context),
-            child: const Text('보기', style: TextStyle(fontSize: 12)),
+            child: Text(context.t('mobile.common.view', defaultValue: '보기'), style: const TextStyle(fontSize: 12)),
           ),
         ],
       ),
@@ -285,7 +287,7 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                       children: [
                         const Icon(Icons.history, size: 16, color: AppTheme.textSecondary),
                         const SizedBox(width: 6),
-                        const Text('버전:', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                        Text('${context.t('mobile.common.version', defaultValue: '버전')}:', style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
                         const SizedBox(width: 8),
                         Expanded(
                           child: DropdownButton<int?>(
@@ -295,7 +297,7 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                             items: [
                               const DropdownMenuItem<int?>(
                                 value: null,
-                                child: Text('현재 시행 중', style: TextStyle(fontSize: 13)),
+                                child: Text(context.t('mobile.auth.consent.in_effect', defaultValue: '현재 시행 중'), style: const TextStyle(fontSize: 13)),
                               ),
                               ...versions.map((v) => DropdownMenuItem<int?>(
                                 value: v['id'] as int?,
@@ -323,7 +325,7 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                       return const Center(child: CircularProgressIndicator());
                     }
                     if (snap.hasError) {
-                      return Text('정책을 불러오지 못했습니다.\n${snap.error}');
+                      return Text('${context.t('mobile.auth.consent.policy_load_failed', defaultValue: '정책을 불러오지 못했습니다.')}\n${snap.error}');
                     }
                     final body = snap.data?['body']?.toString() ?? '';
                     final needsContent = snap.data?['needs_content'] == true;

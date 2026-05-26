@@ -7,6 +7,7 @@ import '../../services/ble_service.dart';
 import '../../services/i18n_service.dart';
 import '../../services/permission_service.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/i18n_context.dart';
 import '../../widgets/notification_permission_dialog.dart';
 import '../../widgets/pw.dart';
 import '../search/search_screen.dart';
@@ -84,7 +85,7 @@ class _HomeTab extends StatelessWidget {
             children: [
               Text('PathWave', style: Theme.of(context).textTheme.displaySmall),
               const SizedBox(height: 4),
-              const Text('비콘이 감지되면 자동으로 WiFi에 연결됩니다.',
+              Text(context.t('mobile.home.beacon_auto_connect', defaultValue: '비콘이 감지되면 자동으로 WiFi에 연결됩니다.'),
                 style: TextStyle(color: AppTheme.textSecondary)),
               const SizedBox(height: 20),
 
@@ -169,7 +170,7 @@ class _HomeTab extends StatelessWidget {
                     children: [
                       Icon(Icons.wifi_off, color: AppTheme.textHint),
                       SizedBox(width: 12),
-                      Expanded(child: Text('아직 감지된 비콘이 없습니다.',
+                      Expanded(child: Text(context.t('mobile.home.no_beacon', defaultValue: '아직 감지된 비콘이 없습니다.'),
                         style: TextStyle(color: AppTheme.textSecondary))),
                     ],
                   ),
@@ -227,7 +228,7 @@ class _WifiBanner extends StatelessWidget {
           const SizedBox(height: 12),
           PwButton(
             onPressed: onTap,
-            child: const Text('자동 연결하기'),
+            child: Text(context.t('mobile.home.auto_connect', defaultValue: '자동 연결하기')),
           ),
         ],
       ),
@@ -250,7 +251,8 @@ class _MyPageTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('마이페이지', style: Theme.of(context).textTheme.displaySmall),
+          Text(context.t('mobile.mypage.title', defaultValue: '마이페이지'),
+            style: Theme.of(context).textTheme.displaySmall),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(16),
@@ -272,7 +274,7 @@ class _MyPageTab extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(email, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      const Text('일반 회원', style: TextStyle(color: AppTheme.textSecondary)),
+                      Text(context.t('mobile.mypage.member', defaultValue: '일반 회원'), style: const TextStyle(color: AppTheme.textSecondary)),
                     ],
                   ),
                 ),
@@ -296,7 +298,7 @@ class _MyPageTab extends StatelessWidget {
               await context.read<AuthService>().logout();
               if (context.mounted) context.go('/auth/login');
             },
-            child: const Text('로그아웃'),
+            child: Text(context.t('mobile.mypage.logout', defaultValue: '로그아웃')),
           ),
         ],
       ),
@@ -347,9 +349,10 @@ class _NotificationsTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('알림', style: Theme.of(context).textTheme.displaySmall),
+          Text(context.t('mobile.notifications.title', defaultValue: '알림'),
+            style: Theme.of(context).textTheme.displaySmall),
           const SizedBox(height: 8),
-          const Text('스탬프 적립 / 쿠폰 발급 / 시스템 공지가 표시됩니다.',
+          Text(context.t('mobile.notifications.placeholder', defaultValue: '스탬프 적립 / 쿠폰 발급 / 시스템 공지가 표시됩니다.'),
             style: TextStyle(color: AppTheme.textSecondary)),
           const SizedBox(height: 16),
           Center(
@@ -357,7 +360,7 @@ class _NotificationsTab extends StatelessWidget {
               // push 사용 — 알림 화면에서 시스템 백 제스처로 홈 복귀.
               onPressed: () => context.push('/notifications'),
               icon: const Icon(Icons.open_in_new),
-              label: const Text('전체 알림 보기'),
+              label: Text(context.t('mobile.notifications.view_all', defaultValue: '전체 알림 보기')),
             ),
           ),
         ],

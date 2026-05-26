@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/abuse_report_service.dart';
+import '../../services/i18n_service.dart';
 import '../../services/support_service.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/i18n_context.dart';
 import '../../widgets/pw.dart';
 
 /// 고객센터 메인 화면 — FAQ / 내 문의 / 신고하기 탭.
@@ -55,7 +57,7 @@ class _SupportScreenState extends State<SupportScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PwAppBar(
-        title: const Text('고객센터'),
+        title: Text(context.t('mobile.support.title', defaultValue: '고객센터')),
         bottom: TabBar(
           controller: _tabCtrl,
           tabs: const [
@@ -376,7 +378,7 @@ class _MyTicketsTabState extends State<_MyTicketsTab> {
           child: PwButton(
             icon: Icons.edit_outlined,
             onPressed: _openCreate,
-            child: const Text('문의 작성'),
+            child: Text(context.t('mobile.support.compose', defaultValue: '문의 작성')),
           ),
         ),
 
@@ -542,7 +544,7 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('제출 실패: $e')),
+        SnackBar(content: Text('${I18nService.instance.t('mobile.support.submit_failed', defaultValue: '제출 실패')}: $e')),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -561,7 +563,7 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('문의 작성',
+              Text(context.t('mobile.support.compose', defaultValue: '문의 작성'),
                   style: TextStyle(
                       fontSize: 18, fontWeight: FontWeight.w700)),
               const SizedBox(height: 16),
@@ -584,7 +586,7 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
                 ),
                 dropdownColor: AppTheme.surface,
                 items: [
-                  const DropdownMenuItem(value: null, child: Text('선택 안 함')),
+                  DropdownMenuItem(value: null, child: Text(context.t('mobile.common.unselected', defaultValue: '선택 안 함'))),
                   for (final (code, label) in _categories)
                     DropdownMenuItem(value: code, child: Text(label)),
                 ],
@@ -632,7 +634,7 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
               PwButton(
                 loading: _loading,
                 onPressed: _loading ? null : _submit,
-                child: const Text('제출하기'),
+                child: Text(context.t('mobile.common.submit', defaultValue: '제출하기')),
               ),
             ],
           ),
@@ -711,12 +713,12 @@ class _ReportTabState extends State<_ReportTab> {
         _reasonCode = 'spam';
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('신고가 접수되었습니다. 검토 후 조치하겠습니다.')),
+        SnackBar(content: Text(I18nService.instance.t('mobile.support.report_received', defaultValue: '신고가 접수되었습니다. 검토 후 조치하겠습니다.'))),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('신고 실패: $e')),
+        SnackBar(content: Text('${I18nService.instance.t('mobile.support.report_failed', defaultValue: '신고 실패')}: $e')),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -754,7 +756,7 @@ class _ReportTabState extends State<_ReportTab> {
             const SizedBox(height: 20),
 
             // ── 신고 대상 종류 ──────────────────────────────────────
-            const Text('신고 대상',
+            Text(context.t('mobile.support.report_target', defaultValue: '신고 대상'),
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
             const SizedBox(height: 8),
             Row(
@@ -790,7 +792,7 @@ class _ReportTabState extends State<_ReportTab> {
             const SizedBox(height: 20),
 
             // ── 신고 사유 라디오 ────────────────────────────────────
-            const Text('신고 사유',
+            Text(context.t('mobile.support.report_reason', defaultValue: '신고 사유'),
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
             const SizedBox(height: 4),
             for (final (code, label) in _reasons)
@@ -830,7 +832,7 @@ class _ReportTabState extends State<_ReportTab> {
               icon: Icons.flag_outlined,
               loading: _loading,
               onPressed: _loading ? null : _submit,
-              child: const Text('신고 제출'),
+              child: Text(context.t('mobile.support.report_submit', defaultValue: '신고 제출')),
             ),
           ],
         ),

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../services/i18n_service.dart';
 import '../../services/parent_invite_service.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/i18n_context.dart';
 import '../../widgets/pw.dart';
 
 /// 부모(만 19세 이상)가 자녀(만 14~18) 가입 초대 코드를 발급하는 화면.
@@ -47,7 +49,7 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PwAppBar(title: const Text('자녀 초대 코드 발급')),
+      appBar: PwAppBar(title: Text(context.t('mobile.parent_invite.title', defaultValue: '자녀 초대 코드 발급'))),
       body: SafeArea(child: Padding(
         padding: const EdgeInsets.all(20),
         child: _result != null
@@ -74,7 +76,7 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
                 children: [
                   Icon(Icons.warning_amber_rounded, size: 18, color: AppTheme.warning),
                   SizedBox(width: 6),
-                  Text('자녀 초대 책임 동의',
+                  Text(context.t('mobile.parent_invite.responsibility_title', defaultValue: '자녀 초대 책임 동의'),
                     style: TextStyle(color: AppTheme.warning, fontWeight: FontWeight.w700)),
                 ],
               ),
@@ -102,7 +104,7 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
                 ),
                 const SizedBox(width: 10),
                 const Expanded(
-                  child: Text('위 책임 사항에 동의합니다.',
+                  child: Text(context.t('mobile.parent_invite.agree', defaultValue: '위 책임 사항에 동의합니다.'),
                     style: TextStyle(fontSize: 14)),
                 ),
               ],
@@ -110,7 +112,7 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        const Text('자녀 이메일 (선택)',
+        Text(context.t('mobile.parent_invite.child_email', defaultValue: '자녀 이메일 (선택)'),
           style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
         const SizedBox(height: 6),
         PwTextField(
@@ -127,7 +129,7 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
         PwButton(
           onPressed: _create,
           loading: _busy,
-          child: const Text('초대 코드 발급'),
+          child: Text(context.t('mobile.parent_invite.issue_code', defaultValue: '초대 코드 발급')),
         ),
       ],
     );
@@ -152,7 +154,7 @@ class _SuccessView extends StatelessWidget {
         children: [
           const Icon(Icons.check_circle, size: 56, color: AppTheme.success),
           const SizedBox(height: 12),
-          const Text('초대 코드가 발급되었습니다',
+          Text(context.t('mobile.parent_invite.code_issued', defaultValue: '초대 코드가 발급되었습니다'),
             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
           const SizedBox(height: 24),
           Container(
@@ -164,7 +166,7 @@ class _SuccessView extends StatelessWidget {
             ),
             child: Column(
               children: [
-                const Text('초대 코드',
+                Text(context.t('mobile.parent_invite.code_label', defaultValue: '초대 코드'),
                   style: TextStyle(color: AppTheme.textHint, fontSize: 12)),
                 const SizedBox(height: 6),
                 SelectableText(
@@ -181,7 +183,7 @@ class _SuccessView extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           if (expiresAt.isNotEmpty)
-            Text('만료: $expiresAt',
+            Text('${context.t('mobile.common.expires', defaultValue: '만료')}: $expiresAt',
               style: const TextStyle(color: AppTheme.textHint, fontSize: 12)),
           const SizedBox(height: 16),
           PwButton(
@@ -192,11 +194,11 @@ class _SuccessView extends StatelessWidget {
               await Clipboard.setData(ClipboardData(text: code));
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('초대 코드를 복사했습니다.')),
+                  SnackBar(content: Text(I18nService.instance.t('mobile.parent_invite.code_copied', defaultValue: '초대 코드를 복사했습니다.'))),
                 );
               }
             },
-            child: const Text('코드 복사'),
+            child: Text(context.t('mobile.parent_invite.copy_code', defaultValue: '코드 복사')),
           ),
           if (shareUrl.isNotEmpty) ...[
             const SizedBox(height: 8),
@@ -208,18 +210,18 @@ class _SuccessView extends StatelessWidget {
                 await Clipboard.setData(ClipboardData(text: shareUrl));
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('가입 링크를 복사했습니다.')),
+                    SnackBar(content: Text(I18nService.instance.t('mobile.parent_invite.link_copied', defaultValue: '가입 링크를 복사했습니다.'))),
                   );
                 }
               },
-              child: const Text('가입 링크 복사'),
+              child: Text(context.t('mobile.parent_invite.copy_link', defaultValue: '가입 링크 복사')),
             ),
           ],
           const SizedBox(height: 24),
           PwButton(
             variant: PwButtonVariant.text,
             onPressed: onClose,
-            child: const Text('닫기'),
+            child: Text(context.t('mobile.common.close', defaultValue: '닫기')),
           ),
         ],
       ),

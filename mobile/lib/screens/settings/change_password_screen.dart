@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/i18n_context.dart';
 import '../../widgets/pw.dart';
 
 /// 비밀번호 변경 (PR #63) — 이메일 가입자 전용.
@@ -61,7 +62,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
     if (!isEmail) {
       return Scaffold(
-        appBar: PwAppBar(title: const Text('비밀번호 변경')),
+        appBar: PwAppBar(title: Text(context.t('mobile.settings.change_password.title', defaultValue: '비밀번호 변경'))),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -76,7 +77,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     }
 
     return Scaffold(
-      appBar: PwAppBar(title: const Text('비밀번호 변경')),
+      appBar: PwAppBar(title: Text(context.t('mobile.settings.change_password.title', defaultValue: '비밀번호 변경'))),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -133,7 +134,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 PwButton(
                   onPressed: _submit,
                   loading: _busy,
-                  child: const Text('변경하기'),
+                  child: Text(context.t('mobile.settings.change_password.button', defaultValue: '변경하기')),
                 ),
               ],
             ),

@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../services/favorite_service.dart';
 import '../../services/store_service.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/i18n_context.dart';
 import '../../widgets/pw.dart';
 
 /// 매장 상세 — 이미지 / 영업시간 / 위치 / 채팅 진입.
@@ -145,7 +146,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
         tooltip: '뒤로',
         onPressed: () => context.pop(),
       ),
-      title: const Text('매장 정보'),
+      title: Text(context.t('mobile.facility.title', defaultValue: '매장 정보')),
     );
   }
 
@@ -288,7 +289,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   const Icon(Icons.menu_book_outlined,
                     size: 18, color: AppTheme.textSecondary),
                   const SizedBox(width: 6),
-                  Text('메뉴', style: Theme.of(context).textTheme.titleMedium),
+                  Text(context.t('mobile.facility.menu', defaultValue: '메뉴'),
+                    style: Theme.of(context).textTheme.titleMedium),
                   if (isTranslated) ...[
                     const SizedBox(width: 8),
                     Container(
@@ -297,7 +299,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                         color: AppTheme.primary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text('자동 번역', style: TextStyle(
+                      child: Text(context.t('mobile.facility.auto_translate',
+                          defaultValue: '자동 번역'), style: const TextStyle(
                         fontSize: 10, color: AppTheme.primary,
                         fontWeight: FontWeight.w600,
                       )),
@@ -394,7 +397,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
             const Row(children: [
               Icon(Icons.access_time, size: 16, color: AppTheme.textSecondary),
               SizedBox(width: 6),
-              Text('영업시간', style: TextStyle(fontWeight: FontWeight.w600)),
+              Text(context.t('mobile.facility.business_hours', defaultValue: '영업시간'),
+                style: const TextStyle(fontWeight: FontWeight.w600)),
             ]),
             const SizedBox(height: 8),
             Text(
@@ -444,7 +448,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
             child: PwButton(
               icon: Icons.chat_bubble_outline,
               onPressed: () => context.push('/chat/$_id'),
-              child: const Text('매장과 채팅'),
+              child: Text(context.t('mobile.facility.chat_with_store', defaultValue: '매장과 채팅')),
             ),
           ),
         ],

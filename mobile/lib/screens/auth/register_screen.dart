@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/i18n_context.dart';
 import '../../widgets/pw.dart';
 import '../../widgets/social_login_row.dart';
 import 'consent_screen.dart';
@@ -153,7 +154,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PwAppBar(
-        title: const Text('회원가입'),
+        title: Text(context.t('mobile.auth.signup', defaultValue: '회원가입')),
         // 소셜 신규 가입 흐름의 consent 단계에서는 뒤로가기를 막는다 —
         // 계정은 이미 생성됐고, 동의 미기록 상태로 빠져나가는 것을 방지.
         leading: (_isSocialFlow && _step == 4)
@@ -251,9 +252,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   List<Widget> _stepEmail() {
     final auth = context.read<AuthService>();
     return [
-      Text('가입 방법 선택', style: Theme.of(context).textTheme.headlineMedium),
+      Text(context.t('mobile.auth.register.method', defaultValue: '가입 방법 선택'),
+        style: Theme.of(context).textTheme.headlineMedium),
       const SizedBox(height: 8),
-      const Text('소셜 로그인 또는 이메일로 가입할 수 있습니다.',
+      Text(context.t('mobile.auth.register.method_hint', defaultValue: '소셜 로그인 또는 이메일로 가입할 수 있습니다.'),
         style: TextStyle(color: AppTheme.textSecondary)),
       const SizedBox(height: 24),
 
@@ -278,7 +280,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Expanded(child: Divider(color: AppTheme.border)),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 12),
-            child: Text('또는 이메일로 가입',
+            child: Text(context.t('mobile.auth.register.or_email', defaultValue: '또는 이메일로 가입'),
               style: TextStyle(color: AppTheme.textHint, fontSize: 12)),
           ),
           Expanded(child: Divider(color: AppTheme.border)),
@@ -296,15 +298,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
       PwButton(
         onPressed: _sendCode,
         loading: _busy,
-        child: const Text('인증 코드 받기'),
+        child: Text(context.t('mobile.auth.register.get_code', defaultValue: '인증 코드 받기')),
       ),
     ];
   }
 
   List<Widget> _stepCode() => [
-    Text('인증 코드 입력', style: Theme.of(context).textTheme.headlineMedium),
+    Text(context.t('mobile.auth.register.code_input', defaultValue: '인증 코드 입력'),
+      style: Theme.of(context).textTheme.headlineMedium),
     const SizedBox(height: 8),
-    Text('${_emailCtrl.text} 으로 6자리 코드를 보냈습니다.',
+    Text('${_emailCtrl.text} ${context.t('mobile.auth.register.code_sent_suffix', defaultValue: '으로 6자리 코드를 보냈습니다.')}',
       style: const TextStyle(color: AppTheme.textSecondary)),
     const SizedBox(height: 24),
     PwTextField(
@@ -319,21 +322,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
     PwButton(
       onPressed: _verifyCode,
       loading: _busy,
-      child: const Text('확인'),
+      child: Text(context.t('mobile.common.confirm', defaultValue: '확인')),
     ),
     PwButton(
       variant: PwButtonVariant.text,
       onPressed: _busy ? null : _sendCode,
-      child: const Text('코드 다시 받기'),
+      child: Text(context.t('mobile.auth.register.resend_code', defaultValue: '코드 다시 받기')),
     ),
   ];
 
   List<Widget> _stepAge() {
     final showInviteField = _isMinor;
     return [
-      Text('생년 입력', style: Theme.of(context).textTheme.headlineMedium),
+      Text(context.t('mobile.auth.register.birth_input', defaultValue: '생년 입력'),
+        style: Theme.of(context).textTheme.headlineMedium),
       const SizedBox(height: 8),
-      const Text('만 14세 이상부터 가입 가능합니다.\n만 14~18세는 보호자 초대 코드가 필요합니다.',
+      Text(context.t('mobile.auth.register.age_notice', defaultValue: '만 14세 이상부터 가입 가능합니다.\n만 14~18세는 보호자 초대 코드가 필요합니다.'),
         style: TextStyle(color: AppTheme.textSecondary)),
       const SizedBox(height: 24),
       PwTextField(
@@ -378,15 +382,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
       PwButton(
         onPressed: _proceedFromAge,
         loading: _busy,
-        child: const Text('다음'),
+        child: Text(context.t('mobile.common.next', defaultValue: '다음')),
       ),
     ];
   }
 
   List<Widget> _stepPassword() => [
-    Text('비밀번호 설정', style: Theme.of(context).textTheme.headlineMedium),
+    Text(context.t('mobile.auth.register.password_setup', defaultValue: '비밀번호 설정'),
+      style: Theme.of(context).textTheme.headlineMedium),
     const SizedBox(height: 8),
-    const Text('영문 대/소문자 + 숫자 + 특수문자 포함 8자 이상.',
+    Text(context.t('mobile.auth.register.password_rule', defaultValue: '영문 대/소문자 + 숫자 + 특수문자 포함 8자 이상.'),
       style: TextStyle(color: AppTheme.textSecondary)),
     const SizedBox(height: 24),
     PwTextField(
@@ -399,7 +404,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     PwButton(
       onPressed: _proceedToConsent,
       loading: _busy,
-      child: const Text('다음 — 약관 동의'),
+      child: Text(context.t('mobile.auth.register.next_consent', defaultValue: '다음 — 약관 동의')),
     ),
   ];
 }
