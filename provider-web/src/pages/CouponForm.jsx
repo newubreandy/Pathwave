@@ -61,15 +61,16 @@ const CouponForm = () => {
     window.scrollTo(0, 0);
 
     if (isEditMode) {
-      // Load dummy data for edit mode based on screenshot
+      // P5 (2026-05-26): mock '호텔H' / 외부 unsplash 이미지 제거 → 일반화 + 빈 이미지.
+      // 실 데이터는 GET /api/coupons/<id> 에서 fetch (Phase 2+ 실연동).
       setFormData({
-        title: '호텔H 썬베드 선착순 50명 무료 이용권 증정이벤트',
-        exposureStart: '2022-05-01',
-        exposureEnd: '2022-05-31',
-        progressStart: '2022-05-01',
-        progressEnd: '2022-05-31',
-        images: ['https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=400'],
-        message: '호텔H 수영장 이용권 알림을 보여주시는 고객(선착순 방문 20명 대상)께 입장 시, 썬베드 1개를 무료로 빌려 드립니다.\n대여시간은 1시간이며, 추가 이용시 추가 비용이 발생할 수 있습니다.\n해당 이벤트는 선착순으로 진행되며, 20명이 넘을시 별도의 알림없이 자동으로 종료 됩니다.',
+        title: '샘플 — 썬베드 선착순 50명 무료 이용권 증정이벤트',
+        exposureStart: '2026-05-01',
+        exposureEnd: '2026-05-31',
+        progressStart: '2026-05-01',
+        progressEnd: '2026-05-31',
+        images: [],
+        message: '수영장 이용권 알림을 보여주시는 고객(선착순 방문 20명 대상)께 입장 시, 썬베드 1개를 무료로 빌려 드립니다.\n대여시간은 1시간이며, 추가 이용시 추가 비용이 발생할 수 있습니다.\n해당 이벤트는 선착순으로 진행되며, 20명이 넘을시 별도의 알림없이 자동으로 종료 됩니다.',
         presentsTitle: '썬베드 무료이용권',
         presentsCount: 50,
         isUnlimited: false,
