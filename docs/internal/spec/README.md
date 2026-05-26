@@ -23,4 +23,7 @@
 
 ## 현재 상태 (2026-05-26)
 
-모든 spec 파일 ⏳ TBD. 본 PR 은 디렉토리 구조 + README + architecture 골격만.
+- ✅ `data-architecture.md` v0.1 (PR 진행 중)
+- ✅ `beacon-protocol.md` v0.1 (PR 진행 중)
+- ✅ `wifi-roaming.md` v0.1 (PR 진행 중)
+- ⏳ 나머지 5개 TBD — 사용자 요청 시 작성

@@ -164,13 +164,13 @@ sequenceDiagram
 
 | 파일 | 내용 | 상태 |
 |---|---|---|
-| [`spec/data-architecture.md`](spec/data-architecture.md) | 마스터 DB + read 인덱스 + 환경 분리 | ⏳ TBD |
-| [`spec/beacon-protocol.md`](spec/beacon-protocol.md) | BLE 5.x + nonce + TTL + OTA | ⏳ TBD |
-| [`spec/wifi-roaming.md`](spec/wifi-roaming.md) | 방식 C 비콘 주도 무중단 핸드오프 | ⏳ TBD |
+| [`spec/data-architecture.md`](spec/data-architecture.md) | 마스터 DB + read 인덱스 + 환경 분리 | ✅ v0.1 |
+| [`spec/beacon-protocol.md`](spec/beacon-protocol.md) | BLE 5.x + nonce + TTL + OTA | ✅ v0.1 |
+| [`spec/wifi-roaming.md`](spec/wifi-roaming.md) | 방식 C 비콘 주도 무중단 핸드오프 | ✅ v0.1 |
 | [`spec/i18n-strategy.md`](spec/i18n-strategy.md) | 23개 언어 DB i18n + DeepL | ⏳ TBD |
 | [`spec/function-spec.md`](spec/function-spec.md) | 3 콘솔 기능 (분할 가능) | ⏳ TBD |
-| [`spec/payment-integration.md`](spec/payment-integration.md) | 토스 + 알리페이/위챗페이 + 면세 | ⏳ TBD |
-| [`spec/automation-roadmap.md`](spec/automation-roadmap.md) | Stage 1~3 자동화 | ⏳ TBD |
+| [`spec/subscription-billing.md`](spec/subscription-billing.md) | **provider 구독료만** (토스 빌링키). 사용자 결제·면세·외국인결제 없음 (Phase 2+ 검토) | ⏳ TBD |
+| [`spec/automation-roadmap.md`](spec/automation-roadmap.md) | Stage 1~3 자동화 (**출시 후 — 챗봇 포함**) | ⏳ TBD |
 | [`spec/store-review-compliance.md`](spec/store-review-compliance.md) | Apple HIG + Material 3 + 심의 | ⏳ TBD |
 
 각 spec 은 사용자 요청 시 채움 — 한꺼번에 작성하지 않음 (토큰 효율).
