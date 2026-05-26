@@ -1,0 +1,103 @@
+/* MemberCheckin — P22-b (2026-05-26): 회원 QR 체크인 (provider-web).
+   provider 디자인 토큰 (--pw-primary 녹색 #22C55E) 기반. */
+
+.member-checkin-page {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: var(--pw-space-6, 24px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-6, 24px);
+}
+
+.member-checkin-header .page-title {
+  font-size: var(--pw-title-size, 1.5rem);
+  font-weight: 700;
+  color: var(--pw-text);
+  margin: 0 0 8px 0;
+}
+.member-checkin-header .sub-title {
+  font-size: var(--pw-label-size, 0.875rem);
+  color: var(--pw-text-secondary);
+  margin: 0;
+}
+
+/* ── 스캐너 카메라 영역 ───────────────────────────────────── */
+.member-checkin-scan-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-3, 12px);
+}
+.member-checkin-scan-region {
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+  border-radius: var(--pw-radius-lg, 16px);
+  overflow: hidden;
+  background: #000;
+  aspect-ratio: 1 / 1;
+}
+
+/* ── 로딩 / 에러 / 결과 ──────────────────────────────────── */
+.member-checkin-busy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  color: var(--pw-text-secondary);
+}
+.member-checkin-busy .spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.member-checkin-error {
+  padding: 16px;
+  border-radius: var(--pw-radius-lg, 12px);
+  background: rgba(239, 68, 68, 0.12);
+  color: #FCA5A5;
+  border: 1px solid rgba(239, 68, 68, 0.32);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── 결과 (회원 카드 + 액션) ─────────────────────────────── */
+.member-checkin-result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-4, 16px);
+}
+.member-checkin-user-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--pw-radius-lg, 12px);
+  background: var(--pw-surface-1, rgba(255, 255, 255, 0.045));
+  border: 1px solid var(--pw-surface-line, rgba(255, 255, 255, 0.085));
+}
+.member-checkin-user-card .user-id {
+  font-weight: 600;
+  color: var(--pw-text);
+  margin-bottom: 4px;
+}
+.member-checkin-user-card .user-email {
+  font-size: 0.875rem;
+  color: var(--pw-text-secondary);
+}
+.member-checkin-user-card .user-minor {
+  margin-top: 8px;
+  font-size: 0.8125rem;
+  color: #FCD34D;
+}
+
+.member-checkin-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

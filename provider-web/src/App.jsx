@@ -15,6 +15,7 @@ import CustomerChat from './pages/CustomerChat';
 import Notifications from './pages/Notifications';
 import Stamps from './pages/Stamps';
 import StampForm from './pages/StampForm';
+import MemberCheckin from './pages/MemberCheckin';
 import Coupons from './pages/Coupons';
 import CouponForm from './pages/CouponForm';
 import Settings from './pages/Settings';
@@ -99,6 +100,8 @@ function App() {
           <Route path="/dashboard/notifications" element={<Notifications />} />
           <Route path="/dashboard/stamps" element={<Stamps />} />
           <Route path="/dashboard/stamps/:action/:id?" element={<StampForm />} />
+          {/* P22-b (2026-05-26): 회원 QR 체크인 — 손님 QR 스캔 후 스탬프/쿠폰 적용 */}
+          <Route path="/dashboard/checkin" element={<MemberCheckin />} />
           <Route path="/dashboard/coupons" element={<Coupons />} />
           <Route path="/dashboard/coupons/:action/:id?" element={<CouponForm />} />
           <Route path="/dashboard/payments" element={<PaymentManagement />} />
