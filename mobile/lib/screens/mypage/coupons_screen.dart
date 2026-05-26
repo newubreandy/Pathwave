@@ -467,10 +467,23 @@ class _CouponCard extends StatelessWidget {
             onPressed: () async {
               ctx.pop();
               final id = data['id'] as int?;
-              if (id != null) {
-                try {
-                  await CouponService().useCoupon(id);
-                } catch (_) {}
+              if (id == null) return;
+              // P9 (2026-05-26): silent error 수정 — 사용 후 피드백 + 목록 새로고침.
+              final messenger = ScaffoldMessenger.of(context);
+              try {
+                await CouponService().useCoupon(id);
+                if (!mounted) return;
+                messenger.showSnackBar(SnackBar(
+                  content: Text(t.t('coupon.use_success',
+                      defaultValue: '쿠폰을 사용했습니다.')),
+                ));
+                setState(() { _futures.clear(); }); // 전체 status 캐시 invalidate
+              } catch (e) {
+                if (!mounted) return;
+                messenger.showSnackBar(SnackBar(
+                  content: Text('${t.t('coupon.use_failed',
+                      defaultValue: '쿠폰 사용 실패')}: $e'),
+                ));
               }
             },
             child: Text(t.t('coupon.use_btn', defaultValue: '사용하기')),

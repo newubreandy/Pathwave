@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { Stamp, Plus, ChevronRight } from 'lucide-react';
 import StampService from '../services/stamp/StampService';
-import { MOCK_STAMPS } from '../services/stamp/mockStamps';
+import AuthService from '../services/auth/AuthService';
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import './Stamps.css';
@@ -25,12 +25,16 @@ const Stamps = () => {
   const loadStamps = async () => {
     setIsLoading(true);
     try {
-      // 백엔드 미연동 환경 — mock 사용. 연동 후 StampService.list() 호출 + setStampList 로 교체.
-      await new Promise((r) => setTimeout(r, 200));
-      setStampList(MOCK_STAMPS);
+      // P9 (2026-05-26): MOCK_STAMPS 제거 — 실 백엔드 호출.
+      // facility_id 는 로그인 사장 계정의 매장 (1계정=1매장 정책, AuthService).
+      const user = AuthService.getCurrentUser();
+      const fid = user?.facility_id || user?.facilityId || null;
+      const res = await StampService.list(fid);
+      const items = res?.stamps || res?.data || res || [];
+      setStampList(Array.isArray(items) ? items : []);
     } catch (error) {
       console.error('Failed to load stamps', error);
-      setStampList(MOCK_STAMPS); // fallback
+      setStampList([]); // 빈 상태 — 사장이 신규 등록 가능
     } finally {
       setIsLoading(false);
     }
