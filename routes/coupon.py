@@ -250,21 +250,60 @@ def get_coupon(cid):
 @coupon_bp.route('/api/coupons/<int:cid>', methods=['DELETE'])
 @require_facility_actor(roles=['owner', 'admin'])
 def revoke_coupon(cid):
-    """쿠폰 회수 (hard delete). 사용된 쿠폰도 삭제 가능 (이력 보존이 필요하면
-    delete 대신 별도 archive 테이블 — 향후)."""
+    """쿠폰 회수.
+
+    P22-d (2026-05-27): 활성 쿠폰 (미사용 + 미만료) 은 점주가 임의로 회수할 수 없음.
+    - 사용된 쿠폰 (used=1)            → 정리 가능 (이력 보존이 필요하면 archive)
+    - 만료된 쿠폰 (expires_at < now)  → 정리 가능
+    - 활성 쿠폰 (used=0 + 미만료)     → 거부 (소비자 보호)
+      → 활성 쿠폰 정리가 필요하면 슈퍼어드민에 요청.
+    """
     account_id = g.auth['owner_account_id']
     db = get_db()
+
+    # 본인 매장의 쿠폰인지 + 상태 확인
+    row = db.execute(
+        """SELECT c.id, c.used, c.expires_at
+             FROM coupons c
+             JOIN facilities f ON f.id = c.facility_id
+            WHERE c.id=? AND f.owner_id=?""",
+        (cid, account_id),
+    ).fetchone()
+    if not row:
+        db.close()
+        return jsonify({'success': False,
+                        'message': '쿠폰을 찾을 수 없습니다.'}), 404
+
+    is_used = bool(row['used'])
+    is_expired = False
+    if row['expires_at']:
+        # expires_at < now 면 만료. SQLite 의 datetime 비교는 ISO 문자열로 OK.
+        exp_row = db.execute(
+            "SELECT (?  < datetime('now')) AS expired",
+            (row['expires_at'],),
+        ).fetchone()
+        is_expired = bool(exp_row['expired'])
+
+    if not is_used and not is_expired:
+        # 활성 쿠폰 — 거부.
+        db.close()
+        return jsonify({
+            'success': False,
+            'message': '활성 쿠폰은 회수할 수 없습니다. 사용 또는 만료 후 정리할 수 있습니다.',
+            'code':    'COUPON_ACTIVE_PROTECTED',
+        }), 403
+
     cur = db.execute(
         """DELETE FROM coupons
            WHERE id=? AND facility_id IN (SELECT id FROM facilities WHERE owner_id=?)""",
-        (cid, account_id)
+        (cid, account_id),
     )
     db.commit()
     affected = cur.rowcount
     db.close()
     if affected == 0:
         return jsonify({'success': False, 'message': '쿠폰을 찾을 수 없습니다.'}), 404
-    return jsonify({'success': True, 'message': '쿠폰이 회수되었습니다.'})
+    return jsonify({'success': True, 'message': '쿠폰이 정리되었습니다.'})
 
 
 # ── 사용 처리 ─────────────────────────────────────────────────────────────────
