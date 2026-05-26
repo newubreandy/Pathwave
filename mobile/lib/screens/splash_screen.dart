@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/auth_service.dart';
+import '../services/i18n_service.dart';
 import '../services/version_service.dart';
+import '../utils/i18n_context.dart';
 import '../utils/neu_theme.dart';
 
 /// 스플래시 — AuthService 초기 토큰 로딩 + 앱 버전 강제/권장 업데이트 체크 후
@@ -57,6 +59,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _showForceUpdateDialog(VersionCheckResult v) async {
     if (!mounted) return;
+    final i18n = I18nService.instance;
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -64,17 +67,20 @@ class _SplashScreenState extends State<SplashScreen> {
         canPop: false,
         child: AlertDialog(
           backgroundColor: NeuTheme.surface,
-          title: const Text('업데이트가 필요합니다'),
+          title: Text(i18n.t('mobile.splash.force_update.title',
+              defaultValue: '업데이트가 필요합니다')),
           content: Text(
             v.forceMessage?.isNotEmpty == true
                 ? v.forceMessage!
-                : '안전한 사용을 위해 최신 버전 설치가 필요합니다.\n'
-                  '현재 버전: ${v.current ?? '-'} · 최소 지원: ${v.minSupported ?? '-'}',
+                : '${i18n.t('mobile.splash.force_update.body', defaultValue: '안전한 사용을 위해 최신 버전 설치가 필요합니다.')}\n'
+                  '${i18n.t('mobile.splash.current_version', defaultValue: '현재 버전')}: ${v.current ?? '-'} · '
+                  '${i18n.t('mobile.splash.min_supported', defaultValue: '최소 지원')}: ${v.minSupported ?? '-'}',
           ),
           actions: [
             FilledButton(
               onPressed: () => _openStore(v.storeUrl),
-              child: const Text('스토어로 이동'),
+              child: Text(i18n.t('mobile.splash.go_store',
+                  defaultValue: '스토어로 이동')),
             ),
           ],
         ),
@@ -84,20 +90,23 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _showRecommendDialog(VersionCheckResult v) async {
     if (!mounted) return;
+    final i18n = I18nService.instance;
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: NeuTheme.surface,
-        title: const Text('새로운 버전이 있어요'),
+        title: Text(i18n.t('mobile.splash.recommend_update.title',
+            defaultValue: '새로운 버전이 있어요')),
         content: Text(
-          '최신 버전이 출시되었습니다.\n'
-          '현재 ${v.current ?? '-'} → 최신 ${v.latest ?? '-'}',
+          '${i18n.t('mobile.splash.recommend_update.body', defaultValue: '최신 버전이 출시되었습니다.')}\n'
+          '${i18n.t('mobile.splash.current_version', defaultValue: '현재')} ${v.current ?? '-'} → '
+          '${i18n.t('mobile.splash.latest', defaultValue: '최신')} ${v.latest ?? '-'}',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('나중에'),
+            child: Text(i18n.t('common.later', defaultValue: '나중에')),
           ),
           FilledButton(
             onPressed: () {
@@ -105,7 +114,8 @@ class _SplashScreenState extends State<SplashScreen> {
               Navigator.of(ctx).pop();
               _openStore(v.storeUrl);
             },
-            child: const Text('지금 업데이트'),
+            child: Text(i18n.t('mobile.splash.update_now',
+                defaultValue: '지금 업데이트')),
           ),
         ],
       ),
@@ -146,8 +156,9 @@ class _SplashScreenState extends State<SplashScreen> {
             Text('PathWave',
               style: Theme.of(context).textTheme.displaySmall),
             const SizedBox(height: 6),
-            const Text('비콘 기반 WiFi · 스탬프 · 쿠폰',
-              style: TextStyle(color: NeuTheme.textSecondary)),
+            Text(context.t('mobile.splash.tagline',
+                defaultValue: '비콘 기반 WiFi · 스탬프 · 쿠폰'),
+              style: const TextStyle(color: NeuTheme.textSecondary)),
               const SizedBox(height: 40),
               const CircularProgressIndicator(
                 strokeWidth: 2.5,

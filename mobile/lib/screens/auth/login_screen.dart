@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
+import '../../utils/i18n_context.dart';
 import '../../utils/neu_theme.dart';
 import '../../widgets/neu/neu_button.dart';
 import '../../widgets/neu/neu_card.dart';
@@ -104,9 +105,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: Theme.of(context).textTheme.displaySmall),
               ),
               const SizedBox(height: 4),
-              const Center(
-                child: Text('이메일로 로그인',
-                  style: TextStyle(color: NeuTheme.textSecondary)),
+              Center(
+                child: Text(
+                  context.t('mobile.auth.login.subtitle',
+                      defaultValue: '이메일로 로그인'),
+                  style: const TextStyle(color: NeuTheme.textSecondary),
+                ),
               ),
               const SizedBox(height: 28),
 
@@ -142,8 +146,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: _busy
                     ? const SizedBox(width: 22, height: 22,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('로그인',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                    : Text(
+                        context.t('mobile.auth.login.button',
+                            defaultValue: '로그인'),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                 ),
               ),
 
@@ -156,30 +162,36 @@ class _LoginScreenState extends State<LoginScreen> {
                     fullWidth: false,
                     // push 사용 — 비밀번호 찾기 화면에서 백 버튼으로 로그인 복귀.
                     onPressed: _busy ? null : () => context.push('/auth/forgot'),
-                    child: const Text('비밀번호 찾기',
-                      style: TextStyle(color: NeuTheme.textSecondary)),
+                    child: Text(
+                      context.t('mobile.auth.forgot_password',
+                          defaultValue: '비밀번호 찾기'),
+                      style: const TextStyle(color: NeuTheme.textSecondary)),
                   ),
                   PwButton(
                     variant: PwButtonVariant.text,
                     fullWidth: false,
                     // push 사용 — 회원가입 화면에서 백 버튼으로 로그인 복귀.
                     onPressed: _busy ? null : () => context.push('/auth/register'),
-                    child: const Text('회원가입',
-                      style: TextStyle(color: NeuTheme.primary, fontWeight: FontWeight.w600)),
+                    child: Text(
+                      context.t('mobile.auth.signup',
+                          defaultValue: '회원가입'),
+                      style: const TextStyle(color: NeuTheme.primary, fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),
 
               const SizedBox(height: 4),
-              const Row(
+              Row(
                 children: [
-                  Expanded(child: Divider(color: NeuTheme.border)),
+                  const Expanded(child: Divider(color: NeuTheme.border)),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('또는 SNS 로 계속',
-                      style: TextStyle(color: NeuTheme.textHint, fontSize: 12)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      context.t('mobile.auth.login.or_sns',
+                          defaultValue: '또는 SNS 로 계속'),
+                      style: const TextStyle(color: NeuTheme.textHint, fontSize: 12)),
                   ),
-                  Expanded(child: Divider(color: NeuTheme.border)),
+                  const Expanded(child: Divider(color: NeuTheme.border)),
                 ],
               ),
               const SizedBox(height: 18),
@@ -210,15 +222,17 @@ class _LoginScreenState extends State<LoginScreen> {
               // PR #68 — 둘러보기 (로그인 없이 화면 미리보기)
               NeuButton(
                 onPressed: _busy ? null : _previewMode,
-                child: const Center(
+                child: Center(
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.visibility_outlined, size: 18,
+                      const Icon(Icons.visibility_outlined, size: 18,
                         color: NeuTheme.textSecondary),
-                      SizedBox(width: 8),
-                      Text('로그인 없이 둘러보기',
-                        style: TextStyle(
+                      const SizedBox(width: 8),
+                      Text(
+                        context.t('mobile.auth.login.preview_mode',
+                            defaultValue: '로그인 없이 둘러보기'),
+                        style: const TextStyle(
                           color: NeuTheme.textSecondary,
                           fontWeight: FontWeight.w600,
                         )),

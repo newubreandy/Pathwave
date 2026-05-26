@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../services/i18n_service.dart';
 import '../../services/support_service.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/i18n_context.dart';
 import '../../widgets/pw.dart';
 
 /// 문의 상세 — ticket 정보 + thread 메시지 + 추가 메시지 입력.
@@ -45,7 +47,7 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('전송 실패: $e')),
+        SnackBar(content: Text('${I18nService.instance.t('mobile.support.send_failed', defaultValue: '전송 실패')}: $e')),
       );
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -55,7 +57,7 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PwAppBar(title: const Text('문의 상세')),
+      appBar: PwAppBar(title: Text(context.t('mobile.support.detail_title', defaultValue: '문의 상세'))),
       body: FutureBuilder<Map<String, dynamic>>(
         future: _ticketFuture,
         builder: (context, snap) {
@@ -67,13 +69,13 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('불러오기 실패: ${snap.error}',
+                  Text('${context.t('mobile.common.load_failed', defaultValue: '불러오기 실패')}: ${snap.error}',
                       style: const TextStyle(color: AppTheme.textSecondary)),
                   const SizedBox(height: 12),
                   PwButton(
                     fullWidth: false,
                     onPressed: () => setState(() { _load(); }),
-                    child: const Text('다시 시도'),
+                    child: Text(context.t('mobile.common.retry', defaultValue: '다시 시도')),
                   ),
                 ],
               ),
@@ -122,7 +124,8 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
               Expanded(
                 child: messages.isEmpty
                     ? const Center(
-                        child: Text('아직 메시지가 없습니다.',
+                        child: Text(context.t('mobile.support.no_messages',
+                            defaultValue: '아직 메시지가 없습니다.'),
                             style: TextStyle(color: AppTheme.textSecondary)),
                       )
                     : ListView.builder(
@@ -165,7 +168,7 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
                         fullWidth: false,
                         loading: _sending,
                         onPressed: _sending ? null : _sendMessage,
-                        child: const Text('전송'),
+                        child: Text(context.t('mobile.support.send', defaultValue: '전송')),
                       ),
                     ],
                   ),
@@ -218,7 +221,7 @@ class _MessageBubble extends StatelessWidget {
               isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             if (!isUser)
-              const Text('관리자',
+              Text(context.t('mobile.support.admin', defaultValue: '관리자'),
                   style: TextStyle(
                       color: AppTheme.primary,
                       fontSize: 11,

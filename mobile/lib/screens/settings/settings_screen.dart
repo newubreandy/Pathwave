@@ -5,10 +5,12 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/auth_service.dart';
+import '../../services/i18n_service.dart';
 import '../../services/notification_preferences_service.dart';
 import '../../services/policy_service.dart';
 import '../../utils/api_config.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/i18n_context.dart';
 import '../../widgets/pw.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -20,7 +22,7 @@ class SettingsScreen extends StatelessWidget {
     final email = auth.user?['email']?.toString() ?? '—';
 
     return Scaffold(
-      appBar: PwAppBar(title: const Text('설정')),
+      appBar: PwAppBar(title: Text(context.t('mobile.settings.title', defaultValue: '설정'))),
       body: SafeArea(child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -73,13 +75,13 @@ class SettingsScreen extends StatelessWidget {
               await context.read<AuthService>().logout();
               if (context.mounted) context.go('/auth/login');
             },
-            child: const Text('로그아웃'),
+            child: Text(context.t('mobile.mypage.logout', defaultValue: '로그아웃')),
           ),
           const SizedBox(height: 8),
           PwButton(
             variant: PwButtonVariant.text,
             onPressed: () => context.push('/mypage/delete-account'),
-            child: const Text('회원 탈퇴',
+            child: Text(context.t('mobile.mypage.delete_account.title', defaultValue: '회원 탈퇴'),
               style: TextStyle(
                 color: AppTheme.error,
                 decoration: TextDecoration.underline,
@@ -101,7 +103,7 @@ class SettingsScreen extends StatelessWidget {
     await Clipboard.setData(const ClipboardData(text: _supportEmail));
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('고객지원 이메일을 클립보드에 복사했습니다: support@triggersoft.kr')),
+      SnackBar(content: Text(I18nService.instance.t('mobile.settings.support_email_copied', defaultValue: '고객지원 이메일을 클립보드에 복사했습니다: support@triggersoft.kr'))),
     );
   }
 
@@ -111,7 +113,7 @@ class SettingsScreen extends StatelessWidget {
       barrierColor: const Color(0x99000000),
       barrierDismissible: true,
       builder: (_) => AlertDialog(
-        title: const Text('자주 묻는 질문'),
+        title: Text(I18nService.instance.t('mobile.settings.faq', defaultValue: '자주 묻는 질문')),
         content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,7 +139,7 @@ class SettingsScreen extends StatelessWidget {
             variant: PwButtonVariant.text,
             fullWidth: false,
             onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
+            child: Text(I18nService.instance.t('mobile.common.close', defaultValue: '닫기')),
           ),
         ],
       ),
@@ -170,7 +172,7 @@ class SettingsScreen extends StatelessWidget {
       if (!context.mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('약관을 불러오지 못했습니다: $e')),
+        SnackBar(content: Text('${I18nService.instance.t('mobile.settings.policy_load_failed', defaultValue: '약관을 불러오지 못했습니다')}: $e')),
       );
     }
   }
@@ -280,7 +282,7 @@ class _PolicySheet extends StatelessWidget {
             ),
             if (effective != null && effective.isNotEmpty) ...[
               const SizedBox(height: 4),
-              Text('시행일: ${effective.split("T").first}',
+              Text('${context.t('mobile.settings.effective_date', defaultValue: '시행일')}: ${effective.split("T").first}',
                 style: const TextStyle(color: AppTheme.textHint, fontSize: 12)),
             ],
             const Divider(height: 24),
@@ -295,7 +297,7 @@ class _PolicySheet extends StatelessWidget {
             PwButton(
               variant: PwButtonVariant.text,
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('닫기'),
+              child: Text(I18nService.instance.t('mobile.common.close', defaultValue: '닫기')),
             ),
           ],
         ),
@@ -416,7 +418,7 @@ class _NotificationPreferencesSectionState
           : e).toList();
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('변경 실패 — 잠시 후 다시 시도해 주세요.')),
+        SnackBar(content: Text(I18nService.instance.t('mobile.settings.change_failed', defaultValue: '변경 실패 — 잠시 후 다시 시도해 주세요.'))),
       );
     } finally {
       if (mounted) setState(() => _busyCategory = null);
@@ -430,7 +432,7 @@ class _NotificationPreferencesSectionState
       children: [
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Text('알림 카테고리',
+          child: Text(context.t('mobile.settings.notification_category', defaultValue: '알림 카테고리'),
             style: TextStyle(color: AppTheme.textHint, fontSize: 12, letterSpacing: 0.5)),
         ),
         Container(
