@@ -5,12 +5,15 @@ import { Stamp, Plus, ChevronRight } from 'lucide-react';
 import StampService from '../services/stamp/StampService';
 import AuthService from '../services/auth/AuthService';
 import Button from '../components/common/Button';
+import { useConfirm } from '../hooks/useConfirm';
 import BottomActionBar from '../components/common/BottomActionBar';
 import './Stamps.css';
 
 const Stamps = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  // P3-b (2026-05-26): ConfirmModal 기반 confirm/alert (window.* 대신).
+  const { confirm, alert, modal: confirmModal } = useConfirm();
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [stampList, setStampList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,16 +51,21 @@ const Stamps = () => {
   const pausedStamp = stampList.find(s => s.status === 'paused');
   const canRegisterNew = !activeStamp; // active 가 없을 때만 등록 버튼 노출
 
-  const handleAddClick = () => {
+  const handleAddClick = async () => {
     if (activeStamp) {
       // 정상적으로는 버튼이 안 보이지만 만약 클릭되면 안내.
-      alert('현재 진행 중인 스탬프가 있습니다. 매장당 1개의 스탬프만 활성화할 수 있으므로, 기존 스탬프를 정지 후 다시 시도해 주세요.');
+      await alert({
+        title: '진행 중인 스탬프 존재',
+        desc:  '매장당 1개의 스탬프만 활성화할 수 있습니다.\n기존 스탬프를 정지 후 다시 시도해 주세요.',
+      });
       return;
     }
     if (pausedStamp) {
-      const ok = window.confirm(
-        '일시정지된 기존 스탬프가 있습니다.\n신규 스탬프를 등록하시면 사용자가 적립한 기존 스탬프는 더 이상 적용되지 않습니다.\n\n계속 진행하시겠어요?'
-      );
+      const ok = await confirm({
+        title: '신규 스탬프 등록 — 기존 적립 무효',
+        desc:  '일시정지된 기존 스탬프가 있습니다.\n신규 스탬프를 등록하시면 사용자가 적립한 기존 스탬프는 더 이상 적용되지 않습니다.\n\n계속 진행하시겠어요?',
+        confirmText: '계속',
+      });
       if (!ok) return;
     }
     navigate('/dashboard/stamps/new');
@@ -76,7 +84,7 @@ const Stamps = () => {
       await StampService.toggleStampStatus(stamp.id);
       loadStamps();
     } catch (error) {
-      alert(error.message);
+      await alert({ title: '실패', desc: error.message });
     }
     setActiveMenuId(null);
   };
@@ -84,12 +92,17 @@ const Stamps = () => {
   const handleDelete = async (e, id) => {
     e.stopPropagation();
     e.preventDefault();
-    if (window.confirm('이 스탬프를 목록에서 삭제하시겠습니까? (기록은 백데이터에 유지됩니다)')) {
+    const ok = await confirm({
+      title: '스탬프 삭제',
+      desc:  '이 스탬프를 목록에서 삭제하시겠습니까?\n(기록은 백데이터에 유지됩니다)',
+      confirmText: '삭제',
+    });
+    if (ok) {
       try {
         await StampService.deleteStamp(id);
         loadStamps();
       } catch (error) {
-        alert('삭제에 실패했습니다.');
+        await alert({ title: '삭제 실패', desc: error.message || '잠시 후 다시 시도해 주세요.' });
       }
     }
     setActiveMenuId(null);
@@ -184,6 +197,8 @@ const Stamps = () => {
           </Button>
         </BottomActionBar>
       )}
+      {/* P3-b: 공용 confirm/alert 모달 (ConfirmModal 통합) */}
+      {confirmModal}
     </div>
   );
 };
