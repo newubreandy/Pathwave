@@ -29,6 +29,11 @@ CONSENT_KINDS = {
     'terms_facility':   {'required_for': {'facility', 'staff'},  'applicable_for': {'facility', 'staff'}},
     'privacy_user':     {'required_for': {'user'},               'applicable_for': {'user'}},
     'privacy_facility': {'required_for': {'facility', 'staff'},  'applicable_for': {'facility', 'staff'}},
+    # P13 (2026-05-26) — 환불·청소년·쿠키 정책. 가입 화면 비노출 (applicable_for=set()),
+    # 단순 정보 노출용 (footer / 마이페이지 / 설정 의 '약관 보기' 에서 표시).
+    'refund':           {'required_for': set(),                  'applicable_for': set()},  # 환불 정책
+    'youth_protection': {'required_for': set(),                  'applicable_for': set()},  # 청소년 보호 정책
+    'cookie':           {'required_for': set(),                  'applicable_for': set()},  # 쿠키 정책
 }
 
 VALID_KINDS = set(CONSENT_KINDS.keys())
