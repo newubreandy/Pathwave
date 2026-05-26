@@ -17,11 +17,13 @@ import '../../pages/Settings.css';
  */
 export default function BusinessInfoModal({ onClose, context = 'settings' }) {
   const user = AuthService.getCurrentUser();
+  // P5 (2026-05-26): mock fallback ('시원컴퍼니' / '02-1234-5678' / 'admin@pathwave.com') 제거.
+  // 사장이 직접 입력하거나, 백엔드 GET /api/account/business-info 에서 fetch (Phase 2+).
   const [formData, setFormData] = useState({
-    name: user?.name || '시원컴퍼니',
-    bizNumber: '123-45-67890',
-    phone: '02-1234-5678',
-    email: user?.email || 'admin@pathwave.com',
+    name: user?.name || '',
+    bizNumber: '',
+    phone: '',
+    email: user?.email || '',
   });
   const [submitted, setSubmitted] = useState(false);
 
@@ -69,6 +71,7 @@ export default function BusinessInfoModal({ onClose, context = 'settings' }) {
                   className="settings-modal-input"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="대표자명"
                 />
               </div>
 
@@ -101,6 +104,7 @@ export default function BusinessInfoModal({ onClose, context = 'settings' }) {
                   className="settings-modal-input"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="email@example.com"
                 />
               </div>
 

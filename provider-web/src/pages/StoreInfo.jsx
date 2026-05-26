@@ -46,19 +46,19 @@ const StoreInfo = () => {
   const showError = (msg) => {
     setErrorMessage(msg);
   };
+  // P5 (2026-05-26): mock 매장 정보 ('패스트파이브 강남점' / '02-1234-5678' /
+  // unsplash 외부 이미지 등) 제거. 사장이 가입 후 직접 입력 또는 StoreService.get(fid)
+  // 로 백엔드 fetch (Phase 2+ 실연동).
   const [store, setStore] = useState({
-    name: '패스트파이브 강남점',
-    address: '서울특별시 강남구 테헤란로 123',
+    name: '',
+    address: '',
     detailAddress: '',
-    phone: '02-1234-5678',
-    description: '크리에이티브 전문가와 고성장 스타트업을 위한 미니멀한 공유 오피스입니다.',
-    images: [
-      'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200',
-      'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&q=80&w=400',
-    ],
+    phone: '',
+    description: '',
+    images: [],
     hours: { start: '09:00', end: '22:00' },
-    holidays: { days: ['토요일', '일요일'], publicHolidays: true },
-    categories: ['공유오피스'],
+    holidays: { days: [], publicHolidays: false },
+    categories: [],
     lat: LocationService.getDefaultCoordinates().lat,
     lng: LocationService.getDefaultCoordinates().lng
   });
@@ -173,11 +173,9 @@ const StoreInfo = () => {
     setIsAddressSearchOpen(false);
   };
 
-  // DB 연동으로 자동 노출되는 혜택 (Mock Data)
-  const dbBenefits = [
-    "[혜택] 호텔H 숙박 스탬프 이벤트 진행",
-    "[이벤트] 첫 방문 고객 10% 할인 쿠폰"
-  ];
+  // P5 (2026-05-26): mock dbBenefits ('호텔H' 등) 제거. 실 데이터는 매장 캠페인
+  // (stamp_policies / coupons) 에서 가져와야 함 — Phase 2+ 실연동 시 fetch.
+  const dbBenefits = [];
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);

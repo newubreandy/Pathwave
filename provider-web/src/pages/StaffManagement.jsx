@@ -9,26 +9,28 @@ import PasswordInput from '../components/common/PasswordInput';
 import BusinessInfoModal from '../components/common/BusinessInfoModal';
 import './StaffManagement.css';
 
-/* ── 더미 회원 데이터 (MemberProfile 통합) ── */
+/* P5 (2026-05-26): 더미 회원/회사 데이터 ('호텔H' / '02-1234-5678' / 'hotel_H'
+   / 'webmaster@hotelh.com' 등) 제거. 실 데이터는 가입 시 입력 + 백엔드 fetch.
+   Phase 2+ 에서 GET /api/account/business-info 실연동 시 mock 자리 채움. */
 const INITIAL_PROFILE = {
   company: {
-    name: '호텔H',
-    type: '법인사업자',
-    registrationNumber: '759-07-12345',
-    registrationFile: '사업자등록증.jpg',
-    ceoName: '홍길동',
-    cellularPhone: '010-1234-5678',
-    officePhone: '02-1234-5678',
-    address: '서울특별시 중구 동호로 249 (우편번호 : 04605)',
+    name: '',
+    type: '',
+    registrationNumber: '',
+    registrationFile: '',
+    ceoName: '',
+    cellularPhone: '',
+    officePhone: '',
+    address: '',
   },
   agent: {
-    name: '신나라',
-    phone: '010-1234-5678',
+    name: '',
+    phone: '',
   },
   account: {
-    id: 'hotel_H',
-    password: 'Abcd468@',
-    email: 'webmaster@hotelh.com',
+    id: '',
+    password: '',
+    email: '',
   },
 };
 

@@ -83,9 +83,11 @@ const Notifications = () => {
     })();
   }, []);
 
+  // P5 (2026-05-26): mock '호텔H' 제거 — 매장명 일반화. 실 데이터는
+  // GET /api/notifications (매장별) 에서 fetch — Phase 2+ 실연동.
   const [notifications, setNotifications] = useState([
-    { id: 1, type: "공지", title: "지하 2층 사우나 청소안내", date: "2022.05.17 18:00", status: "sent", message: "안녕하세요 호텔H입니다.\n\n2022.05.17 18:00 ~ 24:00 남성 및 여성 사우나 내부청소로 운영이 중단되오니 이점 참고하시어 이용에 불편이 없도록 이용하셨으면 좋겠습니다.\n\n감사합니다.", pushLocal: true, pushGlobal: false },
-    { id: 2, type: "이벤트", title: "여름맞이 전품목 10% 할인", date: "2026.08.01 09:00", status: "pending", message: "이벤트 내용입니다.", pushLocal: true, pushGlobal: false }
+    { id: 1, type: "공지", title: "샘플 공지 — 시설 점검 안내", date: "2026.05.17 18:00", status: "sent", message: "안녕하세요.\n\n시설 점검으로 운영이 일시 중단됩니다. 자세한 일정은 공지를 참고해 주세요.\n\n감사합니다.", pushLocal: true, pushGlobal: false },
+    { id: 2, type: "이벤트", title: "샘플 이벤트 — 전품목 10% 할인", date: "2026.08.01 09:00", status: "pending", message: "이벤트 내용을 작성해 주세요.", pushLocal: true, pushGlobal: false }
   ]);
 
   const [notifKind, setNotifKind] = useState('general'); // 'general' | 'marketing'
