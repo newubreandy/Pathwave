@@ -142,9 +142,10 @@
 }
 
 .sp-badge--resolved {
-  background: rgba(139, 92, 246, 0.10);
-  color: #8B5CF6;
-  border: 1px solid rgba(139, 92, 246, 0.20);
+  /* P3-a: 구 #8B5CF6 보라 잔존 정리 → primary (녹색 #22C55E) 토큰 */
+  background: var(--pw-primary-light, rgba(34, 197, 94, 0.18));
+  color: var(--pw-primary, #22C55E);
+  border: 1px solid var(--pw-primary-glow, rgba(34, 197, 94, 0.32));
 }
 
 .sp-badge--closed {
