@@ -5,6 +5,7 @@ import {
 import Modal from '../components/Modal.jsx';
 import PolicyEditor from '../components/PolicyEditor.jsx';
 import { adminApi } from '../services/admin.js';
+import { useConfirm } from '../hooks/useConfirm.jsx';
 import './Beacons.css';
 
 const KIND_OPTIONS = [
@@ -21,6 +22,7 @@ const KIND_OPTIONS = [
 const KIND_LABEL = Object.fromEntries(KIND_OPTIONS.map((o) => [o.value, o.label]));
 
 export default function Policies() {
+  const { confirm, alert: alertModal, modal: confirmModalEl } = useConfirm();
   const [active, setActive] = useState([]);
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,26 +46,33 @@ export default function Policies() {
   useEffect(() => { reload(); }, [reload]);
 
   async function handleDelete(p) {
-    if (!confirm(`"${KIND_LABEL[p.kind]} v${p.version}" 미시행 버전을 삭제하시겠습니까?`)) return;
+    const ok = await confirm({
+      title: '미시행 버전 삭제',
+      desc:  `"${KIND_LABEL[p.kind]} v${p.version}" 미시행 버전을 삭제하시겠습니까?`,
+      confirmText: '삭제',
+    });
+    if (!ok) return;
     try {
       await adminApi.deletePolicy(p.id);
       reload();
     } catch (e) {
-      alert(e.message || '삭제 실패');
+      await alertModal({ title: '삭제 실패', desc: e.message || '잠시 후 다시 시도해 주세요.' });
     }
   }
 
   async function handleNotify(p) {
-    const ok = confirm(
-      `"${KIND_LABEL[p.kind]} v${p.version}" 변경 안내 메일을 모든 사용자/사장에게 발송하시겠습니까?\n\n발송 후 재발송은 불가합니다.`
-    );
+    const ok = await confirm({
+      title: '변경 안내 메일 발송',
+      desc:  `"${KIND_LABEL[p.kind]} v${p.version}" 변경 안내 메일을 모든 사용자/사장에게 발송하시겠습니까?\n\n발송 후 재발송은 불가합니다.`,
+      confirmText: '발송',
+    });
     if (!ok) return;
     try {
       const res = await adminApi.notifyPolicy(p.id, 'all');
-      alert(`발송 완료: ${res.sent}건 (실패 ${res.failed}건)`);
+      await alertModal({ title: '발송 완료', desc: `${res.sent}건 발송 (실패 ${res.failed}건)` });
       reload();
     } catch (e) {
-      alert(e.message || '발송 실패');
+      await alertModal({ title: '발송 실패', desc: e.message || '잠시 후 다시 시도해 주세요.' });
     }
   }
 
@@ -230,6 +239,7 @@ export default function Policies() {
         kind={historyKind}
         onClose={() => setHistoryKind(null)}
       />
+      {confirmModalEl}
     </div>
   );
 }
