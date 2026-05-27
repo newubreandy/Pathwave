@@ -10,10 +10,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { RefreshCw, Plus, Edit2, Trash2, EyeOff, Eye } from 'lucide-react';
 import { adminApi } from '../services/admin.js';
 import Modal from '../components/Modal.jsx';
+import { useConfirm } from '../hooks/useConfirm.jsx';
 
 const EMPTY = { name: '', group: '기타', sort_order: 0, active: true };
 
 export default function Categories() {
+  const { confirm, modal: confirmModalEl } = useConfirm();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
@@ -97,7 +99,12 @@ export default function Categories() {
   }
 
   async function hardDelete(cat) {
-    if (!window.confirm(`'${cat.name}' 완전 삭제? (복구 불가)`)) return;
+    const ok = await confirm({
+      title: '카테고리 완전 삭제',
+      desc:  `'${cat.name}' 카테고리를 완전 삭제하시겠습니까?\n복구할 수 없습니다.`,
+      confirmText: '삭제',
+    });
+    if (!ok) return;
     setBusy(true); setError(''); setSuccess('');
     try {
       await adminApi.hardDeleteCategory(cat.id);
@@ -262,6 +269,7 @@ export default function Categories() {
           )}
         </Modal>
       )}
+      {confirmModalEl}
     </div>
   );
 }
