@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthService from '../services/auth/AuthService';
 import ConsentSection from '../components/ConsentSection';
+import { useConfirm } from '../hooks/useConfirm';
 import './Signup.css';
 
 // 출시 전 임시 — 사업자 검증 없이 시설관리자 콘솔을 둘러볼 수 있게.
@@ -16,6 +17,7 @@ function enterAsGuest(navigate) {
 
 const Signup = () => {
   const navigate = useNavigate();
+  const { alert: alertModal, modal: confirmModal } = useConfirm();
   const [formData, setFormData] = useState({
     companyName: '',
     businessNo: '',
@@ -38,7 +40,7 @@ const Signup = () => {
   const handleSignup = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      alert('비밀번호가 일치하지 않습니다.');
+      await alertModal({ title: '비밀번호 불일치', desc: '비밀번호와 확인 비밀번호가 일치하지 않습니다.' });
       return;
     }
     setIsLoading(true);
@@ -49,11 +51,11 @@ const Signup = () => {
         kind, accepted: !!accepted, version: 'unspecified',
       }));
       await AuthService.register({ ...formData, consents: consentsPayload });
-      alert('회원가입이 완료되었습니다. 대시보드로 이동합니다.');
+      await alertModal({ title: '회원가입 완료', desc: '대시보드로 이동합니다.' });
       navigate('/dashboard');
     } catch (error) {
       const msg = error?.message || '회원가입에 실패했습니다.';
-      alert(msg);
+      await alertModal({ title: '회원가입 실패', desc: msg });
     } finally {
       setIsLoading(false);
     }
@@ -172,6 +174,7 @@ const Signup = () => {
           </button>
         </div>
       </div>
+      {confirmModal}
     </div>
   );
 };

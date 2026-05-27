@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import AuthService from '../services/auth/AuthService';
+import { useConfirm } from '../hooks/useConfirm';
 import './Login.css';
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { alert: alertModal, modal: confirmModal } = useConfirm();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,7 +37,7 @@ const Login = () => {
       const from = location.state?.from?.pathname || fromQuery || '/dashboard';
       navigate(from, { replace: true });
     } catch (error) {
-      alert('Login failed. Please check your credentials.');
+      await alertModal({ title: '로그인 실패', desc: '이메일과 비밀번호를 확인해 주세요.' });
     } finally {
       setLoading(false);
     }
@@ -91,6 +93,7 @@ const Login = () => {
           </div>
         </form>
       </div>
+      {confirmModal}
     </div>
   );
 };
