@@ -27,10 +27,12 @@ import MenuService from '../services/store/MenuService';
 import PwModal, { PwField } from '../components/common/PwModal';
 import PwPageHeader from '../components/common/PwPageHeader';
 import PwInfoBanner from '../components/common/PwInfoBanner';
+import { useConfirm } from '../hooks/useConfirm';
 
 const EMPTY_ITEM = { name: '', price: '', description: '', sort_order: 0 };
 
 export default function MenuManagement() {
+  const { confirm, modal: confirmModalEl } = useConfirm();
   const [facility, setFacility] = useState(null);
   const [items, setItems]       = useState([]);
   const [loading, setLoading]   = useState(true);
@@ -111,7 +113,12 @@ export default function MenuManagement() {
   }
 
   async function del(item) {
-    if (!window.confirm(`"${item.name}" 삭제하시겠습니까?\n(연결된 외국어 번역도 함께 제거됩니다)`)) return;
+    const ok = await confirm({
+      title: '메뉴 삭제',
+      desc:  `"${item.name}" 삭제하시겠습니까?\n(연결된 외국어 번역도 함께 제거됩니다)`,
+      confirmText: '삭제',
+    });
+    if (!ok) return;
     setBusy(true); setError(''); setSuccess('');
     try {
       await MenuService.deleteItem(item.id);
@@ -247,6 +254,7 @@ export default function MenuManagement() {
           busy={busy}
         />
       )}
+      {confirmModalEl}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, X, Info } from 'lucide-react';
 import AuthService from '../services/auth/AuthService';
 import PwPageHeader from '../components/common/PwPageHeader';
+import { useConfirm } from '../hooks/useConfirm';
 import NotificationPreferencesService from '../services/notification/NotificationPreferencesService';
 import ConfirmModal from '../components/common/ConfirmModal';
 import PasswordInput from '../components/common/PasswordInput';
@@ -170,6 +171,7 @@ const PasswordModal = ({ onClose }) => {
    ═══════════════════════════════════════════════════ */
 const Settings = () => {
   const navigate = useNavigate();
+  const { alert: alertModal, modal: confirmModal } = useConfirm();
   const [settings, setSettings] = useState(loadSettings);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showBusinessModal, setShowBusinessModal] = useState(false);
@@ -210,7 +212,7 @@ const Settings = () => {
       // rollback
       setServerPrefs(prev =>
         prev?.map(p => p.category === cat ? { ...p, enabled: !next } : p));
-      alert(err.message || '변경 실패 — 잠시 후 다시 시도해 주세요.');
+      await alertModal({ title: '변경 실패', desc: err.message || '잠시 후 다시 시도해 주세요.' });
     } finally {
       setToggling(null);
     }
@@ -524,6 +526,7 @@ const Settings = () => {
           onCancel={() => setShowWithdrawSuccess(false)}
         />
       )}
+      {confirmModal}
     </>
   );
 };
