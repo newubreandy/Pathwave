@@ -6,11 +6,9 @@ import HttpBackend from 'i18next-http-backend';
 import translationKO from './locales/ko/translation.json';
 import translationEN from './locales/en/translation.json';
 
-// Phase 1 + Phase 2 지원 언어 전체
-const SUPPORTED = [
-  'ko', 'en', 'zh-CN', 'ja', 'zh-TW', 'vi', 'th', 'tl', 'id', 'ms',
-  'ru', 'hi', 'es', 'de', 'fr', 'pt', 'it', 'nl', 'pl', 'ar', 'tr', 'he', 'sv',
-];
+// 사용자 정책 (2026-05-27): provider-web 은 한국어 1개만 지원.
+// 매장별 다국어 서비스는 추후 admin-web (슈퍼어드민) 에서 국가별 언어 제어.
+const SUPPORTED = ['ko'];
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
@@ -82,8 +80,8 @@ i18n
     resources: fallbackResources,
 
     supportedLngs: SUPPORTED,
-    fallbackLng: 'en',
-    load: 'languageOnly', // 'en-US' → 'en' 매핑
+    fallbackLng: 'ko',     // provider-web 한국어만 (사용자 정책 2026-05-27)
+    load: 'languageOnly',  // 'en-US' → 'en' 매핑 (브라우저 locale 정규화)
 
     // 키 구조: 기존 평면 키('store.label_beacons' 등) 와 호환
     keySeparator: '.',

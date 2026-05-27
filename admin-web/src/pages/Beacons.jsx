@@ -18,7 +18,10 @@ function badgeClass(status) {
 }
 
 export default function Beacons() {
-  const [filter, setFilter] = useState({ status: 'all', q: '' });
+  // 사용자 요청 (2026-05-27): 상태 / 입고일 / 검색창 1개 (시리얼+매장명+UUID).
+  const [filter, setFilter] = useState({
+    status: 'all', q: '', dateFrom: '', dateTo: '',
+  });
   const [beacons, setBeacons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -30,6 +33,7 @@ export default function Beacons() {
     setLoading(true);
     setError('');
     const params = {};
+    // 백엔드 필터 (status, q) — 시리얼 검색은 백엔드에서 처리.
     if (filter.status !== 'all') params.status = filter.status;
     if (filter.q.trim()) params.q = filter.q.trim();
     adminApi.listBeacons(params)
@@ -39,6 +43,19 @@ export default function Beacons() {
   }, [filter.status, filter.q]);
 
   useEffect(() => { reload(); }, [reload]);
+
+  // 클라이언트 측 필터 — 백엔드 q 가 이미 시리얼/매장명/신청인이메일 매칭하므로
+  // 여기선 입고일 범위만 처리 (UUID 검색은 사용자 정책상 제외).
+  const filteredBeacons = beacons.filter((b) => {
+    if (filter.dateFrom && b.created_at) {
+      if (b.created_at < filter.dateFrom) return false;
+    }
+    if (filter.dateTo && b.created_at) {
+      const dtEnd = filter.dateTo + 'T23:59:59';
+      if (b.created_at > dtEnd) return false;
+    }
+    return true;
+  });
 
   return (
     <div className="modern-page">
@@ -80,10 +97,38 @@ export default function Beacons() {
             <Search size={16} />
             <input
               type="text"
-              placeholder="시리얼 번호 검색"
+              placeholder="시리얼 / 매장명 / 신청인 이메일 검색"
               value={filter.q}
               onChange={(e) => setFilter((f) => ({ ...f, q: e.target.value }))}
             />
+          </div>
+          {/* 사용자 요청 (2026-05-27): 입고일 범위 + '전체' preset */}
+          <div className="filter-group">
+            <span className="filter-label">입고일</span>
+            <input
+              type="date"
+              value={filter.dateFrom}
+              onChange={(e) => setFilter((f) => ({ ...f, dateFrom: e.target.value }))}
+              aria-label="입고일 시작"
+            />
+            <span style={{ color: 'var(--text-muted)', padding: '0 4px' }}>~</span>
+            <input
+              type="date"
+              value={filter.dateTo}
+              onChange={(e) => setFilter((f) => ({ ...f, dateTo: e.target.value }))}
+              aria-label="입고일 종료"
+            />
+            {(filter.dateFrom || filter.dateTo) && (
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setFilter((f) => ({ ...f, dateFrom: '', dateTo: '' }))}
+                style={{ marginLeft: 8 }}
+                aria-label="입고일 전체"
+              >
+                전체
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -104,24 +149,29 @@ export default function Beacons() {
               <th>상태</th>
               <th>역할</th>
               <th>할당 매장</th>
+              <th>신청인 이메일</th>
+              <th>설치위치</th>
               <th>배터리</th>
               <th>Major</th>
               <th>Minor</th>
               <th>FW</th>
-              <th>입고일</th>
+              <th>비콘 입고일</th>
+              <th>매장 서비스 시작일</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={12} className="row-empty">로딩 중...</td></tr>
+              <tr><td colSpan={15} className="row-empty">로딩 중...</td></tr>
             )}
-            {!loading && beacons.length === 0 && (
-              <tr><td colSpan={12} className="row-empty">
-                비콘이 없습니다. 우측 상단 "입고" 버튼으로 등록하세요.
+            {!loading && filteredBeacons.length === 0 && (
+              <tr><td colSpan={15} className="row-empty">
+                {beacons.length === 0
+                  ? '비콘이 없습니다. 우측 상단 "입고" 버튼으로 등록하세요.'
+                  : '검색 조건에 맞는 비콘이 없습니다.'}
               </td></tr>
             )}
-            {!loading && beacons.map((b) => (
+            {!loading && filteredBeacons.map((b) => (
               <tr key={b.id}>
                 <td className="cell-mono">{b.id}</td>
                 <td className="cell-mono">{b.serial_no}</td>
@@ -147,11 +197,20 @@ export default function Beacons() {
                     ? <span>{b.facility_name || `매장 #${b.facility_id}`}</span>
                     : <span className="text-hint">—</span>}
                 </td>
+                <td className="cell-mono">
+                  {b.owner_email || <span className="text-hint">—</span>}
+                </td>
+                <td>
+                  {b.location_label
+                    ? <span>{b.location_label}</span>
+                    : <span className="text-hint">—</span>}
+                </td>
                 <td className="cell-mono">{b.battery_pct != null ? `${b.battery_pct}%` : '—'}</td>
                 <td className="cell-mono">{b.major != null ? b.major : <span className="text-hint">—</span>}</td>
                 <td className="cell-mono">{b.minor != null ? b.minor : <span className="text-hint">—</span>}</td>
                 <td className="cell-mono">{b.firmware_ver || '—'}</td>
                 <td className="cell-mono">{b.created_at?.slice(0, 10) || '—'}</td>
+                <td className="cell-mono">{b.assigned_at?.slice(0, 10) || <span className="text-hint">—</span>}</td>
                 <td className="cell-actions">
                   <button
                     className="icon-btn"
@@ -425,11 +484,12 @@ function EditModal({ beacon, onClose, onSaved }) {
   useEffect(() => {
     if (beacon) {
       setForm({
-        firmware_ver: beacon.firmware_ver || '',
-        battery_pct:  beacon.battery_pct ?? '',
-        status:       beacon.status,
-        uuid:         beacon.uuid || '',
-        role:         beacon.role || 'wifi',
+        firmware_ver:   beacon.firmware_ver || '',
+        battery_pct:    beacon.battery_pct ?? '',
+        status:         beacon.status,
+        uuid:           beacon.uuid || '',
+        role:           beacon.role || 'wifi',
+        location_label: beacon.location_label || '',  // P22 후속 (2026-05-27)
       });
       setError('');
     }
@@ -443,6 +503,9 @@ function EditModal({ beacon, onClose, onSaved }) {
     if (form.status !== beacon.status) payload.status = form.status;
     if (form.uuid !== beacon.uuid) payload.uuid = form.uuid;
     if (form.role !== (beacon.role || 'wifi')) payload.role = form.role;
+    // P22 후속 (2026-05-27): 설치위치 라벨
+    if (form.location_label !== (beacon.location_label || ''))
+      payload.location_label = form.location_label;
 
     if (Object.keys(payload).length === 0) {
       setError('변경된 필드가 없습니다.');
@@ -493,6 +556,18 @@ function EditModal({ beacon, onClose, onSaved }) {
               <option value="wifi">WiFi (BLE→WiFi 핸드오프)</option>
               <option value="cashier">계산대 (결제/스탬프 트리거)</option>
             </select>
+          </label>
+          {/* P22 후속 (2026-05-27): 설치위치 라벨 — Minor 숫자의 사람 친화 표시 */}
+          <label className="form-label">
+            <span>설치위치</span>
+            <input
+              type="text"
+              placeholder="예: 입구, 객실 101, 스파, 1층 카운터"
+              value={form.location_label || ''}
+              maxLength={64}
+              onChange={(e) => setForm((f) => ({ ...f, location_label: e.target.value }))}
+              disabled={busy}
+            />
           </label>
           <label className="form-label">
             <span>펌웨어 버전</span>

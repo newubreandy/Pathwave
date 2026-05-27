@@ -7,6 +7,8 @@ import {
 import SupportService from '../services/support/SupportService';
 import SectionTabs from '../components/common/SectionTabs';
 import Button from '../components/common/Button';
+import PwPageHeader from '../components/common/PwPageHeader';
+import PwInfoBanner from '../components/common/PwInfoBanner';
 import './Support.css';
 
 /* ── 상태 뱃지 색상 매핑 ── */
@@ -383,17 +385,15 @@ const Support = () => {
 
   return (
     <div className="sp-page">
-      {/* 페이지 헤더 */}
-      <div className="sp-page-header">
-        <HelpCircle size={22} className="sp-page-icon" />
-        <h1 className="sp-page-title">{t('support.title', '고객센터')}</h1>
-      </div>
+      <PwPageHeader
+        icon={HelpCircle}
+        title={t('support.title', '고객센터')}
+      />
 
-      {/* 안내 박스 */}
-      <div className="sp-info-box sp-info-box--page">
-        <p className="sp-info-row"><strong>{t('support.business_hours', '영업시간')}</strong> 평일 09:00–18:00 (주말·공휴일 제외)</p>
-        <p className="sp-info-row"><strong>{t('support.response_eta', '응답 예상시간')}</strong> 접수 후 1–2 영업일 이내 답변</p>
-      </div>
+      <PwInfoBanner variant="info">
+        <div><strong>{t('support.business_hours', '영업시간')}</strong> 평일 09:00–18:00 (주말·공휴일 제외)</div>
+        <div><strong>{t('support.response_eta', '응답 예상시간')}</strong> 접수 후 1–2 영업일 이내 답변</div>
+      </PwInfoBanner>
 
       {/* 탭 */}
       <SectionTabs

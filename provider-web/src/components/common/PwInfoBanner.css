@@ -1,0 +1,61 @@
+/* PwInfoBanner — 공용 안내/경고 박스 (2026-05-27)
+   subtle 톤. border-left 로 variant 표시 (Material 3 / GitHub callout 패턴). */
+
+.pw-info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  border: 1px solid;
+  border-left-width: 3px;
+}
+
+.pw-info-banner__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.pw-info-banner__body {
+  flex: 1;
+  min-width: 0;
+  color: var(--pw-text);
+}
+
+/* info — 회색 / dim */
+.pw-info-banner--info {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+  border-left-color: var(--pw-text-secondary, #8A8A99);
+}
+.pw-info-banner--info .pw-info-banner__icon { color: var(--pw-text-secondary); }
+
+/* warn — 노란 톤 (subtle) */
+.pw-info-banner--warn {
+  background: rgba(245, 158, 11, 0.06);
+  border-color: rgba(245, 158, 11, 0.20);
+  border-left-color: #F59E0B;
+}
+.pw-info-banner--warn .pw-info-banner__icon { color: #F59E0B; }
+
+/* danger — 빨간 톤 */
+.pw-info-banner--danger {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.24);
+  border-left-color: #EF4444;
+}
+.pw-info-banner--danger .pw-info-banner__icon { color: #EF4444; }
+.pw-info-banner--danger .pw-info-banner__body { color: #FCA5A5; }
+
+/* success — 녹색 톤 */
+.pw-info-banner--success {
+  background: rgba(34, 197, 94, 0.06);
+  border-color: rgba(34, 197, 94, 0.20);
+  border-left-color: var(--pw-primary, #22C55E);
+}
+.pw-info-banner--success .pw-info-banner__icon { color: var(--pw-primary, #22C55E); }

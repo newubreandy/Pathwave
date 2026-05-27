@@ -1,15 +1,18 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 /**
  * PR #69 v2 — 미니멀 KPI 카드.
  * 컬러는 델타 배지에만 (녹색=상승, 빨강=하락). 아이콘은 무채.
+ *
+ * 2026-05-27: `to` prop 추가 — 카드 클릭 시 해당 라우트로 이동 + hover lift.
  */
 export default function KpiCard({
   title, value, unit, delta, deltaPositive = true, icon: Icon,
-  spark,
+  spark, to,
 }) {
-  return (
-    <div className="card">
+  const inner = (
+    <>
       <div style={{
         display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
         marginBottom: 8,
@@ -42,8 +45,18 @@ export default function KpiCard({
           {spark && <Sparkline points={spark} />}
         </div>
       )}
-    </div>
+    </>
   );
+
+  if (to) {
+    return (
+      <Link to={to} className="card card--clickable"
+            aria-label={`${title} 상세로 이동`}>
+        {inner}
+      </Link>
+    );
+  }
+  return <div className="card">{inner}</div>;
 }
 
 /**

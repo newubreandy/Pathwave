@@ -1,113 +1,177 @@
 /* ═══════════════════════════════════════════════════
-   PwFooter — 법인 정보 placeholder 푸터
+   PwFooter — provider-web 공통 푸터 (2026-05-27 재구성)
    다크 + 녹색(#22C55E) 톤. 디자인 토큰 사용.
-   (구 #8B5CF6 보라 잔존 정리 — 2026-05-15 정책 변경)
+
+   구조 (중앙 정렬):
+   1행: 약관/지원 링크 (이용약관 / 개인정보 / 위치기반 / 마케팅 / FAQ / 고객센터)
+   2행: 법인 정보 inline (상호 / 대표자 / 사업자등록번호 / 통신판매업 / 주소 / 전화 / 이메일)
+   3행: copyright + notice (한 줄)
    ═══════════════════════════════════════════════════ */
 
 .pw-footer {
   width: 100%;
   background: var(--pw-bg-2, #0F0F17);
   border-top: 1px solid var(--pw-border, #1F1F2B);
-  margin-top: var(--pw-space-16);
-  padding: var(--pw-space-10) 0 var(--pw-space-8);
+  padding: 24px 16px 32px;
+  margin-top: 48px;
+  color: var(--pw-text-secondary, #8A8A99);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .pw-footer-inner {
-  max-width: var(--pw-max-width, 1200px);
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 var(--pw-container-pad, 2.5rem);
-}
-
-/* 법인 정보 dl */
-.pw-footer-info {
   display: flex;
   flex-direction: column;
-  gap: var(--pw-space-2);
-  margin: 0 0 var(--pw-space-6);
+  align-items: center;
+  gap: 14px;
+  text-align: center;
 }
 
-.pw-footer-row {
-  display: flex;
-  align-items: baseline;
-  gap: var(--pw-space-3);
-  flex-wrap: wrap;
-}
-
-.pw-footer-row dt {
-  flex: 0 0 120px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--pw-text-hint, #5A6072);
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-}
-
-.pw-footer-row dd {
-  flex: 1;
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--pw-text-muted, #9CA3B5);
-  line-height: 1.5;
-  margin: 0;
-}
-
-/* 약관 링크 */
+/* ── 1행: 약관/지원 링크 ──────────────────────────── */
 .pw-footer-links {
   display: flex;
-  align-items: center;
-  gap: var(--pw-space-3);
   flex-wrap: wrap;
-  margin-bottom: var(--pw-space-4);
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+  font-size: 13px;
 }
 
 .pw-footer-link {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--pw-text-secondary, #B3B9CB);
+  color: var(--pw-text, #E5E7EB);
   text-decoration: none;
-  transition: color var(--pw-duration-fast, 150ms) var(--pw-ease);
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 4px;
+  transition: color var(--pw-duration-fast, 150ms) ease,
+              background-color var(--pw-duration-fast, 150ms) ease;
 }
-
 .pw-footer-link:hover {
-  color: var(--pw-text, #F2F3F7);
+  color: var(--pw-primary, #22C55E);
+  background-color: rgba(34, 197, 94, 0.08);
 }
-
-/* 개인정보처리방침은 굵게 (법적 강조) */
 .pw-footer-link--bold {
   font-weight: 700;
-  color: var(--pw-text-secondary, #B3B9CB);
+  color: var(--pw-text);
+}
+.pw-footer-link:focus-visible {
+  outline: 2px solid var(--pw-primary, #22C55E);
+  outline-offset: 2px;
 }
 
 .pw-footer-sep {
   display: inline-block;
-  width: 1px;
-  height: 11px;
-  background: var(--pw-border-strong, #2A2A38);
-  flex-shrink: 0;
+  color: var(--pw-text-hint, #6B6B7A);
+  font-size: 11px;
+  padding: 0 4px;
+  user-select: none;
 }
 
-/* 안내 disclaimer */
-.pw-footer-notice {
-  margin: 0 0 var(--pw-space-3);
-  font-size: 11px;
-  line-height: 1.6;
-  color: var(--pw-text-hint, #5A6072);
+/* copyright entry — 법인정보 한 줄 끝에 inline (PC 한 줄, 모바일 자동 wrap) */
+.pw-footer-entry--copy dd {
+  color: var(--pw-text-hint, #5A5A66);
+  font-style: italic;
+  margin-left: 4px;
 }
 
-/* 저작권 */
-.pw-footer-copy {
-  font-size: 11px;
-  color: var(--pw-text-hint, #5A6072);
+/* ── 2행: 법인 정보 (inline 가로) ─────────────────── */
+.pw-footer-info {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px 18px;
   margin: 0;
+  padding: 0;
 }
 
-/* 모바일 */
-@media (max-width: 768px) {
-  .pw-footer-inner {
-    padding: 0 var(--pw-container-pad-m, 1.5rem);
-  }
+.pw-footer-entry {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: normal;
+}
 
-  .pw-footer-row dt {
-    flex: 0 0 100px;
+/* entry 사이 점 구분자 (· 자동) */
+.pw-footer-entry + .pw-footer-entry::before {
+  content: "·";
+  margin-right: 10px;
+  color: var(--pw-text-hint, #5A5A66);
+  opacity: 0.7;
+}
+
+/* screen reader 전용 라벨 — 시각 숨김, 접근성 유지 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 법인 정보 dim — 약관 링크와 시각적 위계 분리 */
+.pw-footer-entry dt {
+  font-weight: 500;
+  color: var(--pw-text-hint, #5A5A66);   /* dim 라벨 */
+  display: inline;
+  margin: 0;
+  font-size: 11px;
+  text-transform: none;
+}
+
+.pw-footer-entry dd {
+  margin: 0;
+  display: inline;
+  color: var(--pw-text-secondary, #7A7A88);  /* dim 본문 */
+  font-size: 11px;
+}
+
+/* ── notice (약관 링크 아래 한 칸 띄움) ─────────────── */
+.pw-footer-notice {
+  margin: 0;
+  font-size: 11px;
+  color: var(--pw-text-hint, #5A5A66);
+  text-align: center;
+  max-width: 720px;
+  line-height: 1.5;
+}
+
+/* ── copyright (가장 dim, 맨 아래) ────────────────── */
+.pw-footer-copy {
+  margin: 4px 0 0;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--pw-text-hint, #5A5A66);
+}
+
+/* ── 반응형 ───────────────────────────────────────── */
+@media (max-width: 720px) {
+  .pw-footer {
+    padding: 20px 12px 24px;
+    font-size: 11px;
+  }
+  .pw-footer-links {
+    font-size: 12px;
+  }
+  .pw-footer-link {
+    padding: 4px 6px;
+  }
+  .pw-footer-info {
+    gap: 6px 14px;
+  }
+  .pw-footer-entry dd {
+    font-size: 11px;
+  }
+  .pw-footer-meta {
+    gap: 4px;
+  }
+  .pw-footer-meta-sep {
+    display: none;
   }
 }

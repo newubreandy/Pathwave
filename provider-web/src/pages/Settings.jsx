@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, X, Info } from 'lucide-react';
 import AuthService from '../services/auth/AuthService';
+import PwPageHeader from '../components/common/PwPageHeader';
 import NotificationPreferencesService from '../services/notification/NotificationPreferencesService';
 import ConfirmModal from '../components/common/ConfirmModal';
 import PasswordInput from '../components/common/PasswordInput';
@@ -268,10 +269,12 @@ const Settings = () => {
         <h1>설정</h1>
       </header>
 
-      {/* PC 전용 헤더 (CSS로 769px 이상에서만 표시) */}
-      <div className="page-header-section settings-pc-header">
-        <h1 className="page-title">설정</h1>
-        <p className="sub-title">서비스 설정 및 계정 관리</p>
+      {/* PC 전용 헤더 (CSS로 769px 이상에서만 표시) — PwPageHeader 공용 컴포넌트 */}
+      <div className="settings-pc-header">
+        <PwPageHeader
+          title="설정"
+          subtitle="서비스 설정 및 계정 관리"
+        />
       </div>
 
       <div className="settings-page">
@@ -476,23 +479,8 @@ const Settings = () => {
         </button>
       </div>
 
-      {/* ── Footer (Full Width Dark) ── */}
-      <div className="settings-footer">
-        <div className="settings-footer-links">
-          <button className="settings-footer-link">고객센터</button>
-          <div className="settings-footer-divider" />
-          <button className="settings-footer-link">자주묻는 질문</button>
-          <div className="settings-footer-divider" />
-          <button className="settings-footer-link">서비스이용약관</button>
-        </div>
-        <p className="settings-footer-notice">
-          ※ PathWave는 서비스 플랫폼으로, 플랫폼 내에서 제공되는 정보 및 이벤트, 혜택 등에 대한 책임은 등록 업체에 있습니다.
-        </p>
-        <div className="settings-footer-company">
-          <p style={{ fontWeight: 600, marginBottom: '2px' }}>시원컴퍼니 Copyright 2023, siwon company. All rights reserved.</p>
-          <p>서울특별시 서초구 메헌로 26(하이브랜드 1312,1313층) 02-1234-5678</p>
-        </div>
-      </div>
+      {/* 2026-05-27: 자체 settings-footer 제거 — DashboardLayout 의 공통 PwFooter
+          가 자동 마운트됨. 시원컴퍼니/메헌로/02-1234-5678 mock 도 같이 정리. */}
 
       {/* ── Modals ── */}
       {showPasswordModal && (

@@ -10,16 +10,17 @@ import KpiCard, { Sparkline } from '../components/KpiCard.jsx';
 const DEMO_SPARK = (seed) => Array.from({ length: 18 },
   (_, i) => 30 + Math.sin((i + seed) * 0.6) * 14 + Math.random() * 6);
 
+// 2026-05-27: 카드 클릭 시 해당 상세 화면으로 이동 (to 추가)
 const STAT_CARDS = [
-  { key: 'total_facility_accounts',   label: '전체 사장 계정', icon: Building2 },
-  { key: 'pending_facility_accounts', label: '승인 대기',     icon: UserCheck },
-  { key: 'total_facilities',          label: '활성 매장',     icon: Wifi },
-  { key: 'total_users',               label: '앱 사용자',     icon: Users },
-  { key: 'total_beacons',             label: '비콘 입고',     icon: Radio },
-  { key: 'active_beacons',            label: '비콘 활성',     icon: RadioReceiver },
+  { key: 'total_facility_accounts',   label: '전체 사장 계정', icon: Building2,    to: '/dashboard/owners' },
+  { key: 'pending_facility_accounts', label: '승인 대기',     icon: UserCheck,    to: '/dashboard/owners?status=pending' },
+  { key: 'total_facilities',          label: '활성 매장',     icon: Wifi,         to: '/dashboard/facilities' },
+  { key: 'total_users',               label: '앱 사용자',     icon: Users,        to: '/dashboard/users' },
+  { key: 'total_beacons',             label: '비콘 입고',     icon: Radio,        to: '/dashboard/beacons?status=inventory' },
+  { key: 'active_beacons',            label: '비콘 활성',     icon: RadioReceiver, to: '/dashboard/beacons?status=active' },
   { key: 'mtd_paid_total_krw',        label: '이번 달 결제',  icon: CreditCard,
-    unit: 'KRW', formatter: (v) => (v ?? 0).toLocaleString() },
-  { key: 'mtd_payment_count',         label: '결제 건수',     icon: TrendingUp },
+    unit: 'KRW', formatter: (v) => (v ?? 0).toLocaleString(),                    to: '/dashboard/payments' },
+  { key: 'mtd_payment_count',         label: '결제 건수',     icon: TrendingUp,   to: '/dashboard/payments' },
 ];
 
 const TIME_RANGES = ['1W', '1M', '6M', '1Y', 'All Time'];
@@ -99,21 +100,24 @@ export default function Dashboard() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           <KpiCard title="앱 사용자" value={v('total_users')}
             delta="+12%" deltaPositive icon={Users}
-            spark={DEMO_SPARK(2)} />
+            spark={DEMO_SPARK(2)}
+            to="/dashboard/users" />
           <KpiCard title="활성 비콘" value={v('active_beacons')}
             delta="+3%" deltaPositive icon={RadioReceiver}
-            spark={DEMO_SPARK(4)} />
+            spark={DEMO_SPARK(4)}
+            to="/dashboard/beacons?status=active" />
         </div>
       </div>
 
       <div className="kpi-grid">
-        {STAT_CARDS.map(({ key, label, icon, unit, formatter }) => (
+        {STAT_CARDS.map(({ key, label, icon, unit, formatter, to }) => (
           <KpiCard
             key={key}
             title={label}
             value={v(key, formatter)}
             unit={unit}
             icon={icon}
+            to={to}
           />
         ))}
       </div>

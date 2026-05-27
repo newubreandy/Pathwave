@@ -24,6 +24,9 @@ import {
 } from 'lucide-react';
 import StoreService from '../services/store/StoreService';
 import MenuService from '../services/store/MenuService';
+import PwModal, { PwField } from '../components/common/PwModal';
+import PwPageHeader from '../components/common/PwPageHeader';
+import PwInfoBanner from '../components/common/PwInfoBanner';
 
 const EMPTY_ITEM = { name: '', price: '', description: '', sort_order: 0 };
 
@@ -131,28 +134,16 @@ export default function MenuManagement() {
 
   return (
     <div style={{ padding: '1.5rem', maxWidth: 960, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem',
-                    marginBottom: '0.5rem' }}>
-        <ImageIcon size={20} aria-hidden="true" />
-        <h1 style={{ margin: 0 }}>매장 메뉴 관리</h1>
-      </div>
-      <p style={{ color: 'var(--pw-text-muted)', marginTop: 0 }}>
-        메뉴판 사진을 업로드하면 자동으로 항목이 추출되고, 외국인 사용자에게는 자동 번역으로 제공됩니다.
-      </p>
+      <PwPageHeader
+        icon={ImageIcon}
+        title="매장 메뉴 관리"
+        subtitle="메뉴판 사진을 업로드하면 자동으로 항목이 추출되고, 외국인 사용자에게는 자동 번역으로 제공됩니다."
+      />
 
-      {/* 가격 통화 안내 */}
-      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start',
-                    padding: '0.75rem 1rem', background: 'var(--pw-bg-3)',
-                    border: '1px solid var(--pw-warning)',
-                    borderRadius: 8, marginBottom: '1rem',
-                    fontSize: 'var(--pw-fs-sm)' }}>
-        <AlertTriangle size={16} color="var(--pw-warning)" aria-hidden="true"
-                       style={{ flexShrink: 0, marginTop: 2 }} />
-        <div>
-          가격은 <strong>원화 (KRW)</strong> 만 사용. 외국 통화 ($¥€£) 는 자동 거부됩니다.
-          숫자만 입력해도 자동으로 "원" 단위 붙습니다.
-        </div>
-      </div>
+      <PwInfoBanner variant="warn" icon={AlertTriangle}>
+        가격은 <strong>원화 (KRW)</strong> 만 사용. 외국 통화 ($¥€£) 는 자동 거부됩니다.
+        숫자만 입력해도 자동으로 "원" 단위 붙습니다.
+      </PwInfoBanner>
 
       {/* 업로드 액션 */}
       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center',
@@ -276,57 +267,65 @@ function Badge({ color, children }) {
 }
 
 function DraftCard({ draft, onChange, onSave, onClose, busy }) {
+  // 2026-05-27: PwModal 공용 컴포넌트로 재작성 (디자인 가이드 통일).
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="draft-title"
-         style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
-                  zIndex: 1500, display: 'flex',
-                  alignItems: 'center', justifyContent: 'center',
-                  padding: '1rem' }}
-         onClick={busy ? undefined : onClose}>
-      <div onClick={(e) => e.stopPropagation()}
-           style={{ background: 'var(--pw-bg-2)',
-                    border: '1px solid var(--pw-border)',
-                    borderRadius: 12, padding: '1.5rem', maxWidth: 480,
-                    width: '100%' }}>
-        <h2 id="draft-title" style={{ marginTop: 0 }}>
-          {draft.id ? '메뉴 수정' : '메뉴 추가'}
-        </h2>
-        <label className="pw-label">
-          <span>이름 *</span>
-          <input value={draft.name}
-                 onChange={(e) => onChange({ ...draft, name: e.target.value })}
-                 placeholder="예: 아메리카노" disabled={busy} autoFocus />
-        </label>
-        <label className="pw-label">
-          <span>가격 (KRW)</span>
-          <input value={draft.price}
-                 onChange={(e) => onChange({ ...draft, price: e.target.value })}
-                 placeholder="예: 4500 또는 4,500원"
-                 disabled={busy} />
-        </label>
-        <label className="pw-label">
-          <span>설명 (선택)</span>
-          <textarea rows={2} value={draft.description}
-                    onChange={(e) => onChange({ ...draft, description: e.target.value })}
-                    placeholder="예: 깊은 향의 에스프레소" disabled={busy} />
-        </label>
-        <label className="pw-label">
-          <span>정렬 순서</span>
-          <input type="number" value={draft.sort_order}
-                 onChange={(e) => onChange({ ...draft, sort_order: e.target.value })}
-                 disabled={busy} />
-        </label>
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end',
-                      marginTop: '1rem' }}>
-          <button className="pw-btn pw-btn--ghost" onClick={onClose} disabled={busy}>취소</button>
-          <button className="pw-btn" onClick={onSave}
-                  disabled={busy || !(draft.name || '').trim()}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+    <PwModal
+      open={!!draft}
+      onClose={onClose}
+      busy={busy}
+      title={draft.id ? '메뉴 수정' : '메뉴 추가'}
+      size="md"
+      footer={
+        <>
+          <button className="pw-btn pw-btn--ghost" onClick={onClose} disabled={busy}>
+            취소
+          </button>
+          <button
+            className="pw-btn"
+            onClick={onSave}
+            disabled={busy || !(draft.name || '').trim()}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
             <Save size={14} aria-hidden="true" />
             {busy ? '저장 중...' : (draft.id ? '저장' : '추가')}
           </button>
-        </div>
-      </div>
-    </div>
+        </>
+      }
+    >
+      <PwField label="이름 *">
+        <input
+          value={draft.name}
+          onChange={(e) => onChange({ ...draft, name: e.target.value })}
+          placeholder="예: 아메리카노"
+          disabled={busy}
+          autoFocus
+        />
+      </PwField>
+      <PwField label="가격 (KRW)">
+        <input
+          value={draft.price}
+          onChange={(e) => onChange({ ...draft, price: e.target.value })}
+          placeholder="예: 4500 또는 4,500원"
+          disabled={busy}
+        />
+      </PwField>
+      <PwField label="설명 (선택)">
+        <textarea
+          rows={2}
+          value={draft.description}
+          onChange={(e) => onChange({ ...draft, description: e.target.value })}
+          placeholder="예: 깊은 향의 에스프레소"
+          disabled={busy}
+        />
+      </PwField>
+      <PwField label="정렬 순서">
+        <input
+          type="number"
+          value={draft.sort_order}
+          onChange={(e) => onChange({ ...draft, sort_order: e.target.value })}
+          disabled={busy}
+        />
+      </PwField>
+    </PwModal>
   );
 }

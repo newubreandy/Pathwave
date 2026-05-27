@@ -6,7 +6,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import CardAvatar from '../components/common/CardAvatar';
-import PwFooter from '../components/common/PwFooter';
+// PwFooter 는 DashboardLayout 공통 마운트로 통합 (2026-05-27 중복 제거)
 import { getUnreadCount } from '../services/notification/mockInbox';
 import './Dashboard.css';
 
@@ -287,7 +287,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <PwFooter />
+      {/* PwFooter 는 DashboardLayout 에서 공통 마운트 (중복 제거 — 2026-05-27) */}
     </div>
   );
 };

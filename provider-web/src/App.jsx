@@ -7,7 +7,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import StoreInfo from './pages/StoreInfo';
-import StoreTranslations from './pages/StoreTranslations';
+// import StoreTranslations 제거 (2026-05-27) — 매장 다국어는 백엔드 자동 번역
 import MenuManagement from './pages/MenuManagement';
 import WifiSettings from './pages/WifiSettings';
 import Facilities from './pages/Facilities';
@@ -91,7 +91,7 @@ function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/store" element={<StoreInfo />} />
-          <Route path="/dashboard/store-translations" element={<StoreTranslations />} />
+          {/* Route store-translations 제거 (2026-05-27) — 매장 다국어는 백엔드 자동 번역 */}
           <Route path="/dashboard/menu" element={<MenuManagement />} />
           <Route path="/dashboard/report" element={<ReportManagement />} />
           <Route path="/dashboard/wifi" element={<WifiSettings />} />

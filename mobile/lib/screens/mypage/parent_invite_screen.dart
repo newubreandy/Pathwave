@@ -69,19 +69,19 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: AppTheme.warning.withValues(alpha: 0.4)),
           ),
-          child: const Column(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded, size: 18, color: AppTheme.warning),
-                  SizedBox(width: 6),
+                  const Icon(Icons.warning_amber_rounded, size: 18, color: AppTheme.warning),
+                  const SizedBox(width: 6),
                   Text(context.t('mobile.parent_invite.responsibility_title', defaultValue: '자녀 초대 책임 동의'),
-                    style: TextStyle(color: AppTheme.warning, fontWeight: FontWeight.w700)),
+                    style: const TextStyle(color: AppTheme.warning, fontWeight: FontWeight.w700)),
                 ],
               ),
-              SizedBox(height: 8),
-              Text(
+              const SizedBox(height: 8),
+              const Text(
                 '본 초대 코드로 가입하는 자녀(만 14~18세)의 PathWave 서비스 이용에 대한 '
                 '법적 책임은 보호자인 본인에게 있음을 확인합니다. '
                 '자녀가 일부 시설(숙박/유흥 등 미성년자 출입 제한 시설)에 접근하는 것은 '
@@ -103,9 +103,9 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
                   color: _liabilityAccepted ? AppTheme.primary : AppTheme.textHint,
                 ),
                 const SizedBox(width: 10),
-                const Expanded(
+                Expanded(
                   child: Text(context.t('mobile.parent_invite.agree', defaultValue: '위 책임 사항에 동의합니다.'),
-                    style: TextStyle(fontSize: 14)),
+                    style: const TextStyle(fontSize: 14)),
                 ),
               ],
             ),
