@@ -5,12 +5,14 @@ import {
 import { useTranslation } from 'react-i18next';
 import Modal from '../components/Modal.jsx';
 import { adminApi } from '../services/admin.js';
+import { useConfirm } from '../hooks/useConfirm.jsx';
 import './Beacons.css';
 
 const AUDIENCE_VALUES = ['all', 'users', 'facilities', 'staff'];
 
 export default function Announcements() {
   const { t } = useTranslation();
+  const { confirm, alert: alertModal, modal: confirmModalEl } = useConfirm();
 
   const AUDIENCE_OPTIONS = AUDIENCE_VALUES.map((v) => ({
     value: v,
@@ -35,12 +37,17 @@ export default function Announcements() {
   useEffect(() => { reload(); }, [reload]);
 
   async function handleDelete(item) {
-    if (!confirm(`${t('notif.delete_confirm')} "${item.title}"`)) return;
+    const ok = await confirm({
+      title: t('notif.delete_confirm'),
+      desc:  `"${item.title}"`,
+      confirmText: '삭제',
+    });
+    if (!ok) return;
     try {
       await adminApi.deleteAnnouncement(item.id);
       reload();
     } catch (err) {
-      alert(err.message || t('notif.delete_failed'));
+      await alertModal({ title: '삭제 실패', desc: err.message || t('notif.delete_failed') });
     }
   }
 
@@ -49,7 +56,7 @@ export default function Announcements() {
       await adminApi.updateAnnouncement(item.id, { pinned: !item.pinned });
       reload();
     } catch (err) {
-      alert(err.message || t('notif.pin_failed'));
+      await alertModal({ title: '고정 실패', desc: err.message || t('notif.pin_failed') });
     }
   }
 
@@ -173,6 +180,7 @@ export default function Announcements() {
         audienceLabel={AUDIENCE_LABEL}
         onClose={() => setPreviewTarget(null)}
       />
+      {confirmModalEl}
     </div>
   );
 }

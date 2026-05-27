@@ -3,6 +3,7 @@ import { BookOpen, Plus, RefreshCw, Pencil, Trash2, ToggleLeft, ToggleRight } fr
 import { useTranslation } from 'react-i18next';
 import Modal from '../components/Modal.jsx';
 import { supportApi } from '../services/support.js';
+import { useConfirm } from '../hooks/useConfirm.jsx';
 import './Beacons.css';
 
 const KIND_TABS = [
@@ -12,6 +13,7 @@ const KIND_TABS = [
 
 export default function Faq() {
   const { t } = useTranslation();
+  const { confirm, alert: alertModal, modal: confirmModalEl } = useConfirm();
   const [kind, setKind]   = useState('user');
   const [faqs, setFaqs]   = useState([]);
   const [loading, setLoading] = useState(false);
@@ -30,12 +32,17 @@ export default function Faq() {
   useEffect(() => { reload(); }, [reload]);
 
   async function handleDelete(faq) {
-    if (!confirm(`FAQ #${faq.id}를 삭제하시겠습니까?\n"${faq.question}"`)) return;
+    const ok = await confirm({
+      title: 'FAQ 삭제',
+      desc:  `FAQ #${faq.id} 를 삭제하시겠습니까?\n"${faq.question}"`,
+      confirmText: '삭제',
+    });
+    if (!ok) return;
     try {
       await supportApi.deleteFaq(faq.id);
       reload();
     } catch (err) {
-      alert(err.message || t('common.delete'));
+      await alertModal({ title: '삭제 실패', desc: err.message || t('common.delete') });
     }
   }
 
@@ -45,7 +52,7 @@ export default function Faq() {
       await supportApi.patchFaq(faq.id, { active: !faq.active });
       reload();
     } catch (err) {
-      alert(err.message);
+      await alertModal({ title: '오류', desc: err.message });
     } finally {
       setToggling(null);
     }
@@ -178,6 +185,7 @@ export default function Faq() {
         onClose={() => setEditTarget(null)}
         onSaved={() => { setEditTarget(null); reload(); }}
       />
+      {confirmModalEl}
     </div>
   );
 }
