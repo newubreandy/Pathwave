@@ -139,7 +139,8 @@ class _InboxItem extends StatelessWidget {
           final id = data['id'] as int?;
           if (id != null) await NotificationService().markRead(id);
           // P10 (2026-05-26): kind 별 라우팅 구현 — 알림 클릭 시 관련 화면 이동.
-          if (!mounted) return;
+          // _InboxItem 는 StatelessWidget → context.mounted 사용.
+          if (!context.mounted) return;
           final fid = data['facility_id'];
           final roomId = data['room_id'];
           switch (kind) {

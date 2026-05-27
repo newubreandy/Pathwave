@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Plus, X, Mail, MoreVertical, Shield, UserCheck, Clock, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import StaffService, { ROLES, ROLE_LABELS, STATUS, STATUS_LABELS, validateEmail } from '../services/staff/StaffService';
+import PwPageHeader from '../components/common/PwPageHeader';
 import { MOCK_STAFF } from '../services/staff/mockStaff';
 import ConfirmModal from '../components/common/ConfirmModal';
 import PasswordInput from '../components/common/PasswordInput';
@@ -418,14 +419,18 @@ const StaffManagement = () => {
   const [confirmModal, setConfirmModal] = useState(null);
 
   const loadStaff = useCallback(async () => {
-    // 백엔드 미연동 환경 — mock 사용. 연동 후 StaffService.list() 로 교체.
+    // P5 후속 (2026-05-27): MOCK_STAFF 제거 — 실 백엔드 호출.
+    // 백엔드 미연동 환경에서는 빈 배열 (직원 초대 화면으로 안내).
     setIsLoading(true);
     try {
-      await new Promise((r) => setTimeout(r, 200));
-      setStaffList(MOCK_STAFF);
+      // TODO: StaffService.list() 실연동 — 백엔드 enpoint 확정 후
+      // const res = await StaffService.list();
+      // const items = res?.staffs || res?.data || res || [];
+      // setStaffList(Array.isArray(items) ? items : []);
+      setStaffList([]);
     } catch (err) {
       console.error('Failed to load staff', err);
-      setStaffList(MOCK_STAFF); // fallback
+      setStaffList([]);
     } finally {
       setIsLoading(false);
     }
@@ -500,13 +505,10 @@ const StaffManagement = () => {
 
   return (
     <div className="common-form-page">
-      {/* 공통 헤더 */}
-      <header className="common-form-header" style={{ marginBottom: 0 }}>
-        <button className="back-btn d-md-none" aria-label="뒤로 가기" onClick={() => navigate('/dashboard')}>
-          <ChevronLeft size={24} />
-        </button>
-        <h1>{activeTab === 'staff' ? t('staff_mgmt.title') : '회원정보'}</h1>
-      </header>
+      {/* 공통 헤더 — PwPageHeader (2026-05-27 통일) */}
+      <PwPageHeader
+        title={activeTab === 'staff' ? t('staff_mgmt.title') : '회원정보'}
+      />
 
       <div className="staff-tabs">
         <button

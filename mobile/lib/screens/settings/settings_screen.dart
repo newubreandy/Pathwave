@@ -430,10 +430,10 @@ class _NotificationPreferencesSectionState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: Text(context.t('mobile.settings.notification_category', defaultValue: '알림 카테고리'),
-            style: TextStyle(color: AppTheme.textHint, fontSize: 12, letterSpacing: 0.5)),
+            style: const TextStyle(color: AppTheme.textHint, fontSize: 12, letterSpacing: 0.5)),
         ),
         Container(
           decoration: BoxDecoration(

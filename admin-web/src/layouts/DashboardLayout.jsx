@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Radio, UserCheck, Battery, Megaphone, CreditCard,
   FileText, LogOut, Search, Languages, Ticket, MessageSquare, Users,
@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { adminLogout, getCurrentAdmin } from '../services/auth.js';
-import PwFooter from '../components/common/PwFooter.jsx';
+// PwFooter import 제거 (2026-05-27) — 슈퍼어드민에 푸터 불필요
 import ChangePasswordModal from '../components/ChangePasswordModal.jsx';
 import CriticalAdminAlert from '../components/CriticalAdminAlert.jsx';
 import './DashboardLayout.css';
@@ -133,13 +133,14 @@ export default function DashboardLayout() {
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar">
-        <div className="sidebar-brand">
+        {/* 2026-05-27: 브랜드 클릭 시 메인 대시보드로 이동 */}
+        <Link to="/dashboard" className="sidebar-brand" aria-label="대시보드로 이동">
           <div className="brand-mark">PW</div>
           <div className="brand-text">
             <div className="brand-title">PathWave</div>
             <div className="brand-sub">Super Admin</div>
           </div>
-        </div>
+        </Link>
 
         <div className="sidebar-search">
           <Search size={14} />
@@ -180,15 +181,15 @@ export default function DashboardLayout() {
               </div>
             </div>
           )}
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div style={{ display: 'flex', gap: 6 }}>
             <button className="logout-btn" type="button"
                     onClick={() => setPwModalOpen(true)}
-                    aria-label="비밀번호 변경"
-                    style={{ flex: '0 0 auto', padding: '8px 10px' }}>
+                    style={{ flex: 1, minWidth: 0 }}>
               <KeyRound size={14} aria-hidden="true" />
+              <span>비밀번호</span>
             </button>
             <button className="logout-btn" onClick={handleLogout}
-                    style={{ flex: 1 }}>
+                    style={{ flex: 1, minWidth: 0 }}>
               <LogOut size={14} aria-hidden="true" />
               <span>{t('nav.logout')}</span>
             </button>
@@ -203,7 +204,8 @@ export default function DashboardLayout() {
 
       <main className="admin-main">
         <Outlet />
-        <PwFooter />
+        {/* 2026-05-27: 푸터 제거 — 슈퍼어드민(운영자 내부 도구)은 법적 표기 의무 X.
+            업계 표준 (AWS Console / Stripe Dashboard / Vercel 등) 동일 — admin UI 는 푸터 없음. */}
       </main>
     </div>
   );

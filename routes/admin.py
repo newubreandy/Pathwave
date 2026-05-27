@@ -659,7 +659,11 @@ def _row_to_beacon(row) -> dict:
         'firmware_ver': row['firmware_ver'],
         # P15 — 비콘 role (wifi 핸드오프 | cashier 계산대 트리거).
         'role':         row['role'] if 'role' in keys else 'wifi',
-        'created_at':   row['created_at'],
+        'created_at':   row['created_at'],        # 비콘 입고일
+        # P22 후속 (2026-05-27): 매장 서비스 시작일 + 설치위치 + 신청인 이메일.
+        'assigned_at':    row['assigned_at']    if 'assigned_at'    in keys else None,
+        'location_label': row['location_label'] if 'location_label' in keys else None,
+        'owner_email':    row['owner_email']    if 'owner_email'    in keys else None,
     }
 
 
@@ -743,9 +747,11 @@ def list_beacons():
     q = (request.args.get('q') or '').strip()
 
     db = get_db()
-    sql = """SELECT b.*, f.name AS facility_name
+    # P22 후속 (2026-05-27): owner_email + location_label 응답 포함.
+    sql = """SELECT b.*, f.name AS facility_name, fa.email AS owner_email
              FROM beacons b
-             LEFT JOIN facilities f ON b.facility_id = f.id"""
+             LEFT JOIN facilities f ON b.facility_id = f.id
+             LEFT JOIN facility_accounts fa ON f.owner_id = fa.id"""
     where, params = [], []
     if status:
         if status not in _BEACON_STATUSES:
@@ -756,7 +762,9 @@ def list_beacons():
     if facility_id:
         where.append("b.facility_id=?"); params.append(facility_id)
     if q:
-        where.append("b.serial_no LIKE ?"); params.append(f'%{q}%')
+        # P22 후속: 시리얼 / 매장명 / 신청인 이메일 통합 검색 (UUID 제외 — 사용자 정책)
+        where.append("(b.serial_no LIKE ? OR f.name LIKE ? OR fa.email LIKE ?)")
+        params.extend([f'%{q}%', f'%{q}%', f'%{q}%'])
     if where:
         sql += " WHERE " + " AND ".join(where)
     sql += " ORDER BY b.id DESC"
@@ -811,6 +819,12 @@ def update_beacon(bid):
             return jsonify({'success': False,
                             'message': "role 은 'wifi' 또는 'cashier'."}), 400
         sets.append('role=?'); vals.append(rv)
+    # P22 후속 (2026-05-27): 설치위치 라벨 (예: "입구", "객실 101", "스파").
+    if 'location_label' in data:
+        ll = (data['location_label'] or '').strip()
+        # 64자 제한, 빈 문자열은 NULL 처리
+        ll = ll[:64] if ll else None
+        sets.append('location_label=?'); vals.append(ll)
     if not sets:
         db.close()
         return jsonify({'success': False, 'message': '수정할 필드가 없습니다.'}), 400
@@ -818,8 +832,10 @@ def update_beacon(bid):
     vals.append(bid)
     db.execute(f"UPDATE beacons SET {', '.join(sets)} WHERE id=?", vals)
     new_row = db.execute(
-        """SELECT b.*, f.name AS facility_name
-           FROM beacons b LEFT JOIN facilities f ON b.facility_id=f.id
+        """SELECT b.*, f.name AS facility_name, fa.email AS owner_email
+           FROM beacons b
+           LEFT JOIN facilities f ON b.facility_id=f.id
+           LEFT JOIN facility_accounts fa ON f.owner_id=fa.id
            WHERE b.id=?""", (bid,)
     ).fetchone()
     db.commit()
@@ -858,14 +874,20 @@ def assign_beacon(bid):
         db.close()
         return jsonify({'success': False, 'message': '매장을 찾을 수 없거나 비활성입니다.'}), 404
 
+    # P22 후속 (2026-05-27): 매장 서비스 시작일 (assigned_at) 자동 기록.
     db.execute(
-        "UPDATE beacons SET facility_id=?, status='active' WHERE id=?",
+        """UPDATE beacons
+              SET facility_id=?, status='active',
+                  assigned_at=COALESCE(assigned_at, datetime('now'))
+            WHERE id=?""",
         (facility_id, bid)
     )
     db.commit()
     new_row = db.execute(
-        """SELECT b.*, f.name AS facility_name
-           FROM beacons b LEFT JOIN facilities f ON b.facility_id=f.id
+        """SELECT b.*, f.name AS facility_name, fa.email AS owner_email
+           FROM beacons b
+           LEFT JOIN facilities f ON b.facility_id=f.id
+           LEFT JOIN facility_accounts fa ON f.owner_id=fa.id
            WHERE b.id=?""", (bid,)
     ).fetchone()
     db.close()
@@ -1218,9 +1240,11 @@ def admin_list_subscriptions():
 def unassign_beacon(bid):
     """매장에서 회수 → inventory 복귀."""
     db = get_db()
+    # P22 후속 (2026-05-27): 회수 시 assigned_at 도 NULL (다음 할당 시 새 시작일).
     cur = db.execute(
-        """UPDATE beacons SET facility_id=NULL, status='inventory'
-           WHERE id=? AND facility_id IS NOT NULL""",
+        """UPDATE beacons
+              SET facility_id=NULL, status='inventory', assigned_at=NULL
+            WHERE id=? AND facility_id IS NOT NULL""",
         (bid,)
     )
     db.commit()

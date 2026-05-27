@@ -20,6 +20,19 @@
   padding: 8px 8px 20px;
   border-bottom: 1px solid var(--border);
   margin-bottom: 16px;
+  /* 2026-05-27: Link 로 변경 — 기본 a 스타일 제거 */
+  color: var(--text);
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.sidebar-brand:hover {
+  opacity: 0.85;
+}
+.sidebar-brand:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: var(--radius);
 }
 .brand-mark {
   width: 40px; height: 40px;
@@ -147,15 +160,23 @@ button.sidebar-section--toggle:hover {
 .account-name { font-size: var(--fs-sm); font-weight: 600; color: var(--text); }
 .account-role { font-size: var(--fs-xs); color: var(--text-muted); }
 
+/* 2026-05-27: width: 100% 제거 — flex 부모 안에서 자체 너비 결정.
+   sidebar 영역 뚫고 나가는 overflow 차단. */
 .logout-btn {
-  width: 100%;
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text-muted);
-  padding: 12px 14px;
+  padding: 10px 12px;
   border-radius: var(--radius);
   font-size: var(--fs-sm);
-  display: flex; align-items: center; gap: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;          /* flex 자식 overflow 차단 */
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 .logout-btn:hover {
   background: var(--bg-3);

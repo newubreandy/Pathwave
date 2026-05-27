@@ -67,7 +67,7 @@ const DashboardLayout = () => {
   const allNavItems = [
     { path: '/dashboard/chat', label: t('menu.chat', '채팅') },
     { path: '/dashboard/store', label: t('menu.store', '매장안내') },
-    { path: '/dashboard/store-translations', label: t('menu.storeTranslations', '매장 다국어') },
+    // 매장 다국어 관리 메뉴 제거 (2026-05-27) — 다국어는 백엔드 자동 번역 (DeepL)
     { path: '/dashboard/menu', label: t('menu.menuManagement', '메뉴 관리') },
     { path: '/dashboard/wifi', label: t('menu.wifi', '와이파이') },
     { path: '/dashboard/stamps', label: t('menu.stamps', '스탬프') },
@@ -122,17 +122,18 @@ const DashboardLayout = () => {
                   </span>
                 )}
               </button>
-              {/* PC+모바일 공통: 사람 아이콘 (회원정보/직원관리) + 설정 아이콘 */}
+              {/* PC+모바일 공통: 사람 아이콘 (회원정보/직원관리) + 설정 아이콘.
+                  2026-05-27: navigate 후 blur() — focus outline 잔존 방지 (마우스 클릭 시 강조 X) */}
               <button
                 className="gnb-icon-btn"
-                onClick={() => { navigate('/dashboard/staff'); setIsMenuOpen(false); }}
+                onClick={(e) => { navigate('/dashboard/staff'); setIsMenuOpen(false); e.currentTarget.blur(); }}
                 aria-label="회원정보/직원관리"
               >
                 <User size={20} />
               </button>
               <button
                 className="gnb-icon-btn"
-                onClick={() => { navigate('/dashboard/settings'); setIsMenuOpen(false); }}
+                onClick={(e) => { navigate('/dashboard/settings'); setIsMenuOpen(false); e.currentTarget.blur(); }}
                 aria-label="설정"
               >
                 <Settings size={20} />

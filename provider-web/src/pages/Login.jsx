@@ -10,22 +10,19 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // 이미 로그인된 사용자는 대시보드로 즉시 이동.
-  // ⚠ TEMP (사용자 요구 2026-05-11): 백엔드 인증 연동 전, /login 진입 시
-  //    토큰이 없으면 mock 세션을 자동 발급하고 곧바로 대시보드로 이동.
-  //    실 인증 연동 시 아래 자동 mock 발급 라인 제거.
+  // P4 fix (2026-05-27): 이미 로그인된 사용자만 dashboard 로 redirect.
+  // 자동 mock 세션 발급 제거 — 401 후 /login?from=... 진입 시 무한 루프 차단.
+  // 진짜 로그인은 form 으로만 가능 (P4 인증 우회 차단).
   useEffect(() => {
-    if (!AuthService.isAuthenticated()) {
-      localStorage.setItem('pathwave_token', 'dev-auto-token');
-      localStorage.setItem('pathwave_user', JSON.stringify({
-        id: 'siwon-001',
-        email: 'admin@pathwave.com',
-        name: '시원컴퍼니',
-        role: 'OWNER',
-      }));
+    if (AuthService.isAuthenticated()) {
+      // 이미 토큰 있음 → from 쿼리 / state 또는 dashboard
+      const params = new URLSearchParams(location.search);
+      const fromQuery = params.get('from');
+      const from = location.state?.from?.pathname || fromQuery || '/dashboard';
+      navigate(from, { replace: true });
     }
-    navigate('/dashboard', { replace: true });
-  }, [navigate]);
+    // 토큰 없으면 로그인 화면 머무름.
+  }, [navigate, location]);
 
   const handleLogin = async (e) => {
     e.preventDefault();

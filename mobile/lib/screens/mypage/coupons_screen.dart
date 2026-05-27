@@ -468,18 +468,19 @@ class _CouponCard extends StatelessWidget {
               ctx.pop();
               final id = data['id'] as int?;
               if (id == null) return;
-              // P9 (2026-05-26): silent error 수정 — 사용 후 피드백 + 목록 새로고침.
+              // P9 (2026-05-26): silent error 수정 — 사용 후 피드백.
+              // _CouponCard 는 StatelessWidget — 부모 새로고침 콜백 도입은 후속 PR.
+              // 사용자는 SnackBar 후 화면 재진입 시 최신 상태 확인.
               final messenger = ScaffoldMessenger.of(context);
               try {
                 await CouponService().useCoupon(id);
-                if (!mounted) return;
+                if (!context.mounted) return;
                 messenger.showSnackBar(SnackBar(
                   content: Text(t.t('coupon.use_success',
                       defaultValue: '쿠폰을 사용했습니다.')),
                 ));
-                setState(() { _futures.clear(); }); // 전체 status 캐시 invalidate
               } catch (e) {
-                if (!mounted) return;
+                if (!context.mounted) return;
                 messenger.showSnackBar(SnackBar(
                   content: Text('${t.t('coupon.use_failed',
                       defaultValue: '쿠폰 사용 실패')}: $e'),

@@ -1,0 +1,64 @@
+/* PwPageHeader — 공용 페이지 헤더 (2026-05-27)
+   provider-web 모든 페이지의 헤더 통일. */
+
+.pw-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 0 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--pw-border-light, rgba(255, 255, 255, 0.04));
+}
+
+.pw-page-header__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.pw-page-header__title {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--pw-text);
+  line-height: 1.3;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pw-page-header__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pw-primary, #22C55E);
+}
+
+.pw-page-header__subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--pw-text-secondary, #8A8A99);
+  line-height: 1.5;
+}
+
+.pw-page-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .pw-page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 16px 0 12px;
+  }
+  .pw-page-header__title {
+    font-size: 18px;
+  }
+  .pw-page-header__actions {
+    justify-content: flex-end;
+  }
+}

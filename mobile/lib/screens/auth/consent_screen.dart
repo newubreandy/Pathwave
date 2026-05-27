@@ -140,9 +140,9 @@ class _AllAgreeRow extends StatelessWidget {
               color: allChecked ? AppTheme.primary : AppTheme.textHint,
             ),
             const SizedBox(width: 10),
-            const Expanded(
+            Expanded(
               child: Text(context.t('mobile.auth.consent.agree_all', defaultValue: '전체 동의 (선택 항목 포함)'),
-                style: TextStyle(fontWeight: FontWeight.w600)),
+                style: const TextStyle(fontWeight: FontWeight.w600)),
             ),
           ],
         ),
@@ -295,7 +295,7 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                             isDense: true,
                             isExpanded: true,
                             items: [
-                              const DropdownMenuItem<int?>(
+                              DropdownMenuItem<int?>(
                                 value: null,
                                 child: Text(context.t('mobile.auth.consent.in_effect', defaultValue: '현재 시행 중'), style: const TextStyle(fontSize: 13)),
                               ),

@@ -275,15 +275,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
 
       const SizedBox(height: 20),
-      const Row(
+      Row(
         children: [
-          Expanded(child: Divider(color: AppTheme.border)),
+          const Expanded(child: Divider(color: AppTheme.border)),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(context.t('mobile.auth.register.or_email', defaultValue: '또는 이메일로 가입'),
-              style: TextStyle(color: AppTheme.textHint, fontSize: 12)),
+              style: const TextStyle(color: AppTheme.textHint, fontSize: 12)),
           ),
-          Expanded(child: Divider(color: AppTheme.border)),
+          const Expanded(child: Divider(color: AppTheme.border)),
         ],
       ),
       const SizedBox(height: 20),
