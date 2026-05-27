@@ -182,7 +182,8 @@ const Notifications = () => {
 
   const confirmPremium = () => {
     setShowPremiumModal(false);
-    alert('서비스 신청 페이지로 이동합니다.');
+    // 2026-05-27: window.alert → 페이지 자체 showAlert 사용 (디자인 통일)
+    showAlert('서비스 신청 페이지로 이동합니다.');
   };
 
   const handleSave = () => {
