@@ -8,6 +8,8 @@ import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
 import SectionTabs from '../components/common/SectionTabs';
 import './PaymentManagement.css';
+// 2026-05-27: useConfirm 적용 — mock 페이지 + 큰 파일. 실연동 시 재작성 예정.
+//             alert 잔존은 P3-b3 별도 PR 에서 처리 (실연동 시).
 
 /* ── Mock Data ── */
 const MOCK_CARD = {
