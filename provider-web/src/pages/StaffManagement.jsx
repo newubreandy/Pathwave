@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Plus, X, Mail, MoreVertical, Shield, UserChe
 import { useTranslation } from 'react-i18next';
 import StaffService, { ROLES, ROLE_LABELS, STATUS, STATUS_LABELS, validateEmail } from '../services/staff/StaffService';
 import PwPageHeader from '../components/common/PwPageHeader';
+import { useConfirm } from '../hooks/useConfirm';
 import { MOCK_STAFF } from '../services/staff/mockStaff';
 import ConfirmModal from '../components/common/ConfirmModal';
 import PasswordInput from '../components/common/PasswordInput';
@@ -400,6 +401,7 @@ const ProfileTab = () => {
 const StaffManagement = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { alert: alertModal, modal: confirmModalEl } = useConfirm();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'staff';
 
@@ -451,7 +453,7 @@ const StaffManagement = () => {
       await loadStaff();
       setSelectedMember(null);
     } catch (err) {
-      alert(err.message);
+      await alertModal({ title: '오류', desc: err.message });
     }
   };
 
@@ -465,7 +467,7 @@ const StaffManagement = () => {
           await loadStaff();
           setSelectedMember(null);
         } catch (err) {
-          alert(err.message);
+          await alertModal({ title: '오류', desc: err.message });
         }
         setConfirmModal(null);
       },
@@ -482,7 +484,7 @@ const StaffManagement = () => {
           await loadStaff();
           setSelectedMember(null);
         } catch (err) {
-          alert(err.message);
+          await alertModal({ title: '오류', desc: err.message });
         }
         setConfirmModal(null);
       },
@@ -494,9 +496,9 @@ const StaffManagement = () => {
       await StaffService.resendInvite(id);
       await loadStaff();
       setSelectedMember(null);
-      alert('초대 메일이 재발송되었습니다.');
+      await alertModal({ title: '재발송 완료', desc: '초대 메일이 재발송되었습니다.' });
     } catch (err) {
-      alert(err.message);
+      await alertModal({ title: '오류', desc: err.message });
     }
   };
 
@@ -675,6 +677,7 @@ const StaffManagement = () => {
           onCancel={() => setConfirmModal(null)}
         />
       )}
+      {confirmModalEl}
     </div>
   );
 };
