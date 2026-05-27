@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { RefreshCw, Search, CheckCircle2, XCircle, RotateCcw, Eye } from 'lucide-react';
 import Modal from '../components/Modal.jsx';
 import { adminApi } from '../services/admin.js';
+import { useConfirm } from '../hooks/useConfirm.jsx';
 import './Beacons.css';   // table-card 등 공통 스타일 재사용
 
 const STATUS_OPTIONS = ['pending', 'verified', 'suspended', 'all'];
@@ -17,6 +18,7 @@ function badgeClass(status) {
 }
 
 export default function Approvals() {
+  const { confirm, alert: alertModal, modal: confirmModalEl } = useConfirm();
   const [filter, setFilter] = useState({ status: 'pending', q: '' });
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,22 +41,32 @@ export default function Approvals() {
   useEffect(() => { reload(); }, [reload]);
 
   async function handleVerify(account) {
-    if (!confirm(`"${account.company_name || account.email}" 계정을 승인하시겠습니까?`)) return;
+    const ok = await confirm({
+      title: '계정 승인',
+      desc:  `"${account.company_name || account.email}" 계정을 승인하시겠습니까?`,
+      confirmText: '승인',
+    });
+    if (!ok) return;
     try {
       await adminApi.verifyFacilityAccount(account.id);
       reload();
     } catch (err) {
-      alert(err.message || '승인에 실패했습니다.');
+      await alertModal({ title: '승인 실패', desc: err.message || '잠시 후 다시 시도해 주세요.' });
     }
   }
 
   async function handleReactivate(account) {
-    if (!confirm(`"${account.company_name || account.email}" 정지를 해제하시겠습니까?`)) return;
+    const ok = await confirm({
+      title: '정지 해제',
+      desc:  `"${account.company_name || account.email}" 정지를 해제하시겠습니까?`,
+      confirmText: '해제',
+    });
+    if (!ok) return;
     try {
       await adminApi.reactivateFacilityAccount(account.id);
       reload();
     } catch (err) {
-      alert(err.message || '정지 해제에 실패했습니다.');
+      await alertModal({ title: '정지 해제 실패', desc: err.message || '잠시 후 다시 시도해 주세요.' });
     }
   }
 
@@ -195,6 +207,7 @@ export default function Approvals() {
         onClose={() => setSuspendTarget(null)}
         onChanged={() => { setSuspendTarget(null); reload(); }}
       />
+      {confirmModalEl}
     </div>
   );
 }

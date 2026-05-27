@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { HelpCircle, RefreshCw, Send, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supportApi } from '../services/support.js';
+import { useConfirm } from '../hooks/useConfirm.jsx';
 import './Beacons.css';
 
 const STATUS_LIST = ['open', 'replied', 'closed'];
@@ -26,6 +27,7 @@ function priorityColor(p) {
 
 export default function Support() {
   const { t } = useTranslation();
+  const { alert: alertModal, modal: confirmModalEl } = useConfirm();
   const [kind, setKind]       = useState('user');
   const [statusFilter, setStatusFilter] = useState('');
   const [tickets, setTickets] = useState([]);
@@ -78,7 +80,7 @@ export default function Support() {
       setDetail(flattenTicketResponse(data));
       reload();
     } catch (err) {
-      alert(err.message || t('support.send_btn'));
+      await alertModal({ title: '전송 실패', desc: err.message || t('support.send_btn') });
     } finally {
       setReplying(false);
     }
@@ -93,7 +95,7 @@ export default function Support() {
       setDetail(flattenTicketResponse(data));
       reload();
     } catch (err) {
-      alert(err.message);
+      await alertModal({ title: '오류', desc: err.message });
     } finally {
       setPatchBusy(false);
     }
@@ -414,6 +416,7 @@ export default function Support() {
           )}
         </div>
       </div>
+      {confirmModalEl}
     </div>
   );
 }
