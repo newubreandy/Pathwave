@@ -25,6 +25,15 @@ const CheckinService = {
    * @returns {Promise<{success, user_id, email, is_minor, actor, message?}>}
    */
   verify: (token) => apiClient.post('/api/checkin/verify', { token }),
+
+  /**
+   * A-1 (2026-05-29): 제로페이 결제 확정.
+   * @param {string} token — 회원 QR JWT
+   * @param {number} amount — 결제 금액 (원)
+   * ⚠️ v1 placeholder — 실 제로페이 송금은 가맹점 키 도착 후.
+   */
+  zeropayCharge: (token, amount) =>
+    apiClient.post('/api/checkin/zeropay-charge', { token, amount }),
 };
 
 export default CheckinService;
