@@ -127,15 +127,16 @@ def verify_member_qr():
     db = get_db()
     try:
         row = db.execute(
-            "SELECT id, email, birth_year, status FROM users WHERE id=?",
+            "SELECT id, email, birth_year, deleted_at FROM users WHERE id=?",
             (user_id,),
         ).fetchone()
         if not row:
             return jsonify({'success': False,
                             'message': '회원이 존재하지 않습니다.'}), 404
-        if (row['status'] or 'active') != 'active':
+        # users 테이블은 status 컬럼이 없음. 탈퇴 여부는 deleted_at(soft delete)으로 판단.
+        if row['deleted_at'] is not None:
             return jsonify({'success': False,
-                            'message': '비활성 회원입니다.'}), 400
+                            'message': '탈퇴한 회원입니다.'}), 400
 
         # 만 18세 이하 여부 (청소년 보호)
         is_minor = False
