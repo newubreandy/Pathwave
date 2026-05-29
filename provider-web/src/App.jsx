@@ -5,6 +5,7 @@ import RequireAuth from './components/RequireAuth';
 import SectionTabs from './components/common/SectionTabs';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import StoreInfo from './pages/StoreInfo';
 // import StoreTranslations 제거 (2026-05-27) — 매장 다국어는 백엔드 자동 번역
@@ -83,6 +84,7 @@ function App() {
         {/* 공개 — 인증 불필요 */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         {/* 공개 정책 뷰어 — 푸터/회원가입 흐름에서 진입 */}
         <Route path="/policy/:kind" element={<PolicyView />} />
 
