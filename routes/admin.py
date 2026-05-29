@@ -1256,6 +1256,142 @@ def unassign_beacon(bid):
     return jsonify({'success': True})
 
 
+# ── 서비스 신청 ↔ 비콘 매칭 (P-B, 2026-05-29) ────────────────────────────────
+# 점주 신청(설치위치+WiFi)에 인벤토리 비콘을 매칭 → 할당·활성·WiFi 연결.
+# 설계: docs/pathwave_beacon_provisioning_design_2026-05-29.md
+
+@admin_bp.route('/service-requests', methods=['GET'])
+@require_super_admin()
+def list_service_requests():
+    """서비스 신청 목록 (유닛 포함). ?status= 로 필터 (기본 전체)."""
+    status = (request.args.get('status') or '').strip()
+    db = get_db()
+    where, params = [], []
+    if status:
+        where.append('r.status=?'); params.append(status)
+    sql = """SELECT r.*, f.name AS facility_name, fa.email AS owner_email
+             FROM service_requests r
+             LEFT JOIN facilities f ON r.facility_id = f.id
+             LEFT JOIN facility_accounts fa ON r.facility_account_id = fa.id"""
+    if where:
+        sql += ' WHERE ' + ' AND '.join(where)
+    sql += ' ORDER BY r.id DESC'
+    rows = db.execute(sql, params).fetchall()
+    out = []
+    for r in rows:
+        units = db.execute(
+            """SELECT u.id, u.location_label, u.ssid, u.period_start, u.period_end,
+                      u.beacon_id, u.status, b.serial_no AS beacon_serial
+               FROM service_request_units u
+               LEFT JOIN beacons b ON u.beacon_id = b.id
+               WHERE u.request_id=? ORDER BY u.id""",
+            (r['id'],)
+        ).fetchall()
+        # 보안: wifi_password_enc 는 노출하지 않는다 (매칭 시 서버 내부에서만 사용).
+        out.append({
+            'id':            r['id'],
+            'facility_id':   r['facility_id'],
+            'facility_name': r['facility_name'],
+            'owner_email':   r['owner_email'],
+            'service_type':  r['service_type'],
+            'status':        r['status'],
+            'note':          r['note'],
+            'created_at':    r['created_at'],
+            'units':         [dict(u) for u in units],
+        })
+    db.close()
+    return jsonify({'success': True, 'requests': out})
+
+
+@admin_bp.route('/service-request-units/<int:uid>/match', methods=['POST'])
+@require_super_admin()
+def match_request_unit(uid):
+    """신청 유닛에 인벤토리 비콘을 매칭. body: {beacon_id}.
+
+    - 비콘: facility_id 할당 + status='active' + major(=facility_id)/minor(자동) + location_label.
+    - WiFi: 유닛 SSID 가 있으면 wifi_profiles 생성(암호화 비번 그대로 복사) + beacon_wifi 연결.
+    - 유닛 status='matched'. 신청의 모든 유닛이 matched 면 신청도 'matched'.
+    """
+    data = request.get_json(silent=True) or {}
+    beacon_id = data.get('beacon_id')
+    if not isinstance(beacon_id, int):
+        return jsonify({'success': False, 'message': 'beacon_id 가 필요합니다.'}), 400
+
+    db = get_db()
+    unit = db.execute(
+        """SELECT u.*, r.facility_id AS req_facility_id, r.id AS req_id
+           FROM service_request_units u
+           JOIN service_requests r ON u.request_id = r.id
+           WHERE u.id=?""",
+        (uid,)
+    ).fetchone()
+    if not unit:
+        db.close()
+        return jsonify({'success': False, 'message': '신청 유닛을 찾을 수 없습니다.'}), 404
+    if unit['beacon_id']:
+        db.close()
+        return jsonify({'success': False, 'message': '이미 비콘이 매칭된 유닛입니다.'}), 409
+    fac_id = unit['req_facility_id']
+    if not fac_id:
+        db.close()
+        return jsonify({'success': False,
+                        'message': '신청에 매장이 연결되어 있지 않습니다.'}), 400
+
+    beacon = db.execute("SELECT * FROM beacons WHERE id=?", (beacon_id,)).fetchone()
+    if not beacon:
+        db.close()
+        return jsonify({'success': False, 'message': '비콘을 찾을 수 없습니다.'}), 404
+    if beacon['status'] != 'inventory':
+        db.close()
+        return jsonify({'success': False,
+                        'message': "인벤토리(할당 대기) 상태 비콘만 매칭할 수 있습니다."}), 409
+
+    # 매장 내 다음 minor 자동 할당
+    nxt = db.execute(
+        "SELECT COALESCE(MAX(minor), 0) + 1 AS m FROM beacons WHERE facility_id=?",
+        (fac_id,)
+    ).fetchone()['m']
+
+    # 비콘 할당 + 설치위치(점주 신청값)
+    db.execute(
+        """UPDATE beacons
+              SET facility_id=?, status='active', major=?, minor=?, location_label=?,
+                  assigned_at=datetime('now')
+            WHERE id=?""",
+        (fac_id, fac_id, nxt, unit['location_label'], beacon_id)
+    )
+
+    # WiFi 연결 (유닛에 SSID 있으면). wifi_profiles.password 는 AES 암호값 그대로 저장.
+    if unit['ssid']:
+        cur = db.execute(
+            "INSERT INTO wifi_profiles (facility_id, ssid, password, active) VALUES (?,?,?,1)",
+            (fac_id, unit['ssid'], unit['wifi_password_enc'] or '')
+        )
+        wpid = cur.lastrowid
+        db.execute(
+            "INSERT OR IGNORE INTO beacon_wifi (beacon_id, wifi_profile_id, priority) VALUES (?,?,0)",
+            (beacon_id, wpid)
+        )
+
+    db.execute(
+        "UPDATE service_request_units SET beacon_id=?, status='matched' WHERE id=?",
+        (beacon_id, uid)
+    )
+    # 모든 유닛 matched 면 신청도 matched
+    remaining = db.execute(
+        "SELECT COUNT(*) AS c FROM service_request_units WHERE request_id=? AND status!='matched'",
+        (unit['req_id'],)
+    ).fetchone()['c']
+    if remaining == 0:
+        db.execute("UPDATE service_requests SET status='matched' WHERE id=?", (unit['req_id'],))
+    db.commit()
+    db.close()
+    return jsonify({'success': True, 'unit_id': uid, 'beacon_id': beacon_id,
+                    'major': fac_id, 'minor': nxt,
+                    'request_done': remaining == 0,
+                    'message': '비콘이 매칭·할당되었습니다.'})
+
+
 # ── 비콘 배터리 모니터링 (PR #34) ────────────────────────────────────────────
 @admin_bp.route('/beacons/battery-status', methods=['GET'])
 @require_super_admin()

@@ -6,6 +6,7 @@ import DevPreviewBar from './components/DevPreviewBar.jsx';
 import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Beacons from './pages/Beacons.jsx';
+import ServiceRequests from './pages/ServiceRequests.jsx';
 import Approvals from './pages/Approvals.jsx';
 import Battery from './pages/Battery.jsx';
 import Announcements from './pages/Announcements.jsx';
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/beacons" element={<Beacons />} />
+          <Route path="/dashboard/service-requests" element={<ServiceRequests />} />
           <Route path="/dashboard/approvals" element={<Approvals />} />
           <Route path="/dashboard/battery" element={<Battery />} />
           <Route path="/dashboard/announcements" element={<Announcements />} />

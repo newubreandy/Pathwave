@@ -45,6 +45,14 @@ export const adminApi = {
     apiClient.post(`/api/admin/beacons/${id}/assign`, { facility_id: facilityId }),
   unassignBeacon: (id) => apiClient.post(`/api/admin/beacons/${id}/unassign`, {}),
 
+  // 서비스 신청 ↔ 비콘 매칭 (P-B)
+  listServiceRequests: (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return apiClient.get(`/api/admin/service-requests${q ? '?' + q : ''}`);
+  },
+  matchRequestUnit: (unitId, beaconId) =>
+    apiClient.post(`/api/admin/service-request-units/${unitId}/match`, { beacon_id: beaconId }),
+
   // 사장 가입 승인
   listFacilityAccounts: (params = {}) => {
     const q = new URLSearchParams(params).toString();
