@@ -198,8 +198,8 @@ P1~P3·P5~P15·P17·P20~P22 ✅ 머지 완료. 아래만 잔여:
 
 **즉시 가능 (코드 작업):**
 1. **P8b** — 채팅 자동번역 (OPEN PR #167, 머지 검토 필요) — USP 킬러기능
-2. **P4 후속** — Signup 게스트 차단 / forgot-password 라우트 확정
-3. **갭 보강** — pg_key AES-GCM 암호화 / 약관 ko+en 본문 충실화 / P3-b2-7 admin Notifications.jsx
+2. ~~**점주 비밀번호 재설정** + **pg_key AES-GCM 암호화**~~ ✅ #230 (forgot/reset 라우트 + ForgotPassword.jsx + 빌링키 암호화)
+3. **잔여 갭(소)** — 약관 동의 마이크로항목 7종 en 번역 / P3-b2-7 admin Notifications.jsx / (P4 Signup 게스트 = 명확한 갭 없음)
 4. **C-3** — 페르소나 통합 테스트 시나리오 (OPEN PR #168)
 
 **외부/하드웨어 대기:**
