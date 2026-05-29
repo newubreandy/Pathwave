@@ -52,6 +52,8 @@ export const adminApi = {
   },
   matchRequestUnit: (unitId, beaconId) =>
     apiClient.post(`/api/admin/service-request-units/${unitId}/match`, { beacon_id: beaconId }),
+  shipServiceRequest: (rid) =>
+    apiClient.post(`/api/admin/service-requests/${rid}/ship`, {}),
 
   // 사장 가입 승인
   listFacilityAccounts: (params = {}) => {

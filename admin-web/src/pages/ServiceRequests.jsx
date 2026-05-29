@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { RefreshCw, MapPin, Wifi, CheckCircle2, Printer } from 'lucide-react';
+import { RefreshCw, MapPin, Wifi, CheckCircle2, Printer, Truck } from 'lucide-react';
 import { adminApi } from '../services/admin.js';
 
 // HTML 이스케이프 (라벨 텍스트는 점주 입력값 — 인쇄 창에 안전하게 삽입)
@@ -58,6 +58,16 @@ export default function ServiceRequests() {
       setError(e?.message || '매칭에 실패했습니다.');
     } finally {
       setBusyUnit(null);
+    }
+  };
+
+  const handleShip = async (req) => {
+    setError('');
+    try {
+      await adminApi.shipServiceRequest(req.id);
+      reload();
+    } catch (e) {
+      setError(e?.message || '발송 처리에 실패했습니다.');
     }
   };
 
@@ -150,6 +160,11 @@ export default function ServiceRequests() {
               {(req.units || []).some((u) => u.beacon_id) && (
                 <button className="btn btn-ghost" onClick={() => printLabels(req)} aria-label="라벨 인쇄">
                   <Printer size={15} /> <span>라벨 인쇄</span>
+                </button>
+              )}
+              {req.status === 'matched' && (
+                <button className="btn btn-primary" onClick={() => handleShip(req)} aria-label="발송 처리">
+                  <Truck size={15} /> <span>발송 처리</span>
                 </button>
               )}
               <span style={{

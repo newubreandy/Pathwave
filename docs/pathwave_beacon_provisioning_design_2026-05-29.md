@@ -91,4 +91,8 @@ service_request_units              -- 신청 1건 안의 위치별 유닛 (N개)
 - ✅ **P-A** (#236) — service_requests/units + 저장 API + provider 제출 배선 + WiFi PW 암호화.
 - ✅ **P-B** (#237) — admin 신청관리 + 비콘 매칭(할당·활성·major/minor·설치위치·WiFi 연결).
 - ✅ **P-C** — admin 라벨 인쇄(매칭 유닛별 1장, 새 창 격리 print CSS, 크기 설정 기본 40×25mm, 텍스트: 매장명/설치위치/시리얼).
-- ⬜ **P-D** — 상태 추적(shipped/installed) + 점주 확인(읽기전용 #235).
+- ✅ **P-D** — 상태 추적: matched →(admin 발송)→ shipped →(점주 설치완료)→ installed.
+  admin '발송 처리' 버튼 + provider 매장정보 '서비스 신청 상태' + '설치완료' 버튼.
+
+**✅ 비콘 프로비저닝 워크플로우 P-A~D 전체 완료 (2026-05-29).**
+end-to-end 검증: 신청 → 매칭(active/major/minor/설치위치/WiFi) → 발송 → 설치완료, 가드(매칭 전 발송 차단) 포함.

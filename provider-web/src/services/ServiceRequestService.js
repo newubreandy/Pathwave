@@ -36,6 +36,11 @@ const ServiceRequestService = {
   list() {
     return apiClient.get('/api/service-requests');
   },
+
+  /** 발송받은 비콘 설치완료 처리 (shipped → installed) */
+  markInstalled(rid) {
+    return apiClient.post(`/api/service-requests/${rid}/installed`, {});
+  },
 };
 
 export default ServiceRequestService;

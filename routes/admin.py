@@ -1392,6 +1392,25 @@ def match_request_unit(uid):
                     'message': '비콘이 매칭·할당되었습니다.'})
 
 
+@admin_bp.route('/service-requests/<int:rid>/ship', methods=['POST'])
+@require_super_admin()
+def ship_service_request(rid):
+    """매칭완료된 신청을 발송 처리 (matched → shipped). 라벨 부착 후 택배 발송."""
+    db = get_db()
+    row = db.execute("SELECT status FROM service_requests WHERE id=?", (rid,)).fetchone()
+    if not row:
+        db.close()
+        return jsonify({'success': False, 'message': '신청을 찾을 수 없습니다.'}), 404
+    if row['status'] != 'matched':
+        db.close()
+        return jsonify({'success': False,
+                        'message': "비콘 매칭이 완료된(matched) 신청만 발송할 수 있습니다."}), 409
+    db.execute("UPDATE service_requests SET status='shipped' WHERE id=?", (rid,))
+    db.commit()
+    db.close()
+    return jsonify({'success': True, 'status': 'shipped', 'message': '발송 처리되었습니다.'})
+
+
 # ── 비콘 배터리 모니터링 (PR #34) ────────────────────────────────────────────
 @admin_bp.route('/beacons/battery-status', methods=['GET'])
 @require_super_admin()
