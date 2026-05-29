@@ -1,6 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { RefreshCw, MapPin, Wifi, CheckCircle2 } from 'lucide-react';
+import { RefreshCw, MapPin, Wifi, CheckCircle2, Printer } from 'lucide-react';
 import { adminApi } from '../services/admin.js';
+
+// HTML 이스케이프 (라벨 텍스트는 점주 입력값 — 인쇄 창에 안전하게 삽입)
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /**
  * ServiceRequests — 서비스 신청 관리 + 비콘 매칭 (P-B, 2026-05-29).
@@ -20,6 +24,9 @@ export default function ServiceRequests() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [busyUnit, setBusyUnit] = useState(null);
+  // 라벨(스티커) 크기 — 기본 40×25mm (비콘 48×37mm 보다 작게). 프린터/라벨지에 맞춰 조정.
+  const [labelW, setLabelW] = useState(40);
+  const [labelH, setLabelH] = useState(25);
 
   const reload = useCallback(() => {
     setLoading(true);
@@ -54,6 +61,40 @@ export default function ServiceRequests() {
     }
   };
 
+  // 라벨 인쇄 — 매칭된 유닛(비콘)마다 1장. 새 창에 격리된 print CSS 로 정확한 크기 출력.
+  // 저렴한 스티커/라벨 프린터를 OS 인쇄창에서 선택 (드라이버 불필요).
+  const printLabels = (req) => {
+    const labels = (req.units || []).filter((u) => u.beacon_id);
+    if (labels.length === 0) { setError('매칭된 비콘이 없어 인쇄할 라벨이 없습니다.'); return; }
+    const w = labelW || 40, h = labelH || 25;
+    const win = window.open('', '_blank', 'width=420,height=640');
+    if (!win) { setError('팝업이 차단되었습니다. 팝업 허용 후 다시 시도해 주세요.'); return; }
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>비콘 라벨</title>
+      <style>
+        @page { size: ${w}mm ${h}mm; margin: 0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { background: #fff; }
+        .label { width: ${w}mm; height: ${h}mm; padding: 1.5mm 2mm; overflow: hidden;
+                 page-break-after: always; display: flex; flex-direction: column;
+                 justify-content: center; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif; }
+        .store { font-size: 7pt; color: #444; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .loc   { font-size: 11pt; font-weight: 700; line-height: 1.15; margin: 0.8mm 0; }
+        .sn    { font-size: 6pt; color: #888; font-family: ui-monospace, Menlo, monospace; }
+        @media screen { body { padding: 16px; background: #eee; }
+          .label { background: #fff; border: 1px dashed #bbb; margin-bottom: 8px; } }
+      </style></head><body>
+      ${labels.map((u) => `<div class="label">
+        <div class="store">${esc(req.facility_name || ('매장 #' + (req.facility_id ?? '')))}</div>
+        <div class="loc">${esc(u.location_label || '-')}</div>
+        <div class="sn">${esc(u.beacon_serial || ('#' + u.beacon_id))}</div>
+      </div>`).join('')}
+      <script>window.onload = function(){ setTimeout(function(){ window.print(); }, 150); };<\/script>
+      </body></html>`;
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+  };
+
   return (
     <div className="modern-page">
       <div className="page-header-section">
@@ -64,7 +105,18 @@ export default function ServiceRequests() {
               점주 신청(설치위치·WiFi)에 인벤토리 비콘을 매칭 → 할당·활성·WiFi 연결. 매칭 후 라벨을 출력해 발송하세요.
             </p>
           </div>
-          <div className="header-actions">
+          <div className="header-actions" style={{ alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              <Printer size={14} /> 라벨
+              <input type="number" min="10" max="100" value={labelW}
+                onChange={(e) => setLabelW(Number(e.target.value))}
+                style={{ width: 52, padding: '0.25rem 0.4rem' }} aria-label="라벨 폭(mm)" />
+              ×
+              <input type="number" min="10" max="100" value={labelH}
+                onChange={(e) => setLabelH(Number(e.target.value))}
+                style={{ width: 52, padding: '0.25rem 0.4rem' }} aria-label="라벨 높이(mm)" />
+              mm
+            </span>
             <button className="btn btn-ghost" onClick={reload} disabled={loading} aria-label="새로고침">
               <RefreshCw size={16} className={loading ? 'spin' : ''} />
               <span>새로고침</span>
@@ -94,12 +146,19 @@ export default function ServiceRequests() {
                 {req.owner_email || '-'} · 신청 #{req.id} · {req.created_at}
               </span>
             </div>
-            <span style={{
-              fontSize: '0.82rem', fontWeight: 600, padding: '0.2rem 0.7rem', borderRadius: 6,
-              background: req.status === 'matched' ? 'rgba(34,197,94,0.12)' : 'var(--surface-1, rgba(255,255,255,0.05))',
-              color: req.status === 'matched' ? '#22C55E' : 'var(--text-secondary)',
-              border: '1px solid var(--border, rgba(255,255,255,0.1))',
-            }}>{STATUS_KO[req.status] || req.status}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {(req.units || []).some((u) => u.beacon_id) && (
+                <button className="btn btn-ghost" onClick={() => printLabels(req)} aria-label="라벨 인쇄">
+                  <Printer size={15} /> <span>라벨 인쇄</span>
+                </button>
+              )}
+              <span style={{
+                fontSize: '0.82rem', fontWeight: 600, padding: '0.2rem 0.7rem', borderRadius: 6,
+                background: req.status === 'matched' ? 'rgba(34,197,94,0.12)' : 'var(--surface-1, rgba(255,255,255,0.05))',
+                color: req.status === 'matched' ? '#22C55E' : 'var(--text-secondary)',
+                border: '1px solid var(--border, rgba(255,255,255,0.1))',
+              }}>{STATUS_KO[req.status] || req.status}</span>
+            </div>
           </div>
 
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
