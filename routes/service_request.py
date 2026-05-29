@@ -112,3 +112,27 @@ def list_requests():
     finally:
         db.close()
     return jsonify({'success': True, 'requests': out})
+
+
+@service_request_bp.route('/<int:rid>/installed', methods=['POST'])
+@require_facility_actor(roles=['owner'])
+def mark_installed(rid):
+    """점주가 발송받은 비콘을 부착 완료 처리 (shipped → installed). 본인 신청만."""
+    account_id = g.auth['owner_account_id']
+    db = get_db()
+    try:
+        row = db.execute(
+            "SELECT status, facility_account_id FROM service_requests WHERE id=?",
+            (rid,)
+        ).fetchone()
+        if not row or row['facility_account_id'] != account_id:
+            return jsonify({'success': False, 'message': '신청을 찾을 수 없습니다.'}), 404
+        if row['status'] != 'shipped':
+            return jsonify({'success': False,
+                            'message': '발송(shipped) 상태인 신청만 설치완료할 수 있습니다.'}), 409
+        db.execute("UPDATE service_requests SET status='installed' WHERE id=?", (rid,))
+        db.commit()
+    finally:
+        db.close()
+    return jsonify({'success': True, 'status': 'installed',
+                    'message': '설치완료 처리되었습니다.'})

@@ -14,6 +14,7 @@ import DaumPostcodeEmbed from 'react-daum-postcode';
 import CategoryService from '../services/store/CategoryService';
 import StoreService from '../services/store/StoreService';
 import AuthService from '../services/auth/AuthService';
+import ServiceRequestService from '../services/ServiceRequestService';
 
 // 커스텀 녹색 마커 (위치 핀 형태 SVG)
 const customGreenMarker = L.divIcon({
@@ -84,6 +85,7 @@ const StoreInfo = () => {
   // 한다 (시리얼 self-claim 제거). → 본 화면은 내 매장 비콘 목록 read-only.
   const [facilityId, setFacilityId] = useState(null);   // 내 매장 ID (facility/me)
   const [beacons, setBeacons] = useState([]);
+  const [requests, setRequests] = useState([]);          // P-D: 내 서비스 신청 상태
 
   // 비콘 목록 fetch. apiClient 는 본문을 그대로 반환하므로 res.beacons 사용.
   const fetchBeacons = async (fid) => {
@@ -96,7 +98,23 @@ const StoreInfo = () => {
     }
   };
 
-  // 마운트 시 내 매장 ID 확보 → 비콘 목록 로드. (1계정=1매장)
+  // P-D: 내 서비스 신청 목록 (상태 추적 — 발송/설치완료)
+  const fetchRequests = async () => {
+    try {
+      const res = await ServiceRequestService.list();
+      setRequests(res?.requests ?? []);
+    } catch { /* noop */ }
+  };
+
+  const handleMarkInstalled = async (rid) => {
+    try {
+      await ServiceRequestService.markInstalled(rid);
+      fetchRequests();
+      if (facilityId) fetchBeacons(facilityId);
+    } catch { /* noop */ }
+  };
+
+  // 마운트 시 내 매장 ID 확보 → 비콘 목록 + 신청 상태 로드. (1계정=1매장)
   useEffect(() => {
     let alive = true;
     AuthService.me()
@@ -105,6 +123,7 @@ const StoreInfo = () => {
         if (!alive) return;
         setFacilityId(fid);
         if (fid) fetchBeacons(fid);
+        fetchRequests();
       })
       .catch(() => { /* 미가입/오류 시 비콘 섹션 비활성 */ });
     return () => { alive = false; };
@@ -702,6 +721,46 @@ const StoreInfo = () => {
               </div>
             ) : (
               <p className="field-hint" style={{ marginBottom: '0.5rem' }}>아직 배정된 비콘이 없습니다.</p>
+            )}
+
+            {/* P-D: 서비스 신청 상태 (발송 → 설치완료) */}
+            {requests.length > 0 && (
+              <div style={{ marginTop: '1.5rem' }}>
+                <p className="field-hint" style={{ marginBottom: '0.5rem', fontWeight: 600 }}>서비스 신청 상태</p>
+                {requests.map((r) => {
+                  const ST = {
+                    pending:   { label: '신청 접수',     color: 'var(--pw-text-secondary)' },
+                    matched:   { label: '비콘 준비중',    color: 'var(--pw-text-secondary)' },
+                    shipped:   { label: '발송됨 (수령 후 부착)', color: '#22C55E' },
+                    installed: { label: '설치완료',       color: '#22C55E' },
+                    canceled:  { label: '취소',          color: 'var(--pw-text-hint)' },
+                  };
+                  const s = ST[r.status] || { label: r.status, color: 'var(--pw-text-secondary)' };
+                  return (
+                    <div key={r.id} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      gap: 12, padding: '0.6rem 0', borderBottom: '1px solid var(--pw-surface-line)',
+                    }}>
+                      <span style={{ fontSize: '0.9rem' }}>
+                        신청 #{r.id} · {r.service_type?.toUpperCase()} · 유닛 {r.units?.length ?? 0}개
+                      </span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: s.color }}>{s.label}</span>
+                        {r.status === 'shipped' && (
+                          <button
+                            type="button"
+                            className="btn-search-address"
+                            style={{ flexShrink: 0, background: 'var(--primary)', color: '#fff', border: '1px solid var(--primary)' }}
+                            onClick={() => handleMarkInstalled(r.id)}
+                          >
+                            설치완료
+                          </button>
+                        )}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}
