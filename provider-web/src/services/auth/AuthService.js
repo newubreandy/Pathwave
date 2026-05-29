@@ -63,6 +63,11 @@ class AuthService {
     return apiClient.post('/api/facility/reset-password', { email, code, password });
   }
 
+  /** 현재 시설 계정 + 소유 매장(facility_id/name) 조회 */
+  me() {
+    return apiClient.get('/api/facility/me');
+  }
+
   async logout() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_KEY);
