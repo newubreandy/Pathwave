@@ -85,7 +85,7 @@ class _MemberQrScreenState extends State<MemberQrScreen> {
 
     return Scaffold(
       appBar: PwAppBar(title: Text(context.t('mobile.member_qr.title',
-          defaultValue: '내 회원 QR'))),
+          defaultValue: '내 회원 QR (적립·결제)'))),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -94,7 +94,7 @@ class _MemberQrScreenState extends State<MemberQrScreen> {
             children: [
               Text(
                 context.t('mobile.member_qr.help',
-                    defaultValue: '점주가 스캔하면 스탬프·쿠폰이 자동으로 처리됩니다.'),
+                    defaultValue: '점주가 스캔하면 스탬프·쿠폰 적립 또는 제로페이 결제가 진행됩니다.'),
                 style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
               ),
               const SizedBox(height: 32),

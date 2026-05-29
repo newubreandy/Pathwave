@@ -161,3 +161,66 @@ def verify_member_qr():
         })
     finally:
         db.close()
+
+
+# ─── 점주: 제로페이 결제 확정 (A-1, 2026-05-29) ──────────────────────────────
+@checkin_bp.route('/zeropay-charge', methods=['POST'])
+def zeropay_charge():
+    """점주가 스캔한 회원 QR 로 제로페이 결제 확정.
+
+    Bearer access 토큰 필수 (facility_owner / staff).
+    body: { token: '<member_qr>', amount: <int> }
+
+    ⚠️ v1 placeholder — 실 제로페이 송금/정산은 가맹점 API 키 도착 후 연동.
+       현재는 결제 요청 검증 + mock 성공 응답 (실 자금 이동 없음).
+       실 연동 시: 제로페이 가맹점 동적 QR 발급 + 결제 webhook 수신 + payments 기록.
+    """
+    actor_token = _bearer_token()
+    if not actor_token:
+        return jsonify({'success': False,
+                        'message': '로그인이 필요합니다.'}), 401
+    try:
+        actor = decode_access_token(actor_token, expected_sub_type='facility')
+    except ValueError:
+        try:
+            actor = decode_access_token(actor_token, expected_sub_type='staff')
+        except ValueError as e:
+            return jsonify({'success': False, 'message': str(e)}), 401
+
+    data = request.get_json(silent=True) or {}
+    member_token = (data.get('token') or '').strip()
+    amount = data.get('amount')
+    if not member_token:
+        return jsonify({'success': False, 'message': 'token 이 필요합니다.'}), 400
+    if not isinstance(amount, int) or amount <= 0:
+        return jsonify({'success': False, 'message': 'amount 는 1 이상의 정수여야 합니다.'}), 400
+
+    # 회원 QR 토큰 검증
+    try:
+        payload = jwt.decode(member_token, SECRET_KEY, algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        return jsonify({'success': False,
+                        'message': '회원 QR 이 만료되었습니다. 손님께 새로고침 요청해 주세요.'}), 400
+    except jwt.InvalidTokenError:
+        return jsonify({'success': False,
+                        'message': '유효하지 않은 회원 QR 입니다.'}), 400
+
+    if payload.get('kind') != 'member_qr':
+        return jsonify({'success': False,
+                        'message': '회원 QR 토큰이 아닙니다.'}), 400
+
+    user_id = payload.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'message': '회원 ID 가 없습니다.'}), 400
+
+    # v1 placeholder — 실 제로페이 송금 X. mock 성공.
+    order_no = f"ZP-{user_id}-{int(datetime.now(timezone.utc).timestamp())}"
+    return jsonify({
+        'success':   True,
+        'mock':      True,
+        'order_no':  order_no,
+        'user_id':   user_id,
+        'amount':    amount,
+        'method':    'zeropay',
+        'message':   f'{amount:,}원 제로페이 결제가 확인되었습니다. (v1 시뮬레이션)',
+    })

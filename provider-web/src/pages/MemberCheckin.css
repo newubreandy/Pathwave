@@ -101,3 +101,44 @@
   flex-direction: column;
   gap: 8px;
 }
+
+/* A-1 (2026-05-29): 제로페이 결제 영역 */
+.member-checkin-zeropay {
+  margin: 4px 0;
+  padding: 12px;
+  border: 1px solid var(--pw-surface-line, rgba(255, 255, 255, 0.085));
+  border-radius: 10px;
+  background: var(--pw-surface-1, rgba(255, 255, 255, 0.045));
+}
+.member-checkin-zeropay-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pw-text-secondary, #8A8A99);
+  margin-bottom: 8px;
+}
+.member-checkin-zeropay-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.member-checkin-amount-input {
+  flex: 1;
+  height: 40px;
+  box-sizing: border-box;
+  background: var(--pw-bg-2, #14141C);
+  border: 1px solid var(--pw-border, #2A2A38);
+  border-radius: 10px;
+  padding: 0 12px;
+  color: var(--pw-text);
+  font-size: 14px;
+  outline: none !important;
+  box-shadow: none !important;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.member-checkin-amount-input:focus {
+  border-color: var(--pw-primary, #22C55E);
+}

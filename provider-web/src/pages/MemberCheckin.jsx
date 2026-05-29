@@ -9,7 +9,7 @@
  */
 import { useState, useEffect, useRef } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { Camera, X, User, Stamp, Gift, Loader2 } from 'lucide-react';
+import { Camera, X, User, Stamp, Gift, Loader2, QrCode } from 'lucide-react';
 
 import CheckinService from '../services/checkin/CheckinService';
 import StampService from '../services/stamp/StampService';
@@ -27,6 +27,9 @@ export default function MemberCheckin() {
   const [busy, setBusy] = useState(false);
   const [user, setUser] = useState(null);   // verify 응답
   const [error, setError] = useState(null);
+  // A-1 (2026-05-29): 제로페이 결제 — 스캔 토큰 보관 + 금액 입력
+  const [scannedToken, setScannedToken] = useState(null);
+  const [payAmount, setPayAmount] = useState('');
 
   // ── 스캐너 라이프사이클 ─────────────────────────────────────
   const startScanner = async () => {
@@ -75,11 +78,45 @@ export default function MemberCheckin() {
       const res = await CheckinService.verify(token);
       if (res?.success) {
         setUser(res);
+        setScannedToken(token);   // A-1: 제로페이 결제용 토큰 보관
       } else {
         setError(res?.message || 'QR 검증 실패.');
       }
     } catch (err) {
       setError(err?.message || 'QR 검증 중 오류가 발생했습니다.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // ── A-1: 제로페이 결제 ──────────────────────────────────────
+  const handleZeropayCharge = async () => {
+    if (!user?.user_id || !scannedToken) return;
+    const amount = parseInt((payAmount || '').replace(/[^0-9]/g, ''), 10);
+    if (!amount || amount <= 0) {
+      await alert({ title: '금액 확인', desc: '결제 금액을 올바르게 입력해 주세요.' });
+      return;
+    }
+    const ok = await confirm({
+      title: '제로페이 결제',
+      desc:  `회원 ${user.email || user.user_id} 에게 ${amount.toLocaleString()}원 제로페이 결제를 진행하시겠습니까?`,
+      confirmText: '결제',
+    });
+    if (!ok) return;
+
+    setBusy(true);
+    try {
+      const res = await CheckinService.zeropayCharge(scannedToken, amount);
+      await alert({
+        title: '결제 완료',
+        desc:  res?.message || `${amount.toLocaleString()}원 결제가 확인되었습니다.`,
+      });
+      setPayAmount('');
+    } catch (err) {
+      await alert({
+        title: '결제 실패',
+        desc:  err?.message || '잠시 후 다시 시도해 주세요.',
+      });
     } finally {
       setBusy(false);
     }
@@ -121,6 +158,8 @@ export default function MemberCheckin() {
     await stopScanner();
     setUser(null);
     setError(null);
+    setScannedToken(null);
+    setPayAmount('');
   };
 
   // ── 렌더 ───────────────────────────────────────────────────
@@ -178,6 +217,32 @@ export default function MemberCheckin() {
             <Button onClick={handleGrantStamp} variant="primary" fullWidth>
               <Stamp size={16} style={{ marginRight: 6 }} /> 스탬프 1개 적립
             </Button>
+
+            {/* A-1 (2026-05-29): 제로페이 결제 — 금액 입력 + 결제 */}
+            <div className="member-checkin-zeropay">
+              <div className="member-checkin-zeropay-label">
+                <QrCode size={15} aria-hidden="true" /> 제로페이 결제
+              </div>
+              <div className="member-checkin-zeropay-row">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className="member-checkin-amount-input"
+                  placeholder="결제 금액 (원)"
+                  value={payAmount}
+                  onChange={(e) => {
+                    const n = e.target.value.replace(/[^0-9]/g, '');
+                    setPayAmount(n ? parseInt(n, 10).toLocaleString() : '');
+                  }}
+                  disabled={busy}
+                />
+                <Button onClick={handleZeropayCharge} variant="primary"
+                        disabled={busy || !payAmount}>
+                  결제
+                </Button>
+              </div>
+            </div>
+
             <Button onClick={handleReset} variant="secondary" fullWidth>
               <Gift size={16} style={{ marginRight: 6 }} /> 다른 손님 스캔
             </Button>
