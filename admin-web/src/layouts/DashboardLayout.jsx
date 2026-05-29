@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Radio, UserCheck, Battery, Megaphone, CreditCard,
   FileText, LogOut, Search, Languages, Ticket, MessageSquare, Users,
   HelpCircle, BookOpen, BarChart2, ChevronDown, ChevronRight, Building2,
-  Flag, Bell, Smartphone, KeyRound, Activity, DollarSign,
+  Flag, Bell, Smartphone, KeyRound, Activity, DollarSign, PackageCheck,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { adminLogout, getCurrentAdmin } from '../services/auth.js';
@@ -26,6 +26,7 @@ const NAV_GROUPS = [
     items: [
       { to: '/dashboard',           icon: LayoutDashboard, labelKey: 'nav.dashboard',  end: true },
       { to: '/dashboard/beacons',   icon: Radio,           labelKey: 'nav.beacons'               },
+      { to: '/dashboard/service-requests', icon: PackageCheck, labelKey: 'nav.service_requests', labelDefault: '서비스 신청' },
       { to: '/dashboard/approvals', icon: UserCheck,       labelKey: 'nav.approvals',  badge: 3  },
     ],
   },
