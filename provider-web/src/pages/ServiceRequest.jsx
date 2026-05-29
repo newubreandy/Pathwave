@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, Minus, HelpCir
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
+import ServiceRequestService from '../services/ServiceRequestService';
 import './ServiceRequest.css';
 
 // 신청 가능 서비스 카테고리
@@ -341,9 +342,18 @@ const ServiceRequest = () => {
     setConfirmMsg('서비스를 신청하시겠어요?\n신청 후 운영팀에서 검토하고 연락드립니다.');
   };
 
-  const doSubmit = () => {
+  const doSubmit = async () => {
     setConfirmMsg(null);
-    setSubmitted(true);
+    // P-A: 신청 내역(설치위치 + WiFi)을 백엔드에 저장 → 슈퍼어드민이 비콘 매칭.
+    try {
+      await ServiceRequestService.submit({
+        serviceType: categoryKey,
+        wifiItems,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      setConfirmMsg(err?.message || '신청 접수 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+    }
   };
 
   // 카드 헤더 status 라벨

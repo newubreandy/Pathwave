@@ -133,6 +133,38 @@ def init_db():
         );
         CREATE INDEX IF NOT EXISTS idx_units_facility ON units(facility_id);
 
+        -- 비콘 프로비저닝 — 점주 서비스 신청 (설계 2026-05-29).
+        -- 점주가 설치위치 + WiFi 를 신청 → 슈퍼어드민이 인벤토리 비콘을 매칭·발송.
+        CREATE TABLE IF NOT EXISTS service_requests (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            facility_id         INTEGER,
+            facility_account_id INTEGER NOT NULL,
+            service_type        TEXT    NOT NULL DEFAULT 'wifi',
+            status              TEXT    NOT NULL DEFAULT 'pending', -- pending|matched|shipped|installed|canceled
+            note                TEXT,
+            created_at          TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (facility_id)         REFERENCES facilities(id),
+            FOREIGN KEY (facility_account_id) REFERENCES facility_accounts(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_service_requests_acct ON service_requests(facility_account_id);
+
+        -- 신청 1건 안의 위치별 유닛 (1:N). 설치위치 = 점주 입력값.
+        CREATE TABLE IF NOT EXISTS service_request_units (
+            id                INTEGER PRIMARY KEY AUTOINCREMENT,
+            request_id        INTEGER NOT NULL,
+            location_label    TEXT,                              -- 점주 입력 설치위치
+            ssid              TEXT,
+            wifi_password_enc TEXT,                              -- AES-256-GCM 암호화
+            period_start      TEXT,
+            period_end        TEXT,
+            beacon_id         INTEGER,                           -- 매칭된 비콘 (NULL=미매칭)
+            status            TEXT    NOT NULL DEFAULT 'pending', -- pending|matched
+            created_at        TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (request_id) REFERENCES service_requests(id),
+            FOREIGN KEY (beacon_id)  REFERENCES beacons(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_sru_request ON service_request_units(request_id);
+
         -- P14 — WiFi 접근 권한 (시간제).
         CREATE TABLE IF NOT EXISTS wifi_access_grant (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
