@@ -584,7 +584,7 @@ def list_facility_beacons(fid):
 
     rows = db.execute(
         """SELECT id, serial_no, uuid, major, minor,
-                  status, battery_pct, firmware_ver, created_at
+                  status, battery_pct, firmware_ver, location_label, created_at
            FROM beacons WHERE facility_id=?
            ORDER BY id DESC""",
         (fid,)

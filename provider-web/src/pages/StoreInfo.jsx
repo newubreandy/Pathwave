@@ -78,20 +78,12 @@ const StoreInfo = () => {
     return () => { alive = false; };
   }, []);
 
-  // ── 비콘 관리 state ──
+  // ── 비콘 (읽기 전용) ──
+  // 정책(2026-05-29): 비콘 할당은 슈퍼어드민 주도. 운영자가 신청 매장에 비콘을
+  // 배정 + 설치위치를 지정해 라벨을 붙여 발송한다. 점주는 배정된 비콘을 '확인'만
+  // 한다 (시리얼 self-claim 제거). → 본 화면은 내 매장 비콘 목록 read-only.
   const [facilityId, setFacilityId] = useState(null);   // 내 매장 ID (facility/me)
   const [beacons, setBeacons] = useState([]);
-  const [beaconSn, setBeaconSn] = useState('');
-  const [beaconMinor, setBeaconMinor] = useState('');
-  const [beaconLoading, setBeaconLoading] = useState(false);
-  const [beaconToast, setBeaconToast] = useState('');
-  const [beaconError, setBeaconError] = useState('');
-
-  // 비콘 토스트 자동 닫기 (3초)
-  const showBeaconToast = (msg) => {
-    setBeaconToast(msg);
-    setTimeout(() => setBeaconToast(''), 3000);
-  };
 
   // 비콘 목록 fetch. apiClient 는 본문을 그대로 반환하므로 res.beacons 사용.
   const fetchBeacons = async (fid) => {
@@ -118,44 +110,6 @@ const StoreInfo = () => {
     return () => { alive = false; };
   }, []);
 
-  // 비콘 claim 제출
-  const handleClaimBeacon = async () => {
-    setBeaconError('');
-    const snTrimmed = beaconSn.trim();
-    if (!snTrimmed) {
-      setBeaconError(t('store.beacon_err_sn'));
-      return;
-    }
-    if (beaconMinor !== '' && (!/^\d+$/.test(beaconMinor) || Number(beaconMinor) < 1)) {
-      setBeaconError(t('store.beacon_err_minor'));
-      return;
-    }
-
-    if (!facilityId) {
-      setBeaconError('매장 정보를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.');
-      return;
-    }
-
-    setBeaconLoading(true);
-    try {
-      const res = await StoreService.claimBeacon(facilityId, snTrimmed, beaconMinor || null);
-      const beacon = res?.beacon ?? {};
-      setBeacons(prev => [...prev, beacon]);
-      setBeaconSn('');
-      setBeaconMinor('');
-      showBeaconToast(
-        t('store.beacon_claim_success', {
-          major: beacon.major ?? '-',
-          minor: beacon.minor ?? '-',
-        })
-      );
-    } catch (err) {
-      const msg = err?.response?.data?.message ?? err?.message ?? '비콘 등록에 실패했습니다.';
-      setBeaconError(msg);
-    } finally {
-      setBeaconLoading(false);
-    }
-  };
   const WEEKDAYS = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
   const TIME_OPTIONS = Array.from({ length: 49 }, (_, i) => {
     const hours = Math.floor(i / 2).toString().padStart(2, '0');
@@ -676,9 +630,16 @@ const StoreInfo = () => {
           <div className="detail-item">
             <label>{t('store.label_beacons')}</label>
 
-            {/* 비콘 목록 테이블 */}
+            {/* 안내: 비콘 할당은 슈퍼어드민(운영자) 주도 */}
+            <p className="field-hint" style={{ marginBottom: '1rem', lineHeight: 1.6 }}>
+              비콘은 <strong>운영자(PathWave)</strong>가 신청하신 매장에 배정하고 설치위치를 지정해
+              라벨을 붙여 발송합니다. 받으신 비콘을 지정 위치에 부착하시면 됩니다. 아래는 우리 매장에
+              배정된 비콘 목록입니다. 추가·변경이 필요하면 고객지원으로 문의해 주세요.
+            </p>
+
+            {/* 비콘 목록 (읽기 전용) */}
             {beacons.length > 0 ? (
-              <div style={{ overflowX: 'auto', marginBottom: '1.5rem' }}>
+              <div style={{ overflowX: 'auto', marginBottom: '0.5rem' }}>
                 <table style={{
                   width: '100%',
                   borderCollapse: 'collapse',
@@ -690,8 +651,11 @@ const StoreInfo = () => {
                       <th style={{ textAlign: 'left', padding: '0.6rem 0.8rem', color: 'var(--pw-text-hint)', fontWeight: 600 }}>
                         {t('store.beacon_col_sn')}
                       </th>
+                      <th style={{ textAlign: 'left', padding: '0.6rem 0.8rem', color: 'var(--pw-text-hint)', fontWeight: 600 }}>
+                        설치위치
+                      </th>
                       <th style={{ textAlign: 'center', padding: '0.6rem 0.8rem', color: 'var(--pw-text-hint)', fontWeight: 600 }}>
-                        {t('store.beacon_col_major')}
+                        상태
                       </th>
                       <th style={{ textAlign: 'center', padding: '0.6rem 0.8rem', color: 'var(--pw-text-hint)', fontWeight: 600 }}>
                         {t('store.beacon_col_minor')}
@@ -699,19 +663,24 @@ const StoreInfo = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {beacons.map((b, idx) => (
+                    {beacons.map((b, idx) => {
+                      const STATUS_KO = { active: '활성', inventory: '배정 대기', inactive: '비활성', lost: '분실' };
+                      const isActive = b.status === 'active';
+                      return (
                       <tr key={b.id ?? idx} style={{ borderBottom: '1px solid var(--pw-surface-line)' }}>
                         <td style={{ padding: '0.6rem 0.8rem', fontFamily: 'monospace' }}>{b.serial_no ?? b.sn ?? '-'}</td>
+                        <td style={{ padding: '0.6rem 0.8rem' }}>{b.location_label || <span style={{ color: 'var(--pw-text-hint)' }}>미지정</span>}</td>
                         <td style={{ padding: '0.6rem 0.8rem', textAlign: 'center' }}>
                           <span style={{
                             display: 'inline-block',
-                            background: 'var(--pw-surface-1)',
-                            border: '1px solid var(--pw-surface-line)',
+                            background: isActive ? 'rgba(34,197,94,0.12)' : 'var(--pw-surface-1)',
+                            border: `1px solid ${isActive ? 'rgba(34,197,94,0.35)' : 'var(--pw-surface-line)'}`,
                             borderRadius: '6px',
                             padding: '0.2rem 0.6rem',
                             fontSize: '0.82rem',
                             fontWeight: 600,
-                          }}>{b.major ?? '-'}</span>
+                            color: isActive ? '#22C55E' : 'var(--pw-text-secondary)',
+                          }}>{STATUS_KO[b.status] ?? b.status ?? '-'}</span>
                         </td>
                         <td style={{ padding: '0.6rem 0.8rem', textAlign: 'center' }}>
                           <span style={{
@@ -726,89 +695,17 @@ const StoreInfo = () => {
                           }}>{b.minor ?? '-'}</span>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             ) : (
-              <p className="field-hint" style={{ marginBottom: '1rem' }}>{t('store.beacon_empty')}</p>
-            )}
-
-            {/* claim 입력 폼 */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
-              <div style={{ flex: '2 1 180px' }}>
-                <p className="field-hint" style={{ marginBottom: '0.3rem' }}>{t('store.beacon_claim_sn')}</p>
-                <input
-                  className="input-modern"
-                  style={{ fontSize: '1rem' }}
-                  value={beaconSn}
-                  onChange={e => setBeaconSn(e.target.value)}
-                  placeholder={t('store.beacon_claim_sn_ph')}
-                  disabled={beaconLoading}
-                />
-              </div>
-              <div style={{ flex: '1 1 130px' }}>
-                <p className="field-hint" style={{ marginBottom: '0.3rem' }}>{t('store.beacon_claim_minor')}</p>
-                <input
-                  className="input-modern"
-                  style={{ fontSize: '1rem' }}
-                  type="number"
-                  min="1"
-                  value={beaconMinor}
-                  onChange={e => setBeaconMinor(e.target.value)}
-                  placeholder={t('store.beacon_claim_minor_ph')}
-                  disabled={beaconLoading}
-                />
-              </div>
-              <button
-                type="button"
-                className="btn-search-address"
-                style={{
-                  flexShrink: 0,
-                  background: 'var(--primary)',
-                  color: '#fff',
-                  border: '1px solid var(--primary)',
-                  opacity: beaconLoading ? 0.6 : 1,
-                  cursor: beaconLoading ? 'not-allowed' : 'pointer',
-                }}
-                onClick={handleClaimBeacon}
-                disabled={beaconLoading}
-              >
-                {beaconLoading ? '등록 중…' : t('store.beacon_claim_btn')}
-              </button>
-            </div>
-
-            {/* 인라인 에러 */}
-            {beaconError && (
-              <p className="field-hint warn" style={{ marginTop: '0.5rem' }}>{beaconError}</p>
+              <p className="field-hint" style={{ marginBottom: '0.5rem' }}>아직 배정된 비콘이 없습니다.</p>
             )}
           </div>
         )}
       </section>
-
-      {/* 비콘 claim 성공 토스트 */}
-      {beaconToast && (
-        <div style={{
-          position: 'fixed',
-          bottom: '5.5rem',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'var(--primary)',
-          color: '#fff',
-          padding: '0.75rem 1.25rem',
-          borderRadius: '10px',
-          fontSize: '0.9rem',
-          fontWeight: 600,
-          boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
-          zIndex: 3000,
-          whiteSpace: 'nowrap',
-          maxWidth: '90vw',
-          textAlign: 'center',
-          animation: 'vmFadeIn 0.2s ease',
-        }}>
-          {beaconToast}
-        </div>
-      )}
 
       <BottomActionBar>
         {!isEditing ? (
