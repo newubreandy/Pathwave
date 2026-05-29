@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Plus, Check, Wifi, Bell, Gift, CreditCard, ArrowLeft, ArrowRight, Loader2, Download, X, Info, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Check, Wifi, Bell, Gift, CreditCard, ArrowLeft, ArrowRight, Loader2, Download, X, Info, AlertTriangle, ShieldCheck, QrCode } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import AuthService from '../services/auth/AuthService';
 import Button from '../components/common/Button';
@@ -10,6 +10,18 @@ import SectionTabs from '../components/common/SectionTabs';
 import './PaymentManagement.css';
 // 2026-05-27: useConfirm 적용 — mock 페이지 + 큰 파일. 실연동 시 재작성 예정.
 //             alert 잔존은 P3-b3 별도 PR 에서 처리 (실연동 시).
+
+/* ────────────────────────────────────────────────────────────
+   결제 수단 feature flag (2026-05-27)
+   - 제로페이(ZeroPay) 연동. 가맹점 등록·API 키 도착 후 활성.
+   - 연동이 안 되면 ZEROPAY_ENABLED = false 로 바꾸면 UI 에서 숨겨짐.
+   ──────────────────────────────────────────────────────────── */
+const ZEROPAY_ENABLED = true;
+
+const ZEROPAY_MERCHANT = {
+  name: '주식회사 트리거소프트',
+  qrPlaceholder: 'zeropay://merchant/triggersoft',
+};
 
 /* ── Mock Data ── */
 const MOCK_CARD = {
@@ -127,6 +139,8 @@ const ServiceApplyFlow = ({ onBack, onComplete }) => {
   const [quantity, setQuantity] = useState(1);
   const [pgLoading, setPgLoading] = useState(false);
   const [pgDone, setPgDone] = useState(false);
+  // 2026-05-27: 결제 수단 — 'card' (토스 빌링키) | 'zeropay' (제로페이 QR)
+  const [payMethod, setPayMethod] = useState('card');
 
   const service = MOCK_SERVICES.find(s => s.id === selectedService);
   const plan = service?.plans.find(p => p.id === selectedPlan);
@@ -279,9 +293,55 @@ const ServiceApplyFlow = ({ onBack, onComplete }) => {
               </div>
             ) : (
               <div className="pay-pg-ready">
-                <div className="pay-pg-card-icon"><CreditCard size={40} /></div>
-                <h3>PG 결제</h3>
-                <p>등록된 카드로 결제를 진행합니다</p>
+                {/* 결제 수단 선택 — 카드 / 제로페이 (ZEROPAY_ENABLED) */}
+                <div className="pay-method-tabs" role="tablist" aria-label="결제 수단">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={payMethod === 'card'}
+                    className={`pay-method-tab ${payMethod === 'card' ? 'active' : ''}`}
+                    onClick={() => setPayMethod('card')}
+                  >
+                    <CreditCard size={18} aria-hidden="true" />
+                    <span>카드</span>
+                  </button>
+                  {ZEROPAY_ENABLED && (
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={payMethod === 'zeropay'}
+                      className={`pay-method-tab ${payMethod === 'zeropay' ? 'active' : ''}`}
+                      onClick={() => setPayMethod('zeropay')}
+                    >
+                      <QrCode size={18} aria-hidden="true" />
+                      <span>제로페이</span>
+                    </button>
+                  )}
+                </div>
+
+                {payMethod === 'card' ? (
+                  <>
+                    <div className="pay-pg-card-icon"><CreditCard size={40} /></div>
+                    <h3>카드 결제</h3>
+                    <p>등록된 카드로 결제를 진행합니다</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="pay-zeropay-qr" aria-label="제로페이 QR">
+                      <QrCode size={120} strokeWidth={1} />
+                    </div>
+                    <h3>제로페이 결제</h3>
+                    <p>
+                      제로페이 앱(은행/페이 앱)으로 위 QR 을 스캔해
+                      <strong> {ZEROPAY_MERCHANT.name}</strong> 으로 결제하세요.
+                    </p>
+                    <p className="pay-zeropay-note">
+                      ※ 제로페이는 수수료 0%대의 계좌이체 간편결제입니다.
+                      결제 완료 후 자동으로 다음 단계로 넘어갑니다.
+                    </p>
+                  </>
+                )}
+
                 <div className="pay-pg-amount">
                   <span>결제금액</span>
                   <strong>{(totalPrice + vat).toLocaleString()}원</strong>
@@ -321,7 +381,9 @@ const ServiceApplyFlow = ({ onBack, onComplete }) => {
             disabled={!canNext() || pgLoading}
             isLoading={pgLoading}
           >
-            {step === 3 ? (pgDone ? '다음' : '결제하기') : step === 2 ? '결제 진행' : '다음'}
+            {step === 3
+              ? (pgDone ? '다음' : (payMethod === 'zeropay' ? '제로페이 결제 확인' : '카드 결제하기'))
+              : step === 2 ? '결제 진행' : '다음'}
           </Button>
         )}
         {step === 4 && (
