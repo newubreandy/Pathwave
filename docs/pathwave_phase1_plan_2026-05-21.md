@@ -146,7 +146,7 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 
 ⬜ 대기 · 🔄 진행중 · ◑ 부분 머지 · 🔎 검토 · ✅ 완료
 
-**최종 갱신**: 2026-05-26 (실제 머지 PR 코드 검증 기반)
+**최종 갱신**: 2026-05-29 (P22 시리즈 + 제로페이 A/B 머지·로컬 검증 기반)
 
 | PR | 상태 | PR | 상태 | PR | 상태 |
 |---|---|---|---|---|---|
@@ -157,7 +157,7 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 | P5 | ⬜ | P12 | ✅ | P19 | ⬜ |
 | P6 | ⬜ | P13 | ⬜ | P20 | ✅ |
 | P7 | ✅ | P14 | ✅ | P21 | ✅ |
-| P22 | ⬜ |  |  |  |  |
+| P22 | ✅ |  |  |  |  |
 
 ### 6.1 머지 PR 매핑 (실제 head branch + PR #)
 
@@ -184,7 +184,7 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 | P19 | ⬜ | — | units/grant 관리 화면 (feature flag, v1 비공개 OK) |
 | P20 | ✅ | #127 (Phase K), #180 (b-app-versions-ui) | 앱 버전 강제 업데이트 + admin UI |
 | P21 | ✅ | #181 (c-store-review-audit), #194 (ios-privacy-manifest), #195 (medium-policies-photo-picker) | Privacy Manifest + 청소년·쿠키 + Photo Picker + 계정삭제 웹 URL |
-| P22 | ⬜ | — | 회원 QR + 친구초대 (P9 후) |
+| P22 | ✅ | #213 (P22-a member-qr BE+mobile), #215 (P22-b provider 스캐너·스탬프 적립), #216 (P22-c 친구초대 QR), #217 (P22-d 스탬프 auto/staff 모드·쿠폰함 회수 보호) | 회원 QR 시리즈 완료. + 제로페이: #225 (B 매장→PathWave 구독료 feature flag), #226 (A-1 사용자→매장 결제), #227 (verify status 컬럼 버그 fix). ⚠️ 제로페이는 v1 mock — 가맹점 API 키 도착 후 실 연동. A-2 테이블오더는 별도(미착수) |
 
 ### 6.2 의존성 검증 결과 (⚠️ 갭)
 
@@ -203,7 +203,7 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 5. **P9** — 쿠폰·스탬프 실연동
 6. **P10** — 알림 mobile/provider
 7. **P13** — 약관 3종 (환불·청소년·쿠키 KIND)
-8. **P22** — 회원 QR + 친구초대 (P9 후)
+8. ~~**P22** — 회원 QR + 친구초대~~ ✅ 완료 (#213·#215·#216·#217) + 제로페이 A/B (#225·#226·#227). A-2 테이블오더만 별도 미착수.
 9. **P16-b** — mobile BLE 무중단 핸드오프 (비콘 도착 후)
 10. **P8b** — 채팅번역 (현재 PR OPEN, 머지 후 완료)
 11. **(선택) P8 본체** — provider CustomerChat + admin ChatMonitor + mobile SSE
