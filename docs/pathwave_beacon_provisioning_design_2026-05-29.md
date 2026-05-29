@@ -87,4 +87,8 @@ service_request_units              -- 신청 1건 안의 위치별 유닛 (N개)
 
 ## 8. 진행 로그
 
-- 2026-05-29: 설계 확정. **P-A 착수** (service_requests/units + 저장 API + provider 제출 배선 + WiFi PW 암호화).
+- 2026-05-29: 설계 확정.
+- ✅ **P-A** (#236) — service_requests/units + 저장 API + provider 제출 배선 + WiFi PW 암호화.
+- ✅ **P-B** (#237) — admin 신청관리 + 비콘 매칭(할당·활성·major/minor·설치위치·WiFi 연결).
+- ✅ **P-C** — admin 라벨 인쇄(매칭 유닛별 1장, 새 창 격리 print CSS, 크기 설정 기본 40×25mm, 텍스트: 매장명/설치위치/시리얼).
+- ⬜ **P-D** — 상태 추적(shipped/installed) + 점주 확인(읽기전용 #235).
