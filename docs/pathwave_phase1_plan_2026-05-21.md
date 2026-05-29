@@ -151,11 +151,11 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 | PR | 상태 | PR | 상태 | PR | 상태 |
 |---|---|---|---|---|---|
 | P1 | ✅ | P8 | ◑ | P15 | ✅ |
-| P2 | ⬜ | P9 | ⬜ | P16 | ◑ |
-| P3 | ⬜ | P10 | ⬜ | P17 | ✅ |
+| P2 | ✅ | P9 | ✅ | P16 | ◑ |
+| P3 | ✅ | P10 | ✅ | P17 | ✅ |
 | P4 | ◑ | P11 | ✅ | P18 | ⬜ |
-| P5 | ⬜ | P12 | ✅ | P19 | ⬜ |
-| P6 | ⬜ | P13 | ⬜ | P20 | ✅ |
+| P5 | ✅ | P12 | ✅ | P19 | ⬜ |
+| P6 | ✅ | P13 | ✅ | P20 | ✅ |
 | P7 | ✅ | P14 | ✅ | P21 | ✅ |
 | P22 | ✅ |  |  |  |  |
 
@@ -164,18 +164,18 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 | P# | 상태 | 머지 PR | 비고 |
 |---|---|---|---|
 | P1 | ✅ | #114 (auth-unify-3-consoles), #115 (design-unify-3-consoles) | 인증 + 디자인 통일 |
-| P2 | ⬜ | — | mobile i18n 인프라 (ko 시드 550 완료, ARB/l10n.yaml/I18nService 미적용) |
-| P3 | ⬜ | — | ⚠️ ConfirmModal 미선행 — P11 머지 의존성 우회된 듯, 회수 필요 |
+| P2 | ✅ | #205 (P2-a i18n 인프라 l10n.yaml+ARB ko/en), #208 (P2-b mobile 13화면 t()), #218 (const 빌드 fix) | mobile i18n 적용 완료 |
+| P3 | ✅ | #214 (P3-b1 useConfirm hook), #219~#224 (P3-b2 alert/confirm→useConfirm 일괄), P3-a (admin ConfirmModal) | ⚠️ P3-b2-7 admin Notifications.jsx 만 skip (helper 기반, 향후) |
 | P4 | ◑ | #70 (provider-web-remove-preview-bar) | DevPreviewBar 만 처리. DEV_AUTO_LOGIN / 게스트 / forgot-password 잔여 |
-| P5 | ⬜ | — | 매장·회사정보 실연동 |
-| P6 | ⬜ | — | OCR 허위 제거 |
+| P5 | ✅ | #209 (p5-real-data) | 매장·회사정보 하드코딩 mock 제거 + company_info 시드 |
+| P6 | ✅ | #206 (p6-ocr-removal) | OCR 허위 제거 — 정직한 수동 입력 UI |
 | P7 | ✅ | #122 (phase-g-billing-subscription-staff), #39 (admin-web-payments) | 결제·구독·직원 |
 | P8 | ◑ | #146 (P8c push 다국어), #151 (P8d 이메일 다국어). **P8b 채팅번역 OPEN**, 본체 (provider CustomerChat + admin ChatMonitor) 미머지 |
-| P9 | ⬜ | — | 쿠폰·스탬프 실연동 |
-| P10 | ⬜ | — | 알림 mobile/provider |
+| P9 | ✅ | #210 (p9-stamps-coupons) | 쿠폰·스탬프 실연동 — mobile silent error 수정 + provider MOCK_STAMPS 제거 |
+| P10 | ✅ | #211 (p10-notifications) | 알림 도메인 실연동 — mobile 라우팅 + provider Notifications mock 제거 |
 | P11 | ✅ | #145 (p11-notification-admin-workflow), #150 (p-series-clean) | admin Notifications + Staff + CouponStats |
 | P12 | ✅ | #147 (p12-policy-ko-en-only), #150 | 약관 ko/en 두 언어만 + fallback |
-| P13 | ⬜ | — | 약관 3종 (환불·청소년·쿠키 KIND). 환불/청소년/쿠키 페이지는 PR #181, #195 에서 일부 처리됨 |
+| P13 | ✅ | #212 (p13-policies) | 약관 3종 (환불·청소년·쿠키) BE policy KIND 추가 + seed |
 | P14 | ✅ | #152 (p14-wifi-data-model) | wifi_profiles 확장 + beacon_wifi + units + wifi_access_grant |
 | P15 | ✅ | #153 (P15a), #154 (P15b-1), #155 (P15b-3a), #157 (P15b-3b) | WiFi 등록·연동 (BE + provider + admin) |
 | P16 | ◑ | #158 (P16-a mobile .mobileconfig 트리거) | **P16-b BLE 무중단 핸드오프 미머지** (물리 비콘 도착 후) |
@@ -186,28 +186,26 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 | P21 | ✅ | #181 (c-store-review-audit), #194 (ios-privacy-manifest), #195 (medium-policies-photo-picker) | Privacy Manifest + 청소년·쿠키 + Photo Picker + 계정삭제 웹 URL |
 | P22 | ✅ | #213 (P22-a member-qr BE+mobile), #215 (P22-b provider 스캐너·스탬프 적립), #216 (P22-c 친구초대 QR), #217 (P22-d 스탬프 auto/staff 모드·쿠폰함 회수 보호) | 회원 QR 시리즈 완료. + 제로페이: #225 (B 매장→PathWave 구독료 feature flag), #226 (A-1 사용자→매장 결제), #227 (verify status 컬럼 버그 fix). ⚠️ 제로페이는 v1 mock — 가맹점 API 키 도착 후 실 연동. A-2 테이블오더는 별도(미착수) |
 
-### 6.2 의존성 검증 결과 (⚠️ 갭)
+### 6.2 의존성 검증 결과 (2026-05-29 — 대부분 해소)
 
-- **P3 ⬜ + P11 ✅**: ConfirmModal 의존성 우회된 듯. P3 머지 시 P11 회수 필요할 수 있음.
-- **P5/P6 ⬜ + P7 ✅**: 매장·OCR 미머지 상태에서 결제 머지. P5/P6 머지 시 결제 회수 확인 필요.
-- **P9 → P22**: 둘 다 미머지. 순서 유지.
-- **P14 → P18/P19**: P14 머지됨, P18/P19 는 feature flag 로 v1 비공개 OK.
+- **P2·P3·P5·P6·P9·P10·P13 모두 ✅ 머지 완료** (#205~#224). 의존성 우려 해소.
+- **P9 → P22 ✅**: 순서대로 머지 완료. + 제로페이 A/B (#225~#227).
+- **P14 → P18/P19**: P14 머지됨, P18/P19 는 feature flag 로 v1 비공개 OK (미착수).
 
-### 6.3 잔여 작업 (10개)
+### 6.3 잔여 작업 (2026-05-29 갱신)
 
-순서 (의존성 + 우선순위):
-1. **P2** — mobile i18n 인프라 (의존 없음, 깔끔)
-2. **P3** — 웹 디자인·ConfirmModal (의존 깨짐 회수)
-3. **P5** — 매장·회사정보 실연동
-4. **P6** — OCR 허위 제거
-5. **P9** — 쿠폰·스탬프 실연동
-6. **P10** — 알림 mobile/provider
-7. **P13** — 약관 3종 (환불·청소년·쿠키 KIND)
-8. ~~**P22** — 회원 QR + 친구초대~~ ✅ 완료 (#213·#215·#216·#217) + 제로페이 A/B (#225·#226·#227). A-2 테이블오더만 별도 미착수.
-9. **P16-b** — mobile BLE 무중단 핸드오프 (비콘 도착 후)
-10. **P8b** — 채팅번역 (현재 PR OPEN, 머지 후 완료)
-11. **(선택) P8 본체** — provider CustomerChat + admin ChatMonitor + mobile SSE
-12. **(Phase 2 검토) P18, P19** — feature flag v1 비공개
+P1~P3·P5~P15·P17·P20~P22 ✅ 머지 완료. 아래만 잔여:
+
+**즉시 가능 (코드 작업):**
+1. **P8b** — 채팅 자동번역 (OPEN PR #167, 머지 검토 필요) — USP 킬러기능
+2. **P4 후속** — Signup 게스트 차단 / forgot-password 라우트 확정
+3. **갭 보강** — pg_key AES-GCM 암호화 / 약관 ko+en 본문 충실화 / P3-b2-7 admin Notifications.jsx
+4. **C-3** — 페르소나 통합 테스트 시나리오 (OPEN PR #168)
+
+**외부/하드웨어 대기:**
+5. **P16-b** — mobile BLE 무중단 핸드오프 (물리 비콘 도착 후)
+6. **(선택) P8 본체** — provider CustomerChat + admin ChatMonitor + mobile SSE
+7. **(Phase 2 검토) P18, P19** — feature flag v1 비공개 OK
 
 ---
 
