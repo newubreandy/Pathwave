@@ -7,11 +7,11 @@
  *   POST   /api/facilities                   — 매장 생성
  *   PATCH  /api/facilities/<fid>             — 매장 정보 수정
  *   DELETE /api/facilities/<fid>             — 매장 삭제
- *   POST   /api/store/<fid>/claim-beacon     — 비콘 SN 클레임 (Phase C)
+ *   POST   /api/facilities/<fid>/claim-beacon — 비콘 SN 클레임 (Phase C)
  *     body: { serial_no, minor? }
  *     major 는 백엔드가 facility_id 로 자동 세팅.
  *     minor 미지정 시 백엔드가 매장 내 다음 순번 자동 할당.
- *   GET    /api/store/<fid>/beacons          — 비콘 목록 (major, minor 포함)
+ *   GET    /api/facilities/<fid>/beacons      — 비콘 목록 (major, minor 포함)
  */
 import apiClient from '../apiClient';
 
@@ -55,7 +55,7 @@ const StoreService = {
     if (minor !== null && minor !== undefined && minor !== '') {
       body.minor = Number(minor);
     }
-    return apiClient.post(`/api/store/${fid}/claim-beacon`, body);
+    return apiClient.post(`/api/facilities/${fid}/claim-beacon`, body);
   },
 
   /**
@@ -64,7 +64,7 @@ const StoreService = {
    * @param {string} fid — 매장(시설) ID
    */
   listBeacons(fid) {
-    return apiClient.get(`/api/store/${fid}/beacons`);
+    return apiClient.get(`/api/facilities/${fid}/beacons`);
   },
 
   // ── P-025 매장 다국어 캐시 (D 번들3-B) ─────────────────────────────────

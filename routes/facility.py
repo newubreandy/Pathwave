@@ -319,7 +319,18 @@ def me():
            FROM facility_accounts WHERE id=?""",
         (payload['user_id'],)
     ).fetchone()
-    db.close()
     if not row:
+        db.close()
         return jsonify({'success': False, 'message': '계정을 찾을 수 없습니다.'}), 404
-    return jsonify({'success': True, 'facility_account': dict(row)})
+
+    acct = dict(row)
+    # 1계정=1매장 정책 — 소유 매장의 id/name 을 같이 내려 provider-web 이
+    # 비콘 claim 등 매장 단위 API(/api/facilities/<fid>/...)를 호출할 수 있게 한다.
+    fac = db.execute(
+        "SELECT id, name FROM facilities WHERE owner_id=? AND active=1 ORDER BY id LIMIT 1",
+        (payload['user_id'],)
+    ).fetchone()
+    db.close()
+    acct['facility_id']   = fac['id'] if fac else None
+    acct['facility_name'] = fac['name'] if fac else None
+    return jsonify({'success': True, 'facility_account': acct})

@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import DaumPostcodeEmbed from 'react-daum-postcode';
 import CategoryService from '../services/store/CategoryService';
 import StoreService from '../services/store/StoreService';
+import AuthService from '../services/auth/AuthService';
 
 // 커스텀 녹색 마커 (위치 핀 형태 SVG)
 const customGreenMarker = L.divIcon({
@@ -78,6 +79,7 @@ const StoreInfo = () => {
   }, []);
 
   // ── 비콘 관리 state ──
+  const [facilityId, setFacilityId] = useState(null);   // 내 매장 ID (facility/me)
   const [beacons, setBeacons] = useState([]);
   const [beaconSn, setBeaconSn] = useState('');
   const [beaconMinor, setBeaconMinor] = useState('');
@@ -91,15 +93,30 @@ const StoreInfo = () => {
     setTimeout(() => setBeaconToast(''), 3000);
   };
 
-  // 비콘 목록 fetch (실제 백엔드 연동 시 fid 를 실 매장 ID 로 교체)
+  // 비콘 목록 fetch. apiClient 는 본문을 그대로 반환하므로 res.beacons 사용.
   const fetchBeacons = async (fid) => {
+    if (!fid) return;
     try {
       const res = await StoreService.listBeacons(fid);
-      setBeacons(res.data?.beacons ?? res.data ?? []);
+      setBeacons(res?.beacons ?? []);
     } catch {
       // 목록 조회 실패는 조용히 무시 (빈 목록 유지)
     }
   };
+
+  // 마운트 시 내 매장 ID 확보 → 비콘 목록 로드. (1계정=1매장)
+  useEffect(() => {
+    let alive = true;
+    AuthService.me()
+      .then((res) => {
+        const fid = res?.facility_account?.facility_id ?? null;
+        if (!alive) return;
+        setFacilityId(fid);
+        if (fid) fetchBeacons(fid);
+      })
+      .catch(() => { /* 미가입/오류 시 비콘 섹션 비활성 */ });
+    return () => { alive = false; };
+  }, []);
 
   // 비콘 claim 제출
   const handleClaimBeacon = async () => {
@@ -114,12 +131,15 @@ const StoreInfo = () => {
       return;
     }
 
+    if (!facilityId) {
+      setBeaconError('매장 정보를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.');
+      return;
+    }
+
     setBeaconLoading(true);
     try {
-      // TODO: store.fid 를 실 매장 ID (API 응답값) 로 교체
-      const MOCK_FID = 'demo';
-      const res = await StoreService.claimBeacon(MOCK_FID, snTrimmed, beaconMinor || null);
-      const beacon = res.data?.beacon ?? {};
+      const res = await StoreService.claimBeacon(facilityId, snTrimmed, beaconMinor || null);
+      const beacon = res?.beacon ?? {};
       setBeacons(prev => [...prev, beacon]);
       setBeaconSn('');
       setBeaconMinor('');
