@@ -941,6 +941,55 @@
   margin: 0;
 }
 
+/* ── 결제 수단 선택 (카드 / 제로페이) 2026-05-27 ── */
+.pay-method-tabs {
+  display: flex;
+  gap: var(--pw-space-2, 8px);
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto var(--pw-space-6, 24px);
+}
+.pay-method-tab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--pw-border, #2A2A38);
+  border-radius: 10px;
+  background: var(--pw-bg-2, #14141C);
+  color: var(--pw-text-secondary, #8A8A99);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.pay-method-tab:hover { border-color: var(--pw-primary, #22C55E); }
+.pay-method-tab.active {
+  border-color: var(--pw-primary, #22C55E);
+  color: var(--pw-primary, #22C55E);
+  background: var(--pw-primary-subtle, rgba(34, 197, 94, 0.08));
+}
+
+.pay-zeropay-qr {
+  width: 160px;
+  height: 160px;
+  margin: 0 auto var(--pw-space-4, 16px);
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border-radius: 12px;
+  color: #000;
+}
+.pay-zeropay-note {
+  font-size: 12px;
+  color: var(--pw-text-hint, #6B6B7A);
+  line-height: 1.5;
+  max-width: 320px;
+  margin: 8px auto 0;
+}
+
 /* ── Mobile ── */
 @media (max-width: 768px) {
   .payment-card, .payment-card-empty { max-width: 280px; }
