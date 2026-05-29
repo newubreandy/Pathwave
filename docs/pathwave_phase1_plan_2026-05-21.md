@@ -150,7 +150,7 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 
 | PR | 상태 | PR | 상태 | PR | 상태 |
 |---|---|---|---|---|---|
-| P1 | ✅ | P8 | ◑ | P15 | ✅ |
+| P1 | ✅ | P8 | ✅ | P15 | ✅ |
 | P2 | ✅ | P9 | ✅ | P16 | ◑ |
 | P3 | ✅ | P10 | ✅ | P17 | ✅ |
 | P4 | ◑ | P11 | ✅ | P18 | ⬜ |
@@ -170,7 +170,7 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 | P5 | ✅ | #209 (p5-real-data) | 매장·회사정보 하드코딩 mock 제거 + company_info 시드 |
 | P6 | ✅ | #206 (p6-ocr-removal) | OCR 허위 제거 — 정직한 수동 입력 UI |
 | P7 | ✅ | #122 (phase-g-billing-subscription-staff), #39 (admin-web-payments) | 결제·구독·직원 |
-| P8 | ◑ | #146 (P8c push 다국어), #151 (P8d 이메일 다국어). **P8b 채팅번역 OPEN**, 본체 (provider CustomerChat + admin ChatMonitor) 미머지 |
+| P8 | ✅ | #146 (P8c push 다국어), #151 (P8d 이메일 다국어), 5004b28 (P8b 채팅·문의 자동번역). 본체(provider CustomerChat 실연동·SSE + admin ChatMonitor `/api/admin/chat/rooms` + mobile SSE 자동재연결) 모두 머지. ⚠️ 운영 시 `TRANSLATION_PROVIDER=google` + API 키 필요(dev=stub `[lang]` 접두사). OPEN PR #167 은 stale superset → 닫기 권장 |
 | P9 | ✅ | #210 (p9-stamps-coupons) | 쿠폰·스탬프 실연동 — mobile silent error 수정 + provider MOCK_STAMPS 제거 |
 | P10 | ✅ | #211 (p10-notifications) | 알림 도메인 실연동 — mobile 라우팅 + provider Notifications mock 제거 |
 | P11 | ✅ | #145 (p11-notification-admin-workflow), #150 (p-series-clean) | admin Notifications + Staff + CouponStats |
@@ -196,16 +196,19 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 
 P1~P3·P5~P15·P17·P20~P22 ✅ 머지 완료. 아래만 잔여:
 
-**즉시 가능 (코드 작업):**
-1. **P8b** — 채팅 자동번역 (OPEN PR #167, 머지 검토 필요) — USP 킬러기능
-2. ~~**점주 비밀번호 재설정** + **pg_key AES-GCM 암호화**~~ ✅ #230 (forgot/reset 라우트 + ForgotPassword.jsx + 빌링키 암호화)
-3. **잔여 갭(소)** — 약관 동의 마이크로항목 7종 en 번역 / P3-b2-7 admin Notifications.jsx / (P4 Signup 게스트 = 명확한 갭 없음)
-4. **C-3** — 페르소나 통합 테스트 시나리오 (OPEN PR #168)
+**P1~P15·P17·P20~P22 + 제로페이 A/B ✅ 머지 완료.** P8(채팅 도메인+자동번역)도 ✅ 검증 완료(2026-05-29).
 
-**외부/하드웨어 대기:**
+**즉시 가능 (코드 작업, 소규모):**
+1. ~~**점주 비밀번호 재설정** + **pg_key AES-GCM 암호화**~~ ✅ #230
+2. **잔여 갭(소)** — 약관 동의 마이크로항목 7종 en 번역 / P3-b2-7 admin Notifications.jsx / (P4 Signup 게스트 = 명확한 갭 없음)
+3. **C-3** — 페르소나 통합 테스트 시나리오 (OPEN PR #168, 충돌 → 리베이스 필요)
+
+**외부/하드웨어 대기 (코드 아님):**
+4. **운영 번역 키** — `TRANSLATION_PROVIDER=google` + API 키 (출시 외부서비스 단계)
 5. **P16-b** — mobile BLE 무중단 핸드오프 (물리 비콘 도착 후)
-6. **(선택) P8 본체** — provider CustomerChat + admin ChatMonitor + mobile SSE
-7. **(Phase 2 검토) P18, P19** — feature flag v1 비공개 OK
+6. **(Phase 2 검토) P18, P19** — feature flag v1 비공개 OK
+
+**정리 필요:** OPEN PR #167(P8b stale superset), #168(C-3 충돌) — 닫기/리베이스 결정
 
 ---
 
