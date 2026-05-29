@@ -19,6 +19,7 @@ from datetime import datetime
 from dateutil_shim import add_months  # local import
 from flask import Blueprint, request, jsonify, g
 
+from models.crypto import decrypt_secret, encrypt_secret
 from models.database import get_db
 from models.payment_provider import get_payment_provider
 from routes.auth import require_facility_actor
@@ -65,7 +66,8 @@ def register_card():
                         'message': 'card_brand + last4(4자리 숫자) 필요.'}), 400
 
     masked = f'****-****-****-{last4}'
-    pg_key = f'sim-{secrets.token_hex(8)}'
+    # pg_key(빌링키)는 민감 정보 — AES-256-GCM 으로 암호화해 저장 (SRS 4.2).
+    pg_key = encrypt_secret(f'sim-{secrets.token_hex(8)}')
     db = get_db()
     # 기존 active 카드 비활성 (단일 active 카드)
     db.execute("UPDATE billing_keys SET active=0 WHERE facility_account_id=?", (account_id,))
@@ -211,7 +213,7 @@ def create_subscription():
     receipt_email = data.get('receipt_email') or db.execute(
         "SELECT email FROM facility_accounts WHERE id=?", (account_id,)
     ).fetchone()['email']
-    ok, pg_tid, _payment_key = _charge(card['pg_key'], total, order_no, receipt_email)
+    ok, pg_tid, _payment_key = _charge(decrypt_secret(card['pg_key']), total, order_no, receipt_email)
 
     cur2 = db.execute(
         """INSERT INTO payments
@@ -317,7 +319,7 @@ def extend_subscription(sid):
     receipt_email = db.execute(
         "SELECT email FROM facility_accounts WHERE id=?", (account_id,)
     ).fetchone()['email']
-    ok, pg_tid, _payment_key = _charge(card['pg_key'], total, order_no, receipt_email)
+    ok, pg_tid, _payment_key = _charge(decrypt_secret(card['pg_key']), total, order_no, receipt_email)
 
     new_ends = add_months(datetime.utcnow(), row['period_months']).isoformat()
     db.execute(

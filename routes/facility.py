@@ -229,6 +229,78 @@ def login():
     })
 
 
+# ── 비밀번호 재설정 ───────────────────────────────────────────────────────────
+
+@facility_bp.route('/forgot-password', methods=['POST'])
+@limiter.limit('3 per minute; 10 per hour')
+def forgot_password():
+    """시설 계정 비밀번호 찾기: 가입된 이메일이면 인증 코드 발송.
+
+    계정 열거 방지(SRS 4.2) — 가입 여부와 무관하게 항상 동일한 성공 응답.
+    """
+    data  = request.get_json(silent=True) or {}
+    email = (data.get('email') or '').strip().lower()
+    if not email or '@' not in email:
+        return jsonify({'success': False, 'message': '유효한 이메일을 입력해 주세요.'}), 400
+
+    db  = get_db()
+    row = db.execute("SELECT id FROM facility_accounts WHERE email=?", (email,)).fetchone()
+
+    # 가입된 이메일일 때만 실제 코드 발송. 응답은 항상 success (열거 방지).
+    if row:
+        code = generate_code()
+        exp  = (datetime.utcnow() + timedelta(minutes=5)).isoformat()
+        db.execute('UPDATE email_codes SET used=1 WHERE email=? AND used=0', (email,))
+        db.execute('INSERT INTO email_codes (email, code, expires_at) VALUES (?,?,?)',
+                   (email, code, exp))
+        db.commit()
+        db.close()
+        send_email(email, code)
+    else:
+        db.close()
+
+    return jsonify({'success': True,
+                    'message': '가입된 이메일이라면 인증 코드를 발송했습니다. 메일함을 확인해 주세요.'})
+
+
+@facility_bp.route('/reset-password', methods=['POST'])
+@limiter.limit('5 per minute; 20 per hour')
+def reset_password():
+    """시설 계정 비밀번호 재설정 — email + code + 새 비밀번호."""
+    data     = request.get_json(silent=True) or {}
+    email    = (data.get('email')    or '').strip().lower()
+    code     = (data.get('code')     or '').strip()
+    password = (data.get('password') or '')
+
+    if not email or not code or not password:
+        return jsonify({'success': False, 'message': '모든 필드를 입력해 주세요.'}), 400
+    if (err := password_complexity_error(password)):
+        return jsonify({'success': False, 'message': err}), 400
+
+    db  = get_db()
+    row = db.execute(
+        """SELECT expires_at FROM email_codes
+           WHERE email=? AND code=? AND used=0
+           ORDER BY id DESC LIMIT 1""", (email, code)
+    ).fetchone()
+    if not row or datetime.utcnow() > datetime.fromisoformat(row['expires_at']):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '인증 코드가 올바르지 않거나 만료되었습니다.'}), 400
+
+    acct = db.execute("SELECT id FROM facility_accounts WHERE email=?", (email,)).fetchone()
+    if not acct:
+        db.close()
+        return jsonify({'success': False, 'message': '계정을 찾을 수 없습니다.'}), 404
+
+    hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    db.execute('UPDATE facility_accounts SET password=? WHERE email=?', (hashed, email))
+    db.execute('UPDATE email_codes SET used=1 WHERE email=? AND code=?', (email, code))
+    db.commit()
+    db.close()
+    return jsonify({'success': True, 'message': '비밀번호가 재설정되었습니다. 새 비밀번호로 로그인해 주세요.'})
+
+
 @facility_bp.route('/me', methods=['GET'])
 def me():
     """토큰으로 현재 시설 계정 정보 조회."""

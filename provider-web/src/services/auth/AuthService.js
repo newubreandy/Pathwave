@@ -53,6 +53,16 @@ class AuthService {
     return apiClient.post('/api/facility/verify-code', { email, code });
   }
 
+  /** 비밀번호 찾기 — 가입된 이메일이면 인증 코드 발송 (응답은 항상 성공) */
+  forgotPassword(email) {
+    return apiClient.post('/api/facility/forgot-password', { email });
+  }
+
+  /** 비밀번호 재설정 — email + code + 새 비밀번호 */
+  resetPassword(email, code, password) {
+    return apiClient.post('/api/facility/reset-password', { email, code, password });
+  }
+
   async logout() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_KEY);
