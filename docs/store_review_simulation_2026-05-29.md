@@ -9,7 +9,8 @@
 |---|---|
 | ✅ 코드 처리 완료 (R1~R7 전부) | **7건** |
 | ✅ 출시 운영 문서 작성 완료 (M1·M2·M3 본문·M5) | 4건 |
-| 🟡 잔여 (M4 Sentry · M3 스크린샷 · R2 후속 콘솔) | 3건 |
+| ✅ Sentry 3 클라이언트 설치 (M4) | 1건 |
+| 🟡 잔여 (M3 스크린샷 · R2 후속 콘솔 · Sentry DSN 발급) | 3건 |
 | ✅ 이미 통과 (참고) | 17건 |
 
 → **🔴 코드 측 리젝 위험 전부 해소.** 사용자님은 R2 콘솔 등록 + 스크린샷 디자인만 진행하시면 양쪽 스토어 제출 가능.
@@ -125,8 +126,11 @@
 - 한국어+영어 앱이름·부제·키워드·설명(4000자 이하): `docs/store_listing_content.md`
 - 스크린샷·미리보기 영상은 디자인 작업(별도, 사용자님 또는 외주).
 
-### M4. Crashlytics/Sentry 미설치  →  잔여 (별도 PR)
-- 권장 사항(필수 X). 출시 후 크래시 추적 위해 Sentry 도입 예정.
+### M4. Sentry 설치  →  ✅ **3 클라이언트 설치 완료**
+- 백엔드 `app.py:110` 이미 구현됨 — `SENTRY_DSN` env 주입 시 자동 활성.
+- mobile `mobile/lib/main.dart` — `sentry_flutter ^8.10.1` + `--dart-define=SENTRY_DSN=...`.
+- provider-web/admin-web `src/main.jsx` — `@sentry/react ^8.39.0` + `VITE_SENTRY_DSN`.
+- 공통: `tracesSampleRate=0.1`, `sendDefaultPii=false` (PII 누출 방지). DSN 미주입 시 자동 no-op.
 
 ### M5. 운영 키 주입 + 빌드 명령  →  ✅ **문서화 완료**
 - iOS/Android/백엔드/웹 운영 빌드 전체 명령 + dart-define 키 목록: `docs/launch_build_commands.md`

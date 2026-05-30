@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'services/auth_service.dart';
 import 'services/i18n_service.dart';
@@ -34,7 +35,22 @@ void main() async {
   // i18n 초기화 — 디바이스 언어 자동 감지 → fetch → 24h 캐싱
   await I18nService.instance.init();
 
-  runApp(const PathWaveApp());
+  // M4 (2026-05-29): Sentry 초기화 — 크래시/에러 추적.
+  //   --dart-define=SENTRY_DSN=https://... 주입 시 활성, 미주입 시 자동 no-op.
+  //   PII (이메일 등) 비전송. traces 10% 샘플링.
+  const sentryDsn = String.fromEnvironment('SENTRY_DSN', defaultValue: '');
+  const envName   = String.fromEnvironment('PATHWAVE_ENV', defaultValue: 'development');
+  await SentryFlutter.init(
+    (options) {
+      options.dsn               = sentryDsn;
+      options.environment       = envName;
+      options.tracesSampleRate  = 0.1;
+      options.sendDefaultPii    = false;
+      options.attachScreenshot  = false;
+      options.attachViewHierarchy = false;
+    },
+    appRunner: () => runApp(const PathWaveApp()),
+  );
 }
 
 class PathWaveApp extends StatefulWidget {
