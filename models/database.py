@@ -957,6 +957,12 @@ def init_db():
     _add_column_if_missing(db, 'beacons', 'role',
                            "role TEXT DEFAULT 'wifi'")
 
+    # P22 후속 (#236/#237) — 비콘 프로비저닝 워크플로우 필수 컬럼.
+    # P-B 매칭 endpoint(routes/admin.py match_request_unit)가 UPDATE 하므로 신규 DB에도 필수.
+    # 누락 시 sqlite3.OperationalError 로 첫 매칭 크래시 (launch-blocking).
+    _add_column_if_missing(db, 'beacons', 'assigned_at',    'assigned_at TEXT')
+    _add_column_if_missing(db, 'beacons', 'location_label', 'location_label TEXT')
+
     # P8b — 채팅/사용자 문의 메시지 원문 언어 컬럼 (기존 DB 마이그레이션).
     # 신규 테이블(chat_message_translations / support_message_translations)은
     # 위 executescript 의 CREATE TABLE IF NOT EXISTS 로 멱등 생성.
