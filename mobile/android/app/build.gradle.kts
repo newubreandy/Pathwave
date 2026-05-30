@@ -29,7 +29,7 @@ val releaseKeyPassword   = envOrProp("PATHWAVE_KEY_PASSWORD",      "keyPassword"
 val hasReleaseSigning    = listOf(releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword).all { !it.isNullOrEmpty() }
 
 android {
-    namespace = "com.triggersoft.pathwave_app"
+    namespace = "com.triggersoft.pathwave"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -43,7 +43,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.triggersoft.pathwave_app"
+        applicationId = "com.triggersoft.pathwave"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
