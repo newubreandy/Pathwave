@@ -3,7 +3,7 @@ import './MiniInfoPill.css';
 /**
  * MiniInfoPill — 카드 안 작은 메타 정보용 알약.
  *
- *   <MiniInfoPill label="SSID">kt5G_1234</MiniInfoPill>
+ *   <MiniInfoPill label="SSID">PathWave_Lobby</MiniInfoPill>
  *
  * 운영툴 톤 — pill 색상은 default(차분) / muted(가장 약함) 두 가지만.
  * 한 카드에 4개 이상 노출되지 않도록 호출부에서 제한할 것.
