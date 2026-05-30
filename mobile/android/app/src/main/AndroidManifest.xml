@@ -28,7 +28,7 @@
     -->
 
     <application
-        android:label="pathwave_app"
+        android:label="PathWave"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -69,5 +69,9 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- R4 (심사 시뮬레이션 2026-05-29): Android 11+ package visibility — KakaoTalk 앱 호출 (카카오 로그인 SDK 필수). -->
+        <package android:name="com.kakao.talk" />
+        <!-- Naver 앱 (네이버 로그인 SDK 필수, 미설치 시에도 fallback 동작). -->
+        <package android:name="com.nhn.android.search" />
     </queries>
 </manifest>
