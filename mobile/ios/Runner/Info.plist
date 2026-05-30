@@ -20,7 +20,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Pathwave App</string>
+	<string>PathWave</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -28,7 +28,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>pathwave_app</string>
+	<string>PathWave</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -79,5 +79,23 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- R5 (심사 시뮬레이션 2026-05-29): Apple 수출규제 — 표준 HTTPS/AES 만 사용 → 사용자 정의 암호화 아님(false). App Store Connect 매 빌드 질문 영구 해소. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<!-- R3 (심사 시뮬레이션 2026-05-29): 카카오/네이버 로그인 SDK 가 호출하는 외부 앱 scheme 화이트리스트 (iOS 9+ 필수, 미선언 시 SDK 무반응). -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<!-- KakaoTalk 로그인 -->
+		<string>kakaokompassauth</string>
+		<string>kakaolink</string>
+		<string>kakaoplus</string>
+		<string>kakaotalk</string>
+		<!-- Naver 로그인 -->
+		<string>naversearchapp</string>
+		<string>naversearchthirdlogin</string>
+	</array>
+	<!-- ⚠️ R3 후속 (운영 빌드 직전): CFBundleURLTypes 에 카카오 콜백 scheme `kakao{NATIVE_APP_KEY}` 추가 필요.
+	     예: <key>CFBundleURLSchemes</key><array><string>kakao1234567890abcdef</string></array>
+	     KAKAO_NATIVE_APP_KEY 는 dart-define 으로만 주입 중 — Info.plist 는 실제 값이 들어가야 함. -->
 </dict>
 </plist>
