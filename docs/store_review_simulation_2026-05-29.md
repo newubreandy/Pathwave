@@ -8,10 +8,11 @@
 | 등급 | 건수 |
 |---|---|
 | ✅ 코드 처리 완료 (R1~R7 전부) | **7건** |
-| 🟡 콘솔 작업 / 권장 강화 (사용자 진행) | 5건 |
+| ✅ 출시 운영 문서 작성 완료 (M1·M2·M3 본문·M5) | 4건 |
+| 🟡 잔여 (M4 Sentry · M3 스크린샷 · R2 후속 콘솔) | 3건 |
 | ✅ 이미 통과 (참고) | 17건 |
 
-→ **🔴 코드 측 리젝 위험 전부 해소.** 사용자님은 R2 후속(콘솔 등록)과 M1~M5만 진행하시면 양쪽 스토어 제출 가능.
+→ **🔴 코드 측 리젝 위험 전부 해소.** 사용자님은 R2 콘솔 등록 + 스크린샷 디자인만 진행하시면 양쪽 스토어 제출 가능.
 
 ## ✅ 본 PR 처리 (2026-05-29)
 
@@ -112,27 +113,24 @@
 
 ## 🟡 콘솔 작업 / 권장 강화 (5건)
 
-### M1. Apple App Privacy 라벨 + Google Data Safety 폼
-- 코드 아닌 콘솔 입력. 수집 항목(이메일·이름·전화·위치·사진·디바이스ID·결제·채팅)을 정확히 선언.
-- ⭐ **AD_ID 권한 없음** → Data Safety에 "광고 ID 수집 안 함" 명시 가능 (강점).
-- 참고: `mobile/ios/Runner/PrivacyInfo.xcprivacy` 본문이 이미 정답지.
+### M1. Apple App Privacy 라벨 + Google Data Safety 폼  →  ✅ **정답지 문서화 완료**
+- 콘솔 폼에 그대로 입력할 데이터 매트릭스: `docs/data_collection_map.md`
+- AD_ID 미수집 / 추적 0건 / xcprivacy 본문과 일치하는 정답지.
 
-### M2. 데모/심사 계정 안내 문서 없음
-- 심사관에게 제공할 reviewer guide(테스트 계정 + BLE 비콘 없이 핵심 화면 도달 경로 + 1매장 사전세팅).
-- 권장: `docs/reviewer_guide.md` 신설 (제출 시 콘솔에 본문 붙여넣기).
+### M2. 심사관 안내 문서  →  ✅ **작성 완료**
+- App Store Connect / Play Console "App Review Information" 칸용 한국어+영어 본문: `docs/reviewer_guide.md`
+- 데모 계정 + BLE 비콘 없이 핵심 기능 검증 경로 + 권한 사용 설명 포함.
 
-### M3. 스토어 리스팅 자료 없음 (스크린샷·설명·키워드)
-- 콘솔 작업. iOS 6.7"/6.5"/5.5", Android phone/tablet 스크린샷 + 80자 한줄 + 4000자 설명.
-- 외국인 관광객 USP 강조 권장(번역 채팅, 매장 자동 응대).
+### M3. 스토어 리스팅 (스크린샷·설명·키워드)  →  ◑ **본문 초안 작성 완료**
+- 한국어+영어 앱이름·부제·키워드·설명(4000자 이하): `docs/store_listing_content.md`
+- 스크린샷·미리보기 영상은 디자인 작업(별도, 사용자님 또는 외주).
 
-### M4. Crashlytics/Sentry 미설치
-- 권장 사항(필수 X). 출시 후 크래시 추적 위해 Sentry 또는 Firebase Crashlytics 도입.
-- 예상: 0.5일.
+### M4. Crashlytics/Sentry 미설치  →  잔여 (별도 PR)
+- 권장 사항(필수 X). 출시 후 크래시 추적 위해 Sentry 도입 예정.
 
-### M5. Kakao Native Key / Naver consumerKey 운영 주입
-- 현재 `KAKAO_NATIVE_APP_KEY`는 `--dart-define` 으로 받음 → 출시 빌드 명령에 누락되면 카카오 로그인 실패.
-- Naver는 `flutter_naver_login` 설정이 코드상 보이지 않음 → iOS URL type + Android consumerKey 설정 확인.
-- 권장: 출시 직전 `docs/launch_build_commands.md` 작성(키 주입 명령).
+### M5. 운영 키 주입 + 빌드 명령  →  ✅ **문서화 완료**
+- iOS/Android/백엔드/웹 운영 빌드 전체 명령 + dart-define 키 목록: `docs/launch_build_commands.md`
+- 사전 점검·환경변수·최종 체크리스트·자주 하는 실수 포함.
 
 ---
 
