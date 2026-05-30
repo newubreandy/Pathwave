@@ -1,4 +1,4 @@
-package com.triggersoft.pathwave_app
+package com.triggersoft.pathwave
 
 import android.content.Context
 import android.net.wifi.WifiManager

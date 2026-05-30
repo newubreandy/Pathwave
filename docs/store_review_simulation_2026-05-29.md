@@ -7,24 +7,28 @@
 
 | 등급 | 건수 |
 |---|---|
-| ✅ 본 PR 처리 완료 (R1·R3·R4·R5·R6) | **5건** |
-| 🔴 잔여 (R2 Bundle ID 통일, R7 WifiSettings mock 제거) | 2건 |
+| ✅ 코드 처리 완료 (R1·R2·R3·R4·R5·R6) | **6건** |
+| 🔴 잔여 (R7 WifiSettings mock 제거) | 1건 |
 | 🟡 콘솔 작업 / 권장 강화 | 5건 |
 | ✅ 이미 통과 (참고) | 17건 |
 
-→ R2·R7만 정리하면 **양쪽 스토어 제출 가능** 상태.
+→ R7(코드)·콘솔 등록만 정리하면 **양쪽 스토어 제출 가능** 상태.
 
 ## ✅ 본 PR 처리 (2026-05-29)
 
 | # | 변경 | 검증 |
 |---|---|---|
 | R1 | iOS CFBundleName/CFBundleDisplayName + Android android:label → "PathWave" | grep ✅ |
+| R2 | Bundle ID 통일 → `com.triggersoft.pathwave` (iOS 6 lines + Android namespace/applicationId + Kotlin package + 디렉토리 이동) | grep ✅ |
 | R3 | iOS Info.plist `LSApplicationQueriesSchemes` (카카오·네이버 6종 scheme) | plutil OK |
 | R4 | Android `<queries>` 에 `com.kakao.talk` + `com.nhn.android.search` package | xmllint OK |
 | R5 | iOS `ITSAppUsesNonExemptEncryption = false` (수출규제 영구 해소) | plutil OK |
 | R6 | iOS deployment target 13.0 → 15.0 (Debug/Release/Profile 3 config) | grep ✅ |
 
-⚠️ R3 후속: `CFBundleURLTypes` 에 카카오 콜백 scheme `kakao{NATIVE_APP_KEY}` 추가 필요 (운영 빌드 직전, 실 키 확보 후).
+⚠️ R2 후속(사용자 콘솔 작업, **빌드 동작 위해 필수**): Firebase/Apple Portal/Kakao/Naver/Play Console 에 새 Bundle ID 등록 + 새 `GoogleService-Info.plist`/`google-services.json` 교체.
+→ 가이드: `docs/launch_bundle_id_console_steps.md` (총 1~1.5시간 행정 작업).
+
+⚠️ R3 후속: `CFBundleURLTypes` 에 카카오 콜백 scheme `kakao{NATIVE_APP_KEY}` 추가 필요 (R2 콘솔 작업 시 같이 진행).
 
 ---
 
