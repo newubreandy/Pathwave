@@ -25,7 +25,55 @@ import CardAvatar from '../components/common/CardAvatar';
 import { SkeletonCard } from '../components/common/Skeleton';
 // StageProgress / stageMapping 은 list view 에서 제거 (사용자 요구: StatusBadge 텍스트 방식 유지).
 // 슈퍼어드민 / 상세 화면에서 재사용 가능하도록 컴포넌트 자체는 유지.
+import AuthService from '../services/auth/AuthService';
+import StoreService from '../services/store/StoreService';
+import ServiceRequestService from '../services/ServiceRequestService';
 import './WifiSettings.css';
+
+// ── R7 (2026-05-29): MOCK 제거 + 실 백엔드 데이터 매핑 ─────────────────────
+// 비콘 프로비저닝 워크플로우(P-A~D)가 만든 service_requests + units + 매칭된
+// beacons 를 화면이 기대하는 profile shape 으로 변환한다. (가짜 데이터 제거 — 심사 R7)
+const REQUEST_STATUS_TO_APPLICATION = {
+  pending:   'submitted',       // 신청 접수 (운영자 확인 대기)
+  matched:   'shipping_ready',  // 비콘 매칭 완료 (발송 준비)
+  shipped:   'shipping',        // 발송됨
+  installed: 'active',          // 설치완료 (운영 중)
+  canceled:  'terminated',
+};
+
+const REQ_DATE = (iso) => (iso || '').slice(0, 10).replace(/-/g, '.');
+
+const buildProfilesFromRequest = (request, beaconsByid) => {
+  const units = request.units || [];
+  const groupId = `REQ-${request.id}`;
+  const status  = REQUEST_STATUS_TO_APPLICATION[request.status] || 'submitted';
+  const enabled = request.status === 'installed' || request.status === 'shipped';
+  return units.map((u, idx) => {
+    const beacon = u.beacon_id ? beaconsByid[u.beacon_id] : null;
+    return {
+      id:                     `R${request.id}U${u.id}`,
+      name:                   u.location_label || `위치 ${idx + 1}`,
+      message:                '',
+      ssid:                   u.ssid || '',
+      beaconSn:               beacon?.serial_no || '',
+      password:               '',                   // 보안: 응답에 비번 없음 (서버에서 strip)
+      date:                   REQ_DATE(request.created_at),
+      periodEnd:              u.period_end || '',
+      image:                  null,
+      applicationGroupId:     groupId,
+      applicationGroupSeq:    idx + 1,
+      applicationGroupTotal:  units.length,
+      paidAt:                 request.created_at || '',
+      applicationStatus:      status,
+      statusMessage:          '',
+      statusUpdatedAt:        request.created_at || '',
+      statusHistory:          [],
+      deviceStatus:           beacon ? 'ok' : 'offline',
+      battery:                beacon?.battery_pct ?? 100,
+      enabled,
+    };
+  });
+};
 
 /**
  * 상태 → 카드 좌측 아바타 맵핑.
@@ -71,107 +119,6 @@ const getAvatarForStatus = (status) =>
 //   statusUpdatedAt   — 'YYYY.MM.DD HH:mm' 또는 ISO8601
 //   statusHistory     — 후속 PR 활용
 
-const MOCK_PROFILES = [
-  // ── 기존 운영 중 와이파이 (단건 신청) ─────────────────────────
-  { id: 1, name: '로비정문1', applicationGroupId: 'PW-20220315-001', applicationGroupSeq: 1, applicationGroupTotal: 1,
-    paidAt: '2022.03.15 09:30',
-    message: 'Message', ssid: 'kt5G_1234789', beaconSn: 'BCN-2024-0001', password: 'Ezddd1@3356', date: '2022.03.15', periodEnd: '2024.03.14', image: null,
-    applicationStatus: 'active',
-    statusMessage: '',
-    statusUpdatedAt: '2024.03.20 10:00',
-    statusHistory: [],
-    deviceStatus: 'ok', battery: 90, enabled: true },
-  { id: 2, name: '수영장', applicationGroupId: 'PW-20220310-002', applicationGroupSeq: 1, applicationGroupTotal: 1,
-    paidAt: '2022.03.10 14:00',
-    message: 'Message', ssid: 'kt5G_pool01', beaconSn: 'BCN-2024-0002', password: 'Ezddd1@3356', date: '2022.03.10', periodEnd: '2024.03.09', image: null,
-    applicationStatus: 'active',
-    statusMessage: '',
-    statusUpdatedAt: '2024.03.15 14:00',
-    statusHistory: [],
-    deviceStatus: 'ok', battery: 76, enabled: true },
-  { id: 3, name: '1층카페', applicationGroupId: 'PW-20220228-003', applicationGroupSeq: 1, applicationGroupTotal: 1,
-    paidAt: '2022.02.28 11:00',
-    message: 'Message', ssid: 'kt5G_cafe01', beaconSn: 'BCN-2024-0003', password: 'Ezddd1@3356', date: '2022.02.28', periodEnd: '2024.02.27', image: null,
-    applicationStatus: 'active',
-    statusMessage: '',
-    statusUpdatedAt: '2024.03.05 11:20',
-    statusHistory: [],
-    deviceStatus: 'low', battery: 22, enabled: true },
-  { id: 4, name: '5001호', applicationGroupId: 'PW-20220115-004', applicationGroupSeq: 1, applicationGroupTotal: 1,
-    paidAt: '2022.01.15 10:00',
-    message: 'Message', ssid: 'kt5G_5001', beaconSn: 'BCN-2024-0005', password: 'Ezddd1@3356', date: '2022.01.15', periodEnd: '2024.01.14', image: null,
-    applicationStatus: 'active',
-    statusMessage: '',
-    statusUpdatedAt: '2024.02.01 10:00',
-    statusHistory: [],
-    deviceStatus: 'offline', battery: 0, enabled: true },
-
-  // ── 일시중지 (단건) ───────────────────────────────────────────
-  { id: 5, name: '2층뷔페', applicationGroupId: 'PW-20220220-005', applicationGroupSeq: 1, applicationGroupTotal: 1,
-    paidAt: '2022.02.20 13:00',
-    message: 'Message', ssid: 'kt5G_buffet', beaconSn: 'BCN-2024-0004', password: 'Ezddd1@3356', date: '2022.02.20', periodEnd: '2024.02.19', image: null,
-    applicationStatus: 'paused',
-    statusMessage: '배터리 점검을 위해 일시 중지되었습니다.',
-    statusUpdatedAt: '2024.02.25 17:45',
-    statusHistory: [],
-    deviceStatus: 'ok', battery: 12, enabled: false },
-
-  // ── 서비스대기 — 배송 완료 후 사용자 활성화 대기 (단건) ─────────
-  { id: 11, name: '서관 1층', applicationGroupId: 'PW-20260507-003', applicationGroupSeq: 1, applicationGroupTotal: 1,
-    paidAt: '2026.05.07 11:00',
-    message: '', ssid: 'kt5G_WS_F1', beaconSn: 'BCN-2026-0020', password: 'Ezddd1@8820', date: '2026.05.07', periodEnd: '2028.05.06', image: null,
-    applicationStatus: 'delivered',
-    statusMessage: '배송이 완료되었습니다. 서비스 시작을 기다리는 중입니다.',
-    statusUpdatedAt: '2026.05.09 10:30',
-    statusHistory: [],
-    deviceStatus: 'ok', battery: 100, enabled: false },
-
-  // ── 다건 신청 그룹 #1 — 신관 (3개) ────────────────────────────
-  // 결제 1회로 3개 wifi 동시 신청. 각 wifiItem 단계 다양함.
-  { id: 6, name: '신관 1층', applicationGroupId: 'PW-20260509-001', applicationGroupSeq: 1, applicationGroupTotal: 3,
-    paidAt: '2026.05.09 09:00',
-    message: '', ssid: 'kt5G_NW_F1', beaconSn: 'BCN-2026-0010', password: 'Ezddd1@8801', date: '2026.05.09', periodEnd: '2028.05.08', image: null,
-    applicationStatus: 'beacon_setting',
-    statusMessage: '비콘 SN 매핑 진행 중입니다.',
-    statusUpdatedAt: '2026.05.09 14:22',
-    statusHistory: [
-      { status: 'beacon_setting', message: '비콘 SN 매핑 시작',          changedAt: '2026.05.09 14:22', changedBy: 'admin' },
-      { status: 'receiving',      message: '슈퍼어드민이 신청을 확인했습니다.', changedAt: '2026.05.09 11:00', changedBy: 'admin' },
-      { status: 'submitted',      message: '결제 완료 — 신청이 접수되었습니다.', changedAt: '2026.05.09 09:00', changedBy: 'system' },
-    ],
-    deviceStatus: 'ok', battery: 0, enabled: false },
-  { id: 7, name: '신관 2층', applicationGroupId: 'PW-20260509-001', applicationGroupSeq: 2, applicationGroupTotal: 3,
-    paidAt: '2026.05.09 09:00',
-    message: '', ssid: 'kt5G_NW_F2', beaconSn: 'BCN-2026-0011', password: 'Ezddd1@8802', date: '2026.05.09', periodEnd: '2028.05.08', image: null,
-    applicationStatus: 'shipping_ready',
-    statusMessage: '출고 준비 중입니다.',
-    statusUpdatedAt: '2026.05.09 16:10',
-    statusHistory: [],
-    deviceStatus: 'ok', battery: 0, enabled: false },
-  { id: 8, name: '신관 루프탑', applicationGroupId: 'PW-20260509-001', applicationGroupSeq: 3, applicationGroupTotal: 3,
-    paidAt: '2026.05.09 09:00',
-    message: '', ssid: 'kt5G_NW_RF', beaconSn: 'BCN-2026-0012', password: 'Ezddd1@8803', date: '2026.05.09', periodEnd: '2028.05.08', image: null,
-    applicationStatus: 'shipping',
-    shippingCarrier: 'CJ대한통운',
-    shippingTrackingNo: '1234-5678-9012',
-    statusMessage: '배송이 시작되었습니다. 도착까지 1~2일 소요됩니다.',
-    statusUpdatedAt: '2026.05.09 17:00',
-    statusHistory: [],
-    deviceStatus: 'ok', battery: 0, enabled: false },
-
-  // ── 단건 신청 — 접수확인중 ───────────────────────────────────
-  { id: 9, name: '별관 1층', applicationGroupId: 'PW-20260508-002', applicationGroupSeq: 1, applicationGroupTotal: 1,
-    paidAt: '2026.05.08 18:30',
-    message: '', ssid: 'kt5G_BR_F1', beaconSn: '', password: 'Ezddd1@8810', date: '2026.05.08', periodEnd: '2028.05.07', image: null,
-    applicationStatus: 'submitted',
-    statusMessage: '결제가 완료되었습니다. 슈퍼어드민이 신청을 확인하면 다음 단계로 진행됩니다.',
-    statusUpdatedAt: '2026.05.08 18:30',
-    statusHistory: [
-      { status: 'submitted', message: '결제 완료 — 신청이 접수되었습니다.', changedAt: '2026.05.08 18:30', changedBy: 'system' },
-    ],
-    deviceStatus: 'ok', battery: 0, enabled: false },
-];
-
 // 상태 라벨 + 색상
 const STATUS_LABEL = {
   ok: '정상',
@@ -182,7 +129,7 @@ const STATUS_LABEL = {
 const WifiSettings = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [profiles, setProfiles] = useState(MOCK_PROFILES);
+  const [profiles, setProfiles] = useState([]);
   const [view, setView] = useState('list'); // 'list' | 'search' | 'detail' | 'add'
   // 리스트 탭 — 3개 탭 구조 (사용자 요구 2026-05-09 update):
   //   신청 진행중  = 신청접수 + 준비중 + 배송중
@@ -219,11 +166,31 @@ const WifiSettings = () => {
     setErrorMsg(null);
   }, [location.key]);
 
-  // 첫 진입 시 가짜 로딩 (실 API 연동 시 fetch promise resolve 시점에 setIsLoading(false)).
-  // 350ms 정도면 시각 피드백은 충분하면서 답답하지 않음.
+  // R7 (2026-05-29): 실 백엔드 데이터 로드 (mock 제거 — 심사 리젝 방지).
+  //   ServiceRequestService.list() — 점주 신청(P-A) 본인 것
+  //   StoreService.listBeacons(fid) — 매장 비콘(매칭된 것 포함, P-B+#235)
+  //   → buildProfilesFromRequest 로 합쳐 화면 profile shape 으로 매핑.
+  //   WiFi 비번은 응답에서 제외(서버 strip) → 상세 화면에 비어있음(보안).
   useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 350);
-    return () => clearTimeout(t);
+    let alive = true;
+    (async () => {
+      try {
+        const meRes = await AuthService.me().catch(() => null);
+        const fid = meRes?.facility_account?.facility_id ?? null;
+        const [reqRes, beaconRes] = await Promise.all([
+          ServiceRequestService.list().catch(() => null),
+          fid ? StoreService.listBeacons(fid).catch(() => null) : Promise.resolve(null),
+        ]);
+        if (!alive) return;
+        const beacons = beaconRes?.beacons || [];
+        const beaconsByid = Object.fromEntries(beacons.map((b) => [b.id, b]));
+        const out = (reqRes?.requests || []).flatMap((r) => buildProfilesFromRequest(r, beaconsByid));
+        setProfiles(out);
+      } finally {
+        if (alive) setIsLoading(false);
+      }
+    })();
+    return () => { alive = false; };
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 
@@ -403,7 +370,7 @@ const WifiSettings = () => {
   );
 
   // 헤더 인라인 검색 — 와이파이 이름(설치 위치) 만 매칭.
-  // SSID 부분 매칭은 의도치 않은 결과 (예: "1" → "kt5G_pool01") 를 만들어
+  // SSID 부분 매칭은 의도치 않은 결과 (예: "1" → "Cafe_5G_01") 를 만들어
   // 사장님 직관에 어긋남. SSID 까지 검색하려면 우측 "상세" 버튼의 chip-search 사용.
   const inlineFiltered = inlineQuery.trim()
     ? visibleProfiles.filter((p) => {

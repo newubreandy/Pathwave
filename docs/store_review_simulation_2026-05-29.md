@@ -7,12 +7,11 @@
 
 | 등급 | 건수 |
 |---|---|
-| ✅ 코드 처리 완료 (R1·R2·R3·R4·R5·R6) | **6건** |
-| 🔴 잔여 (R7 WifiSettings mock 제거) | 1건 |
-| 🟡 콘솔 작업 / 권장 강화 | 5건 |
+| ✅ 코드 처리 완료 (R1~R7 전부) | **7건** |
+| 🟡 콘솔 작업 / 권장 강화 (사용자 진행) | 5건 |
 | ✅ 이미 통과 (참고) | 17건 |
 
-→ R7(코드)·콘솔 등록만 정리하면 **양쪽 스토어 제출 가능** 상태.
+→ **🔴 코드 측 리젝 위험 전부 해소.** 사용자님은 R2 후속(콘솔 등록)과 M1~M5만 진행하시면 양쪽 스토어 제출 가능.
 
 ## ✅ 본 PR 처리 (2026-05-29)
 
@@ -24,6 +23,7 @@
 | R4 | Android `<queries>` 에 `com.kakao.talk` + `com.nhn.android.search` package | xmllint OK |
 | R5 | iOS `ITSAppUsesNonExemptEncryption = false` (수출규제 영구 해소) | plutil OK |
 | R6 | iOS deployment target 13.0 → 15.0 (Debug/Release/Profile 3 config) | grep ✅ |
+| R7 | provider-web WifiSettings — MOCK_PROFILES 제거 (가짜 SSID/비번/비콘SN 10건) + 실 백엔드(ServiceRequest+Beacons) 매핑 + MiniInfoPill JSDoc 예시 정리 | esbuild OK + 실 데이터 매핑 시뮬레이션 3 profile 정상 |
 
 ⚠️ R2 후속(사용자 콘솔 작업, **빌드 동작 위해 필수**): Firebase/Apple Portal/Kakao/Naver/Play Console 에 새 Bundle ID 등록 + 새 `GoogleService-Info.plist`/`google-services.json` 교체.
 → 가이드: `docs/launch_bundle_id_console_steps.md` (총 1~1.5시간 행정 작업).
