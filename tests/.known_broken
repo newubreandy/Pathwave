@@ -5,13 +5,5 @@
 # 형식: 파일 경로 한 줄씩. '#' 줄과 빈 줄은 무시.
 # 복구 시 해당 줄 삭제 → 다음 CI 부터 정상 게이트.
 
-# title='🔔 점검 공지' 가 push stub log[0]['title'] 와 mismatch.
-# 가설: push 발송 직전 i18n 자동번역 또는 emoji 처리로 title 이 변형됨.
-# 추적: services/announcement_push or push_provider 의 title 가공 위치.
-tests/test_announcement_push.py
-
-# 정책 source 가 'static_file' 기대 vs 실제 'db' 반환.
-# 가설: PR #45 도입 시 static 파일이었으나 이후 PR #46 정책 버전 관리에서
-# DB seed (policies 13행) 로 전환되며 응답 source 값 변경됨.
-# 추적: routes/policy.py 의 응답 build 시 source 값 결정 로직.
-tests/test_policy_versioning.py
+# 현재 등록된 known-broken 없음. 모든 테스트가 게이트 통과 중.
+# 2026-06-01: test_announcement_push, test_policy_versioning 픽스됨.

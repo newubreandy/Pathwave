@@ -59,10 +59,13 @@ db.execute("INSERT INTO users (email, password) VALUES (?,?)",
 db.execute("INSERT INTO users (email, password) VALUES (?,?)",
            ('u2@push.test', 'irrelevant'))
 uids = [r['id'] for r in db.execute("SELECT id FROM users").fetchall()]
-db.execute("INSERT INTO push_tokens (user_id, token, platform) VALUES (?,?,?)",
-           (uids[0], 'tok-u1-aaaaaa', 'fcm'))
-db.execute("INSERT INTO push_tokens (user_id, token, platform) VALUES (?,?,?)",
-           (uids[1], 'tok-u2-bbbbbb', 'fcm'))
+# 2026-06-01: push_tokens.language NULL → 'en' default (models/push.py:296) 로
+# 변경되어 자동 번역(stub 가 '[en]' prefix 추가)이 일어남. 본 테스트는 ko 원문
+# 그대로 발송되는 경로 검증 목적이므로 language='ko' 명시.
+db.execute("INSERT INTO push_tokens (user_id, token, platform, language) VALUES (?,?,?,?)",
+           (uids[0], 'tok-u1-aaaaaa', 'fcm', 'ko'))
+db.execute("INSERT INTO push_tokens (user_id, token, platform, language) VALUES (?,?,?,?)",
+           (uids[1], 'tok-u2-bbbbbb', 'fcm', 'ko'))
 db.commit(); db.close()
 _ok(f'사용자 {len(uids)}명 + 토큰 2개', len(uids) == 2)
 
