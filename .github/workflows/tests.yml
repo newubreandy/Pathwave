@@ -1,0 +1,92 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  python-tests:
+    name: Python (backend) — tests/
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: 'requirements.txt'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run all tests/ files
+        # 각 테스트 파일을 독립 프로세스로 실행 (글로벌 state·DB 격리).
+        # 실패한 파일을 모아 마지막에 종합 리포트 후 non-zero 종료.
+        env:
+          # Python 은 스크립트 디렉토리(tests/) 만 sys.path 에 추가하므로
+          # 프로젝트 루트(models/, routes/ 등)를 명시 노출.
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          set -u
+          PASS=()
+          FAIL=()
+          for f in tests/test_*.py; do
+            echo ""
+            echo "════════════════════════════════════════════════════════════"
+            echo "▶ $f"
+            echo "════════════════════════════════════════════════════════════"
+            if python "$f"; then
+              PASS+=("$f")
+            else
+              FAIL+=("$f")
+            fi
+          done
+          echo ""
+          echo "════════════════════════════════════════════════════════════"
+          echo "🧪 결과: ${#PASS[@]} pass / ${#FAIL[@]} fail (총 $((${#PASS[@]}+${#FAIL[@]})))"
+          echo "════════════════════════════════════════════════════════════"
+          if [ ${#FAIL[@]} -gt 0 ]; then
+            echo "실패한 테스트:"
+            printf '  ✗ %s\n' "${FAIL[@]}"
+            exit 1
+          fi
+          echo "✅ 모든 테스트 통과"
+
+  syntax-check:
+    name: 문법·플리스트·매니페스트 검증
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python 문법 (routes/ models/ services/ scripts/)
+        run: |
+          python -m py_compile $(find routes models services scripts -name '*.py' -type f) && echo "✅ Python 문법 OK"
+
+      - name: iOS Info.plist (plutil — Linux 환경에선 XML 검증만)
+        run: |
+          python -c "
+          import xml.etree.ElementTree as ET, sys
+          paths = ['mobile/ios/Runner/Info.plist', 'mobile/ios/Runner/PrivacyInfo.xcprivacy']
+          for p in paths:
+            try:
+              ET.parse(p); print(f'✅ {p}')
+            except Exception as e:
+              print(f'❌ {p}: {e}'); sys.exit(1)
+          "
+
+      - name: Android AndroidManifest.xml
+        run: |
+          xmllint --noout mobile/android/app/src/main/AndroidManifest.xml && echo "✅ AndroidManifest XML OK"
