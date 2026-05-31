@@ -51,18 +51,15 @@ jobs:
         run: |
           python -m py_compile $(find routes models services scripts -name '*.py' -type f) && echo "✅ Python 문법 OK"
 
-      - name: iOS Info.plist (plutil — Linux 환경에선 XML 검증만)
+      - name: iOS Info.plist + PrivacyInfo.xcprivacy (xmllint)
+        # Python xml.etree 는 PrivacyInfo 의 멀티라인 코멘트(em-dash 등)에 까다로움.
+        # plutil 은 macOS only — Linux CI 에선 xmllint --noout 으로 well-formed 만 확인.
+        # 운영 권한·구조 검증은 별도(plutil -lint 로컬 / Xcode Cloud 빌드).
         run: |
-          python -c "
-          import xml.etree.ElementTree as ET, sys
-          paths = ['mobile/ios/Runner/Info.plist', 'mobile/ios/Runner/PrivacyInfo.xcprivacy']
-          for p in paths:
-            try:
-              ET.parse(p); print(f'✅ {p}')
-            except Exception as e:
-              print(f'❌ {p}: {e}'); sys.exit(1)
-          "
+          for f in mobile/ios/Runner/Info.plist mobile/ios/Runner/PrivacyInfo.xcprivacy; do
+            xmllint --noout "$f" && echo "✅ $f"
+          done
 
-      - name: Android AndroidManifest.xml
+      - name: Android AndroidManifest.xml (xmllint)
         run: |
           xmllint --noout mobile/android/app/src/main/AndroidManifest.xml && echo "✅ AndroidManifest XML OK"

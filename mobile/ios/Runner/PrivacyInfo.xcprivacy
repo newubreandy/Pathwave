@@ -4,7 +4,7 @@
   https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
 
   v1 스코프
-  --------
+  ────────
   - 광고/추적 미사용 (NSPrivacyTracking=false)
   - 수집 데이터: 이메일/이름/전화/위치/사진/디바이스ID/사용자ID/결제/지원채팅
   - 모두 'App Functionality' 목적 — 결제는 'Personalization' 도 추가
@@ -12,7 +12,7 @@
     DiskSpace / SystemBootTime)
 
   업데이트 가이드
-  -------------
+  ─────────────
   - 새 SDK 추가 시 그 SDK 의 PrivacyInfo.xcprivacy 를 함께 확인.
   - 추적 도메인(애드네트워크/분석)을 활성화하면 NSPrivacyTracking=true 로 변경
     + NSPrivacyTrackingDomains 배열에 도메인 등록.
