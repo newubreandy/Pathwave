@@ -47,6 +47,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: xmllint 설치 (libxml2-utils)
+        # ubuntu-latest 러너에 기본 미포함된 경우가 있어 명시 설치.
+        run: sudo apt-get update -qq && sudo apt-get install -y libxml2-utils
+
       - name: Python 문법 (routes/ models/ services/ scripts/)
         run: |
           python -m py_compile $(find routes models services scripts -name '*.py' -type f) && echo "✅ Python 문법 OK"
