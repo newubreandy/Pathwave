@@ -62,7 +62,12 @@ admin_token = j['access_token']
 
 
 # ── [2] DB 비어있을 때 GET /api/policies — file fallback ──────────────────
+# 2026-05-31: init_db() 가 자동으로 13개 정책을 부트스트랩 시드하므로
+# fallback 경로 검증을 위해 'terms' row 를 명시적으로 삭제한 뒤 호출.
 print('\n[2] DB 비었을 때 — static 파일 fallback')
+_seed_clear = _patched_get_db()
+_seed_clear.execute("DELETE FROM policies WHERE kind='terms'")
+_seed_clear.commit(); _seed_clear.close()
 s, j = _get('/api/policies/terms')
 _ok('200', s == 200)
 _ok('source = static_file (PR #45 의 파일)',
@@ -118,8 +123,10 @@ pending_id = j['policy']['id']
 print('\n[7] /api/admin/policies — active + pending 분리 조회')
 s, j = _get('/api/admin/policies', token=admin_token)
 _ok('200', s == 200)
-_ok(f'active 9개 (모든 kind, got {len(j["active"])})',
-    len(j['active']) == 9)
+# 2026-05-31: kind 종류는 시간에 따라 추가 가능 (terms_user/facility 분리, refund 등).
+# fragile 한 정확 개수 매칭 → "최소 9개 이상" 으로 완화.
+_ok(f'active >= 9개 (모든 kind, got {len(j["active"])})',
+    len(j['active']) >= 9)
 _ok(f'pending 1개 (got {len(j["pending"])})', len(j['pending']) == 1)
 
 
