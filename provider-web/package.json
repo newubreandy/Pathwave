@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@sentry/react": "^8.39.0",
+    "@sentry/react": "^8.55.2",
     "html5-qrcode": "^2.3.8",
     "i18next": "^26.0.8",
     "i18next-browser-languagedetector": "^8.2.1",
