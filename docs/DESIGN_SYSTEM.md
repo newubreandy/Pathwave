@@ -392,3 +392,66 @@ detail/add/search 뷰에 영향 없는지 확인 후 다음 PR 에서 제거 예
 3. **WifiSettings.css deprecated 블록 제거**
 4. **상세보기 화면 디자인 정렬** (현재는 form 위주, 새 카드 시스템 미적용)
 5. **공유 패키지 추출 검토** (`packages/ui-common/`)
+
+---
+
+## 10. Mobile (Flutter) — 디자인 토큰
+
+> 추가: 2026-06-01. 웹(provider/admin)은 CSS 변수로 토큰화돼 있으나 mobile 은
+> 위젯마다 라운드·여백·폰트가 하드코딩돼 있었음. 단일 소스(`AppTheme`)로 통일.
+
+### 10-1 단일 소스 — `mobile/lib/utils/app_theme.dart`
+
+mobile 의 모든 디자인 값은 `AppTheme` 상수로만 정의한다. **화면/위젯에서 직접 숫자/색을 쓰지 않는다.**
+
+| 카테고리 | 토큰 | 값 |
+|---|---|---|
+| **색상** | `primary` | `#7C3AED` 보라 (확정 정책색) |
+| | `secondary` / `background` / `surface` / `border` | 시안 / `#0F0F1A` / `#1E1E2E` / `#3F3F5C` |
+| | `error` / `success` / `warning` | `#EF4444` / `#10B981` / `#F59E0B` |
+| | `textPrimary` / `textSecondary` / `textHint` | 흰 / `#A1A1AA` / `#71717A` |
+| **라운드** | `rSm` / `rMd` / `rLg` / `rXl` / `rPill` | 12 / 16 / 20 / 28 / 999 |
+| **여백** | `s1`~`s6` | 4 / 8 / 12 / 16 / 20 / 24 |
+| **그림자** | `softShadow` / `softShadowSm` | black 20%·blur16 / black 15%·blur8 |
+| **타이포** | `Theme.of(context).textTheme.*` | display/headline/title/body/label (letterSpacing·height 정제됨) |
+
+### 10-2 라운드 적용 규칙 (DesignCode 톤)
+
+- 칩/태그/작은 요소 → `rSm` (12)
+- 버튼·입력필드 → `rMd` (16)
+- 카드·바텀시트 → `rLg` (20)
+- 큰 컨테이너·모달 → `rXl` (28)
+
+### 10-3 ⚠️ 하드코딩 금지 (이것이 핵심)
+
+```dart
+// ❌ 금지 — 나중에 일괄 변경 불가
+borderRadius: BorderRadius.circular(16),
+padding: const EdgeInsets.all(16),
+style: TextStyle(fontSize: 14, color: Color(0xFFA1A1AA)),
+
+// ✅ 토큰 참조 — AppTheme 한 곳만 고치면 전체 반영
+borderRadius: BorderRadius.circular(AppTheme.rMd),
+padding: const EdgeInsets.all(AppTheme.s4),
+style: Theme.of(context).textTheme.bodyMedium,        // 폰트
+// 색이 꼭 필요하면 AppTheme.textSecondary (직접 hex 금지)
+```
+
+### 10-4 공통 위젯 (화면은 raw 위젯 대신 이걸 사용)
+
+| 위젯 | 역할 | 토큰 |
+|---|---|---|
+| `PwButton` | 버튼 (primary/secondary/outlined/text/danger) | `rMd` |
+| `PwCard` | 카드 | `rLg` + (옵션) `softShadow` |
+| `PwTextField` | 입력 | `rMd` (테마) |
+| `PwAppBar` / `PwIconButton` / `PwSwitchTile` / `PwEmptyState` | — | 테마 |
+
+→ 화면은 `Container`+`BoxDecoration` 직접 대신 `Pw*` 위젯을 쓴다. 톤 교체 시 위젯 한 곳만.
+
+### 10-5 마이그레이션 현황 (2026-06-01)
+
+- ✅ **1단계 (완료)**: `AppTheme` 토큰 단일소스 + 공통 위젯(`PwCard`/`PwButton`) 토큰화.
+- ⬜ **2단계 (점진)**: 23개 화면의 하드코딩 274건(라운드 91·직접색 30·폰트 153)을
+  토큰으로 치환. 화면 그룹별 PR(auth → mypage → chat → home → settings → support).
+  각 PR 후 시뮬레이터 시각 확인 (색·레이아웃 보존, 라운드만 토큰값 반영).
+- 신규 화면/위젯은 **처음부터 토큰만 사용** (위 10-3 규칙).
