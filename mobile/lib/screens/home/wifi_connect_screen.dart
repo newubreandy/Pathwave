@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../utils/error_message.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
@@ -40,9 +42,9 @@ class _WifiConnectScreenState extends State<WifiConnectScreen> {
       );
       setState(() => _success = '연결 요청 완료 (method=${res['method'] ?? 'unknown'})');
     } on PlatformException catch (e) {
-      setState(() => _error = '${e.code}: ${e.message ?? ''}');
+      setState(() => _error = friendlyError(e));
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _error = friendlyError(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }

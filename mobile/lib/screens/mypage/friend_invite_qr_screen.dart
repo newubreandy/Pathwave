@@ -11,6 +11,8 @@
 library;
 
 import 'package:flutter/material.dart';
+
+import '../../utils/error_message.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -54,7 +56,7 @@ class _FriendInviteQrScreenState extends State<FriendInviteQrScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = e.toString());
+      setState(() => _error = friendlyError(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }

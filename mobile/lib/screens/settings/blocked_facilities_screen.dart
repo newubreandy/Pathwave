@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../utils/error_message.dart';
+
 import '../../services/block_service.dart';
 import '../../services/i18n_service.dart';
 import '../../utils/app_theme.dart';
@@ -66,7 +68,7 @@ class _BlockedFacilitiesScreenState extends State<BlockedFacilitiesScreen> {
           }
           if (snap.hasError) {
             return PwErrorState(
-              message: snap.error.toString(),
+              message: friendlyError(snap.error),
               onRetry: _reload,
             );
           }

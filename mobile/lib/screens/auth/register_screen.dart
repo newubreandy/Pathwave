@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../utils/error_message.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -60,7 +62,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         setState(() => _error = res['message']?.toString() ?? '코드 발송 실패.');
       }
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _error = friendlyError(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -82,7 +84,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         setState(() => _error = res['message']?.toString() ?? '코드가 올바르지 않습니다.');
       }
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _error = friendlyError(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -144,7 +146,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = e.toString());
+      setState(() => _error = friendlyError(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -243,7 +245,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = e.toString());
+      setState(() => _error = friendlyError(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }

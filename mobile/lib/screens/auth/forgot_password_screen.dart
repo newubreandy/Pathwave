@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../utils/error_message.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -48,7 +50,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             i18n.t('mobile.auth.forgot.send_failed', defaultValue: '발송 실패.'));
       }
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _error = friendlyError(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -75,7 +77,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = e.toString());
+      setState(() => _error = friendlyError(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }

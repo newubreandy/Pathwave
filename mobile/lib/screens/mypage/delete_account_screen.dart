@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../utils/error_message.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -50,7 +52,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = e.toString());
+      setState(() => _error = friendlyError(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }

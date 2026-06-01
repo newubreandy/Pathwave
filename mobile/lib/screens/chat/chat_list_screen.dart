@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../utils/error_message.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/chat_service.dart';
@@ -38,7 +40,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
               return const Center(child: CircularProgressIndicator());
             }
             if (snap.hasError) {
-              return PwErrorState(message: snap.error.toString(), onRetry: _reload);
+              return PwErrorState(message: friendlyError(snap.error), onRetry: _reload);
             }
             final list = snap.data ?? [];
             if (list.isEmpty) {

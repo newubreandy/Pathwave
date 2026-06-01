@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../utils/error_message.dart';
+
 import '../../services/api_client.dart';
 import '../../services/i18n_service.dart';
 import '../../utils/app_theme.dart';
@@ -54,7 +56,7 @@ class _PolicyViewScreenState extends State<PolicyViewScreen> {
       });
     } on ApiException catch (e) {
       if (!mounted) return;
-      setState(() { _error = e.message; _loading = false; });
+      setState(() { _error = friendlyError(e); _loading = false; });
     } catch (_) {
       if (!mounted) return;
       setState(() {

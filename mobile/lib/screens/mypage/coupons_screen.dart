@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../utils/error_message.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -106,7 +108,7 @@ class _CouponListState extends State<_CouponList> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snap.hasError) {
-            return PwErrorState(message: snap.error.toString(), onRetry: widget.onRetry);
+            return PwErrorState(message: friendlyError(snap.error), onRetry: widget.onRetry);
           }
           final list = snap.data ?? [];
           if (list.isEmpty) {
