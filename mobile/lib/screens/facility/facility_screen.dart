@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../utils/error_message.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -111,7 +113,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: PwErrorState(
-                      message: snap.error.toString(),
+                      message: friendlyError(snap.error),
                       onRetry: _refresh,
                     ),
                   ),

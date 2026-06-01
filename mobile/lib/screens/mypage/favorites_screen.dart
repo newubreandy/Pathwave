@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../utils/error_message.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 
@@ -52,7 +54,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             if (snap.hasError) {
               return ListView(children: [
                 const SizedBox(height: 100),
-                PwErrorState(message: snap.error.toString(), onRetry: _reload),
+                PwErrorState(message: friendlyError(snap.error), onRetry: _reload),
               ]);
             }
             final list = snap.data ?? [];

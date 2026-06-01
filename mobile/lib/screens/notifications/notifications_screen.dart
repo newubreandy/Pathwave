@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../utils/error_message.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/i18n_service.dart';
@@ -82,7 +84,7 @@ class _InboxTab extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (snap.hasError) {
-            return PwErrorState(message: snap.error.toString(), onRetry: onRefresh);
+            return PwErrorState(message: friendlyError(snap.error), onRetry: onRefresh);
           }
           final list = snap.data ?? [];
           if (list.isEmpty) {
@@ -253,7 +255,7 @@ class _AnnouncementsTab extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (snap.hasError) {
-            return PwErrorState(message: snap.error.toString(), onRetry: onRefresh);
+            return PwErrorState(message: friendlyError(snap.error), onRetry: onRefresh);
           }
           final list = snap.data ?? [];
           if (list.isEmpty) {

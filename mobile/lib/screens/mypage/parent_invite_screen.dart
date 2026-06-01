@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../utils/error_message.dart';
 import 'package:flutter/services.dart';
 
 import '../../services/i18n_service.dart';
@@ -40,7 +42,7 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
       );
       setState(() => _result = r);
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _error = friendlyError(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
