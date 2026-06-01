@@ -439,14 +439,25 @@ style: Theme.of(context).textTheme.bodyMedium,        // 폰트
 
 ### 10-4 공통 위젯 (화면은 raw 위젯 대신 이걸 사용)
 
-| 위젯 | 역할 | 토큰 |
-|---|---|---|
-| `PwButton` | 버튼 (primary/secondary/outlined/text/danger) | `rMd` |
-| `PwCard` | 카드 | `rLg` + (옵션) `softShadow` |
-| `PwTextField` | 입력 | `rMd` (테마) |
-| `PwAppBar` / `PwIconButton` / `PwSwitchTile` / `PwEmptyState` | — | 테마 |
+배럴: `import '../../widgets/pw.dart';` 하나로 전체 import.
+
+| 위젯 | 역할 | 주요 props | 토큰 |
+|---|---|---|---|
+| `PwButton` | 버튼 | `variant`(primary·secondary·outlined·text·danger), `icon`, `fullWidth`, `onPressed`, `child` | `rMd` |
+| `PwCard` | 카드 컨테이너 | `child`, `padding`, `onTap` | `rLg` + (옵션) `softShadow` |
+| `PwTextField` | 입력 | `label`, `hint`, `controller`, `obscureText`, `validator` | `rMd`(테마) |
+| `PwAppBar` | 상단바 | `title`, `actions`, `leading` | 테마 |
+| `PwEmptyState` | 목록 빈 상태 | `icon`, `title`, `subtitle`, `actionLabel`, `onAction` | 테마 |
+| `PwErrorState` | 에러 + 재시도 | `message`, `onRetry` | 테마 |
+| `PwIconButton` | 아이콘 버튼 | `icon`, `onPressed` | 테마 |
+| `PwSwitch` / `PwSwitchTile` | 토글 / 토글 행 | `value`, `onChanged`, `title` | 테마 |
+| `PwFooter` | 법적 푸터(사업자정보·약관) | — | 테마 |
 
 → 화면은 `Container`+`BoxDecoration` 직접 대신 `Pw*` 위젯을 쓴다. 톤 교체 시 위젯 한 곳만.
+
+> ⚠️ 현재 `PwEmptyState`/`PwErrorState` 내부는 아직 일부 하드코딩(`fontSize 15/13`,
+> `Icon size 56/48`, `EdgeInsets.all(32)`) 이 남아 있다. **2-a 우선 개선 대상**
+> (→ `docs/claude_design_brief.md`).
 
 ### 10-5 마이그레이션 현황 (2026-06-01)
 
@@ -455,3 +466,39 @@ style: Theme.of(context).textTheme.bodyMedium,        // 폰트
   토큰으로 치환. 화면 그룹별 PR(auth → mypage → chat → home → settings → support).
   각 PR 후 시뮬레이터 시각 확인 (색·레이아웃 보존, 라운드만 토큰값 반영).
 - 신규 화면/위젯은 **처음부터 토큰만 사용** (위 10-3 규칙).
+
+### 10-6 화면 인벤토리 (26개 — Claude Design 온보딩용)
+
+> Claude Design 이 "어떤 화면을 디자인할지" 파악하도록 정리. 경로는 `mobile/lib/screens/`.
+> **상태** = 빈/에러/로딩 상태를 가진 화면(개선 ROI 높음) 표시.
+
+| 그룹 | 화면 | 목적 | 상태 |
+|---|---|---|---|
+| **auth** | `splash_screen` | 앱 진입 스플래시 | 로딩 |
+| | `consent_screen` | 약관 동의 | 로딩 |
+| | `login_screen` | 로그인 (이메일·소셜) | 로딩 |
+| | `register_screen` | 회원가입 | — |
+| | `forgot_password_screen` | 비밀번호 재설정 | — |
+| **home** | `home_screen` | 홈 탭 컨테이너 (검색·마이페이지 등) | ⚠️ 오버플로우 버그 |
+| | `wifi_connect_screen` | WiFi 연결 (핵심 기능) | — |
+| **facility** | `facility_screen` | 매장 상세 | 빈·에러·로딩 |
+| **search** | `search_screen` | 매장 검색 | 빈·에러·로딩 |
+| **chat** | `chat_list_screen` | 채팅 목록 | 빈·에러·로딩 |
+| | `chat_detail_screen` | 채팅 상세 (번역) | 빈·에러·로딩 |
+| **mypage** | `mypage_screen` | 마이페이지 홈 | — |
+| | `coupons_screen` | 쿠폰함 | 빈·에러·로딩 |
+| | `stamps_screen` | 스탬프 | 빈·에러·로딩 |
+| | `favorites_screen` | 즐겨찾기 | 빈·에러·로딩 |
+| | `member_qr_screen` | 회원 QR | 로딩 |
+| | `friend_invite_qr_screen` | 친구 초대 QR | 로딩 |
+| | `parent_invite_screen` | 보호자 초대 | — |
+| | `delete_account_screen` | 회원 탈퇴 | — |
+| **notifications** | `notifications_screen` | 알림 목록 | 빈·에러·로딩 |
+| **settings** | `settings_screen` | 설정 홈 | 로딩 |
+| | `change_password_screen` | 비밀번호 변경 | — |
+| | `blocked_facilities_screen` | 차단 매장 | 빈·에러·로딩 |
+| | `policy_view_screen` | 약관 보기 | 로딩 |
+| **support** | `support_screen` | 고객지원 / FAQ | 빈·에러·로딩 |
+| | `support_detail_screen` | 지원 상세 | 로딩 |
+
+**빈·에러 상태 보유 10개 화면** = `PwEmptyState`/`PwErrorState` 사용 → 이걸 한 번 개선하면 10개 화면이 동시에 좋아진다 (2-a 가 ROI 1위인 이유).
