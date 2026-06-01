@@ -29,10 +29,12 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       final auth = context.read<AuthService>();
-      final ble  = context.read<BleService>();
+      final ble = context.read<BleService>();
       if (auth.user == null || ble.isScanning) return;
 
-      final granted = await PermissionService.instance.ensureBluetoothScan(context);
+      final granted = await PermissionService.instance.ensureBluetoothScan(
+        context,
+      );
       if (!granted || !mounted) return;
       await ble.startScan(userId: auth.user?['id']?.toString());
 
@@ -59,16 +61,34 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: AppTheme.surface,
         indicatorColor: AppTheme.primary.withValues(alpha: 0.2),
         destinations: [
-          NavigationDestination(icon: const Icon(Icons.home_outlined), selectedIcon: const Icon(Icons.home), label: I18nService.instance.t('nav.home', defaultValue: '홈')),
-          NavigationDestination(icon: const Icon(Icons.search), selectedIcon: const Icon(Icons.search), label: I18nService.instance.t('nav.search', defaultValue: '검색')),
-          NavigationDestination(icon: const Icon(Icons.person_outline), selectedIcon: const Icon(Icons.person), label: I18nService.instance.t('nav.my', defaultValue: '마이')),
-          NavigationDestination(icon: const Icon(Icons.notifications_outlined), selectedIcon: const Icon(Icons.notifications), label: I18nService.instance.t('nav.notifications', defaultValue: '알림')),
+          NavigationDestination(
+            icon: const Icon(Icons.home_outlined),
+            selectedIcon: const Icon(Icons.home),
+            label: I18nService.instance.t('nav.home', defaultValue: '홈'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.search),
+            selectedIcon: const Icon(Icons.search),
+            label: I18nService.instance.t('nav.search', defaultValue: '검색'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.person_outline),
+            selectedIcon: const Icon(Icons.person),
+            label: I18nService.instance.t('nav.my', defaultValue: '마이'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.notifications_outlined),
+            selectedIcon: const Icon(Icons.notifications),
+            label: I18nService.instance.t(
+              'nav.notifications',
+              defaultValue: '알림',
+            ),
+          ),
         ],
       ),
     );
   }
 }
-
 
 // ── 홈 탭: BLE 상태 + WiFi 자동 연결 트리거 ─────────────────────────────────
 class _HomeTab extends StatelessWidget {
@@ -85,8 +105,13 @@ class _HomeTab extends StatelessWidget {
             children: [
               Text('PathWave', style: Theme.of(context).textTheme.displaySmall),
               const SizedBox(height: 4),
-              Text(context.t('mobile.home.beacon_auto_connect', defaultValue: '비콘이 감지되면 자동으로 WiFi에 연결됩니다.'),
-                style: TextStyle(color: AppTheme.textSecondary)),
+              Text(
+                context.t(
+                  'mobile.home.beacon_auto_connect',
+                  defaultValue: '비콘이 감지되면 자동으로 WiFi에 연결됩니다.',
+                ),
+                style: TextStyle(color: AppTheme.textSecondary),
+              ),
               const SizedBox(height: 20),
 
               // BLE 스캔 상태 카드
@@ -100,8 +125,12 @@ class _HomeTab extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(
-                      ble.isScanning ? Icons.bluetooth_searching : Icons.bluetooth_disabled,
-                      color: ble.isScanning ? AppTheme.success : AppTheme.textHint,
+                      ble.isScanning
+                          ? Icons.bluetooth_searching
+                          : Icons.bluetooth_disabled,
+                      color: ble.isScanning
+                          ? AppTheme.success
+                          : AppTheme.textHint,
                       size: 28,
                     ),
                     const SizedBox(width: 12),
@@ -115,9 +144,12 @@ class _HomeTab extends StatelessWidget {
                           ),
                           Text(
                             ble.isScanning
-                              ? '주변에 비콘이 있는지 확인합니다.'
-                              : '권한을 허용하면 자동으로 시작합니다.',
-                            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                                ? '주변에 비콘이 있는지 확인합니다.'
+                                : '권한을 허용하면 자동으로 시작합니다.',
+                            style: const TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 13,
+                            ),
                           ),
                         ],
                       ),
@@ -130,7 +162,10 @@ class _HomeTab extends StatelessWidget {
                               .ensureBluetoothScan(context);
                           if (!granted) return;
                           if (!context.mounted) return;
-                          final uid = context.read<AuthService>().user?['id']?.toString();
+                          final uid = context
+                              .read<AuthService>()
+                              .user?['id']
+                              ?.toString();
                           await ble.startScan(userId: uid);
                         } else {
                           await ble.stopScan();
@@ -147,14 +182,16 @@ class _HomeTab extends StatelessWidget {
               if (ble.pendingWifi != null) ...[
                 _WifiBanner(
                   facility: ble.pendingWifi!['facility'],
-                  wifi:     ble.pendingWifi!['wifi'],
+                  wifi: ble.pendingWifi!['wifi'],
                   onTap: () {
                     final f = ble.pendingWifi!['facility'] ?? {};
                     final w = ble.pendingWifi!['wifi'] ?? {};
                     // push 사용 — wifi-connect 에서 시스템 백 제스처로 홈 복귀.
-                    context.push('/wifi-connect?'
-                        'name=${Uri.encodeComponent(f['name']?.toString() ?? '')}'
-                        '&ssid=${Uri.encodeComponent(w['ssid']?.toString() ?? '')}');
+                    context.push(
+                      '/wifi-connect?'
+                      'name=${Uri.encodeComponent(f['name']?.toString() ?? '')}'
+                      '&ssid=${Uri.encodeComponent(w['ssid']?.toString() ?? '')}',
+                    );
                   },
                   onDismiss: ble.clearPendingWifi,
                 ),
@@ -170,8 +207,15 @@ class _HomeTab extends StatelessWidget {
                     children: [
                       const Icon(Icons.wifi_off, color: AppTheme.textHint),
                       const SizedBox(width: 12),
-                      Expanded(child: Text(context.t('mobile.home.no_beacon', defaultValue: '아직 감지된 비콘이 없습니다.'),
-                        style: const TextStyle(color: AppTheme.textSecondary))),
+                      Expanded(
+                        child: Text(
+                          context.t(
+                            'mobile.home.no_beacon',
+                            defaultValue: '아직 감지된 비콘이 없습니다.',
+                          ),
+                          style: const TextStyle(color: AppTheme.textSecondary),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -182,7 +226,6 @@ class _HomeTab extends StatelessWidget {
     );
   }
 }
-
 
 class _WifiBanner extends StatelessWidget {
   final Map<String, dynamic>? facility;
@@ -201,10 +244,12 @@ class _WifiBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [
-          AppTheme.primary.withValues(alpha: 0.16),
-          AppTheme.secondary.withValues(alpha: 0.12),
-        ]),
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.primary.withValues(alpha: 0.16),
+            AppTheme.secondary.withValues(alpha: 0.12),
+          ],
+        ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
       ),
@@ -216,26 +261,39 @@ class _WifiBanner extends StatelessWidget {
               const Icon(Icons.wifi, color: AppTheme.primary),
               const SizedBox(width: 8),
               Expanded(
-                child: Text('${facility?['name'] ?? '매장'} WiFi 발견',
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                child: Text(
+                  '${facility?['name'] ?? '매장'} WiFi 발견',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
               ),
-              PwIconButton(icon: Icons.close, tooltip: '닫기', size: 18, onPressed: onDismiss),
+              PwIconButton(
+                icon: Icons.close,
+                tooltip: '닫기',
+                size: 18,
+                onPressed: onDismiss,
+              ),
             ],
           ),
           const SizedBox(height: 4),
-          Text('SSID: ${wifi?['ssid'] ?? '—'}',
-            style: const TextStyle(color: AppTheme.textSecondary)),
+          Text(
+            'SSID: ${wifi?['ssid'] ?? '—'}',
+            style: const TextStyle(color: AppTheme.textSecondary),
+          ),
           const SizedBox(height: 12),
           PwButton(
             onPressed: onTap,
-            child: Text(context.t('mobile.home.auto_connect', defaultValue: '자동 연결하기')),
+            child: Text(
+              context.t('mobile.home.auto_connect', defaultValue: '자동 연결하기'),
+            ),
           ),
         ],
       ),
     );
   }
 }
-
 
 // ── 마이 탭 ─────────────────────────────────────────────────────────────────
 class _MyPageTab extends StatelessWidget {
@@ -248,74 +306,139 @@ class _MyPageTab extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(context.t('mobile.mypage.title', defaultValue: '마이페이지'),
-            style: Theme.of(context).textTheme.displaySmall),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppTheme.border),
-            ),
-            child: Row(
-              children: [
-                const CircleAvatar(
-                  radius: 24,
-                  backgroundColor: AppTheme.primary,
-                  child: Icon(Icons.person, color: Colors.white),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(email, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      Text(context.t('mobile.mypage.member', defaultValue: '일반 회원'), style: const TextStyle(color: AppTheme.textSecondary)),
-                    ],
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.t('mobile.mypage.title', defaultValue: '마이페이지'),
+                    style: Theme.of(context).textTheme.displaySmall,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppTheme.border),
+                    ),
+                    child: Row(
+                      children: [
+                        const CircleAvatar(
+                          radius: 24,
+                          backgroundColor: AppTheme.primary,
+                          child: Icon(Icons.person, color: Colors.white),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                email,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                context.t(
+                                  'mobile.mypage.member',
+                                  defaultValue: '일반 회원',
+                                ),
+                                style: const TextStyle(
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // context.push 사용 — 스택 보존으로 시스템 백 제스처 + AppBar back arrow 동작 보장 (iOS HIG / Material 3).
+                  // P22-a (2026-05-26): 회원 QR — 점주 스캔으로 스탬프/쿠폰 자동 처리
+                  _MenuTile(
+                    icon: Icons.qr_code_2,
+                    title: '내 회원 QR',
+                    onTap: () => context.push('/mypage/member-qr'),
+                  ),
+                  _MenuTile(
+                    icon: Icons.local_activity_outlined,
+                    title: '내 스탬프',
+                    onTap: () => context.push('/mypage/stamps'),
+                  ),
+                  _MenuTile(
+                    icon: Icons.confirmation_number_outlined,
+                    title: '내 쿠폰',
+                    onTap: () => context.push('/mypage/coupons'),
+                  ),
+                  _MenuTile(
+                    icon: Icons.favorite_outline,
+                    title: '즐겨찾기',
+                    onTap: () => context.push('/mypage/favorites'),
+                  ),
+                  _MenuTile(
+                    icon: Icons.family_restroom,
+                    title: '자녀 초대',
+                    onTap: () => context.push('/mypage/parent-invite'),
+                  ),
+                  // P22-c (2026-05-27): 친구 초대 QR — 가입 시 invited_via_code 추적
+                  _MenuTile(
+                    icon: Icons.person_add_alt,
+                    title: '친구 초대',
+                    onTap: () => context.push('/mypage/friend-invite'),
+                  ),
+                  _MenuTile(
+                    icon: Icons.chat_bubble_outline,
+                    title: '매장 채팅',
+                    onTap: () => context.push('/chat'),
+                  ),
+                  _MenuTile(
+                    icon: Icons.headset_mic_outlined,
+                    title: '고객센터',
+                    onTap: () => context.push('/support'),
+                  ),
+                  _MenuTile(
+                    icon: Icons.settings_outlined,
+                    title: '설정',
+                    onTap: () => context.push('/settings'),
+                  ),
+                  const Spacer(),
+                  PwButton(
+                    variant: PwButtonVariant.danger,
+                    icon: Icons.logout,
+                    onPressed: () async {
+                      await context.read<AuthService>().logout();
+                      if (context.mounted) context.go('/auth/login');
+                    },
+                    child: Text(
+                      context.t('mobile.mypage.logout', defaultValue: '로그아웃'),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 16),
-          // context.push 사용 — 스택 보존으로 시스템 백 제스처 + AppBar back arrow 동작 보장 (iOS HIG / Material 3).
-          // P22-a (2026-05-26): 회원 QR — 점주 스캔으로 스탬프/쿠폰 자동 처리
-          _MenuTile(icon: Icons.qr_code_2,                    title: '내 회원 QR', onTap: () => context.push('/mypage/member-qr')),
-          _MenuTile(icon: Icons.local_activity_outlined, title: '내 스탬프', onTap: () => context.push('/mypage/stamps')),
-          _MenuTile(icon: Icons.confirmation_number_outlined, title: '내 쿠폰', onTap: () => context.push('/mypage/coupons')),
-          _MenuTile(icon: Icons.favorite_outline, title: '즐겨찾기', onTap: () => context.push('/mypage/favorites')),
-          _MenuTile(icon: Icons.family_restroom,            title: '자녀 초대', onTap: () => context.push('/mypage/parent-invite')),
-          // P22-c (2026-05-27): 친구 초대 QR — 가입 시 invited_via_code 추적
-          _MenuTile(icon: Icons.person_add_alt,             title: '친구 초대', onTap: () => context.push('/mypage/friend-invite')),
-          _MenuTile(icon: Icons.chat_bubble_outline,        title: '매장 채팅', onTap: () => context.push('/chat')),
-          _MenuTile(icon: Icons.headset_mic_outlined,        title: '고객센터', onTap: () => context.push('/support')),
-          _MenuTile(icon: Icons.settings_outlined,          title: '설정', onTap: () => context.push('/settings')),
-          const Spacer(),
-          PwButton(
-            variant: PwButtonVariant.danger,
-            icon: Icons.logout,
-            onPressed: () async {
-              await context.read<AuthService>().logout();
-              if (context.mounted) context.go('/auth/login');
-            },
-            child: Text(context.t('mobile.mypage.logout', defaultValue: '로그아웃')),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-
 class _MenuTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final VoidCallback onTap;
-  const _MenuTile({required this.icon, required this.title, required this.onTap});
+  const _MenuTile({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -332,7 +455,11 @@ class _MenuTile extends StatelessWidget {
               Icon(icon, size: 22, color: AppTheme.textSecondary),
               const SizedBox(width: 12),
               Expanded(child: Text(title)),
-              const Icon(Icons.chevron_right, size: 20, color: AppTheme.textHint),
+              const Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: AppTheme.textHint,
+              ),
             ],
           ),
         ),
@@ -340,7 +467,6 @@ class _MenuTile extends StatelessWidget {
     );
   }
 }
-
 
 // ── 알림 탭 (목록 진입 라우트로 이동) ───────────────────────────────────────
 class _NotificationsTab extends StatelessWidget {
@@ -353,18 +479,30 @@ class _NotificationsTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(context.t('mobile.notifications.title', defaultValue: '알림'),
-            style: Theme.of(context).textTheme.displaySmall),
+          Text(
+            context.t('mobile.notifications.title', defaultValue: '알림'),
+            style: Theme.of(context).textTheme.displaySmall,
+          ),
           const SizedBox(height: 8),
-          Text(context.t('mobile.notifications.placeholder', defaultValue: '스탬프 적립 / 쿠폰 발급 / 시스템 공지가 표시됩니다.'),
-            style: TextStyle(color: AppTheme.textSecondary)),
+          Text(
+            context.t(
+              'mobile.notifications.placeholder',
+              defaultValue: '스탬프 적립 / 쿠폰 발급 / 시스템 공지가 표시됩니다.',
+            ),
+            style: TextStyle(color: AppTheme.textSecondary),
+          ),
           const SizedBox(height: 16),
           Center(
             child: TextButton.icon(
               // push 사용 — 알림 화면에서 시스템 백 제스처로 홈 복귀.
               onPressed: () => context.push('/notifications'),
               icon: const Icon(Icons.open_in_new),
-              label: Text(context.t('mobile.notifications.view_all', defaultValue: '전체 알림 보기')),
+              label: Text(
+                context.t(
+                  'mobile.notifications.view_all',
+                  defaultValue: '전체 알림 보기',
+                ),
+              ),
             ),
           ),
         ],
@@ -372,5 +510,3 @@ class _NotificationsTab extends StatelessWidget {
     );
   }
 }
-
-
