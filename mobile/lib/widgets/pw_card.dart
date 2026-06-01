@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../utils/app_theme.dart';
+
 /// PathWave 표준 Card (Material 3 [Card] 추상화).
 ///
 /// 화면은 raw [Card] 또는 [Container] + decoration 대신 [PwCard] 를 사용한다.
@@ -18,7 +20,7 @@ class PwCard extends StatelessWidget {
     required this.child,
     this.padding = const EdgeInsets.all(16),
     this.onTap,
-    this.borderRadius = const BorderRadius.all(Radius.circular(16)),
+    this.borderRadius = const BorderRadius.all(Radius.circular(AppTheme.rLg)),
     this.color,
     this.border,
   });
