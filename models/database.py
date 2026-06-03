@@ -867,6 +867,33 @@ def init_db():
         );
         CREATE INDEX IF NOT EXISTS idx_admin_alert_dismissals_admin_alert
             ON admin_alert_dismissals(admin_id, alert_id);
+
+        -- 사용자 앱 시즌 배경 테마 (PR — 글래스모피즘 + 계절 자동 전환).
+        -- 슈퍼어드민이 계절(spring/summer/autumn/winter) 또는 이벤트(event) 별로
+        -- 배경 이미지를 등록·교체. 같은 season 내에서 active=1 인 row 1개만 유효.
+        -- 사용자 앱은 GET /api/theme/current 를 통해 KST 기준 현재 계절의 active 테마
+        -- 1건을 받아 BoxFit.cover 로 표시. 무재배포 갱신.
+        CREATE TABLE IF NOT EXISTS theme_configs (
+            id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+            season               TEXT    NOT NULL,    -- 'spring'|'summer'|'autumn'|'winter'|'event'
+            name                 TEXT    NOT NULL,    -- 식별용 라벨 (예: "2026 봄 - 벚꽃")
+            image_url            TEXT    NOT NULL,    -- '/static/themes/{uuid}.{ext}'
+            image_filename       TEXT    NOT NULL,    -- 디스크 파일명 (삭제 시 사용)
+            overlay_alpha        REAL    DEFAULT 0.45,-- 가독성 보정 딤 (0~1, 클수록 어두움)
+            text_on_dark         INTEGER DEFAULT 1,   -- 1=흰 텍스트 / 0=검은 텍스트
+            accent_color         TEXT,                -- 카드/포인트 hex (선택, 미지정시 #7C3AED)
+            active               INTEGER DEFAULT 0,   -- 1=해당 season 에서 현재 활성
+            event_starts_at      TEXT,                -- season='event' 일 때 노출 시작
+            event_ends_at        TEXT,                -- season='event' 일 때 노출 종료
+            created_by_admin_id  INTEGER,
+            created_at           TEXT    DEFAULT (datetime('now')),
+            updated_at           TEXT    DEFAULT (datetime('now')),
+            FOREIGN KEY (created_by_admin_id) REFERENCES super_admin_accounts(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_theme_configs_season_active
+            ON theme_configs(season, active);
+        CREATE INDEX IF NOT EXISTS idx_theme_configs_event_window
+            ON theme_configs(season, event_starts_at, event_ends_at);
     """)
 
     # ── 마이그레이션: 기존 DB에 없는 컬럼은 ADD COLUMN ────────────────────────

@@ -8,6 +8,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'services/auth_service.dart';
 import 'services/i18n_service.dart';
 import 'services/ble_service.dart';
+import 'services/theme_service.dart';
 import 'utils/app_router.dart';
 import 'utils/neu_theme.dart';
 import 'widgets/dev_preview_bar.dart';
@@ -34,6 +35,10 @@ void main() async {
 
   // i18n 초기화 — 디바이스 언어 자동 감지 → fetch → 24h 캐싱
   await I18nService.instance.init();
+
+  // 시즌 배경 테마 초기화 — 캐시 즉시 로드 + 백그라운드 fetch(1h TTL).
+  // 슈퍼어드민이 admin-web 에서 변경 시 무재배포로 반영 (앱 재실행/pull-to-refresh).
+  await ThemeService.instance.init();
 
   // M4 (2026-05-29): Sentry 초기화 — 크래시/에러 추적.
   //   --dart-define=SENTRY_DSN=https://... 주입 시 활성, 미주입 시 자동 no-op.
@@ -70,6 +75,7 @@ class _PathWaveAppState extends State<PathWaveApp> {
       providers: [
         ChangeNotifierProvider<AuthService>.value(value: _auth),
         ChangeNotifierProvider(create: (_) => BleService()),
+        ChangeNotifierProvider<ThemeService>.value(value: ThemeService.instance),
       ],
       child: MaterialApp.router(
         title: 'PathWave',

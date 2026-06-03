@@ -6,6 +6,7 @@ import '../../services/auth_service.dart';
 import '../../services/ble_service.dart';
 import '../../services/i18n_service.dart';
 import '../../services/permission_service.dart';
+import '../../services/theme_service.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/i18n_context.dart';
 import '../../widgets/notification_permission_dialog.dart';
@@ -54,11 +55,18 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     return Scaffold(
-      body: SafeArea(child: tabs[_tab]),
+      // ⭐ 글래스모피즘 시즌 배경 — 4개 탭 전부 같은 배경 위에 표시.
+      //   서버 등록 이미지 있으면 BoxFit.cover, 없으면 계절 그라데이션.
+      //   ThemeService 변경 시 자동 rebuild.
+      extendBody: true,
+      backgroundColor: Colors.transparent,
+      body: SeasonalBackground(
+        child: SafeArea(child: tabs[_tab]),
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
         onDestinationSelected: (i) => setState(() => _tab = i),
-        backgroundColor: AppTheme.surface,
+        backgroundColor: AppTheme.surface.withValues(alpha: 0.85),
         indicatorColor: AppTheme.primary.withValues(alpha: 0.2),
         destinations: [
           NavigationDestination(
@@ -98,30 +106,36 @@ class _HomeTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<BleService>(
       builder: (context, ble, _) {
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        return RefreshIndicator(
+          // pull-to-refresh — 시즌 배경 즉시 갱신 (캐시 무시).
+          onRefresh: () => context.read<ThemeService>().refresh(),
+          child: ListView(
+            padding: const EdgeInsets.all(20),
             children: [
-              Text('PathWave', style: Theme.of(context).textTheme.displaySmall),
+              // 히어로: 글래스 칩 + 타이틀 + 서브
+              const GlassPill(label: 'PATHWAVE'),
+              const SizedBox(height: 12),
+              Text(
+                'PathWave',
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: Colors.white,
+                  shadows: const [
+                    Shadow(color: Colors.black54, blurRadius: 8, offset: Offset(0, 2)),
+                  ],
+                ),
+              ),
               const SizedBox(height: 4),
               Text(
                 context.t(
                   'mobile.home.beacon_auto_connect',
                   defaultValue: '비콘이 감지되면 자동으로 WiFi에 연결됩니다.',
                 ),
-                style: TextStyle(color: AppTheme.textSecondary),
+                style: const TextStyle(color: Colors.white70),
               ),
               const SizedBox(height: 20),
 
-              // BLE 스캔 상태 카드
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppTheme.border),
-                ),
+              // BLE 스캔 상태 — 글래스 카드
+              GlassCard(
                 child: Row(
                   children: [
                     Icon(
@@ -140,14 +154,18 @@ class _HomeTab extends StatelessWidget {
                         children: [
                           Text(
                             ble.isScanning ? '비콘 감지 중' : '비콘 감지 대기',
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
+                          const SizedBox(height: 2),
                           Text(
                             ble.isScanning
                                 ? '주변에 비콘이 있는지 확인합니다.'
                                 : '권한을 허용하면 자동으로 시작합니다.',
                             style: const TextStyle(
-                              color: AppTheme.textSecondary,
+                              color: Colors.white70,
                               fontSize: 13,
                             ),
                           ),
@@ -196,16 +214,10 @@ class _HomeTab extends StatelessWidget {
                   onDismiss: ble.clearPendingWifi,
                 ),
               ] else
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppTheme.border),
-                  ),
+                GlassCard(
                   child: Row(
                     children: [
-                      const Icon(Icons.wifi_off, color: AppTheme.textHint),
+                      const Icon(Icons.wifi_off, color: Colors.white70),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -213,7 +225,7 @@ class _HomeTab extends StatelessWidget {
                             'mobile.home.no_beacon',
                             defaultValue: '아직 감지된 비콘이 없습니다.',
                           ),
-                          style: const TextStyle(color: AppTheme.textSecondary),
+                          style: const TextStyle(color: Colors.white70),
                         ),
                       ),
                     ],

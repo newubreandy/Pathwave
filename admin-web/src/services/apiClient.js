@@ -14,13 +14,17 @@ function _getToken() {
   return localStorage.getItem(TOKEN_KEY);
 }
 
-async function request(path, { method = 'GET', body, headers = {}, raw = false } = {}) {
-  const finalHeaders = { 'Content-Type': 'application/json', ...headers };
+async function request(path, { method = 'GET', body, headers = {}, raw = false, form = false } = {}) {
+  // form=true 면 multipart/form-data — Content-Type 헤더를 직접 안 넣어야
+  // 브라우저가 boundary 를 자동으로 붙인다. body 는 FormData 인스턴스를 그대로 전달.
+  const finalHeaders = form
+    ? { ...headers }
+    : { 'Content-Type': 'application/json', ...headers };
   const token = _getToken();
   if (token) finalHeaders['Authorization'] = `Bearer ${token}`;
 
   const opts = { method, headers: finalHeaders };
-  if (body !== undefined) opts.body = JSON.stringify(body);
+  if (body !== undefined) opts.body = form ? body : JSON.stringify(body);
 
   const resp = await fetch(path, opts);
 
@@ -74,6 +78,11 @@ export const apiClient = {
   put:    (path, body, opts)      => request(path, { ...opts, method: 'PUT', body }),
   patch:  (path, body, opts)      => request(path, { ...opts, method: 'PATCH', body }),
   delete: (path, opts)            => request(path, { ...opts, method: 'DELETE' }),
+  // 파일 업로드 (multipart/form-data) — body 는 FormData 인스턴스
+  postForm:  (path, formData, opts) =>
+    request(path, { ...opts, method: 'POST',  body: formData, form: true }),
+  patchForm: (path, formData, opts) =>
+    request(path, { ...opts, method: 'PATCH', body: formData, form: true }),
 };
 
 export default apiClient;

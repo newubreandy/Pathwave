@@ -27,6 +27,7 @@ import SystemHealth from './pages/SystemHealth.jsx';
 import Users from './pages/Users.jsx';
 import CostMonitor from './pages/CostMonitor.jsx';
 import Categories from './pages/Categories.jsx';
+import Themes from './pages/Themes.jsx';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -67,6 +68,7 @@ export default function App() {
           <Route path="/dashboard/users" element={<Users />} />
           <Route path="/dashboard/cost-monitor" element={<CostMonitor />} />
           <Route path="/dashboard/categories" element={<Categories />} />
+          <Route path="/dashboard/themes" element={<Themes />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
