@@ -86,6 +86,15 @@ export const adminApi = {
   batteryHistory: (bid, limit = 100) =>
     apiClient.get(`/api/admin/beacons/${bid}/battery-history?limit=${limit}`),
 
+  // 시즌 배경 테마 — 사용자 앱 글래스모피즘 BG (무재배포 운영)
+  listThemes:    () => apiClient.get('/api/admin/themes'),
+  createTheme:   (formData) => apiClient.postForm('/api/admin/themes', formData),
+  updateTheme:   (tid, formData) =>
+    apiClient.patchForm(`/api/admin/themes/${tid}`, formData),
+  activateTheme: (tid) =>
+    apiClient.post(`/api/admin/themes/${tid}/activate`, {}),
+  deleteTheme:   (tid) => apiClient.delete(`/api/admin/themes/${tid}`),
+
   // 시스템 공지 (PR #38)
   listAnnouncements: () => apiClient.get('/api/admin/announcements'),
   createAnnouncement: (payload) => apiClient.post('/api/admin/announcements', payload),
