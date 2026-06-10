@@ -54,7 +54,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
               ]);
             }
             return ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: EdgeInsets.fromLTRB(0, 8, 0,
+                  8 + MediaQuery.of(context).viewPadding.bottom),
               itemCount: list.length,
               separatorBuilder: (_, _) => const Divider(height: 1, color: AppTheme.border),
               itemBuilder: (context, i) => _RoomTile(room: list[i]),

@@ -20,6 +20,7 @@ import 'package:provider/provider.dart';
 import '../services/theme_service.dart';
 import '../utils/api_config.dart';
 import '../utils/season.dart';
+import 'seasonal_particles.dart';
 
 class SeasonalBackground extends StatelessWidget {
   final Widget child;
@@ -36,11 +37,17 @@ class SeasonalBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.watch<ThemeService>();
+    final t = theme.activeTheme;
+    final hasImage = t != null && t.imageUrl.isNotEmpty;
     return Stack(
       fit: StackFit.expand,
       children: [
         _buildBackground(theme),
         if (applyOverlay) _buildOverlay(theme),
+        // ⭐ 등록 이미지가 있으면 코드 파티클을 그리지 않는다.
+        //   이미지에 이미 꽃잎/잎/단풍/눈이 포함돼 있어, 덧그리면 이중으로 겹쳐 보인다.
+        //   fallback 그라데이션일 때만 계절감 보조로 파티클을 표시한다.
+        if (!hasImage) SeasonalParticles(season: theme.season),
         child,
       ],
     );
@@ -70,7 +77,16 @@ class SeasonalBackground extends StatelessWidget {
   }
 
   Widget _buildOverlay(ThemeService svc) {
-    final alpha = svc.activeTheme?.overlayAlpha ?? 0.45;
+    // 가독성 보정 오버레이.
+    //   - 서버 등록 이미지가 있을 때: 슈퍼어드민이 설정한 overlay_alpha (기본 0.45).
+    //     이미지가 화려할 수 있어 가독성 보호 필요.
+    //   - 이미지 없이 fallback 그라데이션일 때: 0.15 (약하게).
+    //     그라데이션 자체가 강렬할 수 있지만 지나친 어둠은 화면을 검게 만든다.
+    final hasImage = svc.activeTheme != null && svc.activeTheme!.imageUrl.isNotEmpty;
+    final alpha = hasImage
+        ? (svc.activeTheme?.overlayAlpha ?? 0.45)
+        : 0.15;
+    if (alpha <= 0.001) return const SizedBox.shrink();
     return Positioned.fill(
       child: IgnorePointer(
         child: ColoredBox(

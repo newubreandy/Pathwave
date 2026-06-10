@@ -3,9 +3,14 @@ import { useNavigate } from 'react-router-dom';
 
 /**
  * PR #65 — 미리보기 모드 (운영자 콘솔 / 실서버 검증용 임시 UI).
- * 활성: `VITE_PREVIEW_MODE=true` 일 때만.
+ * 활성: `VITE_PREVIEW_MODE=true` 이며 MODE 가 production 이 아닐 때만.
+ *
+ * P4 강화(2026-06-08) — MODE='production' 이면 ENV 와 무관하게 강제 비활성.
  */
-const PREVIEW = import.meta.env.VITE_PREVIEW_MODE === 'true';
+const PREVIEW = (
+  import.meta.env.VITE_PREVIEW_MODE === 'true' &&
+  import.meta.env.MODE !== 'production'
+);
 
 const PAGES = [
   ['/dashboard',                '대시보드'],

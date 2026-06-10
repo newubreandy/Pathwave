@@ -24,6 +24,7 @@ _DEEPL_TARGET = {
     'ja':    'JA',
     'zh-CN': 'ZH-HANS',
     'zh-TW': 'ZH-HANT',
+    'zh-HK': 'ZH-HANT',   # 홍콩 — DeepL 미지원, 번체로 fallback (한자 호환)
     'vi':    'VI',
     'th':    'TH',
     'tl':    'EN-US',     # DeepL 미지원 — fallback 으로 영어 (메모리 i18n 전략의 한계 사항)
@@ -44,13 +45,21 @@ _DEEPL_TARGET = {
     'sv':    'SV',
 }
 
-# memory 의 Phase 1 (10개) + Phase 2 (13개) 합 23개 — supported langs single source of truth.
+# Phase 1 = 12개 (사용자 결정 2026-06-08: 중국어 3종 + 러시아어 포함)
+# Phase 2 = 12개 추가. 합 24개 — supported langs single source of truth.
 SUPPORTED_LANGS = (
-    # Phase 1
-    'ko', 'en', 'zh-CN', 'ja', 'zh-TW', 'vi', 'th', 'tl', 'id', 'ms',
-    # Phase 2
-    'ru', 'hi', 'es', 'de', 'fr', 'pt', 'it', 'nl', 'pl',
+    # Phase 1 (12)
+    'ko', 'en', 'zh-CN', 'zh-TW', 'zh-HK', 'ja',
+    'vi', 'th', 'tl', 'id', 'ms', 'ru',
+    # Phase 2 (12)
+    'hi', 'es', 'de', 'fr', 'pt', 'it', 'nl', 'pl',
     'ar', 'tr', 'he', 'sv',
+)
+
+# Phase 1 그룹 — 12개. mobile 시드 / 어드민 필수 검수 대상.
+PHASE1_LANGS = (
+    'ko', 'en', 'zh-CN', 'zh-TW', 'zh-HK', 'ja',
+    'vi', 'th', 'tl', 'id', 'ms', 'ru',
 )
 
 

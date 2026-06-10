@@ -72,8 +72,8 @@ class _PwFooterState extends State<PwFooter> {
         && address.isEmpty && phone.isEmpty && hosting.isEmpty;
 
     return PwCard(
+      // color 미지정 → PwCard 글래스 디폴트 (흰 글래스 + blur + 흰 보더).
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      color: AppTheme.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -130,7 +130,8 @@ class _PwFooterState extends State<PwFooter> {
           ],
 
           const SizedBox(height: 14),
-          const Divider(color: AppTheme.border, height: 1),
+          // 색 미지정 → NeuTheme.dividerTheme (흰 14%) 자동 적용.
+          const Divider(height: 1),
           const SizedBox(height: 14),
 
           // 약관 + 지원 링크 (clickable)
@@ -233,12 +234,13 @@ class _PolicyLink extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         child: Text(
           label,
+          // 가이드 — 푸터 링크 흰 (보라 → 흰 통일).
           style: TextStyle(
-            color: AppTheme.primaryLight,
+            color: Colors.white,
             fontSize: 12,
             fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
             decoration: TextDecoration.underline,
-            decorationColor: AppTheme.primaryLight,
+            decorationColor: Colors.white,
           ),
         ),
       ),

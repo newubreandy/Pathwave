@@ -82,7 +82,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       appBar: PwAppBar(title: Text(context.t('mobile.settings.change_password.title', defaultValue: '비밀번호 변경'))),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.fromLTRB(20, 20, 20,
+              20 + MediaQuery.of(context).viewPadding.bottom),
           child: Form(
             key: _formKey,
             child: Column(

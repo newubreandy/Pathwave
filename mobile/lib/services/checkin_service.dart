@@ -3,15 +3,12 @@
 /// 백엔드 routes/checkin.py 호출 헬퍼.
 /// - issueMemberQr() — 본인 회원 QR 토큰 발급 (60초 유효)
 ///
+/// 2026-06-09: 토큰 저장소를 AuthService 와 일치시키기 위해 ApiClient 패턴으로 통일.
+/// (기존 SharedPreferences 'access_token' 키는 AuthService 가 사용하지 않아 미스매치)
 /// 점주 측 verify 는 provider-web 에서 호출 (mobile 미사용).
 library;
 
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../utils/api_config.dart';
+import 'api_client.dart';
 
 class CheckinService {
   /// 본인 회원 QR 토큰 발급. 60초 유효.
@@ -19,33 +16,15 @@ class CheckinService {
   /// 반환: { token, expiresIn }
   /// 실패 시 [Exception] throw.
   Future<({String token, int expiresIn})> issueMemberQr() async {
-    final prefs = await SharedPreferences.getInstance();
-    final access = prefs.getString('access_token');
-    if (access == null || access.isEmpty) {
-      throw Exception('로그인이 필요합니다.');
+    final data = await ApiClient.instance.post('/api/checkin/member-qr');
+    if (data['success'] != true) {
+      throw Exception(data['message']?.toString() ?? '회원 QR 발급 실패');
     }
-
-    final uri = Uri.parse('${ApiConfig.baseUrl}/api/checkin/member-qr');
-    final res = await http.post(
-      uri,
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': 'Bearer $access',
-      },
-    );
-
-    if (res.statusCode != 200) {
-      throw Exception('회원 QR 발급 실패 (${res.statusCode}): ${res.body}');
-    }
-
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (body['success'] != true) {
-      throw Exception(body['message']?.toString() ?? '회원 QR 발급 실패');
-    }
-
+    final token = data['token']?.toString() ?? '';
+    final exp = data['expires_in'];
     return (
-      token:     body['token'] as String,
-      expiresIn: body['expires_in'] as int,
+      token:     token,
+      expiresIn: exp is int ? exp : (exp is num ? exp.toInt() : 60),
     );
   }
 }

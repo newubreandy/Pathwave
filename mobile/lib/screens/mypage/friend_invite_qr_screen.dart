@@ -10,11 +10,12 @@
 /// v1 = 구조 (rewarded=0) 만. 실제 보상 종류·예산·매장 정산은 2차 슈퍼어드민에서 결정.
 library;
 
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 
 import '../../utils/error_message.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../services/friend_invite_service.dart';
@@ -22,6 +23,7 @@ import '../../services/i18n_service.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/i18n_context.dart';
 import '../../widgets/pw.dart';
+// (pw.dart barrel — PwDialog 등 포함)
 
 const String _signupBaseUrl = 'https://pathwave.co.kr/signup';
 
@@ -48,7 +50,9 @@ class _FriendInviteQrScreenState extends State<FriendInviteQrScreen> {
     try {
       final res = await FriendInviteService().createQrInvite();
       if (!mounted) return;
-      final code = res['code']?.toString();
+      // 2026-06-09 — 백엔드 응답: { success, invitation: { code, share_url, ... } }
+      final inv = res['invitation'] as Map?;
+      final code = inv?['code']?.toString();
       if (code == null) throw Exception('초대 코드 발급 실패');
       setState(() {
         _code = code;
@@ -95,27 +99,44 @@ class _FriendInviteQrScreenState extends State<FriendInviteQrScreen> {
               if (_busy && _code == null)
                 const Center(child: CircularProgressIndicator())
               else if (_error != null)
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.error.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(_error!, style: const TextStyle(color: AppTheme.error)),
+                // 가이드 — 안내/경고는 박스 없이 평문 흰. ※ prefix.
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text('※ ${_error!}',
+                    style: const TextStyle(color: Colors.white, height: 1.5, fontSize: 13)),
                 )
               else if (_signupUrl != null)
                 Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: QrImageView(
-                      data: _signupUrl!,
-                      version: QrVersions.auto,
-                      size: 240,
-                      backgroundColor: Colors.white,
+                  // 검은 글래스 + 흰 QR — 회원 QR 화면과 동일 가이드 (2026-06-09).
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.28),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.18),
+                            width: 1,
+                          ),
+                        ),
+                        child: QrImageView(
+                          data: _signupUrl!,
+                          version: QrVersions.auto,
+                          size: 240,
+                          backgroundColor: Colors.transparent,
+                          eyeStyle: const QrEyeStyle(
+                            eyeShape: QrEyeShape.square,
+                            color: Colors.white,
+                          ),
+                          dataModuleStyle: const QrDataModuleStyle(
+                            dataModuleShape: QrDataModuleShape.square,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -156,13 +177,8 @@ class _FriendInviteQrScreenState extends State<FriendInviteQrScreen> {
                 style: const TextStyle(fontSize: 12, color: AppTheme.textHint),
               ),
 
-              const Spacer(),
-
-              PwButton(
-                variant: PwButtonVariant.text,
-                onPressed: () => context.pop(),
-                child: Text(context.t('mobile.common.close', defaultValue: '닫기')),
-              ),
+              // 하단 "닫기" 제거 — PwAppBar 의 ← 백 버튼으로 동일 동작.
+              // 중복 액션이라 시각적으로 어색했다.
             ],
           ),
         ),

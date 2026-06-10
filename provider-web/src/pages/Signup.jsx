@@ -5,9 +5,16 @@ import ConsentSection from '../components/ConsentSection';
 import { useConfirm } from '../hooks/useConfirm';
 import './Signup.css';
 
-// 출시 전 임시 — 사업자 검증 없이 시설관리자 콘솔을 둘러볼 수 있게.
-// 운영 출범 후에는 이 함수와 .signup-guest 영역 제거.
+// P4 (2026-06-08) — 출시 빌드에서는 자동 차단.
+// VITE_PREVIEW_MODE=true (개발/스테이지) 일 때만 게스트 진입 허용.
+// 운영 빌드(MODE='production') 에서는 button 자체 미렌더 + 함수 호출도 무효화.
+const ALLOW_GUEST = (
+  import.meta.env.VITE_PREVIEW_MODE === 'true' &&
+  import.meta.env.MODE !== 'production'
+);
+
 function enterAsGuest(navigate) {
+  if (!ALLOW_GUEST) return;   // 운영 빌드 안전망
   localStorage.setItem('pathwave_token', 'preview-mode-fake-token');
   localStorage.setItem('pathwave_user', JSON.stringify({
     id: 0, email: 'guest@dev.local', name: '게스트',
@@ -164,15 +171,18 @@ const Signup = () => {
           </button>
         </form>
         
-        <div className="signup-guest">
-          <button
-            type="button"
-            className="btn-guest"
-            onClick={() => enterAsGuest(navigate)}
-          >
-            로그인 없이 이용
-          </button>
-        </div>
+        {/* P4 (2026-06-08) — 운영 빌드에서는 게스트 영역 자체 미렌더. */}
+        {ALLOW_GUEST && (
+          <div className="signup-guest">
+            <button
+              type="button"
+              className="btn-guest"
+              onClick={() => enterAsGuest(navigate)}
+            >
+              로그인 없이 이용
+            </button>
+          </div>
+        )}
       </div>
       {confirmModal}
     </div>

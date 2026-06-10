@@ -385,6 +385,26 @@ def get_my_notification_quota(fid):
 
 # ── 사용자 인박스 ────────────────────────────────────────────────────────────
 
+@notification_bp.route('/api/users/me/notifications/unread-count', methods=['GET'])
+@require_auth(sub_type='user')
+def my_notifications_unread_count():
+    """본인 미읽음 알림 개수 (2026-06-08).
+
+    탭/AppBar 뱃지용. body = ``{ success: true, count: int }``.
+    """
+    user_id = g.auth['user_id']
+    db = get_db()
+    row = db.execute(
+        """SELECT COUNT(*) AS c
+             FROM notification_recipients r
+             JOIN notifications n ON r.notification_id = n.id
+            WHERE r.user_id=? AND n.status='sent' AND r.read_at IS NULL""",
+        (user_id,)
+    ).fetchone()
+    db.close()
+    return jsonify({'success': True, 'count': int(row['c'] or 0)})
+
+
 @notification_bp.route('/api/users/me/notifications', methods=['GET'])
 @require_auth(sub_type='user')
 def my_notifications():

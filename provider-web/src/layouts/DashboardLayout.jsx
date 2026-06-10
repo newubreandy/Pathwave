@@ -63,28 +63,53 @@ const DashboardLayout = () => {
     };
   }, []);
 
-  // 전체 메뉴 항목 (오버레이 전체 메뉴용 — 설정 포함)
-  const allNavItems = [
-    { path: '/dashboard/chat', label: t('menu.chat', '채팅') },
-    { path: '/dashboard/store', label: t('menu.store', '매장안내') },
-    // 매장 다국어 관리 메뉴 제거 (2026-05-27) — 다국어는 백엔드 자동 번역 (DeepL)
-    { path: '/dashboard/menu', label: t('menu.menuManagement', '메뉴 관리') },
-    { path: '/dashboard/wifi', label: t('menu.wifi', '와이파이') },
-    { path: '/dashboard/stamps', label: t('menu.stamps', '스탬프') },
-    { path: '/dashboard/coupons', label: t('menu.coupons', '쿠폰') },
-    { path: '/dashboard/notifications', label: t('menu.notifications', '알림발송') },
-    { path: '/dashboard/report', label: t('menu.report', '리포트') },
-    { path: '/dashboard/staff', label: t('menu.staff', '직원 관리') },
-    { path: '/dashboard/payments', label: t('menu.payments', '결제관리') },
-    { path: '/dashboard/service-request', label: t('menu.serviceRequest', '서비스 신청') },
-    { path: '/dashboard/support', label: t('menu.support', '고객센터') },
-    { path: '/dashboard/settings', label: t('menu.settings', '설정') },
+  // IA 감사 2026-06-09 — 13항목 1차원 → 4 그룹화 + 중복 해소
+  // (P1 채팅 마케팅 그룹으로 이동, P2 staff GNB 중복 제거는 아래 GNB 영역 처리,
+  //  P3 설정은 GNB 만 유지하기 위해 메인 메뉴에서 제거, P4 알림 라벨 명확화.)
+  const navGroups = [
+    {
+      key: 'store',
+      label: t('menu.group.store', '매장 운영'),
+      items: [
+        { path: '/dashboard/store',        label: t('menu.store',         '매장 관리') },   // P6 라벨 변경
+        { path: '/dashboard/menu',         label: t('menu.menuManagement','메뉴 관리') },
+        { path: '/dashboard/wifi',         label: t('menu.wifi',          '와이파이') },
+      ],
+    },
+    {
+      key: 'marketing',
+      label: t('menu.group.marketing', '마케팅'),
+      items: [
+        { path: '/dashboard/chat',          label: t('menu.chat',          '채팅') },
+        { path: '/dashboard/stamps',        label: t('menu.stamps',        '스탬프') },
+        { path: '/dashboard/coupons',       label: t('menu.coupons',       '쿠폰') },
+        { path: '/dashboard/notifications', label: t('menu.notifications', '알림 발송') },
+      ],
+    },
+    {
+      key: 'ops',
+      label: t('menu.group.ops', '운영'),
+      items: [
+        { path: '/dashboard/report',          label: t('menu.report',         '리포트') },
+        { path: '/dashboard/payments',        label: t('menu.payments',       '결제 관리') },
+        { path: '/dashboard/service-request', label: t('menu.serviceRequest', '서비스 신청') },
+        { path: '/dashboard/staff',           label: t('menu.staff',          '직원 관리') },
+      ],
+    },
+    {
+      key: 'support',
+      label: t('menu.group.support', '지원'),
+      items: [
+        { path: '/dashboard/support', label: t('menu.support', '고객센터') },
+      ],
+    },
   ];
 
-  // GNB 수평 메뉴 항목 (설정/직원관리 제외 — PC/모바일 모두 아이콘으로 접근)
-  const gnbNavItems = allNavItems.filter(
-    item => item.path !== '/dashboard/settings' && item.path !== '/dashboard/staff'
-  );
+  // 평탄화 — 현재 페이지 매칭 등 호환용.
+  const allNavItems = navGroups.flatMap(g => g.items);
+
+  // GNB 수평 메뉴 항목 — 메인 메뉴에서 설정 이미 제거됨. 변경 X.
+  const gnbNavItems = allNavItems;
 
   const currentNav = allNavItems.find(item => item.path !== '/dashboard' && location.pathname.startsWith(item.path));
   
@@ -106,7 +131,10 @@ const DashboardLayout = () => {
               {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
 
-            <Link to="/dashboard" className="gnb-logo">PathWave</Link>
+            <Link to="/dashboard" className="gnb-logo" aria-label="pathwave"
+                  style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <img src="/pathwave_lockup.svg" alt="pathwave" style={{ height: 26, display: 'block' }} />
+            </Link>
             
             <div className="gnb-actions">
               {/* Notification Center 진입점 (사용자 요구 2026-05-10) — Bell + unread badge */}
@@ -122,15 +150,9 @@ const DashboardLayout = () => {
                   </span>
                 )}
               </button>
-              {/* PC+모바일 공통: 사람 아이콘 (회원정보/직원관리) + 설정 아이콘.
-                  2026-05-27: navigate 후 blur() — focus outline 잔존 방지 (마우스 클릭 시 강조 X) */}
-              <button
-                className="gnb-icon-btn"
-                onClick={(e) => { navigate('/dashboard/staff'); setIsMenuOpen(false); e.currentTarget.blur(); }}
-                aria-label="회원정보/직원관리"
-              >
-                <User size={20} />
-              </button>
+              {/* IA 감사 2026-06-09 — P2 중복 해소: GNB 의 직원 관리 아이콘 제거.
+                  직원 관리는 메인 LNB "운영" 그룹에서 진입한다.
+                  설정은 GNB 만 유지 (글로벌 도구) — 메인 메뉴에서 제거됨. */}
               <button
                 className="gnb-icon-btn"
                 onClick={(e) => { navigate('/dashboard/settings'); setIsMenuOpen(false); e.currentTarget.blur(); }}

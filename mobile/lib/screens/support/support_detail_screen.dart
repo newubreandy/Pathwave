@@ -129,7 +129,8 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
                             style: const TextStyle(color: AppTheme.textSecondary)),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                        padding: EdgeInsets.fromLTRB(16, 12, 16,
+                            12 + MediaQuery.of(context).viewPadding.bottom),
                         itemCount: messages.length,
                         itemBuilder: (context, i) {
                           final m = messages[i];

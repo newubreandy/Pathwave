@@ -217,14 +217,16 @@
   color: var(--primary) !important;
 }
 
+/* 2026-06-10 — 다크 테마 가이드 통일 (Stamps .empty-state 기준).
+   기존 라이트 톤(#F8FAFC) → surface + dashed border + text-secondary. */
 .empty-benefits {
-  padding: 2rem;
-  background: #F8FAFC;
-  border-radius: 12px;
+  padding: var(--pw-space-16) var(--pw-space-8);
+  background: var(--pw-surface);
+  border-radius: var(--pw-radius-md);
   text-align: center;
-  color: #94A3B8;
-  font-size: 0.95rem;
-  border: 1px dashed #E2E8F0;
+  color: var(--pw-text-secondary);
+  font-size: var(--pw-body-size);
+  border: 1px dashed var(--pw-gray-300);
 }
 
 /* 값 표시 — 공통 .info-value 정렬 (22px / 300 / 흰색) */

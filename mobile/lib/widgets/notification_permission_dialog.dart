@@ -28,11 +28,11 @@ class NotificationPermissionDialog extends StatefulWidget {
   static Future<void> showIfNeeded(BuildContext context) async {
     if (!await shouldShow()) return;
     if (!context.mounted) return;
-    await showDialog<void>(
+    // 공통 가이드 — showPwDialogWidget (흰 글래스 + 블러 딤)
+    await showPwDialogWidget<void>(
       context: context,
-      barrierColor: const Color(0x99000000),
       barrierDismissible: false,
-      builder: (_) => const NotificationPermissionDialog(),
+      child: const NotificationPermissionDialog(),
     );
   }
 
@@ -69,13 +69,8 @@ class _NotificationPermissionDialogState
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: AppTheme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Text(
-        _t.t('notif.permission_title', defaultValue: '알림 수신 동의'),
-        style: const TextStyle(fontWeight: FontWeight.w700),
-      ),
+    return PwDialog(
+      title: Text(_t.t('notif.permission_title', defaultValue: '알림 수신 동의')),
       content: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,7 +86,7 @@ class _NotificationPermissionDialogState
                     '· 마케팅 혜택 정보 (별도 동의 시)',
               ),
               style: const TextStyle(
-                color: AppTheme.textSecondary,
+                color: Colors.white,
                 height: 1.55,
                 fontSize: 14,
               ),

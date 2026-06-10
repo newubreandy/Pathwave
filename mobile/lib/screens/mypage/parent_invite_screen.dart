@@ -94,20 +94,22 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
           ),
         ),
         const SizedBox(height: 16),
+        // 공통 가이드 — raw Checkbox (글로벌 NeuTheme.checkboxTheme 자동 적용)
         InkWell(
           onTap: () => setState(() => _liabilityAccepted = !_liabilityAccepted),
           child: Padding(
             padding: const EdgeInsets.all(8),
             child: Row(
               children: [
-                Icon(
-                  _liabilityAccepted ? Icons.check_circle : Icons.radio_button_unchecked,
-                  color: _liabilityAccepted ? AppTheme.primary : AppTheme.textHint,
+                Checkbox(
+                  value: _liabilityAccepted,
+                  onChanged: (v) => setState(() => _liabilityAccepted = v ?? false),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 6),
                 Expanded(
                   child: Text(context.t('mobile.parent_invite.agree', defaultValue: '위 책임 사항에 동의합니다.'),
-                    style: const TextStyle(fontSize: 14)),
+                    style: const TextStyle(fontSize: 14, color: Colors.white)),
                 ),
               ],
             ),

@@ -9,9 +9,11 @@ import 'services/auth_service.dart';
 import 'services/i18n_service.dart';
 import 'services/ble_service.dart';
 import 'services/theme_service.dart';
+import 'services/feature_service.dart';
 import 'utils/app_router.dart';
 import 'utils/neu_theme.dart';
 import 'widgets/dev_preview_bar.dart';
+import 'widgets/seasonal_background.dart';
 // P2 — Flutter 표준 ARB (코어 string + DB fetch 실패 시 fallback).
 // 실제 운영 텍스트는 I18nService(DB-driven).
 import 'l10n/app_localizations.dart';
@@ -39,6 +41,8 @@ void main() async {
   // 시즌 배경 테마 초기화 — 캐시 즉시 로드 + 백그라운드 fetch(1h TTL).
   // 슈퍼어드민이 admin-web 에서 변경 시 무재배포로 반영 (앱 재실행/pull-to-refresh).
   await ThemeService.instance.init();
+  // Feature Flag — 캐시 즉시 로드 + 백그라운드 fetch (2026-06-08).
+  await FeatureService.instance.init();
 
   // M4 (2026-05-29): Sentry 초기화 — 크래시/에러 추적.
   //   --dart-define=SENTRY_DSN=https://... 주입 시 활성, 미주입 시 자동 no-op.
@@ -76,13 +80,19 @@ class _PathWaveAppState extends State<PathWaveApp> {
         ChangeNotifierProvider<AuthService>.value(value: _auth),
         ChangeNotifierProvider(create: (_) => BleService()),
         ChangeNotifierProvider<ThemeService>.value(value: ThemeService.instance),
+        // Feature Flag (2026-06-08) — 백엔드 /api/me/features 와 동기.
+        ChangeNotifierProvider<FeatureService>.value(value: FeatureService.instance),
       ],
       child: MaterialApp.router(
         title: 'PathWave',
         debugShowCheckedModeBanner: false,
         theme: NeuTheme.themeData,
         routerConfig: _router,
-        builder: (context, child) => DevPreviewBar(child: child!),
+        // 전 화면 글로벌 시즌 배경 — 로그인/가입/모든 sub 페이지가 자동으로
+        // 같은 그라데이션·이미지 위에 글래스 카드를 얹는다. 디자인 일관성.
+        builder: (context, child) => DevPreviewBar(
+          child: SeasonalBackground(child: child!),
+        ),
 
         // 다국어 설정 — P2 단일화 (I18nService 의 23 언어와 통일)
         // 실제 운영 텍스트 = DB-driven I18nService (lib/services/i18n_service.dart)

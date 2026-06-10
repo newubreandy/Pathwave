@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -125,37 +126,20 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NeuTheme.background,
+      // 전 화면 글로벌 SeasonalBackground 적용 — Scaffold 는 투명 유지.
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-            Container(
-              width: 110, height: 110,
-              decoration: BoxDecoration(
-                color: NeuTheme.surface,
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: [NeuTheme.surfaceLight, NeuTheme.surface],
-                ),
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: NeuTheme.outerShadow(distance: 12, blur: 24),
-              ),
-              child: const Center(
-                child: Text(
-                  'PW',
-                  style: TextStyle(
-                    fontSize: 40, fontWeight: FontWeight.w800,
-                    color: NeuTheme.primary,
-                  ),
-                ),
-              ),
+            // 2026-06-10 — 가로 lockup (마크 + wordmark 결합) 단일 SVG.
+            SvgPicture.asset(
+              'assets/brand_logos/pathwave_lockup.svg',
+              height: 72,
+              semanticsLabel: 'pathwave',
             ),
-            const SizedBox(height: 28),
-            Text('PathWave',
-              style: Theme.of(context).textTheme.displaySmall),
-            const SizedBox(height: 6),
+            const SizedBox(height: 16),
             Text(context.t('mobile.splash.tagline',
                 defaultValue: '비콘 기반 WiFi · 스탬프 · 쿠폰'),
               style: const TextStyle(color: NeuTheme.textSecondary)),

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../utils/error_message.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart' as latlng;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../services/favorite_service.dart';
@@ -89,7 +91,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(child: RefreshIndicator(
+      // 2026-06-09 — SafeArea 제거: SliverAppBar 가 top 자동 처리, bottom 은 마지막 SliverPadding 으로.
+      // SafeArea wrapping 시 SliverAppBar/CustomScrollView 의 viewport 가 padding 흡수 → 잘림 버그.
+      body: RefreshIndicator(
         onRefresh: _refresh,
         child: FutureBuilder<Map<String, dynamic>>(
           future: _detail,
@@ -124,18 +128,29 @@ class _FacilityScreenState extends State<FacilityScreen> {
             return CustomScrollView(
               slivers: [
                 _buildAppBar(f),
+                SliverToBoxAdapter(child: _buildHeroImage(f)),
+                // 2026-06-09 — provider StoreInfo 와 노출 순서 통일.
+                // (1) 헤더 주소 (2) 연락처 (3) 영업시간+휴무 (4) 설명 (5) 메뉴
+                // (6) 혜택 (7) 추가 갤러리 (8) 지도
                 SliverToBoxAdapter(child: _buildHeader(f)),
-                SliverToBoxAdapter(child: _buildImages()),
-                SliverToBoxAdapter(child: _buildMenu()),
-                SliverToBoxAdapter(child: _buildHours(f)),
                 SliverToBoxAdapter(child: _buildContact(f)),
+                SliverToBoxAdapter(child: _buildHours(f)),
+                SliverToBoxAdapter(child: _buildDescription(f)),
+                SliverToBoxAdapter(child: _buildMenu()),
+                SliverToBoxAdapter(child: _buildBenefits(f)),
+                SliverToBoxAdapter(child: _buildImages()),
+                SliverToBoxAdapter(child: _buildMap(f)),
                 SliverToBoxAdapter(child: _buildActions(f)),
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                // 2026-06-09 — iPhone home indicator 영역 보정 (SafeArea 가 CustomScrollView 내부에 영향 안 미치는 케이스).
+                SliverToBoxAdapter(
+                  // viewPadding = SafeArea 가 흡수해도 원본 OS padding 유지.
+                  child: SizedBox(height: 24 + MediaQuery.of(context).viewPadding.bottom),
+                ),
               ],
             );
           },
         ),
-      )),
+      ),
     );
   }
 
@@ -153,10 +168,27 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
   SliverAppBar _buildAppBar(Map<String, dynamic> f) {
-    final imageUrl = f['image_url']?.toString();
+    // 2026-06-09 — 이미지를 헤더와 겹치지 않게 분리. AppBar 는 일반 높이만.
+    final name = f['name']?.toString() ?? '매장';
     return SliverAppBar(
-      expandedHeight: 220,
       pinned: true,
+      // 2026-06-09 — 상단 영역 글래스 톤 + 매장명 표시 (다른 상세 패턴 통일).
+      backgroundColor: Colors.white.withValues(alpha: 0.12),
+      surfaceTintColor: Colors.transparent,
+      foregroundColor: Colors.white,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      title: Text(name,
+          style: const TextStyle(color: Colors.white,
+              fontWeight: FontWeight.w700, fontSize: 17)),
+      // 하단 1px 흰 보더 — 본문과 명확히 구분 (Border in shape: 가 SliverAppBar 에서 무시되는 케이스).
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(
+          height: 1,
+          color: Colors.white.withValues(alpha: 0.22),
+        ),
+      ),
       leading: PwIconButton(
         icon: Icons.arrow_back,
         color: AppTheme.textPrimary,
@@ -178,33 +210,55 @@ class _FacilityScreenState extends State<FacilityScreen> {
           ),
         ),
       ],
-      flexibleSpace: FlexibleSpaceBar(
-        background: imageUrl != null && imageUrl.isNotEmpty
-          ? CachedNetworkImage(
-              imageUrl: imageUrl,
-              fit: BoxFit.cover,
-              errorWidget: (_, _, _) => Container(color: AppTheme.surfaceLight),
-            )
-          : Container(
-              color: AppTheme.surfaceLight,
-              child: const Icon(Icons.store, size: 64, color: AppTheme.textHint),
-            ),
-      ),
     );
   }
 
+  /// 매장 메인 이미지 — AppBar 와 겹치지 않게 별도 영역.
+  Widget _buildHeroImage(Map<String, dynamic> f) {
+    final imageUrl = f['image_url']?.toString();
+    return SizedBox(
+      height: 220,
+      width: double.infinity,
+      child: imageUrl != null && imageUrl.isNotEmpty
+          ? CachedNetworkImage(
+              imageUrl: imageUrl,
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+              errorWidget: (_, _, _) =>
+                  Container(color: Colors.white.withValues(alpha: 0.08)),
+            )
+          : Container(
+              color: Colors.white.withValues(alpha: 0.08),
+              child: const Icon(Icons.store, size: 64, color: AppTheme.textHint),
+            ),
+    );
+  }
+
+  /// 천단위 콤마 + "원" 표기. 비숫자/null 은 원본 문자열 그대로.
+  String _formatPrice(dynamic v) {
+    if (v == null) return '';
+    final s = v.toString();
+    final n = int.tryParse(s.replaceAll(RegExp(r'[^0-9-]'), ''));
+    if (n == null) return s;
+    final str = n.toString();
+    final buf = StringBuffer();
+    for (int i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) buf.write(',');
+      buf.write(str[i]);
+    }
+    return '${buf.toString()}원';
+  }
+
   Widget _buildHeader(Map<String, dynamic> f) {
-    final name = f['name']?.toString() ?? '매장';
-    final desc = f['description']?.toString() ?? '';
+    // 2026-06-09 — 매장명은 상단 AppBar 에 표시. 설명은 _buildDescription 으로 분리.
     final address = f['address']?.toString() ?? '';
+    if (address.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(name, style: Theme.of(context).textTheme.headlineMedium),
           if (address.isNotEmpty) ...[
-            const SizedBox(height: 6),
             Row(
               children: [
                 const Icon(Icons.place, size: 16, color: AppTheme.textHint),
@@ -214,12 +268,20 @@ class _FacilityScreenState extends State<FacilityScreen> {
               ],
             ),
           ],
-          if (desc.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(desc,
-              style: const TextStyle(color: AppTheme.textSecondary, height: 1.45)),
-          ],
         ],
+      ),
+    );
+  }
+
+  /// 매장 설명 — 별도 섹션 (영업시간 뒤·메뉴 앞).
+  Widget _buildDescription(Map<String, dynamic> f) {
+    final desc = f['description']?.toString() ?? '';
+    if (desc.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Text(
+        desc,
+        style: const TextStyle(color: AppTheme.textSecondary, height: 1.45),
       ),
     );
   }
@@ -239,18 +301,19 @@ class _FacilityScreenState extends State<FacilityScreen> {
               itemCount: list.length,
               separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (context, i) {
-                final url = list[i]['url']?.toString() ?? '';
+                // 2026-06-09 — backend 응답 키 정합: image_url 또는 url.
+                final url = (list[i]['image_url'] ?? list[i]['url'])?.toString() ?? '';
                 return ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: SizedBox(
                     width: 150, height: 110,
                     child: url.isEmpty
-                      ? Container(color: AppTheme.surfaceLight)
+                      ? Container(color: Colors.white.withValues(alpha: 0.08))
                       : CachedNetworkImage(
                           imageUrl: url,
                           fit: BoxFit.cover,
-                          placeholder: (_, _) => Container(color: AppTheme.surfaceLight),
-                          errorWidget: (_, _, _) => Container(color: AppTheme.surfaceLight),
+                          placeholder: (_, _) => Container(color: Colors.white.withValues(alpha: 0.08)),
+                          errorWidget: (_, _, _) => Container(color: Colors.white.withValues(alpha: 0.08)),
                         ),
                   ),
                 );
@@ -322,15 +385,16 @@ class _FacilityScreenState extends State<FacilityScreen> {
               const SizedBox(height: 8),
               Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.surface,
+                  color: Colors.white.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppTheme.border),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
                 ),
                 child: Column(
                   children: [
                     for (int i = 0; i < items.length; i++) ...[
-                      if (i > 0) const Divider(height: 1,
-                        color: AppTheme.border, indent: 12, endIndent: 12),
+                      if (i > 0) Divider(height: 1,
+                        color: Colors.white.withValues(alpha: 0.18),
+                        indent: 12, endIndent: 12),
                       Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 10),
@@ -360,11 +424,12 @@ class _FacilityScreenState extends State<FacilityScreen> {
                             ),
                             const SizedBox(width: 8),
                             // 가격은 항상 KRW (백엔드 정규화) — 환산/단위 변경 X
+                            // 2026-06-09 — 천단위 콤마 + "원" 단위 표기
                             Text(
-                              (items[i]['price'] ?? '').toString(),
+                              _formatPrice(items[i]['price']),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w600,
-                                color: AppTheme.primary,
+                                color: Colors.white,
                               ),
                             ),
                           ],
@@ -383,31 +448,152 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   Widget _buildHours(Map<String, dynamic> f) {
     final hours = f['business_hours'];
-    if (hours == null) return const SizedBox.shrink();
+    final holidays = (f['holidays'] as List?)?.cast<dynamic>() ?? const [];
+    if (hours == null && holidays.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppTheme.surface,
+          color: Colors.white.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.border),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              const Icon(Icons.access_time, size: 16, color: AppTheme.textSecondary),
-              const SizedBox(width: 6),
-              Text(context.t('mobile.facility.business_hours', defaultValue: '영업시간'),
-                style: const TextStyle(fontWeight: FontWeight.w600)),
-            ]),
-            const SizedBox(height: 8),
-            Text(
-              hours is Map ? hours.entries.map((e) => '${e.key}: ${e.value}').join('\n') : hours.toString(),
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-            ),
+            if (hours != null) ...[
+              Row(children: [
+                const Icon(Icons.access_time, size: 16, color: AppTheme.textSecondary),
+                const SizedBox(width: 6),
+                Text(context.t('mobile.facility.business_hours', defaultValue: '영업시간'),
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+              ]),
+              const SizedBox(height: 8),
+              Text(
+                hours is Map ? hours.entries.map((e) => '${e.key}: ${e.value}').join('\n') : hours.toString(),
+                style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              ),
+            ],
+            if (holidays.isNotEmpty) ...[
+              if (hours != null) const SizedBox(height: 12),
+              Row(children: [
+                const Icon(Icons.event_busy, size: 16, color: AppTheme.textSecondary),
+                const SizedBox(width: 6),
+                const Text('정기휴무',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+              ]),
+              const SizedBox(height: 8),
+              Text(
+                holidays.join(' · '),
+                style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              ),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+
+  /// 진행중 혜택 — welcome 쿠폰·스탬프·할인 카드 리스트.
+  Widget _buildBenefits(Map<String, dynamic> f) {
+    final benefits = (f['benefits'] as List?)?.cast<dynamic>() ?? const [];
+    if (benefits.isEmpty) return const SizedBox.shrink();
+    IconData iconFor(String kind) {
+      switch (kind) {
+        case 'stamp':   return Icons.approval;
+        case 'coupon':  return Icons.confirmation_number;
+        case 'welcome': return Icons.celebration;
+        default:        return Icons.card_giftcard;
+      }
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(children: [
+              Icon(Icons.card_giftcard, size: 16, color: AppTheme.textSecondary),
+              SizedBox(width: 6),
+              Text('진행중인 혜택', style: TextStyle(fontWeight: FontWeight.w600)),
+            ]),
+            const SizedBox(height: 10),
+            for (final b in benefits) ...[
+              if (b != benefits.first)
+                Divider(
+                    height: 18,
+                    color: Colors.white.withValues(alpha: 0.18)),
+              Row(children: [
+                Container(
+                  width: 32, height: 32,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppTheme.primary.withValues(alpha: 0.85),
+                        AppTheme.primary.withValues(alpha: 0.45),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.28)),
+                  ),
+                  child: Icon(
+                      iconFor((b is Map ? b['kind']?.toString() : null) ?? ''),
+                      size: 18, color: Colors.white),
+                ),
+                const SizedBox(width: 10),
+                Expanded(child: Text(
+                  (b is Map ? b['title']?.toString() : b.toString()) ?? '',
+                  style: const TextStyle(
+                      color: Colors.white, fontSize: 13.5),
+                )),
+              ]),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// OSM 매장 위치 지도 (2026-06-09). lat/lng 없으면 미표시.
+  /// flutter_map + OpenStreetMap tile — Google Maps 비용 회피.
+  Widget _buildMap(Map<String, dynamic> f) {
+    final lat = (f['lat'] ?? f['latitude']) as num?;
+    final lng = (f['lng'] ?? f['longitude']) as num?;
+    if (lat == null || lng == null) return const SizedBox.shrink();
+    final pos = latlng.LatLng(lat.toDouble(), lng.toDouble());
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          height: 180,
+          child: FlutterMap(
+            options: MapOptions(initialCenter: pos, initialZoom: 16),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.triggersoft.pathwave',
+              ),
+              MarkerLayer(markers: [
+                Marker(
+                  point: pos,
+                  width: 36, height: 36,
+                  child: const Icon(Icons.location_on,
+                      color: AppTheme.primary, size: 36),
+                ),
+              ]),
+            ],
+          ),
         ),
       ),
     );
@@ -424,9 +610,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppTheme.surface,
+            color: Colors.white.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.border),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
           ),
           child: Row(
             children: [

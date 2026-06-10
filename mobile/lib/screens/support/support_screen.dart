@@ -1,8 +1,13 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../services/abuse_report_service.dart';
 import '../../services/i18n_service.dart';
+import '../../services/store_service.dart';
 import '../../services/support_service.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/i18n_context.dart';
@@ -58,6 +63,7 @@ class _SupportScreenState extends State<SupportScreen>
     return Scaffold(
       appBar: PwAppBar(
         title: Text(context.t('mobile.support.title', defaultValue: '고객센터')),
+        // 색상/인디케이터는 NeuTheme.tabBarTheme 글로벌 정책 따름 (흰 톤 통일).
         bottom: TabBar(
           controller: _tabCtrl,
           tabs: const [
@@ -65,9 +71,6 @@ class _SupportScreenState extends State<SupportScreen>
             Tab(text: '내 문의'),
             Tab(text: '신고하기'),
           ],
-          indicatorColor: AppTheme.primary,
-          labelColor: AppTheme.primary,
-          unselectedLabelColor: AppTheme.textSecondary,
         ),
       ),
       body: SafeArea(child: TabBarView(
@@ -141,18 +144,17 @@ class _FaqTabState extends State<_FaqTab> {
         // ── 영업시간 안내 카드 ────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          // 가이드 — 흰 글래스(PwCard 디폴트) + 흰 아이콘/텍스트
           child: PwCard(
             padding: const EdgeInsets.all(12),
-            color: AppTheme.primary.withValues(alpha: 0.1),
-            border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
             child: const Row(
               children: [
-                Icon(Icons.access_time, size: 16, color: AppTheme.primary),
+                Icon(Icons.access_time, size: 16, color: Colors.white),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     '영업시간 평일 09:00–18:00 · 주말·공휴일 제외\n평균 응답시간 1–2 영업일',
-                    style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                    style: TextStyle(fontSize: 12, color: Colors.white, height: 1.4),
                   ),
                 ),
               ],
@@ -197,17 +199,20 @@ class _FaqTabState extends State<_FaqTab> {
               }
 
               return ListView(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                padding: EdgeInsets.fromLTRB(16, 0, 16,
+                    24 + MediaQuery.of(context).viewPadding.bottom),
                 children: [
                   for (final entry in grouped.entries) ...[
                     Padding(
                       padding: const EdgeInsets.only(top: 16, bottom: 8),
+                      // 카테고리 라벨 — 흰톤 통일 (가이드)
                       child: Text(
                         _categoryLabel(entry.key),
                         style: const TextStyle(
-                          color: AppTheme.primary,
-                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
                           fontSize: 13,
+                          letterSpacing: 0.3,
                         ),
                       ),
                     ),
@@ -262,15 +267,17 @@ class _FaqItemState extends State<_FaqItem> {
             children: [
               Row(
                 children: [
+                  // 가이드 — Q/A 마크 모두 흰톤 통일
                   const Text('Q', style: TextStyle(
-                    color: AppTheme.primary,
+                    color: Colors.white,
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
                   )),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(question,
-                        style: const TextStyle(fontWeight: FontWeight.w500)),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w500, color: Colors.white)),
                   ),
                   Icon(
                     _expanded ? Icons.expand_less : Icons.expand_more,
@@ -279,12 +286,13 @@ class _FaqItemState extends State<_FaqItem> {
                 ],
               ),
               if (_expanded) ...[
-                const Divider(height: 16, color: AppTheme.border),
+                // 색 미지정 — 글로벌 dividerTheme(흰 14%) 적용
+                const Divider(height: 16),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('A', style: TextStyle(
-                      color: AppTheme.success,
+                      color: Colors.white,
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
                     )),
@@ -292,7 +300,7 @@ class _FaqItemState extends State<_FaqItem> {
                     Expanded(
                       child: Text(answer,
                           style: const TextStyle(
-                              color: AppTheme.textSecondary, height: 1.5)),
+                              color: Colors.white70, height: 1.5)),
                     ),
                   ],
                 ),
@@ -330,15 +338,10 @@ class _MyTicketsTabState extends State<_MyTicketsTab> {
   }
 
   void _openCreate() {
-    showModalBottomSheet(
+    // 공통 가이드 — showPwSheet (흰 글래스 + 블러 딤)
+    showPwSheet(
       context: context,
-      isScrollControlled: true,
-      barrierColor: const Color(0x99000000),
-      backgroundColor: AppTheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => _CreateTicketSheet(
+      child: _CreateTicketSheet(
         onCreated: () {
           setState(() { _load(); });
         },
@@ -409,7 +412,8 @@ class _MyTicketsTabState extends State<_MyTicketsTab> {
               return RefreshIndicator(
                 onRefresh: () async => setState(() { _load(); }),
                 child: ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  padding: EdgeInsets.fromLTRB(16, 0, 16,
+                      24 + MediaQuery.of(context).viewPadding.bottom),
                   itemCount: tickets.length,
                   itemBuilder: (context, i) {
                     final t = tickets[i];
@@ -660,10 +664,19 @@ class _ReportTab extends StatefulWidget {
 
 class _ReportTabState extends State<_ReportTab> {
   final _formKey = GlobalKey<FormState>();
-  final _targetIdCtrl = TextEditingController();
+  final _facilityQueryCtrl = TextEditingController();
   final _detailCtrl = TextEditingController();
-  String _targetKind = 'facility';
+
+  // 사용자 앱 정책 — 신고 대상은 시설(매장)만. _targetKind 고정.
+  Map<String, dynamic>? _selectedFacility;     // 선택된 시설
+  List<Map<String, dynamic>> _searchResults = [];
+  bool _searching = false;
+  Timer? _debounce;
+
   String _reasonCode = 'spam';
+  final List<XFile> _attachments = [];          // 최대 3장
+  static const int _maxAttachments = 3;
+
   bool _loading = false;
 
   static const _reasons = [
@@ -677,39 +690,114 @@ class _ReportTabState extends State<_ReportTab> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialTargetKind != null) {
-      _targetKind = widget.initialTargetKind!;
-    }
+    // initialTargetId 가 들어오면 시설 정보 조회 후 자동 선택(딥링크 진입 시).
     if (widget.initialTargetId != null) {
-      _targetIdCtrl.text = widget.initialTargetId!.toString();
+      _preloadFacility(widget.initialTargetId!);
     }
+  }
+
+  Future<void> _preloadFacility(int id) async {
+    try {
+      final f = await StoreService().get(id);
+      if (!mounted || f.isEmpty) return;
+      setState(() => _selectedFacility = f);
+    } catch (_) {}
   }
 
   @override
   void dispose() {
-    _targetIdCtrl.dispose();
+    _debounce?.cancel();
+    _facilityQueryCtrl.dispose();
     _detailCtrl.dispose();
     super.dispose();
   }
 
+  void _onQueryChanged(String q) {
+    _debounce?.cancel();
+    final query = q.trim();
+    if (query.length < 2) {
+      setState(() => _searchResults = []);
+      return;
+    }
+    _debounce = Timer(const Duration(milliseconds: 350), () async {
+      if (!mounted) return;
+      setState(() => _searching = true);
+      try {
+        final results = await StoreService().search(q: query, limit: 8);
+        if (!mounted) return;
+        setState(() => _searchResults = results);
+      } catch (_) {
+        if (!mounted) return;
+        setState(() => _searchResults = []);
+      } finally {
+        if (mounted) setState(() => _searching = false);
+      }
+    });
+  }
+
+  Future<void> _openConfirmDialog(Map<String, dynamic> facility) async {
+    // 공통 가이드 — showPwDialogWidget (흰 글래스 + 블러 딤)
+    final confirmed = await showPwDialogWidget<bool>(
+      context: context,
+      child: _FacilityConfirmDialog(facility: facility),
+    );
+    if (confirmed == true && mounted) {
+      setState(() {
+        _selectedFacility = facility;
+        _facilityQueryCtrl.clear();
+        _searchResults = [];
+      });
+    }
+  }
+
+  Future<void> _addAttachment() async {
+    if (_attachments.length >= _maxAttachments) return;
+    try {
+      final picked = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1600,
+        imageQuality: 80,
+      );
+      if (picked != null && mounted) {
+        setState(() => _attachments.add(picked));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('사진을 불러오지 못했습니다: $e')),
+      );
+    }
+  }
+
+  void _removeAttachment(int i) {
+    setState(() => _attachments.removeAt(i));
+  }
+
   Future<void> _submit() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-    final tid = int.tryParse(_targetIdCtrl.text.trim());
-    if (tid == null) return;
+    if (_selectedFacility == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('신고할 시설을 먼저 선택해 주세요.')),
+      );
+      return;
+    }
+    final tid = (_selectedFacility!['id'] as num).toInt();
 
     setState(() => _loading = true);
     try {
       await AbuseReportService().report(
-        targetKind: _targetKind,
+        targetKind: 'facility',
         targetId: tid,
         reasonCode: _reasonCode,
         detail: _detailCtrl.text.trim().isEmpty ? null : _detailCtrl.text.trim(),
+        attachments: _attachments.isEmpty
+            ? null
+            : _attachments.map((x) => x.path).toList(),
       );
       if (!mounted) return;
-      _targetIdCtrl.clear();
       _detailCtrl.clear();
       setState(() {
-        _targetKind = 'facility';
+        _selectedFacility = null;
+        _attachments.clear();
         _reasonCode = 'spam';
       });
       ScaffoldMessenger.of(context).showSnackBar(
@@ -734,66 +822,52 @@ class _ReportTabState extends State<_ReportTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── 안내 카드 ───────────────────────────────────────────
-            PwCard(
-              padding: const EdgeInsets.all(12),
-              color: AppTheme.primary.withValues(alpha: 0.1),
-              border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
-              child: const Row(
-                children: [
-                  Icon(Icons.info_outline, size: 16, color: AppTheme.primary),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '허위 신고는 서비스 이용에 제한이 있을 수 있습니다.\n검토 후 7 영업일 이내에 조치합니다.',
-                      style: TextStyle(
-                          fontSize: 12, color: AppTheme.textSecondary),
-                    ),
-                  ),
-                ],
+            // ── 안내 — 가이드: 박스 없이 평문 흰. ※ prefix.
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                '※ 허위 신고는 서비스 이용에 제한이 있을 수 있습니다.\n검토 후 7 영업일 이내에 조치합니다.',
+                style: TextStyle(
+                    fontSize: 12, color: Colors.white, height: 1.5),
               ),
             ),
             const SizedBox(height: 20),
 
-            // ── 신고 대상 종류 ──────────────────────────────────────
-            Text(context.t('mobile.support.report_target', defaultValue: '신고 대상'),
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+            // ── 신고할 시설 ─ 검색 또는 선택된 시설 카드 ─────────────
+            const Text('신고할 시설',
+                style: TextStyle(
+                    fontWeight: FontWeight.w700, fontSize: 14, color: Colors.white)),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                _KindChip(
-                  label: '시설 / 매장',
-                  selected: _targetKind == 'facility',
-                  onTap: () => setState(() => _targetKind = 'facility'),
+            if (_selectedFacility == null) ...[
+              PwTextField(
+                controller: _facilityQueryCtrl,
+                hint: '시설명을 검색하세요 (2자 이상)',
+                prefixIcon: Icons.search,
+                onChanged: _onQueryChanged,
+              ),
+              if (_searching)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: LinearProgressIndicator(minHeight: 2),
                 ),
-                const SizedBox(width: 8),
-                _KindChip(
-                  label: '사용자',
-                  selected: _targetKind == 'user',
-                  onTap: () => setState(() => _targetKind = 'user'),
+              if (_searchResults.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                _FacilityResultsList(
+                  results: _searchResults,
+                  onTap: _openConfirmDialog,
                 ),
               ],
-            ),
-            const SizedBox(height: 12),
-
-            // ── 대상 ID ────────────────────────────────────────────
-            PwTextField(
-              controller: _targetIdCtrl,
-              label: '대상 ID (숫자)',
-              hint: '예: 42',
-              keyboardType: TextInputType.number,
-              textInputAction: TextInputAction.next,
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'ID를 입력해 주세요';
-                if (int.tryParse(v.trim()) == null) return '숫자만 입력해 주세요';
-                return null;
-              },
-            ),
+            ] else
+              _SelectedFacilityCard(
+                facility: _selectedFacility!,
+                onChange: () => setState(() => _selectedFacility = null),
+              ),
             const SizedBox(height: 20),
 
             // ── 신고 사유 라디오 ────────────────────────────────────
             Text(context.t('mobile.support.report_reason', defaultValue: '신고 사유'),
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                style: const TextStyle(
+                    fontWeight: FontWeight.w700, fontSize: 14, color: Colors.white)),
             const SizedBox(height: 4),
             for (final (code, label) in _reasons)
               _ReasonRadio(
@@ -802,28 +876,39 @@ class _ReportTabState extends State<_ReportTab> {
                 groupValue: _reasonCode,
                 onChanged: (v) => setState(() => _reasonCode = v),
               ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
 
-            // ── 상세 사유 (선택) ────────────────────────────────────
-            TextFormField(
+            // ── 증빙 사진 첨부 (선택, 최대 3장) ────────────────────
+            Text(
+              '증빙 사진 (선택, 최대 $_maxAttachments장)',
+              style: const TextStyle(
+                  fontWeight: FontWeight.w700, fontSize: 14, color: Colors.white),
+            ),
+            const SizedBox(height: 8),
+            _AttachmentRow(
+              files: _attachments,
+              max: _maxAttachments,
+              onAdd: _addAttachment,
+              onRemove: _removeAttachment,
+            ),
+            const SizedBox(height: 20),
+
+            // ── 상세 사유 (선택) ─ PwTextField
+            PwTextField(
               controller: _detailCtrl,
+              label: '상세 사유 (선택)',
+              hint: '추가 설명이 있으면 입력해 주세요',
               maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: '상세 사유 (선택)',
-                hintText: '추가 설명이 있으면 입력해 주세요',
-                alignLabelWithHint: true,
-              ),
             ),
             const SizedBox(height: 12),
 
-            // ── 개인정보 처리 안내 ──────────────────────────────────
-            PwCard(
-              padding: const EdgeInsets.all(10),
-              color: AppTheme.surfaceLight,
-              child: const Text(
-                '신고 내용은 「개인정보 보호법」에 따라 처리 목적으로만 사용하며 처리 완료 후 파기됩니다.',
-                style:
-                    TextStyle(color: AppTheme.textHint, fontSize: 11, height: 1.4),
+            // ── 개인정보 처리 안내 — 평문 + ※ (배경 없음, 사용자 가이드)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                '※ 신고 내용은 「개인정보 보호법」에 따라 처리 목적으로만 사용하며 처리 완료 후 파기됩니다.',
+                style: TextStyle(
+                    color: Colors.white, fontSize: 11, height: 1.5),
               ),
             ),
             const SizedBox(height: 20),
@@ -841,43 +926,8 @@ class _ReportTabState extends State<_ReportTab> {
   }
 }
 
-class _KindChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _KindChip(
-      {required this.label, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppTheme.primary.withValues(alpha: 0.15)
-              : AppTheme.surfaceLight,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? AppTheme.primary : AppTheme.border,
-            width: selected ? 1.5 : 1,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? AppTheme.primary : AppTheme.textSecondary,
-            fontWeight:
-                selected ? FontWeight.w600 : FontWeight.normal,
-            fontSize: 13,
-          ),
-        ),
-      ),
-    );
-  }
-}
+// _KindChip 제거 — 사용자 앱 정책상 신고 대상은 시설 고정.
+//   (이전: 시설/매장 vs 사용자 chip → 시설 검색으로 일원화)
 
 class _ReasonRadio extends StatelessWidget {
   final String label;
@@ -901,6 +951,7 @@ class _ReasonRadio extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(
           children: [
+            // 가이드 통일 — 흰 톤 라디오 (보라 → 흰).
             AnimatedContainer(
               duration: const Duration(milliseconds: 150),
               width: 20,
@@ -909,19 +960,314 @@ class _ReasonRadio extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: selected ? AppTheme.primary : AppTheme.border,
+                  color: Colors.white.withValues(alpha: selected ? 1.0 : 0.45),
                   width: selected ? 5 : 2,
                 ),
-                color: selected ? AppTheme.primary : Colors.transparent,
+                color: selected ? Colors.white : Colors.transparent,
               ),
             ),
             Text(
               label,
               style: TextStyle(
-                color: selected ? AppTheme.textPrimary : AppTheme.textSecondary,
-                fontWeight: selected ? FontWeight.w500 : FontWeight.normal,
+                color: Colors.white.withValues(alpha: selected ? 1.0 : 0.78),
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── 신고 대상 위젯들 (시설 검색 + 확인 + 선택 카드) ─────────────────────────
+
+class _FacilityResultsList extends StatelessWidget {
+  final List<Map<String, dynamic>> results;
+  final ValueChanged<Map<String, dynamic>> onTap;
+  const _FacilityResultsList({required this.results, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.10),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          for (int i = 0; i < results.length; i++) ...[
+            InkWell(
+              onTap: () => onTap(results[i]),
+              borderRadius: BorderRadius.vertical(
+                top: i == 0 ? const Radius.circular(12) : Radius.zero,
+                bottom: i == results.length - 1 ? const Radius.circular(12) : Radius.zero,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                child: Row(
+                  children: [
+                    const Icon(Icons.store_mall_directory_outlined,
+                        size: 20, color: Colors.white70),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            (results[i]['name'] ?? '').toString(),
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if ((results[i]['address'] ?? '').toString().isNotEmpty)
+                            Text(
+                              results[i]['address'].toString(),
+                              style: const TextStyle(
+                                  color: Colors.white70, fontSize: 12),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right,
+                        size: 18, color: Colors.white54),
+                  ],
+                ),
+              ),
+            ),
+            if (i != results.length - 1)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Container(
+                    height: 1, color: Colors.white.withValues(alpha: 0.10)),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SelectedFacilityCard extends StatelessWidget {
+  final Map<String, dynamic> facility;
+  final VoidCallback onChange;
+  const _SelectedFacilityCard({required this.facility, required this.onChange});
+
+  @override
+  Widget build(BuildContext context) {
+    final name = (facility['name'] ?? '').toString();
+    final address = (facility['address'] ?? '').toString();
+    return PwCard(
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle, color: Colors.white, size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14)),
+                if (address.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(address,
+                      style: const TextStyle(
+                          color: Colors.white70, fontSize: 12),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis),
+                ],
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: onChange,
+            style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4)),
+            child: const Text('변경'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FacilityConfirmDialog extends StatelessWidget {
+  final Map<String, dynamic> facility;
+  const _FacilityConfirmDialog({required this.facility});
+
+  @override
+  Widget build(BuildContext context) {
+    final name = (facility['name'] ?? '').toString();
+    final address = (facility['address'] ?? '').toString();
+    final phone = (facility['phone'] ?? '').toString();
+    return PwDialog(
+      title: const Text('이 시설이 맞나요?'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(name,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16)),
+          if (address.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Icon(Icons.place, size: 14, color: Colors.white70),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(address,
+                      style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                ),
+              ],
+            ),
+          ],
+          if (phone.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.phone, size: 14, color: Colors.white70),
+                const SizedBox(width: 4),
+                Text(phone,
+                    style: const TextStyle(color: Colors.white70, fontSize: 13)),
+              ],
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        PwButton(
+          variant: PwButtonVariant.text,
+          fullWidth: false,
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('닫기'),
+        ),
+        PwButton(
+          variant: PwButtonVariant.danger,
+          fullWidth: false,
+          onPressed: () => Navigator.of(context).pop(true),
+          child: const Text('이 시설 신고'),
+        ),
+      ],
+    );
+  }
+}
+
+// ── 첨부 사진 행 ────────────────────────────────────────────────────────────
+
+class _AttachmentRow extends StatelessWidget {
+  final List<XFile> files;
+  final int max;
+  final VoidCallback onAdd;
+  final ValueChanged<int> onRemove;
+  const _AttachmentRow({
+    required this.files,
+    required this.max,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        for (int i = 0; i < files.length; i++)
+          _AttachmentTile(file: files[i], onRemove: () => onRemove(i)),
+        if (files.length < max)
+          _AddAttachmentTile(onTap: onAdd),
+      ],
+    );
+  }
+}
+
+class _AttachmentTile extends StatelessWidget {
+  final XFile file;
+  final VoidCallback onRemove;
+  const _AttachmentTile({required this.file, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 84,
+      height: 84,
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.file(
+              File(file.path),
+              width: 84,
+              height: 84,
+              fit: BoxFit.cover,
+            ),
+          ),
+          Positioned(
+            top: 4,
+            right: 4,
+            child: GestureDetector(
+              onTap: onRemove,
+              child: Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.55),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
+                ),
+                child: const Icon(Icons.close,
+                    size: 14, color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AddAttachmentTile extends StatelessWidget {
+  final VoidCallback onTap;
+  const _AddAttachmentTile({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 84,
+        height: 84,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.35),
+            width: 1.5,
+            style: BorderStyle.solid,
+          ),
+        ),
+        child: const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add_a_photo_outlined, color: Colors.white, size: 24),
+            SizedBox(height: 4),
+            Text('사진 추가',
+                style: TextStyle(color: Colors.white, fontSize: 11)),
           ],
         ),
       ),

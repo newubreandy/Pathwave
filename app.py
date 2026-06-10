@@ -38,6 +38,7 @@ from routes.notification_preferences import notification_preferences_bp
 from routes.company_info import company_info_bp
 from routes.service_request import service_request_bp
 from routes.theme        import theme_bp
+from routes.features     import features_bp
 
 
 # ── 운영 환경 보안 ENV 검증 ────────────────────────────────────────────────
@@ -197,6 +198,9 @@ app.register_blueprint(notification_preferences_bp)
 app.register_blueprint(company_info_bp)
 app.register_blueprint(service_request_bp)
 app.register_blueprint(theme_bp)
+app.register_blueprint(features_bp)
+from routes.banned_words import banned_words_bp
+app.register_blueprint(banned_words_bp)
 
 # ── Static files ──────────────────────────────────────────────────────────────
 @app.route('/', defaults={'path': ''})

@@ -83,7 +83,8 @@ class _BlockedFacilitiesScreenState extends State<BlockedFacilitiesScreen> {
             );
           }
           return ListView.separated(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(16, 16, 16,
+                16 + MediaQuery.of(context).viewPadding.bottom),
             itemCount: list.length,
             separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (context, i) {

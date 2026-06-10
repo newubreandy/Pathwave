@@ -108,6 +108,29 @@ class ApiClient {
     return _decode(r);
   }
 
+  /// Multipart 업로드 (사진 첨부 등). 2026-06-08 추가.
+  ///
+  /// - [fields]  : 일반 form 필드 (문자열).
+  /// - [files]   : (필드명, 로컬 경로) 튜플 리스트. 같은 필드명 여러 번 가능.
+  Future<Map<String, dynamic>> postMultipart(
+    String path, {
+    Map<String, String>? fields,
+    List<MapEntry<String, String>>? files,
+  }) async {
+    final req = http.MultipartRequest('POST', _uri(path));
+    final t = await _token();
+    if (t != null && t.isNotEmpty) req.headers['Authorization'] = 'Bearer $t';
+    if (fields != null) req.fields.addAll(fields);
+    if (files != null) {
+      for (final e in files) {
+        req.files.add(await http.MultipartFile.fromPath(e.key, e.value));
+      }
+    }
+    final streamed = await req.send();
+    final r = await http.Response.fromStream(streamed);
+    return _decode(r);
+  }
+
   Future<Map<String, dynamic>> delete(String path) async {
     final r = await http.delete(_uri(path), headers: await _headers());
     return _decode(r);

@@ -60,11 +60,21 @@ dependencies:
 
   # ── 위치 정보 ────────────────────────────────────
   geolocator: ^13.0.2
-  google_maps_flutter: ^2.12.1
+  # 2026-06-09: google_maps_flutter 제거 (lib/ 사용처 없음 + Google Maps Platform 비용 회피).
+  # 대안: flutter_map (OpenStreetMap) — 비용 0. 매장 상세/검색에 시점 시 활성.
+  # google_maps_flutter: ^2.12.1
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
 
   # ── 이미지/카메라 ─────────────────────────────────
   image_picker: ^1.1.2
   cached_network_image: ^3.4.1
+
+  # ── 브랜드 아이콘 (Google/Apple/Facebook/Kakao/Naver 등) ──
+  # 1차: assets/brand_logos/{google|apple|facebook|kakao|naver}.svg (있으면 사용)
+  # 2차: simple_icons (단색 fallback, CC0)
+  simple_icons: ^14.6.1
+  flutter_svg: ^2.0.16
 
   # ── 알림 (FCM) ───────────────────────────────────
   firebase_messaging: ^15.2.5
@@ -101,3 +111,4 @@ flutter:
     - assets/images/
     - assets/lottie/
     - assets/translations/
+    - assets/brand_logos/

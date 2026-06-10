@@ -31,13 +31,15 @@ class StoreService {
   // ── 시설 상세 ────────────────────────────────────────────────────────────
   Future<Map<String, dynamic>> get(int facilityId, {String? lang}) async {
     final qs = (lang != null && lang.isNotEmpty) ? '?lang=$lang' : '';
-    final data = await _api.get('/api/facilities/$facilityId$qs');
+    // 2026-06-09 — user 용 공개 라우트 (사장 전용 /api/facilities/<id> 와 분리).
+    final data = await _api.get('/api/search/facilities/$facilityId$qs');
     return (data['facility'] as Map?)?.cast<String, dynamic>() ?? {};
   }
 
   // ── 시설 이미지 목록 ─────────────────────────────────────────────────────
   Future<List<Map<String, dynamic>>> images(int facilityId) async {
-    final data = await _api.get('/api/facilities/$facilityId/images');
+    // 2026-06-09 — user 용 공개 라우트.
+    final data = await _api.get('/api/search/facilities/$facilityId/images');
     return (data['images'] as List?)?.cast<Map<String, dynamic>>() ?? [];
   }
 

@@ -7,10 +7,12 @@ import '../screens/splash_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
+import '../screens/auth/find_email_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/home/wifi_connect_screen.dart';
 import '../screens/facility/facility_screen.dart';
 import '../screens/mypage/mypage_screen.dart';
+import '../screens/notifications/notification_detail_screen.dart';
 import '../screens/mypage/stamps_screen.dart';
 import '../screens/mypage/coupons_screen.dart';
 import '../screens/mypage/parent_invite_screen.dart';
@@ -63,6 +65,7 @@ class AppRouter {
       GoRoute(path: '/auth/login',    builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/auth/register', builder: (_, _) => const RegisterScreen()),
       GoRoute(path: '/auth/forgot',   builder: (_, _) => const ForgotPasswordScreen()),
+      GoRoute(path: '/auth/find-email', builder: (_, _) => const FindEmailScreen()),
 
       // ── 메인 ────────────────────────────────────────────────────
       GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
@@ -97,6 +100,12 @@ class AppRouter {
 
       // ── 알림 ────────────────────────────────────────────────────
       GoRoute(path: '/notifications', builder: (_, _) => const NotificationsScreen()),
+      GoRoute(
+        path: '/notifications/detail',
+        builder: (ctx, state) => NotificationDetailScreen(
+          data: (state.extra as Map<String, dynamic>?) ?? const {},
+        ),
+      ),
 
       // ── 채팅 ────────────────────────────────────────────────────
       GoRoute(path: '/chat',          builder: (_, _) => const ChatListScreen()),

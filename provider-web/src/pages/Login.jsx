@@ -45,10 +45,12 @@ const Login = () => {
 
   return (
     <div className="modern-auth-page">
-      {/* Logo — Figma style centered branding */}
-      <div className="auth-logo">
-        <span className="auth-logo-text">PathWave</span>
-        <span className="auth-logo-sub">SERVICE PROVIDER</span>
+      {/* pathwave 공통 로고 — 마크 SVG + 옆 소문자 텍스트. */}
+      <div className="auth-logo" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img src="/pathwave_lockup.svg" alt="pathwave" style={{ height: 44, display: 'block' }} />
+        </div>
+        <span className="auth-logo-sub">service provider</span>
       </div>
 
       <div className="auth-container">

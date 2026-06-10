@@ -15,7 +15,10 @@ class PwSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Switch.adaptive(
+    // Material 3 Switch (raw `Switch`) — NeuTheme.switchTheme 글로벌 정책 자동 적용.
+    // ※ Switch.adaptive 는 iOS 에서 CupertinoSwitch 로 fallback 되어
+    //   switchTheme 가 무시되므로 사용 금지(녹색 ON 색이 강제됨).
+    return Switch(
       value: value,
       onChanged: onChanged,
     );
