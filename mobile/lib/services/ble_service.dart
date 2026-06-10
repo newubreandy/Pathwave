@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:http/http.dart' as http;
@@ -30,9 +31,19 @@ class BleService extends ChangeNotifier {
   // ── 스캔 시작 ─────────────────────────────────────────────────────
   /// **호출 전 PermissionService.ensureBluetoothScan() 으로 권한을 받아야 함.**
   /// 권한이 없으면 silently no-op (UI 가 사전 안내를 책임).
+  ///
+  /// 2026-06-09 — iOS 시뮬레이터/Android 에뮬레이터에서 BLE 권한이 없을 때
+  /// debug 빌드 한정으로 mock 모드로 진입해 토글 UI 만 동작시킨다.
+  /// 실 비콘 감지는 일어나지 않지만 권한 거부 환경에서 UI 검증이 가능.
   Future<void> startScan({String? userId}) async {
     final scanGranted = await Permission.bluetoothScan.status;
-    if (!scanGranted.isGranted) return;
+    if (!scanGranted.isGranted) {
+      if (kDebugMode && !_isScanning) {
+        _isScanning = true;
+        notifyListeners();
+      }
+      return;
+    }
 
     if (_isScanning) return;
     _isScanning = true;
@@ -130,7 +141,8 @@ class BleService extends ChangeNotifier {
 
   // ── 스캔 중지 ─────────────────────────────────────────────────────
   Future<void> stopScan() async {
-    await FlutterBluePlus.stopScan();
+    // 권한 없는 시뮬·debug mock 환경에서도 안전하게 무시 (예외 swallow).
+    try { await FlutterBluePlus.stopScan(); } catch (_) {}
     await _scanSub?.cancel();
     _scanSub = null;
     _isScanning = false;

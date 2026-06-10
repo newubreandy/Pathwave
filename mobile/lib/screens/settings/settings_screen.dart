@@ -23,8 +23,13 @@ class SettingsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: PwAppBar(title: Text(context.t('mobile.settings.title', defaultValue: '설정'))),
-      body: SafeArea(child: ListView(
-        padding: const EdgeInsets.all(16),
+      // 2026-06-10 — SafeArea 제거 + ListView padding 의 bottom 에 viewPadding 추가.
+      // (매장 상세와 동일 가이드 — home indicator 잘림 방지)
+      body: ListView(
+        padding: EdgeInsets.fromLTRB(
+          16, 16, 16,
+          16 + MediaQuery.of(context).viewPadding.bottom,
+        ),
         children: [
           _section(context, '계정', [
             _tile(context, Icons.email_outlined, '이메일', email),
@@ -41,8 +46,9 @@ class SettingsScreen extends StatelessWidget {
           _section(context, '고객 지원', [
             _linkTile(context, Icons.mail_outline, '이메일 문의',
               () => _launchSupport(context)),
+            // FAQ 는 고객센터 > FAQ 탭으로 통합 노출 (app_router /support 의 디폴트 탭=0=FAQ).
             _linkTile(context, Icons.help_outline, '자주 묻는 질문',
-              () => _showFaq(context)),
+              () => context.push('/support')),
             _linkTile(context, Icons.block, '차단 목록',
               () => context.push('/settings/blocked-facilities')),
           ]),
@@ -68,8 +74,9 @@ class SettingsScreen extends StatelessWidget {
               '주식회사 트리거소프트 (triggersoft)'),
           ]),
           const SizedBox(height: 16),
+          // 공통 가이드 — 모든 액션 버튼은 secondary 톤(흰 글래스)으로 통일.
           PwButton(
-            variant: PwButtonVariant.danger,
+            variant: PwButtonVariant.secondary,
             icon: Icons.logout,
             onPressed: () async {
               await context.read<AuthService>().logout();
@@ -81,10 +88,12 @@ class SettingsScreen extends StatelessWidget {
           PwButton(
             variant: PwButtonVariant.text,
             onPressed: () => context.push('/mypage/delete-account'),
+            // 가이드 — 회원 탈퇴 텍스트도 흰톤(빨강 → 흰). 위험성은 별도 confirm 화면에서.
             child: Text(context.t('mobile.mypage.delete_account.title', defaultValue: '회원 탈퇴'),
-              style: TextStyle(
-                color: AppTheme.error,
+              style: const TextStyle(
+                color: Colors.white,
                 decoration: TextDecoration.underline,
+                decorationColor: Colors.white,
                 fontSize: 13,
               )),
           ),
@@ -92,7 +101,7 @@ class SettingsScreen extends StatelessWidget {
           const PwFooter(),
           const SizedBox(height: 24),
         ],
-      )),
+      ),
     );
   }
 
@@ -107,44 +116,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _showFaq(BuildContext context) async {
-    showDialog(
-      context: context,
-      barrierColor: const Color(0x99000000),
-      barrierDismissible: true,
-      builder: (_) => AlertDialog(
-        title: Text(I18nService.instance.t('mobile.settings.faq', defaultValue: '자주 묻는 질문')),
-        content: const SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _FaqItem(q: 'Q. 비콘이 감지되지 않아요',
-                a: 'A. Bluetooth 와 위치 권한이 모두 허용되어 있는지 확인해 주세요. '
-                   '또한 매장에서 5~10m 이내에 있어야 감지됩니다.'),
-              SizedBox(height: 12),
-              _FaqItem(q: 'Q. WiFi 자동 연결이 안 돼요',
-                a: 'A. iOS 의 경우 설정 → PathWave → "WiFi 자동 연결" 권한을 확인해 주세요. '
-                   'Android 는 시스템 설정의 위치 권한이 활성화되어야 합니다.'),
-              SizedBox(height: 12),
-              _FaqItem(q: 'Q. 스탬프가 적립되지 않았어요',
-                a: 'A. 매장 비콘 감지 후 자동 적립됩니다. 같은 매장에서 24시간 내 재방문은 1회로 카운트됩니다.'),
-              SizedBox(height: 12),
-              _FaqItem(q: 'Q. 회원 탈퇴는 어떻게 하나요?',
-                a: 'A. 설정 → 회원 탈퇴 메뉴에서 진행 가능합니다. 즉시 모든 알림이 차단되며 14일 후 재가입 가능합니다.'),
-            ],
-          ),
-        ),
-        actions: [
-          PwButton(
-            variant: PwButtonVariant.text,
-            fullWidth: false,
-            onPressed: () => Navigator.pop(context),
-            child: Text(I18nService.instance.t('mobile.common.close', defaultValue: '닫기')),
-          ),
-        ],
-      ),
-    );
-  }
+  // FAQ 는 고객센터(/support) FAQ 탭으로 통합됨 — 자체 다이얼로그 제거.
 
   Future<void> _showPolicy(BuildContext context, String kind) async {
     showDialog(
@@ -157,16 +129,10 @@ class SettingsScreen extends StatelessWidget {
       final data = await PolicyService.instance.body(kind);
       if (!context.mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
-      await showModalBottomSheet(
+      // 공통 가이드 — showPwSheet (흰 글래스 + 블러 딤)
+      await showPwSheet(
         context: context,
-        isScrollControlled: true,
-        barrierColor: const Color(0x99000000),
-        isDismissible: true,
-        backgroundColor: AppTheme.surface,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        builder: (ctx) => _PolicySheet(data: data),
+        child: _PolicySheet(data: data),
       );
     } catch (e) {
       if (!context.mounted) return;
@@ -186,11 +152,12 @@ class SettingsScreen extends StatelessWidget {
           child: Text(title,
             style: const TextStyle(color: AppTheme.textHint, fontSize: 12, letterSpacing: 0.5)),
         ),
+        // 가이드 — 흰 글래스 섹션 카드(반투명 + 흰 보더). _section / 알림 카테고리 공통.
         Container(
           decoration: BoxDecoration(
-            color: AppTheme.surface,
+            color: Colors.white.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.border),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
           ),
           child: Column(children: children),
         ),
@@ -238,70 +205,65 @@ class _PolicySheet extends StatelessWidget {
     final body = data['body']?.toString() ?? '본문이 등록되어 있지 않습니다.';
     final effective = data['effective_at']?.toString();
 
-    return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.85,
-      maxChildSize: 0.95,
-      minChildSize: 0.5,
-      builder: (_, scrollCtrl) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40, height: 4,
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: AppTheme.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+    // 2026-06-10 — DraggableScrollableSheet 제거.
+    // PwSheet 가 최대 높이 92% 보장 + 본문이 짧으면 자연 크기.
+    // 본문이 길면 SelectableText 영역만 스크롤.
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+            // 2026-06-10 — drag handle 은 PwSheet 가 이미 그림 → 중복 제거.
+            // 제목 단독 (버전은 시행일 라인 우측 끝으로 이동).
+            Text(title, style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 4),
+            // 시행일 ←→ 버전 칩 (한 줄)
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
-                  child: Text(title,
-                    style: Theme.of(context).textTheme.titleLarge),
+                  child: Text(
+                    (effective != null && effective.isNotEmpty)
+                      ? '${context.t('mobile.settings.effective_date', defaultValue: '시행일')}: ${effective.split("T").first}'
+                      : '',
+                    style: const TextStyle(color: AppTheme.textHint, fontSize: 12),
+                  ),
                 ),
                 if (version.isNotEmpty)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.1),
+                      color: Colors.white.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.24)),
                     ),
                     child: Text('v$version',
                       style: const TextStyle(
-                        color: AppTheme.primary,
+                        color: Colors.white,
                         fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                       )),
                   ),
               ],
             ),
-            if (effective != null && effective.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text('${context.t('mobile.settings.effective_date', defaultValue: '시행일')}: ${effective.split("T").first}',
-                style: const TextStyle(color: AppTheme.textHint, fontSize: 12)),
-            ],
             const Divider(height: 24),
-            Expanded(
+            Flexible(
               child: SingleChildScrollView(
-                controller: scrollCtrl,
                 child: SelectableText(body,
                   style: const TextStyle(fontSize: 14, height: 1.6)),
               ),
             ),
             const SizedBox(height: 12),
-            PwButton(
-              variant: PwButtonVariant.text,
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(I18nService.instance.t('mobile.common.close', defaultValue: '닫기')),
+            // 2026-06-10 — 공통 primary 글래스 버튼 가이드 적용.
+            SizedBox(
+              width: double.infinity,
+              child: PwButton(
+                variant: PwButtonVariant.primary,
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(I18nService.instance.t('mobile.common.close', defaultValue: '닫기')),
+              ),
             ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }
@@ -435,11 +397,12 @@ class _NotificationPreferencesSectionState
           child: Text(context.t('mobile.settings.notification_category', defaultValue: '알림 카테고리'),
             style: const TextStyle(color: AppTheme.textHint, fontSize: 12, letterSpacing: 0.5)),
         ),
+        // 가이드 — 흰 글래스 섹션 카드(반투명 + 흰 보더). _section / 알림 카테고리 공통.
         Container(
           decoration: BoxDecoration(
-            color: AppTheme.surface,
+            color: Colors.white.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.border),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
           ),
           child: Builder(builder: (_) {
             if (_error != null) {
@@ -478,20 +441,4 @@ class _NotificationPreferencesSectionState
   }
 }
 
-class _FaqItem extends StatelessWidget {
-  final String q;
-  final String a;
-  const _FaqItem({required this.q, required this.a});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(q, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-        const SizedBox(height: 4),
-        Text(a, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12, height: 1.5)),
-      ],
-    );
-  }
-}
+// _FaqItem 제거 — FAQ 가 /support FAQ 탭으로 통합되어 더 이상 필요 없음.

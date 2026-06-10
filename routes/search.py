@@ -133,3 +133,65 @@ def search_facilities():
     return jsonify({'success': True,
                     'count': len(results),
                     'results': results})
+
+
+@search_bp.route('/facilities/<int:fid>', methods=['GET'])
+def search_facility_detail(fid):
+    """사용자용 매장 상세 (공개). store_bp 의 사장 전용 라우트와 분리.
+
+    2026-06-09 — mobile facility_screen 진입용.
+    응답: { success, facility }
+    """
+    lang = (request.args.get('lang') or '').strip() or None
+    db = get_db()
+    row = db.execute(
+        "SELECT * FROM facilities WHERE id=? AND active=1", (fid,)
+    ).fetchone()
+    if not row:
+        db.close()
+        return jsonify({'success': False, 'message': '매장을 찾을 수 없습니다.'}), 404
+    # 미성년 차단
+    if _is_minor_caller() and bool(row['adult_only']):
+        db.close()
+        return jsonify({'success': False, 'message': '연령 제한 매장입니다.'}), 403
+    item = _row_to_search_result(row)
+    item['business_hours'] = row['business_hours'] if 'business_hours' in row.keys() else None
+    # 2026-06-09 — 정기휴무 + 진행중 혜택 (mobile 매장 상세 + provider 통일).
+    import json as _json
+    try:
+        item['holidays'] = _json.loads(row['holidays']) if row['holidays'] else []
+    except Exception:
+        item['holidays'] = []
+    try:
+        item['benefits'] = _json.loads(row['benefits']) if row['benefits'] else []
+    except Exception:
+        item['benefits'] = []
+    if lang:
+        t = db.execute(
+            """SELECT name, address, description FROM facility_translations
+               WHERE facility_id=? AND language=?""",
+            (fid, lang)
+        ).fetchone()
+        if t:
+            if t['name']:        item['name']        = t['name']
+            if t['address']:     item['address']     = t['address']
+            if t['description']: item['description'] = t['description']
+            item['language'] = lang
+    db.close()
+    return jsonify({'success': True, 'facility': item})
+
+
+@search_bp.route('/facilities/<int:fid>/images', methods=['GET'])
+def search_facility_images(fid):
+    """사용자용 매장 이미지 갤러리 (공개). 2026-06-09."""
+    db = get_db()
+    rows = db.execute(
+        "SELECT id, image_url, is_primary, sort_order FROM facility_images "
+        "WHERE facility_id=? ORDER BY is_primary DESC, sort_order ASC, id ASC",
+        (fid,)
+    ).fetchall()
+    db.close()
+    return jsonify({
+        'success': True,
+        'images': [dict(r) for r in rows],
+    })

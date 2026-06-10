@@ -28,6 +28,16 @@ class NotificationService {
     }
   }
 
+  /// 미읽음 알림 개수 (2026-06-08). 실패 시 0 반환.
+  Future<int> unreadCount() async {
+    final data = await _getSafe('/api/users/me/notifications/unread-count');
+    if (data == null) return 0;
+    final v = data['count'];
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    return 0;
+  }
+
   // ── 개인 인박스 ─────────────────────────────────────────────────────────
   /// 내 알림 목록 (최신 순). 게스트 / 401 → 빈 리스트.
   Future<List<Map<String, dynamic>>> inbox() async {

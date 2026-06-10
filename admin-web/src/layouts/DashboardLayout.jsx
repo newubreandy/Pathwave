@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Radio, UserCheck, Battery, Megaphone, CreditCard,
@@ -6,9 +6,11 @@ import {
   HelpCircle, BookOpen, BarChart2, ChevronDown, ChevronRight, Building2,
   Flag, Bell, Smartphone, KeyRound, Activity, DollarSign, PackageCheck,
   Palette,
+  ToggleRight,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { adminLogout, getCurrentAdmin } from '../services/auth.js';
+import { adminApi } from '../services/admin.js';
 // PwFooter import 제거 (2026-05-27) — 슈퍼어드민에 푸터 불필요
 import ChangePasswordModal from '../components/ChangePasswordModal.jsx';
 import CriticalAdminAlert from '../components/CriticalAdminAlert.jsx';
@@ -27,7 +29,7 @@ const NAV_GROUPS = [
     items: [
       { to: '/dashboard',           icon: LayoutDashboard, labelKey: 'nav.dashboard',  end: true },
       { to: '/dashboard/beacons',   icon: Radio,           labelKey: 'nav.beacons'               },
-      { to: '/dashboard/service-requests', icon: PackageCheck, labelKey: 'nav.service_requests', labelDefault: '서비스 신청' },
+      { to: '/dashboard/service-requests', icon: PackageCheck, labelKey: 'nav.service_requests', labelDefault: '서비스 신청 관리' },
       { to: '/dashboard/approvals', icon: UserCheck,       labelKey: 'nav.approvals',  badge: 3  },
     ],
   },
@@ -39,11 +41,14 @@ const NAV_GROUPS = [
     items: [
       { to: '/dashboard/battery',       icon: Battery,        labelKey: 'nav.battery'        },
       { to: '/dashboard/announcements', icon: Megaphone,      labelKey: 'nav.announcements'  },
-      { to: '/dashboard/notifications', icon: Bell,           labelKey: 'nav.notifications', labelDefault: '알림 검토' },
-      { to: '/dashboard/users',         icon: Users,          labelKey: 'nav.users',         labelDefault: '회원 관리' },
-      { to: '/dashboard/staff-monitor', icon: Users,          labelKey: 'nav.staff_monitor'  },
-      { to: '/dashboard/chat-monitor',  icon: MessageSquare,  labelKey: 'nav.chat_monitor'   },
-      { to: '/dashboard/abuse-reports', icon: Flag,           labelKey: 'nav.abuse_reports'  },
+      { to: '/dashboard/notifications', icon: Bell,           labelKey: 'nav.notifications', labelDefault: '알림/부가서비스 관리' },
+      { to: '/dashboard/users',         icon: Users,          labelKey: 'nav.users',         labelDefault: '사용자관리' },
+      { to: '/dashboard/facilities',    icon: Building2,      labelKey: 'nav.facilities',    labelDefault: '매장관리' },
+      // IA 감사 2026-06-09 — admin_extra_tools 비활성 시 자동 가림 (P2 이관)
+      { to: '/dashboard/staff-monitor', icon: Users,          labelKey: 'nav.staff_monitor',  requiresFeature: 'admin_extra_tools' },
+      { to: '/dashboard/chat-monitor',  icon: MessageSquare,  labelKey: 'nav.chat_monitor',   requiresFeature: 'admin_extra_tools' },
+      { to: '/dashboard/abuse-reports', icon: Flag,           labelKey: 'nav.abuse_reports'  , labelDefault: '신고 처리' },
+      { to: '/dashboard/banned-words',  icon: Flag,           labelKey: 'nav.banned_words',  labelDefault: '금지어 관리' },
     ],
   },
   {
@@ -54,7 +59,7 @@ const NAV_GROUPS = [
     items: [
       { to: '/dashboard/payments',     icon: CreditCard, labelKey: 'nav.payments'     },
       { to: '/dashboard/policies',     icon: FileText,   labelKey: 'nav.policies'     },
-      { to: '/dashboard/coupon-stats', icon: Ticket,     labelKey: 'nav.coupon_stats' },
+      { to: '/dashboard/coupon-stats', icon: Ticket,     labelKey: 'nav.coupon_stats',   requiresFeature: 'admin_extra_tools' },
     ],
   },
   {
@@ -65,7 +70,7 @@ const NAV_GROUPS = [
     items: [
       { to: '/dashboard/support',       icon: HelpCircle,  labelKey: 'nav.support'       },
       { to: '/dashboard/faq',           icon: BookOpen,    labelKey: 'nav.faq'           },
-      { to: '/dashboard/support/stats', icon: BarChart2,   labelKey: 'nav.support_stats' },
+      { to: '/dashboard/support/stats', icon: BarChart2,   labelKey: 'nav.support_stats', requiresFeature: 'admin_extra_tools' },
     ],
   },
   {
@@ -78,8 +83,9 @@ const NAV_GROUPS = [
       { to: '/dashboard/categories',   icon: BookOpen,  labelKey: 'nav.categories',   labelDefault: '업종 카테고리' },
       { to: '/dashboard/app-versions', icon: Smartphone, labelKey: 'nav.app_versions', labelDefault: '앱 버전' },
       { to: '/dashboard/system-health', icon: Activity, labelKey: 'nav.system_health', labelDefault: '시스템 점검' },
-      { to: '/dashboard/cost-monitor',  icon: DollarSign, labelKey: 'nav.cost_monitor',  labelDefault: 'AI 비용 모니터' },
+      { to: '/dashboard/cost-monitor',  icon: DollarSign, labelKey: 'nav.cost_monitor',  labelDefault: 'AI 비용 모니터', requiresFeature: 'admin_extra_tools' },
       { to: '/dashboard/themes',       icon: Palette,   labelKey: 'nav.themes',       labelDefault: '앱 배경 테마' },
+      { to: '/dashboard/features',     icon: ToggleRight, labelKey: 'nav.features',   labelDefault: 'Feature Flag' },
       { to: '/dashboard/i18n',         icon: Languages, labelKey: 'nav.i18n' },
     ],
   },
@@ -101,6 +107,20 @@ export default function DashboardLayout() {
   const admin = getCurrentAdmin();
   const initial = (admin?.name?.[0] || admin?.email?.[0] || 'A').toUpperCase();
 
+  // IA 감사 2026-06-09 — Feature Flag 조회. requiresFeature 마킹 메뉴 가림.
+  const [features, setFeatures] = useState({});
+  useEffect(() => {
+    adminApi.listFeatures()
+      .then((res) => {
+        const map = {};
+        for (const it of (res.items || [])) {
+          map[it.key] = !!it.current_enabled;
+        }
+        setFeatures(map);
+      })
+      .catch(() => {});
+  }, []);
+
   // 그룹 펼침 상태 — 현재 경로가 속한 그룹은 자동으로 열림
   const activeGroup = groupForPath(location.pathname);
   const [openGroups, setOpenGroups] = useState(() => {
@@ -120,14 +140,14 @@ export default function DashboardLayout() {
     navigate('/login', { replace: true });
   }
 
-  function renderNavLink({ to, icon: Icon, labelKey, end, badge }) {
+  function renderNavLink({ to, icon: Icon, labelKey, labelDefault, end, badge }) {
     return (
       <NavLink
         key={to} to={to} end={end}
         className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
       >
         <Icon size={17} strokeWidth={2} />
-        <span>{t(labelKey)}</span>
+        <span>{t(labelKey, labelDefault)}</span>
         {badge != null && badge > 0 && <span className="nav-badge">{badge}</span>}
       </NavLink>
     );
@@ -137,11 +157,12 @@ export default function DashboardLayout() {
     <div className="admin-shell">
       <aside className="admin-sidebar">
         {/* 2026-05-27: 브랜드 클릭 시 메인 대시보드로 이동 */}
-        <Link to="/dashboard" className="sidebar-brand" aria-label="대시보드로 이동">
-          <div className="brand-mark">PW</div>
-          <div className="brand-text">
-            <div className="brand-title">PathWave</div>
-            <div className="brand-sub">Super Admin</div>
+        {/* pathwave 공통 로고 — 가로 lockup (마크+wordmark 결합) */}
+        <Link to="/dashboard" className="sidebar-brand" aria-label="pathwave 대시보드로 이동">
+          <img src="/pathwave_lockup.svg" alt="pathwave" style={{ height: 28, display: 'block' }} />
+          <div className="brand-text" style={{ display: 'none' }}>
+            <div className="brand-title">pathwave</div>
+            <div className="brand-sub">super admin</div>
           </div>
         </Link>
 
@@ -167,7 +188,10 @@ export default function DashboardLayout() {
               </button>
               {isOpen && (
                 <nav className="sidebar-nav">
-                  {g.items.map(renderNavLink)}
+                  {/* IA 감사 2026-06-09 — requiresFeature 마킹된 항목은 Feature Flag 가 OFF 면 가림. */}
+                  {g.items
+                    .filter((it) => !it.requiresFeature || features[it.requiresFeature])
+                    .map(renderNavLink)}
                 </nav>
               )}
             </div>

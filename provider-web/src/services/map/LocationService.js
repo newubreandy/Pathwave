@@ -56,19 +56,46 @@ class LocationService {
   }
 
   /**
-   * 주소로 좌표 검색 (Geocoding - 모의 구현)
-   * 실제 운영 시 Kakao Local API나 Google Geocoding API 연동
-   * @param {string} address 
-   * @returns {Promise<Object>} { lat, lng }
+   * 주소로 좌표 검색 (Geocoding) — OSM Nominatim 사용 (2026-06-09).
+   *
+   * 비용 0 (Google Maps Platform 회피). Nominatim Usage Policy:
+   *   - 무료 1 req/sec/IP — Rate Limit 자가 준수
+   *   - User-Agent 필수 — 'PathWave/1.0 (admin@pathwave.app)' 송신
+   *   - 결과 캐시 권장 — 같은 주소 24h 메모리 캐시
+   *
+   * @param {string} address
+   * @returns {Promise<Object>} { lat, lng } — 실패 시 기본 좌표 fallback
    */
   async geocodeAddress(address) {
-    // TODO: 백엔드 지오코딩 API 연동
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // 모의 좌표 반환
-        resolve({ lat: 37.4979, lng: 127.0276 }); // 강남역
-      }, 500);
-    });
+    if (!address || !address.trim()) {
+      return this.getDefaultCoordinates();
+    }
+    const key = address.trim();
+    if (this._geoCache && this._geoCache[key] &&
+        (Date.now() - this._geoCache[key].ts) < 24 * 3600 * 1000) {
+      return this._geoCache[key].coords;
+    }
+    try {
+      const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=kr&q='
+                + encodeURIComponent(key);
+      const res = await fetch(url, {
+        headers: { 'User-Agent': 'PathWave/1.0 (admin@pathwave.app)' },
+      });
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        const coords = {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon),
+        };
+        this._geoCache = this._geoCache || {};
+        this._geoCache[key] = { coords, ts: Date.now() };
+        return coords;
+      }
+    } catch (e) {
+      console.warn('[LocationService] Nominatim 실패:', e);
+    }
+    // 실패 시 기본(서울 시청). 운영 정책 — 사용자가 지도 클릭으로 보정.
+    return this.getDefaultCoordinates();
   }
 }
 

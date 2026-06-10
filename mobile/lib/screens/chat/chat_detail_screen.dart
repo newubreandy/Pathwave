@@ -129,58 +129,47 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     );
   }
 
-  /// 우측 상단 ⋮ 메뉴 — 신고 / 차단.
+  /// 우측 상단 ⋮ 메뉴 — 신고 / 차단. 공통 가이드 — showPwSheet (흰 글래스 + 블러 딤)
   void _showChatMenu() {
-    showModalBottomSheet<void>(
+    showPwSheet<void>(
       context: context,
-      barrierColor: const Color(0x99000000),
-      backgroundColor: AppTheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            ListTile(
-              leading: const Icon(Icons.flag_outlined, color: AppTheme.warning),
-              title: Text(_t.t('chat.report_facility', defaultValue: '매장 신고')),
-              subtitle: Text(_t.t('chat.report_facility_desc',
-                  defaultValue: '욕설·불법·스팸 등 이용규칙 위반 신고')),
-              onTap: () {
-                Navigator.of(ctx).pop();
-                _showReportSheet();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.block, color: AppTheme.error),
-              title: Text(_t.t('chat.block_facility', defaultValue: '매장 차단')),
-              subtitle: Text(_t.t('chat.block_facility_desc',
-                  defaultValue: '이 매장과의 대화를 더 이상 받지 않습니다')),
-              onTap: () {
-                Navigator.of(ctx).pop();
-                _confirmBlock();
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.flag_outlined, color: Colors.white),
+            title: Text(_t.t('chat.report_facility', defaultValue: '매장 신고'),
+                style: const TextStyle(color: Colors.white)),
+            subtitle: Text(_t.t('chat.report_facility_desc',
+                defaultValue: '욕설·불법·스팸 등 이용규칙 위반 신고'),
+                style: const TextStyle(color: Colors.white70)),
+            onTap: () {
+              Navigator.of(context).pop();
+              _showReportSheet();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.block, color: Colors.white),
+            title: Text(_t.t('chat.block_facility', defaultValue: '매장 차단'),
+                style: const TextStyle(color: Colors.white)),
+            subtitle: Text(_t.t('chat.block_facility_desc',
+                defaultValue: '이 매장과의 대화를 더 이상 받지 않습니다'),
+                style: const TextStyle(color: Colors.white70)),
+            onTap: () {
+              Navigator.of(context).pop();
+              _confirmBlock();
+            },
+          ),
+        ],
       ),
     );
   }
 
-  /// 신고 시트 — 사유 선택 + 상세 입력 후 제출.
+  /// 신고 시트 — 사유 선택 + 상세 입력 후 제출. 공통 가이드 — showPwSheet.
   Future<void> _showReportSheet() async {
-    final submitted = await showModalBottomSheet<bool>(
+    final submitted = await showPwSheet<bool>(
       context: context,
-      isScrollControlled: true,
-      barrierColor: const Color(0x99000000),
-      backgroundColor: AppTheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => _ReportSheet(facilityId: _facilityIdInt),
+      child: _ReportSheet(facilityId: _facilityIdInt),
     );
     if (submitted == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -192,34 +181,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   /// 매장 차단 — 확인 후 차단하고 채팅 화면을 닫는다.
   Future<void> _confirmBlock() async {
-    final confirmed = await showDialog<bool>(
+    // 공통 가이드 — showPwDialog (흰 글래스 + 블러 딤 + 타이틀/버튼 중앙)
+    final confirmed = await showPwDialog<bool>(
       context: context,
-      barrierColor: const Color(0x99000000),
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(_t.t('chat.block_confirm_title',
-            defaultValue: '매장을 차단할까요?')),
-        content: Text(
-          _t.t('chat.block_confirm_body',
-              defaultValue: '차단하면 이 매장과의 채팅이 목록에서 사라지고 메시지를 주고받을 수 없습니다. 차단은 설정 > 차단 목록에서 언제든 해제할 수 있습니다.'),
-          style: const TextStyle(color: AppTheme.textSecondary, height: 1.5),
+      title: Text(_t.t('chat.block_confirm_title', defaultValue: '매장을 차단할까요?')),
+      content: Text(_t.t('chat.block_confirm_body',
+          defaultValue: '차단하면 이 매장과의 채팅이 목록에서 사라지고 메시지를 주고받을 수 없습니다. 차단은 설정 > 차단 목록에서 언제든 해제할 수 있습니다.')),
+      actions: [
+        PwButton(
+          variant: PwButtonVariant.text,
+          fullWidth: false,
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(_t.t('common.cancel', defaultValue: '취소')),
         ),
-        actions: [
-          PwButton(
-            variant: PwButtonVariant.text,
-            fullWidth: false,
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(_t.t('common.cancel', defaultValue: '취소')),
-          ),
-          PwButton(
-            variant: PwButtonVariant.danger,
-            fullWidth: false,
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(_t.t('chat.block_confirm_btn', defaultValue: '차단')),
-          ),
-        ],
-      ),
+        PwButton(
+          variant: PwButtonVariant.danger,
+          fullWidth: false,
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(_t.t('chat.block_confirm_btn', defaultValue: '차단')),
+        ),
+      ],
     );
     if (confirmed != true) return;
     try {

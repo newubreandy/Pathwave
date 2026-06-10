@@ -68,8 +68,9 @@
 }
 
 .btn-primary:not(:disabled):hover {
+  /* 2026-06-10 — 사용자 가이드: 외곽 큰 glow 제거 (스탬프 등록 버튼 기준).
+     hover = 배경 색 변경만으로 피드백, box-shadow 미사용. */
   background: var(--pw-primary-hover);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 /* Outline — 다크 테마 톤 정렬 (사용자 요구 2026-05-10).

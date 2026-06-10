@@ -10,11 +10,12 @@
 library;
 
 import 'dart:async';
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../utils/error_message.dart';
-import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../services/checkin_service.dart';
@@ -49,6 +50,7 @@ class _MemberQrScreenState extends State<MemberQrScreen> {
   }
 
   Future<void> _refresh() async {
+    // preview 도 dev 토큰으로 정상 인증되므로 별도 가드 불필요 (2026-06-09).
     setState(() { _busy = true; _error = null; });
     try {
       final res = await CheckinService().issueMemberQr();
@@ -102,33 +104,81 @@ class _MemberQrScreenState extends State<MemberQrScreen> {
               const SizedBox(height: 32),
 
               // QR 영역
-              if (_busy && _token == null)
+              if (_error == '__PREVIEW_GUEST__') ...[
+                const SizedBox(height: 24),
+                const Icon(Icons.lock_outline, size: 56, color: Colors.white),
+                const SizedBox(height: 14),
+                Text(
+                  context.t('mobile.member_qr.guest_title',
+                      defaultValue: '회원 QR은 가입 후 이용 가능합니다'),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  context.t('mobile.member_qr.guest_desc',
+                      defaultValue: '둘러보기 모드에서는 QR을 발급할 수 없습니다.\n회원가입 후 마이페이지에서 다시 시도해 주세요.'),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70, height: 1.4),
+                ),
+                const SizedBox(height: 24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: PwButton(
+                    onPressed: () => context.push('/auth/register'),
+                    child: Text(context.t('mobile.auth.signup',
+                        defaultValue: '회원가입')),
+                  ),
+                ),
+              ] else if (_busy && _token == null)
                 const Center(child: CircularProgressIndicator())
               else if (_error != null)
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.error.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(_error!, style: const TextStyle(color: AppTheme.error)),
+                // 가이드 — 안내/경고는 박스 없이 평문 흰. ※ prefix.
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text('※ ${_error!}',
+                    style: const TextStyle(color: Colors.white, height: 1.5, fontSize: 13)),
                 )
               else if (_token != null)
                 Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: QrImageView(
-                      data: _token!,
-                      version: QrVersions.auto,
-                      size: 240,
-                      backgroundColor: Colors.white,
-                      gapless: false,
-                      // 만료 시 회색 처리
-                      foregroundColor: expired ? Colors.grey : Colors.black,
+                  // 검은 글래스 카드 + 흰 QR — 다크 디자인 가이드 일관성 (2026-06-09).
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.28),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.18),
+                            width: 1,
+                          ),
+                        ),
+                        child: QrImageView(
+                          data: _token!,
+                          version: QrVersions.auto,
+                          size: 240,
+                          backgroundColor: Colors.transparent,
+                          gapless: false,
+                          eyeStyle: QrEyeStyle(
+                            eyeShape: QrEyeShape.square,
+                            color: expired
+                                ? Colors.white.withValues(alpha: 0.35)
+                                : Colors.white,
+                          ),
+                          dataModuleStyle: QrDataModuleStyle(
+                            dataModuleShape: QrDataModuleShape.square,
+                            color: expired
+                                ? Colors.white.withValues(alpha: 0.35)
+                                : Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -170,11 +220,7 @@ class _MemberQrScreenState extends State<MemberQrScreen> {
 
               const Spacer(),
 
-              PwButton(
-                variant: PwButtonVariant.text,
-                onPressed: () => context.pop(),
-                child: Text(context.t('mobile.common.close', defaultValue: '닫기')),
-              ),
+              // 하단 "닫기" 제거 — PwAppBar 의 ← 백 버튼으로 동일 동작 (공통 가이드).
             ],
           ),
         ),

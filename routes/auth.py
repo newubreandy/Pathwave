@@ -1,6 +1,7 @@
 import os
 import random
 import re
+import secrets
 import string
 import smtplib
 from email.mime.text import MIMEText
@@ -267,12 +268,16 @@ def send_code():
         return jsonify({'success': False, 'message': '유효한 이메일을 입력해 주세요.'}), 400
 
     db = get_db()
+    # 회원 탈퇴 정책 (사용자 결정 2026-06-08): 동일 이메일 영구 차단.
+    # deleted_at 가 있는(탈퇴된) 행이라도 동일 이메일 재가입 불가.
     existing = db.execute(
-        "SELECT id FROM users WHERE email=? AND deleted_at IS NULL", (email,)
+        "SELECT id, deleted_at FROM users WHERE email=?", (email,)
     ).fetchone()
     if existing:
         db.close()
-        return jsonify({'success': False, 'message': '이미 가입된 이메일입니다.'}), 409
+        msg = ('탈퇴 처리된 이메일입니다. 다른 이메일로 가입해 주세요.'
+               if existing['deleted_at'] else '이미 가입된 이메일입니다.')
+        return jsonify({'success': False, 'message': msg}), 409
 
     code       = generate_code()
     expires_at = (datetime.utcnow() + timedelta(minutes=5)).isoformat()
@@ -331,6 +336,8 @@ def register():
     invitation_code = (data.get('invitation_code') or '').strip() or None
     consents_in     = data.get('consents') or []
     birth_year      = data.get('birth_year')
+    # phone 은 선택 입력 (이메일 찾기 용도). 공백 시 NULL.
+    phone           = (data.get('phone') or '').strip() or None
 
     if not email or not code or not password:
         return jsonify({'success': False, 'message': '모든 필드를 입력해 주세요.'}), 400
@@ -360,9 +367,13 @@ def register():
         db.close()
         return jsonify({'success': False, 'message': '인증이 만료되었습니다. 처음부터 다시 진행해 주세요.'}), 400
 
-    if db.execute("SELECT id FROM users WHERE email=? AND deleted_at IS NULL", (email,)).fetchone():
+    # 동일 이메일 영구 차단 (탈퇴된 행 포함).
+    dup = db.execute("SELECT id, deleted_at FROM users WHERE email=?", (email,)).fetchone()
+    if dup:
         db.close()
-        return jsonify({'success': False, 'message': '이미 가입된 이메일입니다.'}), 409
+        msg = ('탈퇴 처리된 이메일입니다. 다른 이메일로 가입해 주세요.'
+               if dup['deleted_at'] else '이미 가입된 이메일입니다.')
+        return jsonify({'success': False, 'message': msg}), 409
 
     # 미성년자(만 14~18) → 부모(어른) 초대 코드 필수 (PR #47)
     parent_invitation_id = None
@@ -412,10 +423,10 @@ def register():
     hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     cur = db.execute(
         """INSERT INTO users (email, password, provider, invited_via_code,
-                              birth_year, age_group, parent_invitation_id)
-           VALUES (?,?,?,?,?,?,?)""",
+                              birth_year, age_group, parent_invitation_id, phone)
+           VALUES (?,?,?,?,?,?,?,?)""",
         (email, hashed, 'email', invitation_code,
-         birth_year, age_group, parent_invitation_id)
+         birth_year, age_group, parent_invitation_id, phone)
     )
     user_id = cur.lastrowid
     db.execute('UPDATE email_codes SET used=1 WHERE email=? AND code=?', (email, code))
@@ -470,6 +481,47 @@ def login():
         'message': '로그인 성공!',
         **issue_token_pair(row['id'], email),
         'user': {'id': row['id'], 'email': email},
+    })
+
+
+@auth_bp.route('/dev-preview-login', methods=['POST'])
+def dev_preview_login():
+    """둘러보기(preview) 모드 — dev/staging 전용.
+
+    PATHWAVE_ENV != 'production' 일 때만 동작. 운영에서는 404.
+    "로그인된 사용자" 로 동작해 모든 API 가 정상 호출되도록 dev 사용자
+    (이메일 ``preview@dev.local``) 의 실 JWT 토큰을 발급한다.
+    없으면 자동 시드 (deleted_at 무관 영구 보존).
+    """
+    if os.environ.get('PATHWAVE_ENV', 'development').lower() == 'production':
+        return jsonify({'success': False, 'message': 'not available in production'}), 404
+
+    email = 'preview@dev.local'
+    db = get_db()
+    row = db.execute(
+        "SELECT id FROM users WHERE email=? AND deleted_at IS NULL",
+        (email,)
+    ).fetchone()
+    if not row:
+        # 시드 — provider='email' + 랜덤 비번 (외부 로그인 불가, dev 전용)
+        random_pw = bcrypt.hashpw(secrets.token_hex(16).encode(),
+                                   bcrypt.gensalt()).decode()
+        cur = db.execute(
+            "INSERT INTO users (email, password, provider, language, verified, age_group) "
+            "VALUES (?, ?, 'email', 'ko', 1, 'adult_19_plus')",
+            (email, random_pw)
+        )
+        db.commit()
+        user_id = cur.lastrowid
+    else:
+        user_id = row['id']
+    db.close()
+
+    return jsonify({
+        'success': True,
+        'message': 'preview 모드 진입 (dev)',
+        **issue_token_pair(user_id, email),
+        'user': {'id': user_id, 'email': email, 'provider': 'preview'},
     })
 
 
@@ -818,3 +870,159 @@ def reset_password():
     db.close()
 
     return jsonify({'success': True, 'message': '비밀번호가 재설정되었습니다.'})
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 이메일 찾기 (2026-06-08 사용자 결정)
+#
+# 흐름:
+#   1) POST /api/auth/find-email/by-phone   { phone }
+#      → phone 으로 가입된 이메일 목록(마스킹) 반환.
+#   2) POST /api/auth/find-email/send-code  { phone, email }
+#      → 사용자가 마스킹 목록에서 선택한 이메일에 인증코드 발송.
+#         (phone–email 매칭 검증 필수.)
+#   3) POST /api/auth/find-email/verify     { phone, email, code }
+#      → 인증 통과 시 전체 이메일 공개. (자동 로그인은 별도 정책)
+# ──────────────────────────────────────────────────────────────────────────────
+
+def _mask_email(email: str) -> str:
+    """이메일 중간 부분을 ``***`` 로 가린다. 예) ``abcdef@x.com`` → ``ab***ef@x.com``.
+
+    로컬 길이별:
+      - 1글자          → ``*@domain``
+      - 2글자          → ``a***@domain``
+      - 3글자          → ``a***c@domain``
+      - 4글자 이상     → 앞 2 + ``***`` + 마지막 1~2 글자.
+    """
+    local, _, domain = email.partition('@')
+    if not local or not domain:
+        return email
+    n = len(local)
+    if n <= 1:
+        return f'*@{domain}'
+    if n == 2:
+        return f'{local[0]}***@{domain}'
+    if n == 3:
+        return f'{local[0]}***{local[-1]}@{domain}'
+    return f'{local[:2]}***{local[-1]}@{domain}'
+
+
+def _normalize_phone(raw: str) -> str:
+    """입력 phone 에서 숫자만 추출. 빈 문자열이면 ''."""
+    if not raw:
+        return ''
+    return ''.join(ch for ch in raw if ch.isdigit())
+
+
+@auth_bp.route('/find-email/by-phone', methods=['POST'])
+def find_email_by_phone():
+    """phone 으로 가입된 이메일 목록(마스킹) 반환.
+
+    body: ``{ phone }``
+    response:
+      - 성공 — ``{ success: true, matches: [{ email_masked }, ...] }``
+      - 없음 — 200 + 빈 배열 (계정 열거 방지를 위해 동일 형식).
+    """
+    data  = request.get_json(silent=True) or {}
+    phone = _normalize_phone(str(data.get('phone') or ''))
+    if not phone or len(phone) < 8:
+        return jsonify({'success': False,
+                        'message': '연락처를 정확히 입력해 주세요.'}), 400
+
+    db = get_db()
+    rows = db.execute(
+        "SELECT email FROM users WHERE phone=? AND deleted_at IS NULL "
+        "ORDER BY created_at DESC LIMIT 5",
+        (phone,)
+    ).fetchall()
+    db.close()
+
+    matches = [{'email_masked': _mask_email(r['email'])} for r in rows]
+    return jsonify({'success': True, 'matches': matches})
+
+
+@auth_bp.route('/find-email/send-code', methods=['POST'])
+def find_email_send_code():
+    """phone–email 매칭 검증 후, 해당 이메일로 인증코드 발송.
+
+    body: ``{ phone, email }`` (email 은 사용자가 마스킹 목록에서 풀어 입력)
+    """
+    data  = request.get_json(silent=True) or {}
+    phone = _normalize_phone(str(data.get('phone') or ''))
+    email = (data.get('email') or '').strip().lower()
+    if not phone or not email:
+        return jsonify({'success': False,
+                        'message': '연락처와 이메일을 모두 입력해 주세요.'}), 400
+
+    db  = get_db()
+    row = db.execute(
+        "SELECT id FROM users WHERE email=? AND phone=? AND deleted_at IS NULL",
+        (email, phone)
+    ).fetchone()
+    if not row:
+        db.close()
+        # 계정 열거 방지 — 매칭 실패도 동일 메시지로 응답.
+        return jsonify({'success': False,
+                        'message': '연락처와 이메일이 일치하지 않습니다.'}), 404
+
+    code       = generate_code()
+    expires_at = (datetime.utcnow() + timedelta(minutes=5)).isoformat()
+    db.execute('UPDATE email_codes SET used=1 WHERE email=? AND used=0', (email,))
+    db.execute(
+        'INSERT INTO email_codes (email, code, expires_at) VALUES (?,?,?)',
+        (email, code, expires_at)
+    )
+    db.commit()
+    db.close()
+
+    # 회원가입 인증과 동일 메일 렌더링 (`send_email(to_email, code, lang)`).
+    try:
+        send_email(email, code)
+    except Exception as e:  # noqa: BLE001
+        logger.warning('[find-email] 이메일 발송 실패: %s', e)
+
+    return jsonify({'success': True,
+                    'message': '인증 코드를 이메일로 발송했습니다.'})
+
+
+@auth_bp.route('/find-email/verify', methods=['POST'])
+def find_email_verify():
+    """phone+email+code 검증. 통과 시 전체 이메일 공개.
+
+    body: ``{ phone, email, code }``
+    response: ``{ success: true, email }``
+    """
+    data  = request.get_json(silent=True) or {}
+    phone = _normalize_phone(str(data.get('phone') or ''))
+    email = (data.get('email') or '').strip().lower()
+    code  = (data.get('code')  or '').strip()
+    if not phone or not email or not code:
+        return jsonify({'success': False,
+                        'message': '모든 필드를 입력해 주세요.'}), 400
+
+    db  = get_db()
+    user = db.execute(
+        "SELECT id FROM users WHERE email=? AND phone=? AND deleted_at IS NULL",
+        (email, phone)
+    ).fetchone()
+    if not user:
+        db.close()
+        return jsonify({'success': False,
+                        'message': '연락처와 이메일이 일치하지 않습니다.'}), 404
+
+    row = db.execute(
+        """SELECT id, expires_at FROM email_codes
+           WHERE email=? AND code=? AND used=0
+           ORDER BY id DESC LIMIT 1""",
+        (email, code)
+    ).fetchone()
+    if not row or datetime.utcnow() > datetime.fromisoformat(row['expires_at']):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '인증이 만료되었습니다. 처음부터 다시 진행해 주세요.'}), 400
+
+    db.execute('UPDATE email_codes SET used=1 WHERE id=?', (row['id'],))
+    db.commit()
+    db.close()
+
+    return jsonify({'success': True, 'email': email})

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 
 import '../../utils/error_message.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -39,6 +40,35 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     await _reload();
   }
 
+  /// 즐겨찾기 해제 확인 다이얼로그 (실수 방지). 2026-06-09.
+  Future<void> _confirmRemove(Map<String, dynamic> data) async {
+    final id = data['id'] as int?;
+    if (id == null) return;
+    final name = data['name']?.toString() ?? '매장';
+    final ok = await showPwDialog<bool>(
+      context: context,
+      title: const Text('즐겨찾기 해제'),
+      content: Text('"$name"을(를) 즐겨찾기에서 제거할까요?'),
+      actions: [
+        PwButton(
+          variant: PwButtonVariant.text,
+          fullWidth: false,
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('취소'),
+        ),
+        PwButton(
+          variant: PwButtonVariant.danger,
+          fullWidth: false,
+          onPressed: () => Navigator.of(context).pop(true),
+          child: const Text('해제'),
+        ),
+      ],
+    );
+    if (ok == true) {
+      await _remove(id);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,12 +99,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               ]);
             }
             return ListView.separated(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.fromLTRB(16, 16, 16,
+                  16 + MediaQuery.of(context).viewPadding.bottom),
               itemCount: list.length,
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, i) => _FavoriteCard(
                 data: list[i],
-                onRemove: () => _remove(list[i]['id'] as int),
+                onRemove: () => _confirmRemove(list[i]),
               ),
             );
           },
@@ -146,15 +177,38 @@ class _FavoriteCard extends StatelessWidget {
               ],
             ),
           ),
-          // 즐겨찾기 해제 버튼 (하트)
-          PwIconButton(
-            icon: Icons.favorite,
-            color: AppTheme.primary,
-            tooltip: '즐겨찾기 해제',
-            onPressed: onRemove,
+          // 우측 액션 — 공유 + 즐겨찾기 해제 (카드 본체는 매장 이동)
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              PwIconButton(
+                icon: Icons.share_outlined,
+                color: Colors.white,
+                tooltip: '공유하기',
+                onPressed: () => _share(context, id, name),
+              ),
+              const SizedBox(height: 4),
+              PwIconButton(
+                icon: Icons.favorite,
+                color: AppTheme.primary,
+                tooltip: '즐겨찾기 해제',
+                onPressed: onRemove,
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _share(BuildContext context, int? id, String name) async {
+    if (id == null) return;
+    // 2026-06-09 — Clipboard 복사 + SnackBar (share_plus 대안 — v1 가벼운 구현).
+    final url = 'https://pathwave.io/facility/$id';
+    await Clipboard.setData(ClipboardData(text: '$name — $url'));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('"$name" 링크를 복사했습니다.')),
     );
   }
 }

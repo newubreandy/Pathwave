@@ -18,8 +18,9 @@ class AppTheme {
   static const Color success       = Color(0xFF10B981);
   static const Color warning       = Color(0xFFF59E0B);
   static const Color textPrimary   = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFFA1A1AA);
-  static const Color textHint      = Color(0xFF71717A);
+  // 그라데이션 위 가독성 — 흰톤(alpha). NeuTheme 와 동일 정책.
+  static const Color textSecondary = Color(0xC8FFFFFF);   // white 78%
+  static const Color textHint      = Color(0x8AFFFFFF);   // white 54%
   static const Color border        = Color(0xFF3F3F5C);
 
   // ── 라운드 토큰 (DesignCode 톤 — 둥근 카드 계열) ──────────────────
@@ -58,7 +59,9 @@ class AppTheme {
         onSecondary:      Colors.white,
         onSurface:        textPrimary,
       ),
-      scaffoldBackgroundColor: background,
+      // 글로벌 시즌 배경(SeasonalBackground) 이 MaterialApp.builder 에서
+      // 모든 화면 뒤를 깔기 때문에, Scaffold 는 투명이어야 그라데이션이 비친다.
+      scaffoldBackgroundColor: Colors.transparent,
 
       // 폰트 — DesignCode 톤: heading letterSpacing 좁힘 + line-height 정제.
       textTheme: TextTheme(
@@ -76,16 +79,21 @@ class AppTheme {
         labelLarge:    _ts(14, FontWeight.w600,             h: 1.35),
       ),
 
-      // AppBar
+      // AppBar — 시즌 배경 위에 자연스럽게 얹히도록 투명. 그림자로 깊이만 표현.
       appBarTheme: const AppBarTheme(
-        backgroundColor: background,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
           color: textPrimary,
           fontSize: 18,
           fontWeight: FontWeight.w600,
           letterSpacing: -0.2,
+          shadows: [
+            Shadow(color: Colors.black54, blurRadius: 6, offset: Offset(0, 1)),
+          ],
         ),
         iconTheme: IconThemeData(color: textPrimary),
       ),

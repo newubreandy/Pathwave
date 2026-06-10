@@ -10,8 +10,9 @@ class StampService {
 
   /// 내 스탬프 목록 (시설별 그룹). 백엔드 stamp_bp.
   Future<List<Map<String, dynamic>>> myStamps() async {
-    final data = await _api.get('/api/stamps');
-    return (data['stamps'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    // 2026-06-09 — 백엔드 라우트 정합: /api/users/me/stamps + stamps_by_facility
+    final data = await _api.get('/api/users/me/stamps');
+    return (data['stamps_by_facility'] as List?)?.cast<Map<String, dynamic>>() ?? [];
   }
 
   /// 시설별 스탬프 카드 정책 + 보유 카운트.

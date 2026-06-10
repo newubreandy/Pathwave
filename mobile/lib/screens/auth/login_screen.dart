@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../utils/error_message.dart';
 import 'package:go_router/go_router.dart';
@@ -7,9 +8,6 @@ import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../utils/i18n_context.dart';
 import '../../utils/neu_theme.dart';
-import '../../widgets/neu/neu_button.dart';
-import '../../widgets/neu/neu_card.dart';
-import '../../widgets/neu/neu_text_field.dart';
 import '../../widgets/pw.dart';
 import '../../widgets/social_login_row.dart';
 
@@ -73,7 +71,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final auth = context.read<AuthService>();
     return Scaffold(
-      backgroundColor: NeuTheme.background,
+      // 전 화면 글로벌 SeasonalBackground 적용 — Scaffold 는 투명 유지.
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -82,31 +81,16 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const SizedBox(height: 24),
               Center(
-                child: Container(
-                  width: 88, height: 88,
-                  decoration: BoxDecoration(
-                    color: NeuTheme.surface,
-                    borderRadius: BorderRadius.circular(28),
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft, end: Alignment.bottomRight,
-                      colors: [NeuTheme.surfaceLight, NeuTheme.surface],
-                    ),
-                    boxShadow: NeuTheme.outerShadow(distance: 8, blur: 18),
-                  ),
-                  child: const Center(
-                    child: Text('PW', style: TextStyle(
-                      fontSize: 28, fontWeight: FontWeight.w800,
-                      color: NeuTheme.primary,
-                    )),
-                  ),
+                // 로고 — 보라 fill + 흰 PW (사용자 가이드 통일).
+                // 그림자는 멀고 흐리게 (alpha 18% / blur 32 / offset 12) — 부드러운 floating 느낌.
+                // 2026-06-10 — 가로 lockup (마크 + wordmark 결합) 단일 SVG.
+                child: SvgPicture.asset(
+                  'assets/brand_logos/pathwave_lockup.svg',
+                  height: 56,
+                  semanticsLabel: 'pathwave',
                 ),
               ),
-              const SizedBox(height: 18),
-              Center(
-                child: Text('PathWave',
-                  style: Theme.of(context).textTheme.displaySmall),
-              ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 12),
               Center(
                 child: Text(
                   context.t('mobile.auth.login.subtitle',
@@ -116,16 +100,17 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 28),
 
-              NeuTextField(
+              // 공통 가이드 — PwTextField (글래스 톤 InputDecorationTheme 자동 적용)
+              PwTextField(
                 controller: _emailCtrl,
-                hintText: '이메일',
+                hint: '이메일',
                 prefixIcon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 12),
-              NeuTextField(
+              PwTextField(
                 controller: _passwordCtrl,
-                hintText: '비밀번호',
+                hint: '비밀번호',
                 prefixIcon: Icons.lock_outline,
                 obscureText: true,
                 textInputAction: TextInputAction.done,
@@ -133,25 +118,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
               if (_error != null) ...[
                 const SizedBox(height: 12),
-                NeuCard(
-                  padding: const EdgeInsets.all(14),
-                  child: Text(_error!,
-                    style: const TextStyle(color: NeuTheme.error, fontSize: 13)),
+                // 가이드 — 안내/경고는 박스 없이 평문 흰. ※ prefix.
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text('※ ${_error!}',
+                    style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.5)),
                 ),
               ],
 
               const SizedBox(height: 20),
-              NeuButton(
-                variant: NeuButtonVariant.primary,
+              // 공통 가이드 — PwButton primary (loading 옵션 내장)
+              PwButton(
                 onPressed: _busy ? null : _login,
-                child: Center(
-                  child: _busy
-                    ? const SizedBox(width: 22, height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : Text(
-                        context.t('mobile.auth.login.button',
-                            defaultValue: '로그인'),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                loading: _busy,
+                child: Text(
+                  context.t('mobile.auth.login.button', defaultValue: '로그인'),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 ),
               ),
 
@@ -159,33 +141,55 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  PwButton(
-                    variant: PwButtonVariant.text,
-                    fullWidth: false,
-                    // push 사용 — 비밀번호 찾기 화면에서 백 버튼으로 로그인 복귀.
-                    onPressed: _busy ? null : () => context.push('/auth/forgot'),
-                    child: Text(
-                      context.t('mobile.auth.forgot_password',
-                          defaultValue: '비밀번호 찾기'),
-                      style: const TextStyle(color: NeuTheme.textSecondary)),
+                  // 이메일 찾기 + 비밀번호 찾기 — 두 진입점 가로 묶음.
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      PwButton(
+                        variant: PwButtonVariant.text,
+                        fullWidth: false,
+                        onPressed: _busy ? null : () => context.push('/auth/find-email'),
+                        child: Text(
+                          context.t('mobile.auth.find_email',
+                              defaultValue: '이메일 찾기'),
+                        ),
+                      ),
+                      Text('  ·  ',
+                          style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.5))),
+                      PwButton(
+                        variant: PwButtonVariant.text,
+                        fullWidth: false,
+                        onPressed: _busy ? null : () => context.push('/auth/forgot'),
+                        child: Text(
+                          context.t('mobile.auth.forgot_password',
+                              defaultValue: '비밀번호 찾기'),
+                        ),
+                      ),
+                    ],
                   ),
                   PwButton(
                     variant: PwButtonVariant.text,
                     fullWidth: false,
-                    // push 사용 — 회원가입 화면에서 백 버튼으로 로그인 복귀.
                     onPressed: _busy ? null : () => context.push('/auth/register'),
                     child: Text(
-                      context.t('mobile.auth.signup',
-                          defaultValue: '회원가입'),
-                      style: const TextStyle(color: NeuTheme.primary, fontWeight: FontWeight.w600)),
+                      context.t('mobile.auth.signup', defaultValue: '회원가입'),
+                      // 강조 — 흰 100% + bold (공통 가이드 + 강조 패턴)
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ],
               ),
 
               const SizedBox(height: 4),
               Row(
+                // 가로 라인 흐린 흰 (사용자 가이드)
                 children: [
-                  const Expanded(child: Divider(color: NeuTheme.border)),
+                  Expanded(
+                      child: Divider(color: Colors.white.withValues(alpha: 0.18))),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text(
@@ -193,7 +197,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           defaultValue: '또는 SNS 로 계속'),
                       style: const TextStyle(color: NeuTheme.textHint, fontSize: 12)),
                   ),
-                  const Expanded(child: Divider(color: NeuTheme.border)),
+                  Expanded(
+                      child: Divider(color: Colors.white.withValues(alpha: 0.18))),
                 ],
               ),
               const SizedBox(height: 18),
@@ -218,28 +223,18 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
 
               const SizedBox(height: 28),
-              const Divider(color: NeuTheme.border),
+              // 둘러보기 버튼 위 가로 라인 — 흐린 흰 (사용자 가이드)
+              Divider(color: Colors.white.withValues(alpha: 0.18)),
               const SizedBox(height: 16),
 
-              // PR #68 — 둘러보기 (로그인 없이 화면 미리보기)
-              NeuButton(
+              // PR #68 — 둘러보기 (로그인 없이 화면 미리보기) — PwButton 가이드 통일
+              PwButton(
+                variant: PwButtonVariant.secondary,
                 onPressed: _busy ? null : _previewMode,
-                child: Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.visibility_outlined, size: 18,
-                        color: NeuTheme.textSecondary),
-                      const SizedBox(width: 8),
-                      Text(
-                        context.t('mobile.auth.login.preview_mode',
-                            defaultValue: '로그인 없이 둘러보기'),
-                        style: const TextStyle(
-                          color: NeuTheme.textSecondary,
-                          fontWeight: FontWeight.w600,
-                        )),
-                    ],
-                  ),
+                icon: Icons.visibility_outlined,
+                child: Text(
+                  context.t('mobile.auth.login.preview_mode',
+                      defaultValue: '로그인 없이 둘러보기'),
                 ),
               ),
               const SizedBox(height: 8),

@@ -134,7 +134,15 @@ class _SearchScreenState extends State<SearchScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('매장 검색', style: Theme.of(context).textTheme.displaySmall),
+          Text(
+            '매장 검색',
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+              color: Colors.white,
+              shadows: const [
+                Shadow(color: Colors.black54, blurRadius: 8, offset: Offset(0, 2)),
+              ],
+            ),
+          ),
           const SizedBox(height: 12),
           PwTextField(
             controller: _searchCtrl,
@@ -208,16 +216,12 @@ class _ResultCard extends StatelessWidget {
     final imageUrl = data['image_url']?.toString();
     final dist = data['distance_km'];
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(14),
-      onTap: id != null ? () => context.push('/facility/$id') : null,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppTheme.border),
-        ),
-        padding: const EdgeInsets.all(12),
+    // 2026-06-09 — InkWell → GestureDetector (Material 없는 글래스카드 안에서도 hit 보장).
+    return GlassCard(
+      padding: const EdgeInsets.all(12),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: id != null ? () => context.push('/facility/$id') : null,
         child: Row(
           children: [
             ClipRRect(
@@ -228,15 +232,15 @@ class _ResultCard extends StatelessWidget {
                   ? CachedNetworkImage(
                       imageUrl: imageUrl,
                       fit: BoxFit.cover,
-                      placeholder: (_, _) => Container(color: AppTheme.surfaceLight),
+                      placeholder: (_, _) => Container(color: Colors.white12),
                       errorWidget: (_, _, _) => Container(
-                        color: AppTheme.surfaceLight,
-                        child: const Icon(Icons.store, color: AppTheme.textHint),
+                        color: Colors.white12,
+                        child: const Icon(Icons.store, color: Colors.white54),
                       ),
                     )
                   : Container(
-                      color: AppTheme.surfaceLight,
-                      child: const Icon(Icons.store, color: AppTheme.textHint),
+                      color: Colors.white12,
+                      child: const Icon(Icons.store, color: Colors.white54),
                     ),
               ),
             ),
@@ -245,21 +249,27 @@ class _ResultCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
                   if (address.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(address,
-                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                      style: const TextStyle(color: Colors.white70, fontSize: 12),
                       maxLines: 1, overflow: TextOverflow.ellipsis),
                   ],
                   if (dist != null) ...[
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.place, size: 12, color: AppTheme.textHint),
+                        const Icon(Icons.place, size: 12, color: Colors.white54),
                         const SizedBox(width: 2),
                         Text('${(dist as num).toStringAsFixed(2)} km',
-                          style: const TextStyle(color: AppTheme.textHint, fontSize: 11)),
+                          style: const TextStyle(color: Colors.white54, fontSize: 11)),
                       ],
                     ),
                   ],
@@ -269,7 +279,7 @@ class _ResultCard extends StatelessWidget {
             // 즐겨찾기 토글 하트
             PwIconButton(
               icon: isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: isFavorite ? AppTheme.primary : AppTheme.textHint,
+              color: isFavorite ? AppTheme.primary : Colors.white54,
               tooltip: isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가',
               onPressed: onFavoriteToggle,
             ),

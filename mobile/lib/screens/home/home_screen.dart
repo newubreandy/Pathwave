@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +7,9 @@ import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/ble_service.dart';
 import '../../services/i18n_service.dart';
+import '../../services/feature_service.dart';
+import '../../services/notification_service.dart';
+import '../notifications/notifications_screen.dart';
 import '../../services/permission_service.dart';
 import '../../services/theme_service.dart';
 import '../../utils/app_theme.dart';
@@ -21,6 +26,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _tab = 0;
+  int _unreadNotifCount = 0;   // 알림 탭 뱃지 카운트 (2026-06-08)
 
   @override
   void initState() {
@@ -43,6 +49,18 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       await NotificationPermissionDialog.showIfNeeded(context);
     });
+    _refreshUnreadCount();
+  }
+
+  /// 미읽음 알림 개수 갱신 — 진입 시 + 탭 전환 시.
+  /// preview 모드도 dev 토큰으로 정상 인증되므로 별도 가드 불필요 (2026-06-09).
+  Future<void> _refreshUnreadCount() async {
+    if (!mounted) return;
+    final auth = context.read<AuthService>();
+    if (auth.user == null) return;
+    final n = await NotificationService.instance.unreadCount();
+    if (!mounted) return;
+    setState(() => _unreadNotifCount = n);
   }
 
   @override
@@ -51,48 +69,81 @@ class _HomeScreenState extends State<HomeScreen> {
       const _HomeTab(),
       const SearchScreen(),
       const _MyPageTab(),
-      const _NotificationsTab(),
+      const NotificationsScreen(),
     ];
 
     return Scaffold(
-      // ⭐ 글래스모피즘 시즌 배경 — 4개 탭 전부 같은 배경 위에 표시.
-      //   서버 등록 이미지 있으면 BoxFit.cover, 없으면 계절 그라데이션.
-      //   ThemeService 변경 시 자동 rebuild.
-      extendBody: true,
-      backgroundColor: Colors.transparent,
-      body: SeasonalBackground(
-        child: SafeArea(child: tabs[_tab]),
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        onDestinationSelected: (i) => setState(() => _tab = i),
-        backgroundColor: AppTheme.surface.withValues(alpha: 0.85),
-        indicatorColor: AppTheme.primary.withValues(alpha: 0.2),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.home_outlined),
-            selectedIcon: const Icon(Icons.home),
-            label: I18nService.instance.t('nav.home', defaultValue: '홈'),
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.search),
-            selectedIcon: const Icon(Icons.search),
-            label: I18nService.instance.t('nav.search', defaultValue: '검색'),
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.person_outline),
-            selectedIcon: const Icon(Icons.person),
-            label: I18nService.instance.t('nav.my', defaultValue: '마이'),
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.notifications_outlined),
-            selectedIcon: const Icon(Icons.notifications),
-            label: I18nService.instance.t(
-              'nav.notifications',
-              defaultValue: '알림',
+      // 시즌 배경은 MaterialApp.builder 에서 글로벌로 깔리므로 Scaffold 자체는 투명.
+      // extendBody=false — 콘텐츠가 하단 네비를 침범하지 않게(버튼 잘림 방지).
+      // 네비는 블러라 뒤의 시즌 배경은 그대로 비친다.
+      extendBody: false,
+      body: SafeArea(child: tabs[_tab]),
+      // 하단 풀폭 글래스 바 — 화면 하단에 고정(타원형/floating 아님). 시즌 배경을 흐리게 비춤.
+      // 색/아이콘크기/라벨(흰 라인↔채움·선택만 라벨)은 NeuTheme.navigationBarTheme 글로벌.
+      bottomNavigationBar: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              // 블러 위주 — 배경 이미지가 그대로 비치게. 아주 옅은 틴트로 흰 아이콘 가독성만 확보.
+              // 구분선 없음(네비 바 자체가 콘텐츠와의 구분 역할).
+              color: Colors.black.withValues(alpha: 0.18),
+            ),
+            child: SafeArea(
+              top: false,
+              child: NavigationBar(
+                selectedIndex: _tab,
+                onDestinationSelected: (i) {
+                  setState(() => _tab = i);
+                  // 알림 탭(index 3) 진입 시 미읽음 카운트 갱신.
+                  if (i == 3) _refreshUnreadCount();
+                },
+                // 선택된 탭만 라벨 표시 (미선택은 아이콘만).
+                labelBehavior:
+                    NavigationDestinationLabelBehavior.onlyShowSelected,
+                backgroundColor: Colors.transparent,
+                destinations: [
+                  NavigationDestination(
+                    icon: const Icon(Icons.home_outlined),
+                    selectedIcon: const Icon(Icons.home),
+                    label: I18nService.instance.t(
+                      'nav.home',
+                      defaultValue: '홈',
+                    ),
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.search),
+                    selectedIcon: const Icon(Icons.search),
+                    label: I18nService.instance.t(
+                      'nav.search',
+                      defaultValue: '검색',
+                    ),
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.person_outline),
+                    selectedIcon: const Icon(Icons.person),
+                    label: I18nService.instance.t('nav.my', defaultValue: '마이'),
+                  ),
+                  NavigationDestination(
+                    // 미읽음 알림 수 뱃지 (2026-06-08). 0 또는 로드 실패 시 미노출.
+                    icon: _NotifBadge(
+                      count: _unreadNotifCount,
+                      child: const Icon(Icons.notifications_outlined),
+                    ),
+                    selectedIcon: _NotifBadge(
+                      count: _unreadNotifCount,
+                      child: const Icon(Icons.notifications),
+                    ),
+                    label: I18nService.instance.t(
+                      'nav.notifications',
+                      defaultValue: '알림',
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -112,15 +163,17 @@ class _HomeTab extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              // 히어로: 글래스 칩 + 타이틀 + 서브
-              const GlassPill(label: 'PATHWAVE'),
-              const SizedBox(height: 12),
+              // 히어로 타이틀 (작은 PATHWAVE pill 제거 — 사용자 결정)
               Text(
                 'PathWave',
                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
                   color: Colors.white,
                   shadows: const [
-                    Shadow(color: Colors.black54, blurRadius: 8, offset: Offset(0, 2)),
+                    Shadow(
+                      color: Colors.black54,
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
                   ],
                 ),
               ),
@@ -253,24 +306,15 @@ class _WifiBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.primary.withValues(alpha: 0.16),
-            AppTheme.secondary.withValues(alpha: 0.12),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
-      ),
+    return GlassCard(
+      // primary 색을 살짝 강조해서 "WiFi 발견" 임을 시각적으로 명확히
+      borderHighlight: AppTheme.primary.withValues(alpha: 0.55),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.wifi, color: AppTheme.primary),
+              const Icon(Icons.wifi, color: Colors.white),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -278,6 +322,7 @@ class _WifiBanner extends StatelessWidget {
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -285,6 +330,7 @@ class _WifiBanner extends StatelessWidget {
                 icon: Icons.close,
                 tooltip: '닫기',
                 size: 18,
+                color: Colors.white70,
                 onPressed: onDismiss,
               ),
             ],
@@ -292,7 +338,7 @@ class _WifiBanner extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'SSID: ${wifi?['ssid'] ?? '—'}',
-            style: const TextStyle(color: AppTheme.textSecondary),
+            style: const TextStyle(color: Colors.white70),
           ),
           const SizedBox(height: 12),
           PwButton(
@@ -316,34 +362,51 @@ class _MyPageTab extends StatelessWidget {
     final auth = context.watch<AuthService>();
     final email = auth.user?['email']?.toString() ?? '—';
 
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: LayoutBuilder(
-        builder: (context, constraints) => SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: IntrinsicHeight(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+    // 자녀 초대 — Feature Flag 'parent_invite' 가 켜져 있을 때만 노출
+    // (SOW v1.3: 유흥·숙박 등 2차 서비스 제공 시 활성. 1차 OFF.)
+    final showParentInvite = FeatureService.instance.isEnabled('parent_invite');
+    final menuItems = <_MenuSpec>[
+      _MenuSpec(Icons.qr_code_2, '내 회원 QR', '/mypage/member-qr'),
+      _MenuSpec(Icons.local_activity_outlined, '내 스탬프', '/mypage/stamps'),
+      _MenuSpec(Icons.confirmation_number_outlined, '내 쿠폰', '/mypage/coupons'),
+      _MenuSpec(Icons.favorite_outline, '즐겨찾기', '/mypage/favorites'),
+      if (showParentInvite)
+        _MenuSpec(Icons.family_restroom, '자녀 초대', '/mypage/parent-invite'),
+      _MenuSpec(Icons.person_add_alt, '친구 초대', '/mypage/friend-invite'),
+      _MenuSpec(Icons.chat_bubble_outline, '매장 채팅', '/chat'),
+      _MenuSpec(Icons.headset_mic_outlined, '고객센터', '/support'),
+      _MenuSpec(Icons.settings_outlined, '설정', '/settings'),
+    ];
+
+    // NavigationBar 와 로그아웃 버튼 사이 안전 마진(40). ConstrainedBox/
+    // IntrinsicHeight 제거 — Spacer 가 없으므로 화면 강제 늘릴 필요 없음.
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
                   Text(
                     context.t('mobile.mypage.title', defaultValue: '마이페이지'),
-                    style: Theme.of(context).textTheme.displaySmall,
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                      color: Colors.white,
+                      shadows: const [
+                        Shadow(
+                          color: Colors.black54,
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surface,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppTheme.border),
-                    ),
+                  // 프로필 헤더 — 글래스 카드
+                  GlassCard(
                     child: Row(
                       children: [
                         const CircleAvatar(
-                          radius: 24,
+                          radius: 20,
                           backgroundColor: AppTheme.primary,
-                          child: Icon(Icons.person, color: Colors.white),
+                          child: Icon(Icons.person, color: Colors.white, size: 20),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -354,16 +417,16 @@ class _MyPageTab extends StatelessWidget {
                                 email,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
+                                  color: Colors.white,
                                 ),
                               ),
+                              const SizedBox(height: 2),
                               Text(
                                 context.t(
                                   'mobile.mypage.member',
                                   defaultValue: '일반 회원',
                                 ),
-                                style: const TextStyle(
-                                  color: AppTheme.textSecondary,
-                                ),
+                                style: const TextStyle(color: Colors.white70),
                               ),
                             ],
                           ),
@@ -372,69 +435,95 @@ class _MyPageTab extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // context.push 사용 — 스택 보존으로 시스템 백 제스처 + AppBar back arrow 동작 보장 (iOS HIG / Material 3).
-                  // P22-a (2026-05-26): 회원 QR — 점주 스캔으로 스탬프/쿠폰 자동 처리
-                  _MenuTile(
-                    icon: Icons.qr_code_2,
-                    title: '내 회원 QR',
-                    onTap: () => context.push('/mypage/member-qr'),
-                  ),
-                  _MenuTile(
-                    icon: Icons.local_activity_outlined,
-                    title: '내 스탬프',
-                    onTap: () => context.push('/mypage/stamps'),
-                  ),
-                  _MenuTile(
-                    icon: Icons.confirmation_number_outlined,
-                    title: '내 쿠폰',
-                    onTap: () => context.push('/mypage/coupons'),
-                  ),
-                  _MenuTile(
-                    icon: Icons.favorite_outline,
-                    title: '즐겨찾기',
-                    onTap: () => context.push('/mypage/favorites'),
-                  ),
-                  _MenuTile(
-                    icon: Icons.family_restroom,
-                    title: '자녀 초대',
-                    onTap: () => context.push('/mypage/parent-invite'),
-                  ),
-                  // P22-c (2026-05-27): 친구 초대 QR — 가입 시 invited_via_code 추적
-                  _MenuTile(
-                    icon: Icons.person_add_alt,
-                    title: '친구 초대',
-                    onTap: () => context.push('/mypage/friend-invite'),
-                  ),
-                  _MenuTile(
-                    icon: Icons.chat_bubble_outline,
-                    title: '매장 채팅',
-                    onTap: () => context.push('/chat'),
-                  ),
-                  _MenuTile(
-                    icon: Icons.headset_mic_outlined,
-                    title: '고객센터',
-                    onTap: () => context.push('/support'),
-                  ),
-                  _MenuTile(
-                    icon: Icons.settings_outlined,
-                    title: '설정',
-                    onTap: () => context.push('/settings'),
-                  ),
-                  const Spacer(),
-                  PwButton(
-                    variant: PwButtonVariant.danger,
-                    icon: Icons.logout,
-                    onPressed: () async {
-                      await context.read<AuthService>().logout();
-                      if (context.mounted) context.go('/auth/login');
-                    },
-                    child: Text(
-                      context.t('mobile.mypage.logout', defaultValue: '로그아웃'),
+                  // 메뉴 9개 — 1개의 통합 글래스 카드 + 내부 divider 분리
+                  // (iOS 설정앱 / Material 3 grouped list 패턴)
+                  GlassCard(
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      children: [
+                        for (int i = 0; i < menuItems.length; i++) ...[
+                          _MenuRow(
+                            icon: menuItems[i].icon,
+                            title: menuItems[i].title,
+                            onTap: () => context.push(menuItems[i].route),
+                            isFirst: i == 0,
+                            isLast: i == menuItems.length - 1,
+                          ),
+                          if (i != menuItems.length - 1) const _MenuDivider(),
+                        ],
+                      ],
                     ),
                   ),
-                ],
-              ),
+                  const SizedBox(height: 20),
+          // 공통 가이드 — 모든 액션 버튼은 secondary 톤(흰 글래스)으로 통일.
+          // 위험 단서는 시각 색이 아닌 [PwDialog confirm] 으로 처리 (PR 가이드).
+          PwButton(
+            variant: PwButtonVariant.secondary,
+            icon: Icons.logout,
+            onPressed: () async {
+              await context.read<AuthService>().logout();
+              if (context.mounted) context.go('/auth/login');
+            },
+            child: Text(
+              context.t('mobile.mypage.logout', defaultValue: '로그아웃'),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MenuSpec {
+  final IconData icon;
+  final String title;
+  final String route;
+  const _MenuSpec(this.icon, this.title, this.route);
+}
+
+class _MenuRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+  final bool isFirst;
+  final bool isLast;
+  const _MenuRow({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    required this.isFirst,
+    required this.isLast,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // 첫/마지막 행은 GlassCard 의 라운드를 따라가도록 InkWell 의 ripple 도 동일 round 적용.
+    final radius = BorderRadius.vertical(
+      top: isFirst ? const Radius.circular(AppTheme.rLg) : Radius.zero,
+      bottom: isLast ? const Radius.circular(AppTheme.rLg) : Radius.zero,
+    );
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: radius,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Icon(icon, size: 22, color: Colors.white70),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              const Icon(Icons.chevron_right, size: 20, color: Colors.white54),
+            ],
           ),
         ),
       ),
@@ -442,42 +531,13 @@ class _MyPageTab extends StatelessWidget {
   }
 }
 
-class _MenuTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final VoidCallback onTap;
-  const _MenuTile({
-    required this.icon,
-    required this.title,
-    required this.onTap,
-  });
-
+class _MenuDivider extends StatelessWidget {
+  const _MenuDivider();
   @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppTheme.surface,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(icon, size: 22, color: AppTheme.textSecondary),
-              const SizedBox(width: 12),
-              Expanded(child: Text(title)),
-              const Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: AppTheme.textHint,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(left: 50), // 아이콘 너비만큼 들여쓰기
+    child: Container(height: 1, color: Colors.white.withValues(alpha: 0.10)),
+  );
 }
 
 // ── 알림 탭 (목록 진입 라우트로 이동) ───────────────────────────────────────
@@ -493,32 +553,104 @@ class _NotificationsTab extends StatelessWidget {
         children: [
           Text(
             context.t('mobile.notifications.title', defaultValue: '알림'),
-            style: Theme.of(context).textTheme.displaySmall,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            context.t(
-              'mobile.notifications.placeholder',
-              defaultValue: '스탬프 적립 / 쿠폰 발급 / 시스템 공지가 표시됩니다.',
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+              color: Colors.white,
+              shadows: const [
+                Shadow(
+                  color: Colors.black54,
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
-            style: TextStyle(color: AppTheme.textSecondary),
           ),
           const SizedBox(height: 16),
-          Center(
-            child: TextButton.icon(
-              // push 사용 — 알림 화면에서 시스템 백 제스처로 홈 복귀.
-              onPressed: () => context.push('/notifications'),
-              icon: const Icon(Icons.open_in_new),
-              label: Text(
-                context.t(
-                  'mobile.notifications.view_all',
-                  defaultValue: '전체 알림 보기',
+          GlassCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: const [
+                    Icon(
+                      Icons.notifications_outlined,
+                      color: Colors.white70,
+                      size: 20,
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      '최근 알림',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
+                const SizedBox(height: 10),
+                Text(
+                  context.t(
+                    'mobile.notifications.placeholder',
+                    defaultValue: '스탬프 적립 / 쿠폰 발급 / 시스템 공지가 표시됩니다.',
+                  ),
+                  style: const TextStyle(color: Colors.white70, height: 1.4),
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: () => context.push('/notifications'),
+                    icon: const Icon(Icons.open_in_new, color: Colors.white),
+                    label: Text(
+                      context.t(
+                        'mobile.notifications.view_all',
+                        defaultValue: '전체 알림 보기',
+                      ),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+
+/// 알림 탭 미읽음 뱃지 (2026-06-08).
+/// count > 0 일 때만 빨간 점/숫자 노출. 99+ 는 ``99+``.
+class _NotifBadge extends StatelessWidget {
+  final int count;
+  final Widget child;
+  const _NotifBadge({required this.count, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    if (count <= 0) return child;
+    final label = count > 99 ? '99+' : count.toString();
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        child,
+        Positioned(
+          right: -6, top: -4,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+            constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+            decoration: BoxDecoration(
+              color: AppTheme.primary,             // 보라 (브랜드 가이드 통일 2026-06-09)
+              borderRadius: BorderRadius.circular(9),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 0.5),
+            ),
+            alignment: Alignment.center,
+            child: Text(label, style: const TextStyle(
+              color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700,
+            )),
+          ),
+        ),
+      ],
     );
   }
 }

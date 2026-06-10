@@ -67,7 +67,8 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       appBar: PwAppBar(title: Text(context.t('mobile.mypage.delete_account.title', defaultValue: '회원 탈퇴'))),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.fromLTRB(20, 20, 20,
+              20 + MediaQuery.of(context).viewPadding.bottom),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -91,7 +92,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                     SizedBox(height: 8),
                     _Bullet('채팅 / 결제 내역은 법령상 보존 기간 동안 익명화 보존됩니다.'),
                     SizedBox(height: 8),
-                    _Bullet('탈퇴 후 같은 이메일로 재가입할 수 있으나, 이전 데이터는 복구되지 않습니다.'),
+                    _Bullet('탈퇴 시 동일 이메일로는 다시 가입할 수 없습니다.'),
                     SizedBox(height: 8),
                     _Bullet('14일 이내 미성년 보호자 초대 코드 발급 이력은 별도 보존됩니다.'),
                   ],

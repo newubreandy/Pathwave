@@ -109,7 +109,8 @@ class AuthService extends ChangeNotifier {
       String email, String code, String password,
       {List<Map<String, dynamic>>? consents,
        int? birthYear,
-       String? invitationCode}) async {
+       String? invitationCode,
+       String? phone}) async {
     final body = <String, dynamic>{
       'email': email, 'code': code, 'password': password,
     };
@@ -117,6 +118,10 @@ class AuthService extends ChangeNotifier {
     if (birthYear != null) body['birth_year'] = birthYear;
     if (invitationCode != null && invitationCode.isNotEmpty) {
       body['invitation_code'] = invitationCode;
+    }
+    // phone — 선택 입력. 이메일 찾기 흐름에 사용.
+    if (phone != null && phone.trim().isNotEmpty) {
+      body['phone'] = phone.trim();
     }
     final res = await http.post(
       Uri.parse('$_baseUrl/api/auth/register'),
@@ -258,6 +263,22 @@ class AuthService extends ChangeNotifier {
   /// 가짜 토큰 + 익명 사용자를 메모리에 주입.
   /// 실 API 호출은 401 로 실패하지만 UI 네비게이션/렌더링은 가능.
   Future<void> enterPreviewMode() async {
+    // dev/staging 전용 — 백엔드가 실 JWT 발급. 모든 API 가 회원처럼 작동.
+    try {
+      final res = await http.post(
+        Uri.parse('$_baseUrl/api/auth/dev-preview-login'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      if (data['success'] == true && data['token'] != null) {
+        await _saveToken(data['token'], data['user'],
+            refreshToken: data['refresh_token']);
+        notifyListeners();
+        return;
+      }
+    } catch (_) {
+      // 백엔드 미응답/운영 모드 — fallback 으로 옛 흐름(가짜 토큰) 유지.
+    }
     _token = 'preview-mode-token';
     _user  = {
       'id': 0,
@@ -292,6 +313,42 @@ class AuthService extends ChangeNotifier {
       body: jsonEncode({'consents': consents}),
     );
     return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  // ── 이메일 찾기 (2026-06-08) ─────────────────────────────────────
+  // 흐름: phone → 마스킹 목록 → 본인 이메일 입력 → 코드 발송 → 검증.
+  Future<Map<String, dynamic>> findEmailByPhone(String phone) async {
+    final res = await http.post(
+      Uri.parse('$_baseUrl/api/auth/find-email/by-phone'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'phone': phone}),
+    );
+    return jsonDecode(res.body);
+  }
+
+  Future<Map<String, dynamic>> findEmailSendCode({
+    required String phone,
+    required String email,
+  }) async {
+    final res = await http.post(
+      Uri.parse('$_baseUrl/api/auth/find-email/send-code'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'phone': phone, 'email': email}),
+    );
+    return jsonDecode(res.body);
+  }
+
+  Future<Map<String, dynamic>> findEmailVerify({
+    required String phone,
+    required String email,
+    required String code,
+  }) async {
+    final res = await http.post(
+      Uri.parse('$_baseUrl/api/auth/find-email/verify'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'phone': phone, 'email': email, 'code': code}),
+    );
+    return jsonDecode(res.body);
   }
 
   // ── 비밀번호 찾기 ────────────────────────────────────────────────
