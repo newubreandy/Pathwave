@@ -42,54 +42,54 @@ class _DevPreviewBarState extends State<DevPreviewBar> {
   Widget build(BuildContext context) {
     if (!DevPreviewBar.enabled) return widget.child;
 
-    return Stack(
+    // 2026-06-10 — Stack → Column 으로 변경.
+    // Stack 에서는 본문이 화면 전체 차지 + 노란 바가 위에 떠서 가림.
+    // Column 으로 본문이 자연스럽게 노란 바 위에서 멈춤 → 잘림 X.
+    return Column(
       children: [
-        widget.child,
-        Positioned(
-          left: 0, right: 0, bottom: 0,
-          child: Material(
-            elevation: 12,
-            color: const Color(0xFFFEF3C7),
-            child: SafeArea(
-              top: false,
-              child: Container(
-                decoration: const BoxDecoration(
-                  border: Border(top: BorderSide(color: Color(0xFFF59E0B), width: 2)),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      '⚠️ 미리보기 모드 — PRODUCTION 빌드에서 제거 (--dart-define=PREVIEW_MODE=false)',
-                      style: TextStyle(
-                        color: Color(0xFF78350F),
-                        fontSize: 11, fontWeight: FontWeight.w600,
-                      ),
-                      textAlign: TextAlign.center,
+        Expanded(child: widget.child),
+        Material(
+          elevation: 12,
+          color: const Color(0xFFFEF3C7),
+          child: SafeArea(
+            top: false,
+            child: Container(
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: Color(0xFFF59E0B), width: 2)),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    '⚠️ 미리보기 모드 — PRODUCTION 빌드에서 제거 (--dart-define=PREVIEW_MODE=false)',
+                    style: TextStyle(
+                      color: Color(0xFF78350F),
+                      fontSize: 11, fontWeight: FontWeight.w600,
                     ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 6, runSpacing: 4,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      _btn('🔓 토큰 주입', () => _injectToken(context)),
+                      _btn(_open ? '📂 페이지 ▲' : '📂 페이지 ▼',
+                        () => setState(() => _open = !_open)),
+                      _btn('🗑 토큰 해제', () => _clearToken(context),
+                        danger: true),
+                    ],
+                  ),
+                  if (_open) ...[
                     const SizedBox(height: 4),
                     Wrap(
-                      spacing: 6, runSpacing: 4,
+                      spacing: 4, runSpacing: 4,
                       alignment: WrapAlignment.center,
-                      children: [
-                        _btn('🔓 토큰 주입', () => _injectToken(context)),
-                        _btn(_open ? '📂 페이지 ▲' : '📂 페이지 ▼',
-                          () => setState(() => _open = !_open)),
-                        _btn('🗑 토큰 해제', () => _clearToken(context),
-                          danger: true),
-                      ],
+                      children: _pages.map((p) => _menuBtn(p[0], p[1], context)).toList(),
                     ),
-                    if (_open) ...[
-                      const SizedBox(height: 4),
-                      Wrap(
-                        spacing: 4, runSpacing: 4,
-                        alignment: WrapAlignment.center,
-                        children: _pages.map((p) => _menuBtn(p[0], p[1], context)).toList(),
-                      ),
-                    ],
                   ],
-                ),
+                ],
               ),
             ),
           ),

@@ -68,14 +68,15 @@ class _CouponsScreenState extends State<CouponsScreen>
           tabs: _statusTabs.map((s) => Tab(text: _statusLabel[s])).toList(),
         ),
       ),
-      body: SafeArea(child: TabBarView(
+      // 2026-06-10 — SafeArea 제거: ListView padding 으로 bottom 직접 처리.
+      body: TabBarView(
         controller: _tabCtrl,
         children: _statusTabs.map((s) => _CouponList(
           status: s,
           future: _futures[s]!,
           onRetry: () => _reload(s),
         )).toList(),
-      )),
+      ),
     );
   }
 }
@@ -192,8 +193,8 @@ class _CouponListBodyState extends State<_CouponListBody> {
     }).toList();
 
     return ListView(
-      padding: EdgeInsets.fromLTRB(16, 16, 16,
-          16 + MediaQuery.of(context).viewPadding.bottom),
+      // 2026-06-10 — SafeArea 제거 후 padding 직접 처리. 충분히 큰 bottom.
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
       children: [
         // 환영 카드 — 새로 발급된 쿠폰 수만큼 표시
         for (final item in newCoupons)
