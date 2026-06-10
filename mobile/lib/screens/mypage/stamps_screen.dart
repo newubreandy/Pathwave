@@ -36,7 +36,8 @@ class _StampsScreenState extends State<StampsScreen> {
       appBar: PwAppBar(
         title: Text(_t.t('stamp.title', defaultValue: '내 스탬프')),
       ),
-      body: SafeArea(child: RefreshIndicator(
+      // 2026-06-10 — SafeArea 제거: ListView padding 으로 bottom 영역 직접 처리.
+      body: RefreshIndicator(
         onRefresh: _reload,
         child: FutureBuilder<List<Map<String, dynamic>>>(
           future: _future,
@@ -61,15 +62,15 @@ class _StampsScreenState extends State<StampsScreen> {
               );
             }
             return ListView.separated(
-              padding: EdgeInsets.fromLTRB(16, 16, 16,
-                  16 + MediaQuery.of(context).viewPadding.bottom),
+              // 2026-06-10 — SafeArea 제거 후 padding 직접 처리. 충분히 큰 bottom.
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 120),
               itemCount: list.length,
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, i) => _StampCard(data: list[i]),
             );
           },
         ),
-      )),
+      ),
     );
   }
 }
