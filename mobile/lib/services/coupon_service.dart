@@ -10,8 +10,9 @@ class CouponService {
 
   /// 내 쿠폰 목록. 상태 필터: ?status=active|used|expired|all
   Future<List<Map<String, dynamic>>> myCoupons({String? status}) async {
+    // 2026-06-09 — 백엔드 라우트 정합: /api/users/me/coupons
     final qs = (status != null && status.isNotEmpty) ? '?status=$status' : '';
-    final data = await _api.get('/api/coupons$qs');
+    final data = await _api.get('/api/users/me/coupons$qs');
     return (data['coupons'] as List?)?.cast<Map<String, dynamic>>() ?? [];
   }
 

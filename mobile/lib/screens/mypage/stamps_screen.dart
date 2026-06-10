@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../utils/error_message.dart';
 
@@ -60,7 +61,8 @@ class _StampsScreenState extends State<StampsScreen> {
               );
             }
             return ListView.separated(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.fromLTRB(16, 16, 16,
+                  16 + MediaQuery.of(context).viewPadding.bottom),
               itemCount: list.length,
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, i) => _StampCard(data: list[i]),
@@ -79,128 +81,168 @@ class _StampCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = I18nService.instance;
+    // 2026-06-09 — 쿠폰 카드와 동일 디자인 가이드 + 도장 아이콘.
+    // 응답 키 정합: facility_name / total_stamps / reward_threshold / reward_description / reward_available
     final facilityName = data['facility_name']?.toString() ?? '매장';
-    final count = (data['count'] as num?)?.toInt() ?? 0;
-    final required = (data['required_count'] as num?)?.toInt() ?? 10;
+    final count    = (data['total_stamps']    as num?)?.toInt() ?? 0;
+    final required = (data['reward_threshold'] as num?)?.toInt() ?? 10;
     final progress = required > 0 ? (count / required).clamp(0.0, 1.0) : 0.0;
-    final expiresAt = data['expires_at']?.toString();
+    final rewardDesc      = data['reward_description']?.toString();
+    final rewardAvailable = data['reward_available'] == true;
 
-    // 시설별 스탬프 정책 (백엔드 응답에 포함된 경우)
-    final policy = data['policy'] as Map?;
-    final hasPolicy = policy != null;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // 스탬프 적립 안내 카드 (정책 데이터가 있을 때만)
-        if (hasPolicy) ...[
-          PwCard(
-            padding: const EdgeInsets.all(14),
-            color: AppTheme.surfaceLight,
+    // 카드 터치 → 정책 + 진행도 + 보상 다이얼로그 (스탬프 상세).
+    final facilityId = data['facility_id'];
+    return PwCard(
+      onTap: () => _showStampDetail(context, data, facilityId),
+      child: Row(
+        children: [
+          // 글래스 모피즘 도장 박스 — 보라 그라디언트 + 흰 보더 + glow.
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppTheme.primary.withValues(alpha: 0.85),
+                  AppTheme.primary.withValues(alpha: 0.45),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.28),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primary.withValues(alpha: 0.45),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.approval, color: Colors.white, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.info_outline, size: 16, color: AppTheme.primary),
-                    const SizedBox(width: 6),
-                    Text(
-                      t.t('stamp.terms_title', defaultValue: '스탬프 적립 안내'),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                        color: AppTheme.primary,
-                      ),
+                    Expanded(
+                      child: Text(facilityName,
+                          style: const TextStyle(fontWeight: FontWeight.w600)),
                     ),
+                    Text('$count / $required',
+                        style: const TextStyle(
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13)),
                   ],
                 ),
-                const SizedBox(height: 10),
-                _TermsBullet(t.t(
-                  'stamp.terms_accrual',
-                  defaultValue: '비콘 감지 시 자동 적립되며, 매장 내 체류 중 1회 적립됩니다.',
-                )),
-                _TermsBullet(t.t(
-                  'stamp.terms_cooldown',
-                  defaultValue: '동일 매장 재방문 적립은 일정 시간 이후부터 가능합니다.',
-                )),
-                _TermsBullet(t.t(
-                  'stamp.terms_expiry',
-                  defaultValue: '스탬프는 마지막 적립일로부터 일정 기간 후 만료됩니다.',
-                )),
-                _TermsBullet(t.t(
-                  'stamp.terms_reward',
-                  defaultValue: '목표 개수 달성 시 보상 쿠폰이 자동 발급됩니다.',
-                )),
-                _TermsBullet(t.t(
-                  'stamp.terms_dispute',
-                  defaultValue: '적립 관련 분쟁은 해당 매장 사업자가 책임을 부담하며, PathWave 는 중개 플랫폼으로 책임을 지지 않습니다.',
-                )),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 6,
+                    backgroundColor: AppTheme.border,
+                    color: AppTheme.primary,
+                  ),
+                ),
+                if (rewardAvailable) ...[
+                  const SizedBox(height: 6),
+                  const Text('🎉 보상 쿠폰이 발급되었어요',
+                      style: TextStyle(color: AppTheme.success, fontSize: 12)),
+                ] else if (rewardDesc != null && rewardDesc.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text('보상: $rewardDesc',
+                      style: const TextStyle(
+                          color: AppTheme.textHint, fontSize: 12)),
+                ],
               ],
             ),
           ),
-          const SizedBox(height: 12),
         ],
-        // 스탬프 현황 카드
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppTheme.border),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      ),
+    );
+  }
+
+  Future<void> _showStampDetail(BuildContext context, Map<String, dynamic> data, dynamic facilityId) async {
+    final facilityName = data['facility_name']?.toString() ?? '매장';
+    final count    = (data['total_stamps']    as num?)?.toInt() ?? 0;
+    final required = (data['reward_threshold'] as num?)?.toInt() ?? 10;
+    final progress = required > 0 ? (count / required).clamp(0.0, 1.0) : 0.0;
+    final rewardDesc      = data['reward_description']?.toString();
+    final rewardAvailable = data['reward_available'] == true;
+    final remain = (required - count).clamp(0, required);
+
+    await showPwDialog<void>(
+      context: context,
+      title: Text(facilityName),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.local_activity, color: AppTheme.primary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(facilityName,
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text('$count / $required',
-                      style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 8,
-                  backgroundColor: AppTheme.border,
-                  color: AppTheme.primary,
-                ),
-              ),
-              if (expiresAt != null) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.access_time, size: 13, color: AppTheme.textHint),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${t.t('stamp.expires_at_label', defaultValue: '만료일')}: ${expiresAt.split('T').first}',
-                      style: const TextStyle(color: AppTheme.textHint, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ],
-              if (count >= required) ...[
-                const SizedBox(height: 8),
-                const Text('🎉 보상 쿠폰이 발급되었어요',
-                  style: TextStyle(color: AppTheme.success, fontSize: 13)),
-              ],
+              const Text('적립 현황', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+              Text('$count / $required',
+                  style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w700)),
             ],
           ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              backgroundColor: AppTheme.border,
+              color: AppTheme.primary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (rewardDesc != null && rewardDesc.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text('🎁 보상: $rewardDesc',
+                  style: const TextStyle(color: Colors.white)),
+            ),
+          if (rewardAvailable)
+            const Text('🎉 보상 쿠폰이 발급되었어요!',
+                style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.w600))
+          else if (remain > 0)
+            Text('$remain개 더 모으면 보상을 받을 수 있어요.',
+                style: const TextStyle(color: AppTheme.textHint, fontSize: 13)),
+          const SizedBox(height: 8),
+          const Divider(color: AppTheme.border, height: 24),
+          const Text('· 비콘 감지 시 자동 적립됩니다.',
+              style: TextStyle(color: AppTheme.textHint, fontSize: 12)),
+          const SizedBox(height: 4),
+          const Text('· 동일 매장 재방문 적립은 일정 시간 후 가능합니다.',
+              style: TextStyle(color: AppTheme.textHint, fontSize: 12)),
+          const SizedBox(height: 4),
+          const Text('· 적립 분쟁은 매장 사업자가 책임을 부담합니다.',
+              style: TextStyle(color: AppTheme.textHint, fontSize: 12)),
+        ],
+      ),
+      actions: [
+        if (facilityId != null)
+          PwButton(
+            variant: PwButtonVariant.text,
+            fullWidth: false,
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.push('/facility/$facilityId');
+            },
+            child: const Text('매장 보기'),
+          ),
+        PwButton(
+          fullWidth: false,
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('닫기'),
         ),
       ],
     );

@@ -153,16 +153,25 @@ def _ensure_active_card(db, account_id: int):
 
 
 def _charge(card_pg_key: str, total: int, order_no: str,
-            customer_email: str | None = None) -> tuple[bool, str | None, str | None]:
-    """현재 ENV 의 PG provider 로 결제. (success, pg_tid, payment_key)."""
+            customer_email: str | None = None) -> dict:
+    """현재 ENV 의 PG provider 로 결제. dict 반환:
+        success / pg_tid / payment_key / gateway / fallback_from
+    - ``gateway``       : 실제 처리한 PG ('toss' | 'zeropay' | 'sim').
+    - ``fallback_from`` : Fallback 발생 시 원래 시도한 PG (없으면 None).
+    """
     provider = get_payment_provider()
     res = provider.charge(
         billing_key=card_pg_key, total=total,
         order_no=order_no, customer_email=customer_email,
     )
-    if res.get('success'):
-        return True, res.get('pg_tid'), res.get('payment_key')
-    return False, None, None
+    ok = bool(res.get('success'))
+    return {
+        'success':       ok,
+        'pg_tid':        res.get('pg_tid') if ok else None,
+        'payment_key':   res.get('payment_key') if ok else None,
+        'gateway':       res.get('provider'),
+        'fallback_from': res.get('fallback_from'),
+    }
 
 
 @billing_bp.route('/subscriptions', methods=['POST'])
@@ -213,18 +222,22 @@ def create_subscription():
     receipt_email = data.get('receipt_email') or db.execute(
         "SELECT email FROM facility_accounts WHERE id=?", (account_id,)
     ).fetchone()['email']
-    ok, pg_tid, _payment_key = _charge(decrypt_secret(card['pg_key']), total, order_no, receipt_email)
+    pg_res = _charge(decrypt_secret(card['pg_key']), total, order_no, receipt_email)
+    ok      = pg_res['success']
+    pg_tid  = pg_res['pg_tid']
 
     cur2 = db.execute(
         """INSERT INTO payments
              (facility_account_id, subscription_id, order_no, amount, vat, total,
-              pg_tid, status, receipt_email, paid_at)
-           VALUES (?,?,?,?,?,?,?,?,?,?)""",
+              pg_tid, status, receipt_email, paid_at, gateway, fallback_from)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
         (account_id, sid, order_no, base, vat, total,
-         pg_tid if ok else None,
+         pg_tid,
          'paid' if ok else 'failed',
          receipt_email,
-         datetime.utcnow().isoformat() if ok else None)
+         datetime.utcnow().isoformat() if ok else None,
+         pg_res['gateway'],
+         pg_res['fallback_from'])
     )
     pid = cur2.lastrowid
 
@@ -319,7 +332,9 @@ def extend_subscription(sid):
     receipt_email = db.execute(
         "SELECT email FROM facility_accounts WHERE id=?", (account_id,)
     ).fetchone()['email']
-    ok, pg_tid, _payment_key = _charge(decrypt_secret(card['pg_key']), total, order_no, receipt_email)
+    pg_res = _charge(decrypt_secret(card['pg_key']), total, order_no, receipt_email)
+    ok     = pg_res['success']
+    pg_tid = pg_res['pg_tid']
 
     new_ends = add_months(datetime.utcnow(), row['period_months']).isoformat()
     db.execute(
@@ -331,14 +346,16 @@ def extend_subscription(sid):
     cur = db.execute(
         """INSERT INTO payments
              (facility_account_id, subscription_id, order_no, amount, vat, total,
-              pg_tid, status, receipt_email, paid_at)
-           VALUES (?,?,?,?,?,?,?,?,?,?)""",
+              pg_tid, status, receipt_email, paid_at, gateway, fallback_from)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
         (account_id, sid, order_no, base, vat, total,
          pg_tid, 'paid' if ok else 'failed',
          row['facility_account_id'] and db.execute(
              "SELECT email FROM facility_accounts WHERE id=?", (account_id,)
          ).fetchone()['email'],
-         datetime.utcnow().isoformat() if ok else None)
+         datetime.utcnow().isoformat() if ok else None,
+         pg_res['gateway'],
+         pg_res['fallback_from'])
     )
     pid = cur.lastrowid
 

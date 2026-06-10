@@ -33,12 +33,12 @@ export default function Login() {
   return (
     <div className="login-screen">
       <form className="login-card" onSubmit={handleSubmit}>
-        <div className="login-brand">
-          <ShieldCheck size={32} strokeWidth={1.75} />
-          <div>
-            <div className="login-title">PathWave Admin</div>
-            <div className="login-sub">운영자 콘솔</div>
+        {/* pathwave 공통 로고 — 마크 SVG + 옆 소문자 텍스트. */}
+        <div className="login-brand" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <img src="/pathwave_lockup.svg" alt="pathwave" style={{ height: 40, display: 'block' }} />
           </div>
+          <div className="login-sub">admin</div>
         </div>
 
         <label className="login-label">

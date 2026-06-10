@@ -897,6 +897,9 @@ def init_db():
     """)
 
     # ── 마이그레이션: 기존 DB에 없는 컬럼은 ADD COLUMN ────────────────────────
+    # PG 폴백(2026-06-05) — 결제 처리한 gateway 와 폴백 발생 시 원래 시도 기록.
+    _add_column_if_missing(db, 'payments', 'gateway',       'gateway TEXT')
+    _add_column_if_missing(db, 'payments', 'fallback_from', 'fallback_from TEXT')
     _add_column_if_missing(db, 'facilities', 'phone',          'phone TEXT')
     _add_column_if_missing(db, 'facilities', 'business_hours', 'business_hours TEXT')
     # stamps에 grantor/expiry 추적 컬럼 (FR-STAMP-002)
@@ -1078,6 +1081,26 @@ def init_db():
                            "age_group TEXT")  # 'minor_14_18' | 'adult_19_plus'
     _add_column_if_missing(db, 'users', 'parent_invitation_id',
                            'parent_invitation_id INTEGER')
+    # 이메일 찾기(2026-06-08) — phone 으로 가입 이메일 매칭. 선택 입력.
+    _add_column_if_missing(db, 'users', 'phone',
+                           'phone TEXT')
+    # 신고 첨부 사진(2026-06-08) — JSON 배열 ['/static/abuse_reports/{uuid}.jpg', ...]
+    _add_column_if_missing(db, 'abuse_reports', 'attachment_urls',
+                           'attachment_urls TEXT')
+
+    # Feature Flag(2026-06-08) — 모듈 ON/OFF. row 없으면 코드의 DEFAULT 사용.
+    db.executescript("""
+        CREATE TABLE IF NOT EXISTS feature_flags (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            key         TEXT    UNIQUE NOT NULL,
+            enabled     INTEGER NOT NULL DEFAULT 0,
+            env         TEXT    DEFAULT 'production',
+            description TEXT,
+            updated_by  INTEGER,
+            updated_at  TEXT    DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_feature_flags_key ON feature_flags(key);
+    """)
     _add_column_if_missing(db, 'facilities', 'adult_only',
                            'adult_only INTEGER NOT NULL DEFAULT 0')
     _add_column_if_missing(db, 'invitations', 'is_minor_invite',

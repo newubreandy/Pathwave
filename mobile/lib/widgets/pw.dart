@@ -17,4 +17,6 @@ export 'pw_switch.dart';
 export 'pw_switch_tile.dart';
 export 'pw_text_field.dart';
 export 'glass_card.dart';
+export 'pw_dialog.dart';
+export 'pw_sheet.dart';
 export 'seasonal_background.dart';

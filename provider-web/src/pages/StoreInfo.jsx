@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Camera, Save, X, Plus, Gift, ChevronRight } from 'lucide-react';
+import { Camera, Save, X, Plus, Gift, ChevronRight, Utensils } from 'lucide-react';
 import CardAvatar from '../components/common/CardAvatar';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -544,6 +544,22 @@ const StoreInfo = () => {
           </div>
         </div>
 
+        {/* ── 메뉴 (2026-06-09: mobile 매장 상세와 노출 통일, 별도 페이지로 이동) ── */}
+        {!isEditing && (
+          <div className="detail-item">
+            <label>메뉴</label>
+            <div className="benefits-list">
+              <div className="benefit-card clickable" onClick={() => navigate('/dashboard/menu')}>
+                <CardAvatar variant="accent" size="sm">
+                  <Utensils strokeWidth={2} />
+                </CardAvatar>
+                <span className="benefit-text">메뉴 관리 (등록·수정·번역)</span>
+                <ChevronRight size={16} className="benefit-arrow" />
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="detail-row">
           <div className="detail-item">
             <label>{t('store.label_hours')}</label>
@@ -644,126 +660,7 @@ const StoreInfo = () => {
             </div>
           </div>
         )}
-        {/* ── 비콘 관리 섹션 ── */}
-        {!isEditing && (
-          <div className="detail-item">
-            <label>{t('store.label_beacons')}</label>
-
-            {/* 안내: 비콘 할당은 슈퍼어드민(운영자) 주도 */}
-            <p className="field-hint" style={{ marginBottom: '1rem', lineHeight: 1.6 }}>
-              비콘은 <strong>운영자(PathWave)</strong>가 신청하신 매장에 배정하고 설치위치를 지정해
-              라벨을 붙여 발송합니다. 받으신 비콘을 지정 위치에 부착하시면 됩니다. 아래는 우리 매장에
-              배정된 비콘 목록입니다. 추가·변경이 필요하면 고객지원으로 문의해 주세요.
-            </p>
-
-            {/* 비콘 목록 (읽기 전용) */}
-            {beacons.length > 0 ? (
-              <div style={{ overflowX: 'auto', marginBottom: '0.5rem' }}>
-                <table style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  fontSize: '0.9rem',
-                  color: 'var(--pw-text)',
-                }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--pw-border)' }}>
-                      <th style={{ textAlign: 'left', padding: '0.6rem 0.8rem', color: 'var(--pw-text-hint)', fontWeight: 600 }}>
-                        {t('store.beacon_col_sn')}
-                      </th>
-                      <th style={{ textAlign: 'left', padding: '0.6rem 0.8rem', color: 'var(--pw-text-hint)', fontWeight: 600 }}>
-                        설치위치
-                      </th>
-                      <th style={{ textAlign: 'center', padding: '0.6rem 0.8rem', color: 'var(--pw-text-hint)', fontWeight: 600 }}>
-                        상태
-                      </th>
-                      <th style={{ textAlign: 'center', padding: '0.6rem 0.8rem', color: 'var(--pw-text-hint)', fontWeight: 600 }}>
-                        {t('store.beacon_col_minor')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {beacons.map((b, idx) => {
-                      const STATUS_KO = { active: '활성', inventory: '배정 대기', inactive: '비활성', lost: '분실' };
-                      const isActive = b.status === 'active';
-                      return (
-                      <tr key={b.id ?? idx} style={{ borderBottom: '1px solid var(--pw-surface-line)' }}>
-                        <td style={{ padding: '0.6rem 0.8rem', fontFamily: 'monospace' }}>{b.serial_no ?? b.sn ?? '-'}</td>
-                        <td style={{ padding: '0.6rem 0.8rem' }}>{b.location_label || <span style={{ color: 'var(--pw-text-hint)' }}>미지정</span>}</td>
-                        <td style={{ padding: '0.6rem 0.8rem', textAlign: 'center' }}>
-                          <span style={{
-                            display: 'inline-block',
-                            background: isActive ? 'rgba(34,197,94,0.12)' : 'var(--pw-surface-1)',
-                            border: `1px solid ${isActive ? 'rgba(34,197,94,0.35)' : 'var(--pw-surface-line)'}`,
-                            borderRadius: '6px',
-                            padding: '0.2rem 0.6rem',
-                            fontSize: '0.82rem',
-                            fontWeight: 600,
-                            color: isActive ? '#22C55E' : 'var(--pw-text-secondary)',
-                          }}>{STATUS_KO[b.status] ?? b.status ?? '-'}</span>
-                        </td>
-                        <td style={{ padding: '0.6rem 0.8rem', textAlign: 'center' }}>
-                          <span style={{
-                            display: 'inline-block',
-                            background: 'rgba(139,92,246,0.12)',
-                            border: '1px solid rgba(139,92,246,0.3)',
-                            borderRadius: '6px',
-                            padding: '0.2rem 0.6rem',
-                            fontSize: '0.82rem',
-                            fontWeight: 600,
-                            color: 'var(--primary)',
-                          }}>{b.minor ?? '-'}</span>
-                        </td>
-                      </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="field-hint" style={{ marginBottom: '0.5rem' }}>아직 배정된 비콘이 없습니다.</p>
-            )}
-
-            {/* P-D: 서비스 신청 상태 (발송 → 설치완료) */}
-            {requests.length > 0 && (
-              <div style={{ marginTop: '1.5rem' }}>
-                <p className="field-hint" style={{ marginBottom: '0.5rem', fontWeight: 600 }}>서비스 신청 상태</p>
-                {requests.map((r) => {
-                  const ST = {
-                    pending:   { label: '신청 접수',     color: 'var(--pw-text-secondary)' },
-                    matched:   { label: '비콘 준비중',    color: 'var(--pw-text-secondary)' },
-                    shipped:   { label: '발송됨 (수령 후 부착)', color: '#22C55E' },
-                    installed: { label: '설치완료',       color: '#22C55E' },
-                    canceled:  { label: '취소',          color: 'var(--pw-text-hint)' },
-                  };
-                  const s = ST[r.status] || { label: r.status, color: 'var(--pw-text-secondary)' };
-                  return (
-                    <div key={r.id} style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      gap: 12, padding: '0.6rem 0', borderBottom: '1px solid var(--pw-surface-line)',
-                    }}>
-                      <span style={{ fontSize: '0.9rem' }}>
-                        신청 #{r.id} · {r.service_type?.toUpperCase()} · 유닛 {r.units?.length ?? 0}개
-                      </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: s.color }}>{s.label}</span>
-                        {r.status === 'shipped' && (
-                          <button
-                            type="button"
-                            className="btn-search-address"
-                            style={{ flexShrink: 0, background: 'var(--primary)', color: '#fff', border: '1px solid var(--primary)' }}
-                            onClick={() => handleMarkInstalled(r.id)}
-                          >
-                            설치완료
-                          </button>
-                        )}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
+        {/* 2026-06-09 — 비콘 섹션 제거 (정책: 매장관리에 비콘 노출 X, 운영자가 별도 발송). */}
       </section>
 
       <BottomActionBar>

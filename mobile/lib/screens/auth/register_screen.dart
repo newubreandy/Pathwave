@@ -25,6 +25,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _pwCtrl = TextEditingController();
   final _birthYearCtrl = TextEditingController();
   final _inviteCodeCtrl = TextEditingController();
+  // phone — 선택 입력 (이메일 찾기 용도). 2026-06-08 추가.
+  final _phoneCtrl = TextEditingController();
   bool _busy = false;
   bool _isSocialFlow = false;   // 소셜 신규 가입 분기 — consent 만 추가 기록
   String? _error;
@@ -44,6 +46,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _codeCtrl.dispose();
     _pwCtrl.dispose();
     _birthYearCtrl.dispose();
+    _phoneCtrl.dispose();
     _inviteCodeCtrl.dispose();
     super.dispose();
   }
@@ -137,6 +140,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         birthYear: _birthYear,
         invitationCode: _inviteCodeCtrl.text.trim().isEmpty
           ? null : _inviteCodeCtrl.text.trim(),
+        phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
       );
       if (!mounted) return;
       if (res['success'] == true) {
@@ -349,6 +353,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
         keyboardType: TextInputType.number,
         maxLength: 4,
         onChanged: (_) => setState(() {}),
+      ),
+      const SizedBox(height: 16),
+      // 연락처 — 선택 입력 (이메일 찾기에 사용). 2026-06-08 추가.
+      PwTextField(
+        controller: _phoneCtrl,
+        hint: context.t('mobile.auth.register.phone_hint',
+            defaultValue: '연락처 (선택, 숫자만)'),
+        prefixIcon: Icons.phone_outlined,
+        keyboardType: TextInputType.phone,
+      ),
+      const SizedBox(height: 6),
+      Text(
+        context.t('mobile.auth.register.phone_notice',
+            defaultValue: '※ 이메일 찾기 등에 사용됩니다. 입력은 선택사항입니다.'),
+        style: const TextStyle(color: Colors.white, fontSize: 12),
       ),
       if (showInviteField) ...[
         const SizedBox(height: 16),

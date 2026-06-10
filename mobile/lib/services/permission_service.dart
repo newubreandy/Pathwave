@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
+
+import '../widgets/pw.dart';
 
 /// PR #58 — 권한 사전 안내 (Apple HIG / Google Play 가이드라인 대응).
 ///
@@ -83,6 +86,9 @@ class PermissionService {
       await Permission.location.request();
       return true;
     }
+    // 2026-06-09 — iOS/Android 에뮬레이터에서는 BLE 권한이 거부되므로
+    // debug 빌드 한정으로 mock 동의 처리해 토글 UI 검증을 가능하게 한다.
+    if (kDebugMode) return true;
     return false;
   }
 
@@ -116,24 +122,24 @@ class PermissionService {
 
   Future<bool> _rationaleDialog(BuildContext context,
       {required String title, required String message}) async {
-    final result = await showDialog<bool>(
+    // 공통 가이드 — showPwDialog (흰 글래스 + 블러 딤 + 타이틀/버튼 중앙)
+    final result = await showPwDialog<bool>(
       context: context,
-      barrierColor: const Color(0x99000000),
-      barrierDismissible: true,
-      builder: (ctx) => AlertDialog(
-        title: Text(title),
-        content: Text(message, style: const TextStyle(height: 1.5)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('나중에'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('계속'),
-          ),
-        ],
-      ),
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        PwButton(
+          variant: PwButtonVariant.text,
+          fullWidth: false,
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('나중에'),
+        ),
+        PwButton(
+          fullWidth: false,
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('계속'),
+        ),
+      ],
     );
     return result == true;
   }
@@ -141,24 +147,23 @@ class PermissionService {
   Future<bool> _openSettingsDialog(BuildContext context,
       {required String title, required String message}) async {
     if (!context.mounted) return false;
-    final result = await showDialog<bool>(
+    final result = await showPwDialog<bool>(
       context: context,
-      barrierColor: const Color(0x99000000),
-      barrierDismissible: true,
-      builder: (ctx) => AlertDialog(
-        title: Text(title),
-        content: Text(message, style: const TextStyle(height: 1.5)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('취소'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('설정 열기'),
-          ),
-        ],
-      ),
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        PwButton(
+          variant: PwButtonVariant.text,
+          fullWidth: false,
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('취소'),
+        ),
+        PwButton(
+          fullWidth: false,
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('설정 열기'),
+        ),
+      ],
     );
     if (result == true) {
       await openAppSettings();

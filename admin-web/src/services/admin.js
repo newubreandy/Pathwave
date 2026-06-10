@@ -3,6 +3,17 @@ import apiClient from './apiClient.js';
 export const adminApi = {
   // 본인 (A-024 / A-023)
   me: () => apiClient.get('/api/admin/me'),
+  // ── 금지어 (2026-06-09) ────────────────────────────────────────────
+  listBannedWords: (q, kind) => {
+    const qs = new URLSearchParams();
+    if (q) qs.set('q', q);
+    if (kind) qs.set('kind', kind);
+    const s = qs.toString();
+    return apiClient.get(`/api/admin/banned-words${s ? '?' + s : ''}`);
+  },
+  createBannedWord: (body) => apiClient.post('/api/admin/banned-words', body),
+  updateBannedWord: (id, body) => apiClient.patch(`/api/admin/banned-words/${id}`, body),
+  deleteBannedWord: (id) => apiClient.delete(`/api/admin/banned-words/${id}`),
   changeMyPassword: (currentPassword, newPassword) =>
     apiClient.post('/api/admin/change-password', {
       current_password: currentPassword,
@@ -142,6 +153,11 @@ export const adminApi = {
   criticalAlerts: () => apiClient.get('/api/admin/critical-alerts'),
   dismissAlert: (alertId, hours) =>
     apiClient.post(`/api/admin/alerts/${alertId}/dismiss`, { hours }),
+
+  // Feature Flag (2026-06-08)
+  listFeatures: () => apiClient.get('/api/admin/features'),
+  setFeature:   (key, enabled) =>
+    apiClient.patch(`/api/admin/features/${key}`, { enabled }),
 
   // 매장 업종 카테고리 (polish 작업)
   listCategories: () => apiClient.get('/api/admin/categories'),

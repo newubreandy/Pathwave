@@ -14,6 +14,17 @@
 """
 from datetime import datetime
 
+# ── 1차 무제한 정책 (사용자 결정 2026-06-08) ────────────────────────────────
+# 푸시 인프라(FCM/APNs) 비용은 0 이므로 1차 출시는 quota 한도 미적용.
+# 등급별 한도 정책은 2차에서 도입 (notification_plans 테이블 + 어드민 CRUD).
+# ``_UNLIMITED_P1=True`` 가 켜져 있으면 모든 발송이 quota 검증을 우회한다.
+# 2차 활성화 시 이 플래그를 False 로 변경하고 아래 원본 로직이 다시 동작한다.
+# ────────────────────────────────────────────────────────────────────────────
+_UNLIMITED_P1 = True
+
+# UI 가 _UNLIMITED_P1 일 때 표시할 큰 가용량 상수.
+_UNLIMITED_DISPLAY = 999_999
+
 
 def _now_iso() -> str:
     return datetime.utcnow().isoformat()
@@ -22,10 +33,10 @@ def _now_iso() -> str:
 def get_available_quota(db, account_id: int) -> int:
     """발송 가능한 총 quota 잔량 (미만료 row 합계).
 
-    Returns
-    -------
-    int — 0 이상.
+    1차 무제한 정책이 활성이면 항상 큰 값 반환.
     """
+    if _UNLIMITED_P1:
+        return _UNLIMITED_DISPLAY
     row = db.execute(
         """SELECT COALESCE(SUM(quantity_purchased - quantity_used), 0) AS rem
            FROM notification_quota
@@ -40,10 +51,11 @@ def get_available_quota(db, account_id: int) -> int:
 def consume_quota(db, account_id: int, amount: int = 1) -> bool:
     """quota ``amount`` 차감. 부족하면 False (변경 X), 성공하면 True.
 
-    만료가 가까운(``expires_at ASC``) row 부터 차감 (FIFO).
-    호출자가 별도 commit 책임.
+    1차 무제한 정책이 활성이면 차감 없이 무조건 True 반환.
     """
     if amount <= 0:
+        return True
+    if _UNLIMITED_P1:
         return True
     if get_available_quota(db, account_id) < amount:
         return False
@@ -87,6 +99,14 @@ def quota_summary(db, account_id: int) -> dict:
       'expired':   int,   # 만료된 미사용분
     }
     """
+    if _UNLIMITED_P1:
+        return {
+            'purchased': 0,
+            'used':      0,
+            'available': _UNLIMITED_DISPLAY,
+            'expired':   0,
+            'unlimited': True,
+        }
     rows = db.execute(
         """SELECT quantity_purchased, quantity_used, expires_at
            FROM notification_quota WHERE facility_account_id=?""",

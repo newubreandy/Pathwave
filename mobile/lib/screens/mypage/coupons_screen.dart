@@ -62,12 +62,10 @@ class _CouponsScreenState extends State<CouponsScreen>
     return Scaffold(
       appBar: PwAppBar(
         title: Text(_t.t('coupon_issue.title', defaultValue: '내 쿠폰')),
+        // 색상/인디케이터는 NeuTheme.tabBarTheme 글로벌 정책 따름 (흰 톤 통일).
         bottom: TabBar(
           controller: _tabCtrl,
           tabs: _statusTabs.map((s) => Tab(text: _statusLabel[s])).toList(),
-          labelColor: AppTheme.primary,
-          unselectedLabelColor: AppTheme.textSecondary,
-          indicatorColor: AppTheme.primary,
         ),
       ),
       body: SafeArea(child: TabBarView(
@@ -194,7 +192,8 @@ class _CouponListBodyState extends State<_CouponListBody> {
     }).toList();
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16,
+          16 + MediaQuery.of(context).viewPadding.bottom),
       children: [
         // 환영 카드 — 새로 발급된 쿠폰 수만큼 표시
         for (final item in newCoupons)
@@ -294,6 +293,37 @@ class _CouponCard extends StatelessWidget {
     final expiresAt = data['expires_at']?.toString();
 
     final isUsable = status == 'active';
+    // 2026-06-09 — 글래스 모피즘 아이콘 박스 (그라디언트 + 흰 보더 + glow).
+    final Color iconColor;
+    final List<Color> iconGradient;
+    final Color glowColor;
+    final double borderAlpha;
+    if (status == 'active') {
+      iconColor    = Colors.white;
+      iconGradient = [
+        AppTheme.primary.withValues(alpha: 0.85),
+        AppTheme.primary.withValues(alpha: 0.45),
+      ];
+      glowColor    = AppTheme.primary.withValues(alpha: 0.45);
+      borderAlpha  = 0.28;
+    } else if (status == 'used') {
+      iconColor    = AppTheme.textHint;
+      iconGradient = [
+        Colors.white.withValues(alpha: 0.18),
+        Colors.white.withValues(alpha: 0.08),
+      ];
+      glowColor    = Colors.transparent;
+      borderAlpha  = 0.18;
+    } else { // expired
+      iconColor    = Colors.black87;
+      iconGradient = [
+        Colors.black.withValues(alpha: 0.42),
+        Colors.black.withValues(alpha: 0.18),
+      ];
+      glowColor    = Colors.transparent;
+      borderAlpha  = 0.18;
+    }
+    // 본문 텍스트 강조 색은 active 만 보라, 나머지는 회색.
     final color = isUsable ? AppTheme.primary : AppTheme.textHint;
 
     return PwCard(
@@ -301,12 +331,29 @@ class _CouponCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 56, height: 56,
+            width: 44, height: 44,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.18),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: iconGradient,
+              ),
               borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: borderAlpha),
+                width: 1,
+              ),
+              boxShadow: glowColor == Colors.transparent
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: glowColor,
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
             ),
-            child: Icon(Icons.confirmation_number, color: color, size: 28),
+            child: Icon(Icons.confirmation_number, color: iconColor, size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(

@@ -74,7 +74,8 @@ class ThemeService extends ChangeNotifier {
   String?      _lastError;
 
   ThemeConfig? get activeTheme => _activeTheme;
-  Season       get season      => _season;
+  // DEV_FORCE_SEASON 이 있으면 그 계절로 고정(QA), 없으면 서버/시간 기반 _season.
+  Season       get season      => SeasonUtils.devForcedSeason ?? _season;
   bool         get loading     => _loading;
   String?      get lastError   => _lastError;
 
@@ -82,8 +83,14 @@ class ThemeService extends ChangeNotifier {
   Future<void> init() async {
     await _loadFromCache();
     notifyListeners();
-    // 캐시 TTL 만료면 fetch — 만료 안 됐어도 백그라운드로 갱신
-    unawaited(_fetchIfStale());
+    // 개발 계절 강제(DEV_FORCE_SEASON) 시엔 캐시를 무시하고 항상 새로 fetch한다 —
+    // 계절을 바꿔 재실행하면 즉시 해당 계절 테마가 반영되도록(캐시 1h 로 묶이지 않게).
+    if (SeasonUtils.devForcedSeason != null) {
+      unawaited(_fetch());
+    } else {
+      // 캐시 TTL 만료면 fetch — 만료 안 됐어도 백그라운드로 갱신
+      unawaited(_fetchIfStale());
+    }
   }
 
   Future<void> _loadFromCache() async {
@@ -121,7 +128,14 @@ class ThemeService extends ChangeNotifier {
     _lastError = null;
     notifyListeners();
     try {
-      final data = await ApiClient.instance.get('/api/theme/current');
+      // 개발 계절 강제(DEV_FORCE_SEASON) 시 같은 계절의 테마를 받도록 쿼리에 반영.
+      // 운영은 미지정 → 백엔드가 KST 현재 계절을 자동 판정한다.
+      final forced = SeasonUtils.devForcedSeason;
+      final data = await ApiClient.instance.get(
+        forced != null
+            ? '/api/theme/current?season=${forced.code}'
+            : '/api/theme/current',
+      );
       _season = SeasonUtils.parse(data['season']?.toString());
       final t = data['theme'];
       if (t is Map<String, dynamic>) {
