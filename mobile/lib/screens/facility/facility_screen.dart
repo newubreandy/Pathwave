@@ -238,7 +238,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
           ? CachedNetworkImage(
               imageUrl: imageUrl,
               fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
+              // 2026-06-11 — center: 상단 보케(아웃포커스) 사진이 헤더 아래 흐린 띠로 보이는 문제 회피.
+              alignment: Alignment.center,
               errorWidget: (_, _, _) =>
                   Container(color: Colors.white.withValues(alpha: 0.08)),
             )
