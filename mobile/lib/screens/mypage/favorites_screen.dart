@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../services/favorite_service.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/i18n_context.dart';
 import '../../widgets/pw.dart';
 
 /// 즐겨찾기 매장 목록 화면 — `/mypage/favorites`.
@@ -47,20 +48,20 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     final name = data['name']?.toString() ?? '매장';
     final ok = await showPwDialog<bool>(
       context: context,
-      title: const Text('즐겨찾기 해제'),
-      content: Text('"$name"을(를) 즐겨찾기에서 제거할까요?'),
+      title: Text(context.t('favorite.remove_title', defaultValue: '즐겨찾기 해제')),
+      content: Text('"$name"${context.t('favorite.remove_confirm_suffix', defaultValue: '을(를) 즐겨찾기에서 제거할까요?')}'),
       actions: [
         PwButton(
           variant: PwButtonVariant.text,
           fullWidth: false,
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('취소'),
+          child: Text(context.t('mobile.common.cancel', defaultValue: '취소')),
         ),
         PwButton(
           variant: PwButtonVariant.danger,
           fullWidth: false,
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('해제'),
+          child: Text(context.t('favorite.remove_btn', defaultValue: '해제')),
         ),
       ],
     );
@@ -72,7 +73,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PwAppBar(title: const Text('즐겨찾기')),
+      appBar: PwAppBar(title: Text(context.t('favorite.title', defaultValue: '즐겨찾기'))),
       body: SafeArea(child: RefreshIndicator(
         onRefresh: _reload,
         child: FutureBuilder<List<Map<String, dynamic>>>(
@@ -89,12 +90,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             }
             final list = snap.data ?? [];
             if (list.isEmpty) {
-              return ListView(children: const [
-                SizedBox(height: 100),
+              return ListView(children: [
+                const SizedBox(height: 100),
                 PwEmptyState(
                   icon: Icons.favorite_border,
-                  title: '즐겨찾기한 매장이 없습니다',
-                  subtitle: '매장 상세나 검색에서 하트를 눌러보세요.',
+                  title: context.t('favorite.empty_title', defaultValue: '즐겨찾기한 매장이 없습니다'),
+                  subtitle: context.t('favorite.empty_subtitle', defaultValue: '매장 상세나 검색에서 하트를 눌러보세요.'),
                 ),
               ]);
             }
@@ -184,14 +185,14 @@ class _FavoriteCard extends StatelessWidget {
               PwIconButton(
                 icon: Icons.share_outlined,
                 color: Colors.white,
-                tooltip: '공유하기',
+                tooltip: context.t('favorite.share_tooltip', defaultValue: '공유하기'),
                 onPressed: () => _share(context, id, name),
               ),
               const SizedBox(height: 4),
               PwIconButton(
                 icon: Icons.favorite,
                 color: AppTheme.primary,
-                tooltip: '즐겨찾기 해제',
+                tooltip: context.t('favorite.remove_tooltip', defaultValue: '즐겨찾기 해제'),
                 onPressed: onRemove,
               ),
             ],
@@ -208,7 +209,7 @@ class _FavoriteCard extends StatelessWidget {
     await Clipboard.setData(ClipboardData(text: '$name — $url'));
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('"$name" 링크를 복사했습니다.')),
+      SnackBar(content: Text('"$name" ${context.t('favorite.link_copied', defaultValue: '링크를 복사했습니다.')}')),
     );
   }
 }

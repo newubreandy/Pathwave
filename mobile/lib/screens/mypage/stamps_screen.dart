@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../utils/error_message.dart';
 
 import '../../services/i18n_service.dart';
+import '../../utils/i18n_context.dart';
 import '../../services/stamp_service.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/pw.dart';
@@ -56,7 +57,7 @@ class _StampsScreenState extends State<StampsScreen> {
                   PwEmptyState(
                     icon: Icons.local_activity_outlined,
                     title: _t.t('stamp.empty', defaultValue: '아직 적립된 스탬프가 없습니다'),
-                    subtitle: '매장에 방문하면 비콘으로 자동 적립됩니다.',
+                    subtitle: _t.t('stamp.empty_subtitle', defaultValue: '매장에 방문하면 비콘으로 자동 적립됩니다.'),
                   ),
                 ],
               );
@@ -154,11 +155,11 @@ class _StampCard extends StatelessWidget {
                 ),
                 if (rewardAvailable) ...[
                   const SizedBox(height: 6),
-                  const Text('🎉 보상 쿠폰이 발급되었어요',
-                      style: TextStyle(color: AppTheme.success, fontSize: 12)),
+                  Text('🎉 ${context.t('stamp.reward_issued', defaultValue: '보상 쿠폰이 발급되었어요')}',
+                      style: const TextStyle(color: AppTheme.success, fontSize: 12)),
                 ] else if (rewardDesc != null && rewardDesc.isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  Text('보상: $rewardDesc',
+                  Text('${context.t('stamp.reward_label', defaultValue: '보상')}: $rewardDesc',
                       style: const TextStyle(
                           color: AppTheme.textHint, fontSize: 12)),
                 ],
@@ -189,7 +190,7 @@ class _StampCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('적립 현황', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+              Text(context.t('stamp.progress_label', defaultValue: '적립 현황'), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
               Text('$count / $required',
                   style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w700)),
             ],
@@ -208,25 +209,25 @@ class _StampCard extends StatelessWidget {
           if (rewardDesc != null && rewardDesc.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: Text('🎁 보상: $rewardDesc',
+              child: Text('🎁 ${context.t('stamp.reward_label', defaultValue: '보상')}: $rewardDesc',
                   style: const TextStyle(color: Colors.white)),
             ),
           if (rewardAvailable)
-            const Text('🎉 보상 쿠폰이 발급되었어요!',
-                style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.w600))
+            Text('🎉 ${context.t('stamp.reward_issued_exclaim', defaultValue: '보상 쿠폰이 발급되었어요!')}',
+                style: const TextStyle(color: AppTheme.success, fontWeight: FontWeight.w600))
           else if (remain > 0)
-            Text('$remain개 더 모으면 보상을 받을 수 있어요.',
+            Text(context.t('stamp.remain_hint', defaultValue: '$remain개 더 모으면 보상을 받을 수 있어요.').replaceFirst('\$remain', '$remain'),
                 style: const TextStyle(color: AppTheme.textHint, fontSize: 13)),
           const SizedBox(height: 8),
           const Divider(color: AppTheme.border, height: 24),
-          const Text('· 비콘 감지 시 자동 적립됩니다.',
-              style: TextStyle(color: AppTheme.textHint, fontSize: 12)),
+          Text('· ${context.t('stamp.policy_beacon', defaultValue: '비콘 감지 시 자동 적립됩니다.')}',
+              style: const TextStyle(color: AppTheme.textHint, fontSize: 12)),
           const SizedBox(height: 4),
-          const Text('· 동일 매장 재방문 적립은 일정 시간 후 가능합니다.',
-              style: TextStyle(color: AppTheme.textHint, fontSize: 12)),
+          Text('· ${context.t('stamp.policy_revisit', defaultValue: '동일 매장 재방문 적립은 일정 시간 후 가능합니다.')}',
+              style: const TextStyle(color: AppTheme.textHint, fontSize: 12)),
           const SizedBox(height: 4),
-          const Text('· 적립 분쟁은 매장 사업자가 책임을 부담합니다.',
-              style: TextStyle(color: AppTheme.textHint, fontSize: 12)),
+          Text('· ${context.t('stamp.policy_dispute', defaultValue: '적립 분쟁은 매장 사업자가 책임을 부담합니다.')}',
+              style: const TextStyle(color: AppTheme.textHint, fontSize: 12)),
         ],
       ),
       actions: [
@@ -238,43 +239,14 @@ class _StampCard extends StatelessWidget {
               Navigator.of(context).pop();
               context.push('/facility/$facilityId');
             },
-            child: const Text('매장 보기'),
+            child: Text(context.t('stamp.view_store', defaultValue: '매장 보기')),
           ),
         PwButton(
           fullWidth: false,
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('닫기'),
+          child: Text(context.t('mobile.common.close', defaultValue: '닫기')),
         ),
       ],
-    );
-  }
-}
-
-
-class _TermsBullet extends StatelessWidget {
-  final String text;
-  const _TermsBullet(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('• ', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                color: AppTheme.textSecondary,
-                fontSize: 13,
-                height: 1.45,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
