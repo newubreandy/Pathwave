@@ -50,15 +50,18 @@ class NotificationService {
     await _api.post('/api/notifications/$notificationId/read');
   }
 
-  /// 설정 조회. 게스트 / 401 → 빈 맵.
-  Future<Map<String, dynamic>> getSettings() async {
-    final data = await _getSafe('/api/notifications/settings');
-    if (data == null) return {};
-    return (data['settings'] as Map?)?.cast<String, dynamic>() ?? {};
+  /// 알림 카테고리 설정 조회. 게스트 / 401 → 빈 리스트.
+  /// 2026-06-11 — backend 정합: /api/users/me/notification-preferences
+  Future<List<Map<String, dynamic>>> getPreferences() async {
+    final data = await _getSafe('/api/users/me/notification-preferences');
+    if (data == null) return [];
+    return (data['preferences'] as List?)?.cast<Map<String, dynamic>>() ?? [];
   }
 
-  Future<Map<String, dynamic>> updateSettings(Map<String, dynamic> body) {
-    return _api.patch('/api/notifications/settings', body);
+  /// 카테고리 단위 ON/OFF — PUT /api/users/me/notification-preferences/<category>
+  Future<Map<String, dynamic>> setPreference(String category, bool enabled) {
+    return _api.put('/api/users/me/notification-preferences/$category',
+        body: {'enabled': enabled});
   }
 
   // ── 시스템 공지 ─────────────────────────────────────────────────────────

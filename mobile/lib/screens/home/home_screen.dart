@@ -206,7 +206,9 @@ class _HomeTab extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            ble.isScanning ? '비콘 감지 중' : '비콘 감지 대기',
+                            ble.isScanning
+                                ? context.t('mobile.home.ble_scanning', defaultValue: '비콘 감지 중')
+                                : context.t('mobile.home.ble_idle', defaultValue: '비콘 감지 대기'),
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
@@ -215,8 +217,8 @@ class _HomeTab extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             ble.isScanning
-                                ? '주변에 비콘이 있는지 확인합니다.'
-                                : '권한을 허용하면 자동으로 시작합니다.',
+                                ? context.t('mobile.home.ble_scanning_desc', defaultValue: '주변에 비콘이 있는지 확인합니다.')
+                                : context.t('mobile.home.ble_idle_desc', defaultValue: '권한을 허용하면 자동으로 시작합니다.'),
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 13,
@@ -318,7 +320,7 @@ class _WifiBanner extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '${facility?['name'] ?? '매장'} WiFi 발견',
+                  '${facility?['name'] ?? context.t('mobile.home.default_facility', defaultValue: '매장')} ${context.t('mobile.home.wifi_found', defaultValue: 'WiFi 발견')}',
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
@@ -328,7 +330,7 @@ class _WifiBanner extends StatelessWidget {
               ),
               PwIconButton(
                 icon: Icons.close,
-                tooltip: '닫기',
+                tooltip: I18nService.instance.t('mobile.common.close', defaultValue: '닫기'),
                 size: 18,
                 color: Colors.white70,
                 onPressed: onDismiss,
@@ -366,16 +368,16 @@ class _MyPageTab extends StatelessWidget {
     // (SOW v1.3: 유흥·숙박 등 2차 서비스 제공 시 활성. 1차 OFF.)
     final showParentInvite = FeatureService.instance.isEnabled('parent_invite');
     final menuItems = <_MenuSpec>[
-      _MenuSpec(Icons.qr_code_2, '내 회원 QR', '/mypage/member-qr'),
-      _MenuSpec(Icons.local_activity_outlined, '내 스탬프', '/mypage/stamps'),
-      _MenuSpec(Icons.confirmation_number_outlined, '내 쿠폰', '/mypage/coupons'),
-      _MenuSpec(Icons.favorite_outline, '즐겨찾기', '/mypage/favorites'),
+      _MenuSpec(Icons.qr_code_2, context.t('mobile.mypage.menu.member_qr', defaultValue: '내 회원 QR'), '/mypage/member-qr'),
+      _MenuSpec(Icons.local_activity_outlined, context.t('mobile.mypage.menu.stamps', defaultValue: '내 스탬프'), '/mypage/stamps'),
+      _MenuSpec(Icons.confirmation_number_outlined, context.t('mobile.mypage.menu.coupons', defaultValue: '내 쿠폰'), '/mypage/coupons'),
+      _MenuSpec(Icons.favorite_outline, context.t('mobile.mypage.menu.favorites', defaultValue: '즐겨찾기'), '/mypage/favorites'),
       if (showParentInvite)
-        _MenuSpec(Icons.family_restroom, '자녀 초대', '/mypage/parent-invite'),
-      _MenuSpec(Icons.person_add_alt, '친구 초대', '/mypage/friend-invite'),
-      _MenuSpec(Icons.chat_bubble_outline, '매장 채팅', '/chat'),
-      _MenuSpec(Icons.headset_mic_outlined, '고객센터', '/support'),
-      _MenuSpec(Icons.settings_outlined, '설정', '/settings'),
+        _MenuSpec(Icons.family_restroom, context.t('mobile.mypage.menu.child_invite', defaultValue: '자녀 초대'), '/mypage/parent-invite'),
+      _MenuSpec(Icons.person_add_alt, context.t('mobile.mypage.menu.friend_invite', defaultValue: '친구 초대'), '/mypage/friend-invite'),
+      _MenuSpec(Icons.chat_bubble_outline, context.t('mobile.mypage.menu.store_chat', defaultValue: '매장 채팅'), '/chat'),
+      _MenuSpec(Icons.headset_mic_outlined, context.t('mobile.mypage.menu.support', defaultValue: '고객센터'), '/support'),
+      _MenuSpec(Icons.settings_outlined, context.t('mobile.mypage.menu.settings', defaultValue: '설정'), '/settings'),
     ];
 
     // NavigationBar 와 로그아웃 버튼 사이 안전 마진(40). ConstrainedBox/
@@ -539,85 +541,6 @@ class _MenuDivider extends StatelessWidget {
     child: Container(height: 1, color: Colors.white.withValues(alpha: 0.10)),
   );
 }
-
-// ── 알림 탭 (목록 진입 라우트로 이동) ───────────────────────────────────────
-class _NotificationsTab extends StatelessWidget {
-  const _NotificationsTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.t('mobile.notifications.title', defaultValue: '알림'),
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-              color: Colors.white,
-              shadows: const [
-                Shadow(
-                  color: Colors.black54,
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          GlassCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: const [
-                    Icon(
-                      Icons.notifications_outlined,
-                      color: Colors.white70,
-                      size: 20,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      '최근 알림',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  context.t(
-                    'mobile.notifications.placeholder',
-                    defaultValue: '스탬프 적립 / 쿠폰 발급 / 시스템 공지가 표시됩니다.',
-                  ),
-                  style: const TextStyle(color: Colors.white70, height: 1.4),
-                ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: () => context.push('/notifications'),
-                    icon: const Icon(Icons.open_in_new, color: Colors.white),
-                    label: Text(
-                      context.t(
-                        'mobile.notifications.view_all',
-                        defaultValue: '전체 알림 보기',
-                      ),
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 
 /// 알림 탭 미읽음 뱃지 (2026-06-08).
 /// count > 0 일 때만 빨간 점/숫자 노출. 99+ 는 ``99+``.

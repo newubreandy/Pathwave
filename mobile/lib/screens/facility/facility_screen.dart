@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../services/favorite_service.dart';
 import '../../services/store_service.dart';
+import '../../services/i18n_service.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/i18n_context.dart';
 import '../../widgets/pw.dart';
@@ -160,7 +161,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       pinned: true,
       leading: PwIconButton(
         icon: Icons.arrow_back,
-        tooltip: '뒤로',
+        tooltip: context.t('mobile.common.back', defaultValue: '뒤로'),
         onPressed: () => context.pop(),
       ),
       title: Text(context.t('mobile.facility.title', defaultValue: '매장 정보')),
@@ -169,7 +170,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   SliverAppBar _buildAppBar(Map<String, dynamic> f) {
     // 2026-06-09 — 이미지를 헤더와 겹치지 않게 분리. AppBar 는 일반 높이만.
-    final name = f['name']?.toString() ?? '매장';
+    final name = f['name']?.toString() ?? I18nService.instance.t('mobile.common.fallback_store', defaultValue: '매장');
     return SliverAppBar(
       pinned: true,
       // 2026-06-09 — 상단 영역 글래스 톤 + 매장명 표시 (다른 상세 패턴 통일).
@@ -192,19 +193,21 @@ class _FacilityScreenState extends State<FacilityScreen> {
       leading: PwIconButton(
         icon: Icons.arrow_back,
         color: AppTheme.textPrimary,
-        tooltip: '뒤로',
+        tooltip: context.t('mobile.common.back', defaultValue: '뒤로'),
         onPressed: () => context.pop(),
       ),
       actions: [
         PwIconButton(
           icon: _isFavorite ? Icons.favorite : Icons.favorite_border,
           color: _isFavorite ? AppTheme.primary : AppTheme.textPrimary,
-          tooltip: _isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가',
+          tooltip: _isFavorite
+              ? context.t('mobile.facility.unfavorite', defaultValue: '즐겨찾기 해제')
+              : context.t('mobile.facility.add_favorite', defaultValue: '즐겨찾기 추가'),
           onPressed: _favLoading ? null : _toggleFavorite,
         ),
         PwIconButton(
           icon: Icons.flag_outlined,
-          tooltip: '신고하기',
+          tooltip: context.t('mobile.facility.report', defaultValue: '신고하기'),
           onPressed: () => context.push(
             '/support?tab=report&target=facility&id=$_id',
           ),
@@ -377,8 +380,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
-                    '※ 자동 번역 일시 중단 — 원본 표시',
-                    style: TextStyle(fontSize: 11,
+                    context.t('mobile.facility.translate_suspended', defaultValue: '※ 자동 번역 일시 중단 — 원본 표시'),
+                    style: const TextStyle(fontSize: 11,
                       color: AppTheme.textHint, fontStyle: FontStyle.italic),
                   ),
                 ),
@@ -480,8 +483,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
               Row(children: [
                 const Icon(Icons.event_busy, size: 16, color: AppTheme.textSecondary),
                 const SizedBox(width: 6),
-                const Text('정기휴무',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
+                Text(context.t('mobile.facility.regular_holiday', defaultValue: '정기휴무'),
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
               ]),
               const SizedBox(height: 8),
               Text(
@@ -519,10 +522,11 @@ class _FacilityScreenState extends State<FacilityScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(children: [
-              Icon(Icons.card_giftcard, size: 16, color: AppTheme.textSecondary),
-              SizedBox(width: 6),
-              Text('진행중인 혜택', style: TextStyle(fontWeight: FontWeight.w600)),
+            Row(children: [
+              const Icon(Icons.card_giftcard, size: 16, color: AppTheme.textSecondary),
+              const SizedBox(width: 6),
+              Text(context.t('mobile.facility.active_benefits', defaultValue: '진행중인 혜택'),
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
             ]),
             const SizedBox(height: 10),
             for (final b in benefits) ...[

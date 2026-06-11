@@ -49,7 +49,7 @@ class _FindEmailScreenState extends State<FindEmailScreen> {
   Future<void> _lookupByPhone() async {
     final phone = _phoneCtrl.text.trim();
     if (phone.replaceAll(RegExp(r'\D'), '').length < 8) {
-      setState(() => _error = '연락처를 정확히 입력해 주세요.');
+      setState(() => _error = context.t('mobile.auth.find_email.error_invalid_phone', defaultValue: '연락처를 정확히 입력해 주세요.'));
       return;
     }
     setState(() { _busy = true; _error = null; _info = null; });
@@ -59,7 +59,7 @@ class _FindEmailScreenState extends State<FindEmailScreen> {
       if (res['success'] == true) {
         final list = (res['matches'] as List?) ?? [];
         if (list.isEmpty) {
-          setState(() => _error = '해당 연락처로 가입된 이메일이 없습니다.');
+          setState(() => _error = context.t('mobile.auth.find_email.error_no_email', defaultValue: '해당 연락처로 가입된 이메일이 없습니다.'));
           return;
         }
         setState(() {
@@ -68,10 +68,10 @@ class _FindEmailScreenState extends State<FindEmailScreen> {
               .where((s) => s.isNotEmpty)
               .toList();
           _step = 1;
-          _info = '아래 가려진 이메일 중 본인 이메일을 전체로 입력하세요.';
+          _info = context.t('mobile.auth.find_email.info_enter_full_email', defaultValue: '아래 가려진 이메일 중 본인 이메일을 전체로 입력하세요.');
         });
       } else {
-        setState(() => _error = res['message']?.toString() ?? '조회 실패');
+        setState(() => _error = res['message']?.toString() ?? context.t('mobile.auth.find_email.error_lookup_failed', defaultValue: '조회 실패'));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -83,7 +83,7 @@ class _FindEmailScreenState extends State<FindEmailScreen> {
     final email = _emailCtrl.text.trim().toLowerCase();
     final phone = _phoneCtrl.text.trim();
     if (email.isEmpty || !email.contains('@')) {
-      setState(() => _error = '이메일 형식이 올바르지 않습니다.');
+      setState(() => _error = context.t('mobile.auth.find_email.error_invalid_email', defaultValue: '이메일 형식이 올바르지 않습니다.'));
       return;
     }
     setState(() { _busy = true; _error = null; _info = null; });
@@ -92,9 +92,9 @@ class _FindEmailScreenState extends State<FindEmailScreen> {
           phone: phone, email: email);
       if (!mounted) return;
       if (res['success'] == true) {
-        setState(() { _step = 2; _info = '인증 코드를 이메일로 발송했습니다.'; });
+        setState(() { _step = 2; _info = context.t('mobile.auth.find_email.info_code_sent', defaultValue: '인증 코드를 이메일로 발송했습니다.'); });
       } else {
-        setState(() => _error = res['message']?.toString() ?? '발송 실패');
+        setState(() => _error = res['message']?.toString() ?? context.t('mobile.auth.find_email.error_send_failed', defaultValue: '발송 실패'));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -107,7 +107,7 @@ class _FindEmailScreenState extends State<FindEmailScreen> {
     final phone = _phoneCtrl.text.trim();
     final code  = _codeCtrl.text.trim();
     if (code.isEmpty) {
-      setState(() => _error = '인증 코드를 입력해 주세요.');
+      setState(() => _error = context.t('mobile.auth.find_email.error_code_empty', defaultValue: '인증 코드를 입력해 주세요.'));
       return;
     }
     setState(() { _busy = true; _error = null; _info = null; });
@@ -122,7 +122,7 @@ class _FindEmailScreenState extends State<FindEmailScreen> {
           _info = null;
         });
       } else {
-        setState(() => _error = res['message']?.toString() ?? '검증 실패');
+        setState(() => _error = res['message']?.toString() ?? context.t('mobile.auth.find_email.error_verify_failed', defaultValue: '검증 실패'));
       }
     } finally {
       if (mounted) setState(() => _busy = false);

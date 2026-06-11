@@ -9,6 +9,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../services/i18n_service.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/pw.dart';
 
@@ -30,7 +31,8 @@ class NotificationDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = data['title']?.toString() ?? '알림';
+    final t = I18nService.instance;
+    final title = data['title']?.toString() ?? t.t('notif.default_title', defaultValue: '알림');
     final body  = data['body']?.toString() ?? '';
     final kind  = data['kind']?.toString() ?? data['__kind']?.toString();
     final fid   = data['facility_id'];
@@ -43,21 +45,21 @@ class NotificationDetailScreen extends StatelessWidget {
     String? actionLabel;
     VoidCallback? action;
     if (kind == 'coupon') {
-      actionLabel = '쿠폰 보기';
+      actionLabel = t.t('notif.action_view_coupon', defaultValue: '쿠폰 보기');
       action = () => context.push('/mypage/coupons');
     } else if (kind == 'stamp') {
-      actionLabel = '스탬프 보기';
+      actionLabel = t.t('notif.action_view_stamp', defaultValue: '스탬프 보기');
       action = () => context.push('/mypage/stamps');
     } else if (kind == 'chat' && roomId != null) {
-      actionLabel = '채팅 열기';
+      actionLabel = t.t('notif.action_open_chat', defaultValue: '채팅 열기');
       action = () => context.push('/chat/$roomId');
     } else if (fid != null) {
-      actionLabel = '매장 보기';
+      actionLabel = t.t('notif.action_view_facility', defaultValue: '매장 보기');
       action = () => context.push('/facility/$fid');
     }
 
     return Scaffold(
-      appBar: PwAppBar(title: const Text('알림')),
+      appBar: PwAppBar(title: Text(t.t('notif.title', defaultValue: '알림'))),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(20, 20, 20,
@@ -152,7 +154,7 @@ class NotificationDetailScreen extends StatelessWidget {
                         const Divider(color: AppTheme.border, height: 1),
                         const SizedBox(height: 14),
                         SelectableText(
-                          body.isEmpty ? '내용이 없습니다.' : body,
+                          body.isEmpty ? t.t('notif.empty_body', defaultValue: '내용이 없습니다.') : body,
                           style: const TextStyle(
                               color: Colors.white, fontSize: 14, height: 1.55),
                         ),

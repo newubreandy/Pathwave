@@ -66,14 +66,15 @@ class _SupportScreenState extends State<SupportScreen>
         // 색상/인디케이터는 NeuTheme.tabBarTheme 글로벌 정책 따름 (흰 톤 통일).
         bottom: TabBar(
           controller: _tabCtrl,
-          tabs: const [
-            Tab(text: 'FAQ'),
-            Tab(text: '내 문의'),
-            Tab(text: '신고하기'),
+          tabs: [
+            const Tab(text: 'FAQ'),
+            Tab(text: context.t('mobile.support.tab_my_tickets', defaultValue: '내 문의')),
+            Tab(text: context.t('mobile.support.tab_report', defaultValue: '신고하기')),
           ],
         ),
       ),
-      body: SafeArea(child: TabBarView(
+      // 2026-06-10 — SafeArea 제거 (TabBarView viewport 충돌 해결, stamps/coupons 패턴 통일).
+      body: TabBarView(
         controller: _tabCtrl,
         children: [
           const _FaqTab(),
@@ -83,7 +84,7 @@ class _SupportScreenState extends State<SupportScreen>
             initialTargetId: widget.reportTargetId,
           ),
         ],
-      )),
+      ),
     );
   }
 }
@@ -135,7 +136,7 @@ class _FaqTabState extends State<_FaqTab> {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: PwTextField(
             controller: _searchCtrl,
-            hint: 'FAQ 검색',
+            hint: context.t('mobile.support.faq_search_hint', defaultValue: 'FAQ 검색'),
             prefixIcon: Icons.search,
             onChanged: (v) => setState(() => _query = v),
           ),
@@ -147,14 +148,15 @@ class _FaqTabState extends State<_FaqTab> {
           // 가이드 — 흰 글래스(PwCard 디폴트) + 흰 아이콘/텍스트
           child: PwCard(
             padding: const EdgeInsets.all(12),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.access_time, size: 16, color: Colors.white),
-                SizedBox(width: 8),
+                const Icon(Icons.access_time, size: 16, color: Colors.white),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '영업시간 평일 09:00–18:00 · 주말·공휴일 제외\n평균 응답시간 1–2 영업일',
-                    style: TextStyle(fontSize: 12, color: Colors.white, height: 1.4),
+                    context.t('mobile.support.business_hours_faq',
+                        defaultValue: '영업시간 평일 09:00–18:00 · 주말·공휴일 제외\n평균 응답시간 1–2 영업일'),
+                    style: const TextStyle(fontSize: 12, color: Colors.white, height: 1.4),
                   ),
                 ),
               ],
@@ -172,7 +174,7 @@ class _FaqTabState extends State<_FaqTab> {
               }
               if (snap.hasError) {
                 return PwErrorState(
-                  message: 'FAQ를 불러오지 못했습니다.\n${snap.error}',
+                  message: '${context.t('mobile.support.faq_load_failed', defaultValue: 'FAQ를 불러오지 못했습니다.')}\n${snap.error}',
                   onRetry: () => setState(
                     () { _faqFuture = SupportService().listFaqs(); }),
                 );
@@ -184,30 +186,32 @@ class _FaqTabState extends State<_FaqTab> {
               if (list.isEmpty) {
                 return PwEmptyState(
                   icon: _query.isEmpty ? Icons.help_outline : Icons.search_off,
-                  title: _query.isEmpty ? 'FAQ가 없습니다.' : '검색 결과가 없습니다.',
+                  title: _query.isEmpty
+                      ? context.t('mobile.support.faq_empty', defaultValue: 'FAQ가 없습니다.')
+                      : context.t('mobile.support.search_empty', defaultValue: '검색 결과가 없습니다.'),
                   subtitle: _query.isEmpty
                     ? null
-                    : '다른 키워드로 검색해 보세요.',
+                    : context.t('mobile.support.search_empty_hint', defaultValue: '다른 키워드로 검색해 보세요.'),
                 );
               }
 
               // 카테고리별 그룹핑
               final grouped = <String, List<Map<String, dynamic>>>{};
               for (final faq in list) {
-                final cat = faq['category']?.toString() ?? '기타';
+                final cat = faq['category']?.toString() ?? 'etc';
                 grouped.putIfAbsent(cat, () => []).add(faq);
               }
 
               return ListView(
-                padding: EdgeInsets.fromLTRB(16, 0, 16,
-                    24 + MediaQuery.of(context).viewPadding.bottom),
+                // 2026-06-10 — SafeArea 제거 후 120 고정 (충분한 여유).
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
                 children: [
                   for (final entry in grouped.entries) ...[
                     Padding(
                       padding: const EdgeInsets.only(top: 16, bottom: 8),
                       // 카테고리 라벨 — 흰톤 통일 (가이드)
                       child: Text(
-                        _categoryLabel(entry.key),
+                        _categoryLabel(context, entry.key),
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w700,
@@ -227,13 +231,13 @@ class _FaqTabState extends State<_FaqTab> {
     );
   }
 
-  String _categoryLabel(String cat) {
-    const map = {
-      'usage': '서비스 이용',
-      'beacon': '비콘 / WiFi',
-      'coupon': '쿠폰',
-      'payment': '결제',
-      'etc': '기타',
+  String _categoryLabel(BuildContext context, String cat) {
+    final map = {
+      'usage':   context.t('mobile.support.cat_usage',   defaultValue: '서비스 이용'),
+      'beacon':  context.t('mobile.support.cat_beacon',  defaultValue: '비콘 / WiFi'),
+      'coupon':  context.t('mobile.support.cat_coupon',  defaultValue: '쿠폰'),
+      'payment': context.t('mobile.support.cat_payment', defaultValue: '결제'),
+      'etc':     context.t('mobile.support.cat_etc',     defaultValue: '기타'),
     };
     return map[cat] ?? cat;
   }
@@ -360,14 +364,15 @@ class _MyTicketsTabState extends State<_MyTicketsTab> {
             padding: const EdgeInsets.all(12),
             color: AppTheme.primary.withValues(alpha: 0.1),
             border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.access_time, size: 16, color: AppTheme.primary),
-                SizedBox(width: 8),
+                const Icon(Icons.access_time, size: 16, color: AppTheme.primary),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '영업시간 평일 09:00–18:00 · 평균 응답시간 1–2 영업일',
-                    style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                    context.t('mobile.support.business_hours_ticket',
+                        defaultValue: '영업시간 평일 09:00–18:00 · 평균 응답시간 1–2 영업일'),
+                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                   ),
                 ),
               ],
@@ -395,30 +400,30 @@ class _MyTicketsTabState extends State<_MyTicketsTab> {
               }
               if (snap.hasError) {
                 return PwErrorState(
-                  message: '문의 내역을 불러오지 못했습니다.\n${snap.error}',
+                  message: '${context.t('mobile.support.ticket_load_failed', defaultValue: '문의 내역을 불러오지 못했습니다.')}\n${snap.error}',
                   onRetry: () => setState(() { _load(); }),
                 );
               }
 
               final tickets = snap.data ?? [];
               if (tickets.isEmpty) {
-                return const PwEmptyState(
+                return PwEmptyState(
                   icon: Icons.support_agent_outlined,
-                  title: '문의 내역이 없습니다.',
-                  subtitle: '궁금한 점이 있으시면 우측 하단 + 버튼으로 문의를 남겨주세요.',
+                  title: context.t('mobile.support.ticket_empty', defaultValue: '문의 내역이 없습니다.'),
+                  subtitle: context.t('mobile.support.ticket_empty_hint', defaultValue: '궁금한 점이 있으시면 우측 하단 + 버튼으로 문의를 남겨주세요.'),
                 );
               }
 
               return RefreshIndicator(
                 onRefresh: () async => setState(() { _load(); }),
                 child: ListView.builder(
-                  padding: EdgeInsets.fromLTRB(16, 0, 16,
-                      24 + MediaQuery.of(context).viewPadding.bottom),
+                  // 2026-06-10 — SafeArea 제거 후 120 고정 (충분한 여유).
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
                   itemCount: tickets.length,
                   itemBuilder: (context, i) {
                     final t = tickets[i];
                     final tid = t['id'] as int? ?? 0;
-                    final subject = t['subject']?.toString() ?? '문의';
+                    final subject = t['subject']?.toString() ?? context.t('mobile.support.ticket_default_subject', defaultValue: '문의');
                     final status = t['status']?.toString() ?? '';
                     final createdAt = t['created_at']?.toString() ?? '';
                     return Padding(
@@ -475,15 +480,15 @@ class _StatusChip extends StatelessWidget {
     switch (status) {
       case 'open':
         color = AppTheme.warning;
-        label = '접수됨';
+        label = context.t('mobile.support.status_open', defaultValue: '접수됨');
         break;
       case 'in_progress':
         color = AppTheme.secondary;
-        label = '처리중';
+        label = context.t('mobile.support.status_in_progress', defaultValue: '처리중');
         break;
       case 'closed':
         color = AppTheme.success;
-        label = '완료';
+        label = context.t('mobile.support.status_closed', defaultValue: '완료');
         break;
       default:
         color = AppTheme.textHint;
@@ -519,13 +524,19 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
   String? _category;
   bool _loading = false;
 
-  static const _categories = [
-    ('usage', '서비스 이용'),
-    ('beacon', '비콘 / WiFi'),
-    ('coupon', '쿠폰'),
-    ('payment', '결제'),
-    ('etc', '기타'),
-  ];
+  // 카테고리 라벨은 build() 안에서 context.t()로 생성.
+  static const _categoryCodes = ['usage', 'beacon', 'coupon', 'payment', 'etc'];
+
+  String _categoryCodeLabel(BuildContext context, String code) {
+    final map = {
+      'usage':   context.t('mobile.support.cat_usage',   defaultValue: '서비스 이용'),
+      'beacon':  context.t('mobile.support.cat_beacon',  defaultValue: '비콘 / WiFi'),
+      'coupon':  context.t('mobile.support.cat_coupon',  defaultValue: '쿠폰'),
+      'payment': context.t('mobile.support.cat_payment', defaultValue: '결제'),
+      'etc':     context.t('mobile.support.cat_etc',     defaultValue: '기타'),
+    };
+    return map[code] ?? code;
+  }
 
   @override
   void dispose() {
@@ -576,7 +587,7 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
               DropdownButtonFormField<String>(
                 initialValue: _category,
                 decoration: InputDecoration(
-                  labelText: '카테고리 (선택)',
+                  labelText: context.t('mobile.support.category_label', defaultValue: '카테고리 (선택)'),
                   filled: true,
                   fillColor: AppTheme.surface,
                   border: OutlineInputBorder(
@@ -591,8 +602,8 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
                 dropdownColor: AppTheme.surface,
                 items: [
                   DropdownMenuItem(value: null, child: Text(context.t('mobile.common.unselected', defaultValue: '선택 안 함'))),
-                  for (final (code, label) in _categories)
-                    DropdownMenuItem(value: code, child: Text(label)),
+                  for (final code in _categoryCodes)
+                    DropdownMenuItem(value: code, child: Text(_categoryCodeLabel(context, code))),
                 ],
                 onChanged: (v) => setState(() => _category = v),
               ),
@@ -601,11 +612,12 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
               // 제목
               PwTextField(
                 controller: _subjectCtrl,
-                label: '제목',
-                hint: '문의 제목을 입력하세요',
+                label: context.t('mobile.support.subject_label', defaultValue: '제목'),
+                hint: context.t('mobile.support.subject_hint', defaultValue: '문의 제목을 입력하세요'),
                 textInputAction: TextInputAction.next,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? '제목을 입력해 주세요' : null,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? context.t('mobile.support.subject_required', defaultValue: '제목을 입력해 주세요')
+                    : null,
               ),
               const SizedBox(height: 12),
 
@@ -613,13 +625,14 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
               TextFormField(
                 controller: _bodyCtrl,
                 maxLines: 5,
-                decoration: const InputDecoration(
-                  labelText: '내용',
-                  hintText: '문의 내용을 상세히 작성해 주세요',
+                decoration: InputDecoration(
+                  labelText: context.t('mobile.support.body_label', defaultValue: '내용'),
+                  hintText: context.t('mobile.support.body_hint', defaultValue: '문의 내용을 상세히 작성해 주세요'),
                   alignLabelWithHint: true,
                 ),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? '내용을 입력해 주세요' : null,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? context.t('mobile.support.body_required', defaultValue: '내용을 입력해 주세요')
+                    : null,
               ),
               const SizedBox(height: 12),
 
@@ -627,9 +640,10 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
               PwCard(
                 padding: const EdgeInsets.all(10),
                 color: AppTheme.surfaceLight,
-                child: const Text(
-                  '개인정보 처리방침에 따라 문의 내용은 상담 처리 목적으로만 사용되며 1년 후 자동 삭제됩니다.',
-                  style: TextStyle(
+                child: Text(
+                  context.t('mobile.support.privacy_notice',
+                      defaultValue: '개인정보 처리방침에 따라 문의 내용은 상담 처리 목적으로만 사용되며 1년 후 자동 삭제됩니다.'),
+                  style: const TextStyle(
                       color: AppTheme.textHint, fontSize: 11, height: 1.4),
                 ),
               ),
@@ -679,12 +693,12 @@ class _ReportTabState extends State<_ReportTab> {
 
   bool _loading = false;
 
-  static const _reasons = [
-    ('spam', '스팸 / 광고'),
-    ('abuse', '욕설 / 혐오'),
-    ('illegal', '불법 정보'),
-    ('inappropriate', '부적절한 콘텐츠'),
-    ('other', '기타'),
+  List<(String, String)> _reasonList(BuildContext context) => [
+    ('spam',          context.t('mobile.support.reason_spam',          defaultValue: '스팸 / 광고')),
+    ('abuse',         context.t('mobile.support.reason_abuse',         defaultValue: '욕설 / 혐오')),
+    ('illegal',       context.t('mobile.support.reason_illegal',       defaultValue: '불법 정보')),
+    ('inappropriate', context.t('mobile.support.reason_inappropriate', defaultValue: '부적절한 콘텐츠')),
+    ('other',         context.t('mobile.support.reason_other',         defaultValue: '기타')),
   ];
 
   @override
@@ -764,7 +778,7 @@ class _ReportTabState extends State<_ReportTab> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('사진을 불러오지 못했습니다: $e')),
+        SnackBar(content: Text('${context.t('mobile.support.photo_load_failed', defaultValue: '사진을 불러오지 못했습니다')}: $e')),
       );
     }
   }
@@ -776,7 +790,7 @@ class _ReportTabState extends State<_ReportTab> {
   Future<void> _submit() async {
     if (_selectedFacility == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('신고할 시설을 먼저 선택해 주세요.')),
+        SnackBar(content: Text(context.t('mobile.support.facility_required', defaultValue: '신고할 시설을 먼저 선택해 주세요.'))),
       );
       return;
     }
@@ -823,25 +837,26 @@ class _ReportTabState extends State<_ReportTab> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── 안내 — 가이드: 박스 없이 평문 흰. ※ prefix.
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
-                '※ 허위 신고는 서비스 이용에 제한이 있을 수 있습니다.\n검토 후 7 영업일 이내에 조치합니다.',
-                style: TextStyle(
+                context.t('mobile.support.report_notice',
+                    defaultValue: '※ 허위 신고는 서비스 이용에 제한이 있을 수 있습니다.\n검토 후 7 영업일 이내에 조치합니다.'),
+                style: const TextStyle(
                     fontSize: 12, color: Colors.white, height: 1.5),
               ),
             ),
             const SizedBox(height: 20),
 
             // ── 신고할 시설 ─ 검색 또는 선택된 시설 카드 ─────────────
-            const Text('신고할 시설',
-                style: TextStyle(
+            Text(context.t('mobile.support.report_target_label', defaultValue: '신고할 시설'),
+                style: const TextStyle(
                     fontWeight: FontWeight.w700, fontSize: 14, color: Colors.white)),
             const SizedBox(height: 8),
             if (_selectedFacility == null) ...[
               PwTextField(
                 controller: _facilityQueryCtrl,
-                hint: '시설명을 검색하세요 (2자 이상)',
+                hint: context.t('mobile.support.facility_search_hint', defaultValue: '시설명을 검색하세요 (2자 이상)'),
                 prefixIcon: Icons.search,
                 onChanged: _onQueryChanged,
               ),
@@ -869,7 +884,7 @@ class _ReportTabState extends State<_ReportTab> {
                 style: const TextStyle(
                     fontWeight: FontWeight.w700, fontSize: 14, color: Colors.white)),
             const SizedBox(height: 4),
-            for (final (code, label) in _reasons)
+            for (final (code, label) in _reasonList(context))
               _ReasonRadio(
                 label: label,
                 value: code,
@@ -880,7 +895,8 @@ class _ReportTabState extends State<_ReportTab> {
 
             // ── 증빙 사진 첨부 (선택, 최대 3장) ────────────────────
             Text(
-              '증빙 사진 (선택, 최대 $_maxAttachments장)',
+              context.t('mobile.support.attachment_label',
+                  defaultValue: '증빙 사진 (선택, 최대 $_maxAttachments장)'),
               style: const TextStyle(
                   fontWeight: FontWeight.w700, fontSize: 14, color: Colors.white),
             ),
@@ -896,18 +912,19 @@ class _ReportTabState extends State<_ReportTab> {
             // ── 상세 사유 (선택) ─ PwTextField
             PwTextField(
               controller: _detailCtrl,
-              label: '상세 사유 (선택)',
-              hint: '추가 설명이 있으면 입력해 주세요',
+              label: context.t('mobile.support.detail_label', defaultValue: '상세 사유 (선택)'),
+              hint: context.t('mobile.support.detail_hint', defaultValue: '추가 설명이 있으면 입력해 주세요'),
               maxLines: 3,
             ),
             const SizedBox(height: 12),
 
             // ── 개인정보 처리 안내 — 평문 + ※ (배경 없음, 사용자 가이드)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
-                '※ 신고 내용은 「개인정보 보호법」에 따라 처리 목적으로만 사용하며 처리 완료 후 파기됩니다.',
-                style: TextStyle(
+                context.t('mobile.support.report_privacy_notice',
+                    defaultValue: '※ 신고 내용은 「개인정보 보호법」에 따라 처리 목적으로만 사용하며 처리 완료 후 파기됩니다.'),
+                style: const TextStyle(
                     color: Colors.white, fontSize: 11, height: 1.5),
               ),
             ),
@@ -1095,7 +1112,7 @@ class _SelectedFacilityCard extends StatelessWidget {
                 foregroundColor: Colors.white,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4)),
-            child: const Text('변경'),
+            child: Text(context.t('mobile.common.change', defaultValue: '변경')),
           ),
         ],
       ),
@@ -1113,7 +1130,7 @@ class _FacilityConfirmDialog extends StatelessWidget {
     final address = (facility['address'] ?? '').toString();
     final phone = (facility['phone'] ?? '').toString();
     return PwDialog(
-      title: const Text('이 시설이 맞나요?'),
+      title: Text(context.t('mobile.support.confirm_facility_title', defaultValue: '이 시설이 맞나요?')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1154,13 +1171,13 @@ class _FacilityConfirmDialog extends StatelessWidget {
           variant: PwButtonVariant.text,
           fullWidth: false,
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('닫기'),
+          child: Text(context.t('mobile.common.close', defaultValue: '닫기')),
         ),
         PwButton(
           variant: PwButtonVariant.danger,
           fullWidth: false,
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('이 시설 신고'),
+          child: Text(context.t('mobile.support.report_this_facility', defaultValue: '이 시설 신고')),
         ),
       ],
     );
@@ -1261,13 +1278,13 @@ class _AddAttachmentTile extends StatelessWidget {
             style: BorderStyle.solid,
           ),
         ),
-        child: const Column(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_a_photo_outlined, color: Colors.white, size: 24),
-            SizedBox(height: 4),
-            Text('사진 추가',
-                style: TextStyle(color: Colors.white, fontSize: 11)),
+            const Icon(Icons.add_a_photo_outlined, color: Colors.white, size: 24),
+            const SizedBox(height: 4),
+            Text(context.t('mobile.support.add_photo', defaultValue: '사진 추가'),
+                style: const TextStyle(color: Colors.white, fontSize: 11)),
           ],
         ),
       ),

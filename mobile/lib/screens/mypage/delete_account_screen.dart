@@ -30,7 +30,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
 
   Future<void> _submit() async {
     if (!_confirmed) {
-      setState(() => _error = '안내 사항을 모두 확인하셨다면 동의 체크를 해 주세요.');
+      setState(() => _error = context.t('mobile.mypage.delete_account.no_consent', defaultValue: '안내 사항을 모두 확인하셨다면 동의 체크를 해 주세요.'));
       return;
     }
     setState(() { _busy = true; _error = null; });
@@ -42,13 +42,13 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       if (res['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(res['message']?.toString() ?? '회원 탈퇴가 완료되었습니다.'),
+            content: Text(res['message']?.toString() ?? context.t('mobile.mypage.delete_account.success', defaultValue: '회원 탈퇴가 완료되었습니다.')),
             duration: const Duration(seconds: 3),
           ),
         );
         context.go('/auth/login');
       } else {
-        setState(() => _error = res['message']?.toString() ?? '탈퇴에 실패했습니다.');
+        setState(() => _error = res['message']?.toString() ?? context.t('mobile.mypage.delete_account.fail', defaultValue: '탈퇴에 실패했습니다.'));
       }
     } catch (e) {
       if (!mounted) return;
@@ -82,19 +82,19 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                 style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 24),
 
-              const PwCard(
+              PwCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _Bullet('탈퇴 즉시 로그인 / 알림이 차단됩니다.'),
-                    SizedBox(height: 8),
-                    _Bullet('보유한 스탬프 / 쿠폰은 모두 소멸됩니다.'),
-                    SizedBox(height: 8),
-                    _Bullet('채팅 / 결제 내역은 법령상 보존 기간 동안 익명화 보존됩니다.'),
-                    SizedBox(height: 8),
-                    _Bullet('탈퇴 시 동일 이메일로는 다시 가입할 수 없습니다.'),
-                    SizedBox(height: 8),
-                    _Bullet('14일 이내 미성년 보호자 초대 코드 발급 이력은 별도 보존됩니다.'),
+                    _Bullet(context.t('mobile.mypage.delete_account.bullet1', defaultValue: '탈퇴 즉시 로그인 / 알림이 차단됩니다.')),
+                    const SizedBox(height: 8),
+                    _Bullet(context.t('mobile.mypage.delete_account.bullet2', defaultValue: '보유한 스탬프 / 쿠폰은 모두 소멸됩니다.')),
+                    const SizedBox(height: 8),
+                    _Bullet(context.t('mobile.mypage.delete_account.bullet3', defaultValue: '채팅 / 결제 내역은 법령상 보존 기간 동안 익명화 보존됩니다.')),
+                    const SizedBox(height: 8),
+                    _Bullet(context.t('mobile.mypage.delete_account.bullet4', defaultValue: '탈퇴 시 동일 이메일로는 다시 가입할 수 없습니다.')),
+                    const SizedBox(height: 8),
+                    _Bullet(context.t('mobile.mypage.delete_account.bullet5', defaultValue: '14일 이내 미성년 보호자 초대 코드 발급 이력은 별도 보존됩니다.')),
                   ],
                 ),
               ),
@@ -108,7 +108,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                 const SizedBox(height: 8),
                 PwTextField(
                   controller: _passwordCtrl,
-                  hint: '본인 확인을 위해 비밀번호를 입력해 주세요',
+                  hint: context.t('mobile.mypage.delete_account.password_hint', defaultValue: '본인 확인을 위해 비밀번호를 입력해 주세요'),
                   prefixIcon: Icons.lock_outline,
                   obscureText: true,
                 ),
@@ -127,10 +127,10 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                         color: _confirmed ? AppTheme.error : AppTheme.textHint,
                       ),
                       const SizedBox(width: 8),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          '위 내용을 모두 확인했으며, 영구 탈퇴에 동의합니다.',
-                          style: TextStyle(fontSize: 13),
+                          context.t('mobile.mypage.delete_account.consent_text', defaultValue: '위 내용을 모두 확인했으며, 영구 탈퇴에 동의합니다.'),
+                          style: const TextStyle(fontSize: 13),
                         ),
                       ),
                     ],

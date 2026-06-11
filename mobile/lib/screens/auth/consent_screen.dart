@@ -202,7 +202,9 @@ class _ConsentItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
-              required ? '필수' : '선택',
+              required
+                ? context.t('mobile.auth.consent.required', defaultValue: '필수')
+                : context.t('mobile.auth.consent.optional', defaultValue: '선택'),
               style: TextStyle(
                 color: required ? AppTheme.error : AppTheme.textSecondary,
                 fontSize: 11,
@@ -270,7 +272,7 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                   ),
                   PwIconButton(
                     icon: Icons.close,
-                    tooltip: '닫기',
+                    tooltip: context.t('mobile.common.close', defaultValue: '닫기'),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -341,9 +343,9 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                                 color: AppTheme.warning.withValues(alpha: 0.18),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Text(
-                                '⚠️ 정책 본문이 아직 등록되지 않았습니다 (placeholder).',
-                                style: TextStyle(color: AppTheme.warning, fontSize: 12),
+                              child: Text(
+                                context.t('mobile.auth.policy_placeholder', defaultValue: '⚠️ 정책 본문이 아직 등록되지 않았습니다 (placeholder).'),
+                                style: const TextStyle(color: AppTheme.warning, fontSize: 12),
                               ),
                             ),
                           Text(body, style: const TextStyle(height: 1.5)),

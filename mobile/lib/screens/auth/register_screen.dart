@@ -53,16 +53,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _sendCode() async {
     if (_emailCtrl.text.trim().isEmpty || !_emailCtrl.text.contains('@')) {
-      setState(() => _error = '이메일 형식이 올바르지 않습니다.');
+      setState(() => _error = context.t('mobile.auth.register.error_invalid_email', defaultValue: '이메일 형식이 올바르지 않습니다.'));
       return;
     }
     setState(() { _busy = true; _error = null; _info = null; });
     try {
       final res = await context.read<AuthService>().sendCode(_emailCtrl.text.trim());
       if (res['success'] == true) {
-        setState(() { _step = 1; _info = '인증 코드를 발송했습니다.'; });
+        setState(() { _step = 1; _info = context.t('mobile.auth.register.info_code_sent', defaultValue: '인증 코드를 발송했습니다.'); });
       } else {
-        setState(() => _error = res['message']?.toString() ?? '코드 발송 실패.');
+        setState(() => _error = res['message']?.toString() ?? context.t('mobile.auth.register.error_send_code', defaultValue: '코드 발송 실패.'));
       }
     } catch (e) {
       setState(() => _error = friendlyError(e));
@@ -73,7 +73,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _verifyCode() async {
     if (_codeCtrl.text.trim().length != 6) {
-      setState(() => _error = '6자리 인증 코드를 입력해 주세요.');
+      setState(() => _error = context.t('mobile.auth.register.error_code_length', defaultValue: '6자리 인증 코드를 입력해 주세요.'));
       return;
     }
     setState(() { _busy = true; _error = null; _info = null; });
@@ -82,9 +82,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _emailCtrl.text.trim(), _codeCtrl.text.trim(),
       );
       if (res['success'] == true) {
-        setState(() { _step = 2; _info = '인증 완료. 생년을 입력해 주세요.'; });
+        setState(() { _step = 2; _info = context.t('mobile.auth.register.info_code_verified', defaultValue: '인증 완료. 생년을 입력해 주세요.'); });
       } else {
-        setState(() => _error = res['message']?.toString() ?? '코드가 올바르지 않습니다.');
+        setState(() => _error = res['message']?.toString() ?? context.t('mobile.auth.register.error_invalid_code', defaultValue: '코드가 올바르지 않습니다.'));
       }
     } catch (e) {
       setState(() => _error = friendlyError(e));
@@ -96,16 +96,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _proceedFromAge() {
     final y = _birthYear;
     if (y == null || y < 1900 || y > DateTime.now().year) {
-      setState(() => _error = '생년(YYYY)을 올바르게 입력해 주세요.');
+      setState(() => _error = context.t('mobile.auth.register.error_invalid_birth', defaultValue: '생년(YYYY)을 올바르게 입력해 주세요.'));
       return;
     }
     final age = DateTime.now().year - y;
     if (age < 14) {
-      setState(() => _error = '만 14세 이상부터 가입할 수 있습니다.');
+      setState(() => _error = context.t('mobile.auth.register.error_age_min', defaultValue: '만 14세 이상부터 가입할 수 있습니다.'));
       return;
     }
     if (_isMinor && _inviteCodeCtrl.text.trim().isEmpty) {
-      setState(() => _error = '만 14~18세는 보호자가 발급한 초대 코드가 필요합니다.');
+      setState(() => _error = context.t('mobile.auth.register.error_invite_required', defaultValue: '만 14~18세는 보호자가 발급한 초대 코드가 필요합니다.'));
       return;
     }
     setState(() { _step = 3; _error = null; _info = null; });
@@ -113,10 +113,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _proceedToConsent() {
     if (_pwCtrl.text.length < 8) {
-      setState(() => _error = '비밀번호는 8자 이상이어야 합니다.');
+      setState(() => _error = context.t('mobile.auth.register.error_pw_min', defaultValue: '비밀번호는 8자 이상이어야 합니다.'));
       return;
     }
-    setState(() { _step = 4; _error = null; _info = '필수 약관에 동의 후 가입을 완료합니다.'; });
+    setState(() { _step = 4; _error = null; _info = context.t('mobile.auth.register.info_consent_notice', defaultValue: '필수 약관에 동의 후 가입을 완료합니다.'); });
   }
 
   Future<void> _completeRegister(List<Map<String, dynamic>> consents) async {
@@ -129,7 +129,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (res['success'] == true) {
           context.go('/home');
         } else {
-          setState(() => _error = res['message']?.toString() ?? '동의 기록 실패.');
+          setState(() => _error = res['message']?.toString() ?? context.t('mobile.auth.consent_record_failed', defaultValue: '동의 기록 실패.'));
         }
         return;
       }
@@ -146,7 +146,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (res['success'] == true) {
         context.go('/home');
       } else {
-        setState(() => _error = res['message']?.toString() ?? '가입 실패.');
+        setState(() => _error = res['message']?.toString() ?? context.t('mobile.auth.register_failed', defaultValue: '가입 실패.'));
       }
     } catch (e) {
       if (!mounted) return;
@@ -167,7 +167,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ? null
           : PwIconButton(
               icon: Icons.arrow_back,
-              tooltip: '뒤로',
+              tooltip: context.t('mobile.common.back', defaultValue: '뒤로'),
               onPressed: () {
                 if (_step > 0) {
                   setState(() { _step -= 1; _error = null; _info = null; });
@@ -239,7 +239,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           setState(() {
             _isSocialFlow = true;
             _step = 4;
-            _info = '계속 진행하려면 필수 약관에 동의해 주세요.';
+            _info = context.t('mobile.auth.register.info_social_consent', defaultValue: '계속 진행하려면 필수 약관에 동의해 주세요.');
           });
         } else {
           context.go('/home');
@@ -269,15 +269,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       SocialLoginRow(
         busy: _busy,
         onGoogle: () => _socialRegister(
-          () => auth.signInWithGoogle(), 'Google 가입 실패.'),
+          () => auth.signInWithGoogle(), 'Google ${context.t('mobile.auth.signup_failed_suffix', defaultValue: '가입 실패.')}'),
         onApple: () => _socialRegister(
-          () => auth.signInWithApple(), 'Apple 가입 실패.'),
+          () => auth.signInWithApple(), 'Apple ${context.t('mobile.auth.signup_failed_suffix', defaultValue: '가입 실패.')}'),
         onFacebook: () => _socialRegister(
-          () => auth.signInWithFacebook(), 'Facebook 가입 실패.'),
+          () => auth.signInWithFacebook(), 'Facebook ${context.t('mobile.auth.signup_failed_suffix', defaultValue: '가입 실패.')}'),
         onKakao: () => _socialRegister(
-          () => auth.signInWithKakao(), '카카오 가입 실패.'),
+          () => auth.signInWithKakao(), context.t('mobile.auth.register.error_kakao', defaultValue: '카카오 가입 실패.')),
         onNaver: () => _socialRegister(
-          () => auth.signInWithNaver(), '네이버 가입 실패.'),
+          () => auth.signInWithNaver(), context.t('mobile.auth.register.error_naver', defaultValue: '네이버 가입 실패.')),
       ),
 
       const SizedBox(height: 20),
@@ -348,7 +348,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       const SizedBox(height: 24),
       PwTextField(
         controller: _birthYearCtrl,
-        hint: '예: 1995',
+        hint: context.t('mobile.auth.birth_year_hint', defaultValue: '예: 1995'),
         prefixIcon: Icons.cake_outlined,
         keyboardType: TextInputType.number,
         maxLength: 4,
@@ -378,15 +378,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: AppTheme.warning.withValues(alpha: 0.4)),
           ),
-          child: const Row(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.info_outline, size: 16, color: AppTheme.warning),
-              SizedBox(width: 8),
+              const Icon(Icons.info_outline, size: 16, color: AppTheme.warning),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '만 14~18세 회원은 보호자(만 19세 이상)의 초대를 통해서만 가입할 수 있습니다. 보호자가 앱에서 발급한 초대 코드를 입력해 주세요.',
-                  style: TextStyle(color: AppTheme.warning, fontSize: 12),
+                  context.t('mobile.auth.register.minor_invite_notice', defaultValue: '만 14~18세 회원은 보호자(만 19세 이상)의 초대를 통해서만 가입할 수 있습니다. 보호자가 앱에서 발급한 초대 코드를 입력해 주세요.'),
+                  style: const TextStyle(color: AppTheme.warning, fontSize: 12),
                 ),
               ),
             ],
@@ -395,7 +395,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SizedBox(height: 12),
         PwTextField(
           controller: _inviteCodeCtrl,
-          hint: '보호자 초대 코드',
+          hint: context.t('mobile.auth.register.invite_code_hint', defaultValue: '보호자 초대 코드'),
           prefixIcon: Icons.family_restroom,
         ),
       ],
@@ -417,7 +417,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     const SizedBox(height: 24),
     PwTextField(
       controller: _pwCtrl,
-      hint: '비밀번호',
+      hint: context.t('mobile.auth.register.password_hint', defaultValue: '비밀번호'),
       prefixIcon: Icons.lock_outline,
       obscureText: true,
     ),

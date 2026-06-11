@@ -5,6 +5,7 @@ import '../../utils/error_message.dart';
 import '../../services/api_client.dart';
 import '../../services/i18n_service.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/i18n_context.dart';
 import '../../widgets/pw.dart';
 
 /// 공개 약관 본문 뷰어.
@@ -25,16 +26,16 @@ class _PolicyViewScreenState extends State<PolicyViewScreen> {
   bool _loading = true;
   String? _error;
 
-  static const _kindLabel = {
-    'terms':       '이용약관',
-    'privacy':     '개인정보처리방침',
-    'location':    '위치기반서비스 이용약관',
-    'marketing':   '마케팅 정보 수신 동의',
-    'push':        '푸시 알림 동의',
-    'camera':      '카메라 접근 권한',
-    'storage':     '저장공간 접근 권한',
-    'third_party': '제3자 정보 제공 동의',
-    'age14':       '만 14세 이상 동의',
+  Map<String, String> _kindLabelMap(BuildContext context) => {
+    'terms':       context.t('mobile.policy.kind_terms',       defaultValue: '이용약관'),
+    'privacy':     context.t('mobile.policy.kind_privacy',     defaultValue: '개인정보처리방침'),
+    'location':    context.t('mobile.policy.kind_location',    defaultValue: '위치기반서비스 이용약관'),
+    'marketing':   context.t('mobile.policy.kind_marketing',   defaultValue: '마케팅 정보 수신 동의'),
+    'push':        context.t('mobile.policy.kind_push',        defaultValue: '푸시 알림 동의'),
+    'camera':      context.t('mobile.policy.kind_camera',      defaultValue: '카메라 접근 권한'),
+    'storage':     context.t('mobile.policy.kind_storage',     defaultValue: '저장공간 접근 권한'),
+    'third_party': context.t('mobile.policy.kind_third_party', defaultValue: '제3자 정보 제공 동의'),
+    'age14':       context.t('mobile.policy.kind_age14',       defaultValue: '만 14세 이상 동의'),
   };
 
   @override
@@ -69,7 +70,7 @@ class _PolicyViewScreenState extends State<PolicyViewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final title = _kindLabel[widget.kind]
+    final title = _kindLabelMap(context)[widget.kind]
         ?? I18nService.instance.t('policy.viewer_title', defaultValue: '약관 보기');
     return Scaffold(
       appBar: PwAppBar(title: Text(title)),

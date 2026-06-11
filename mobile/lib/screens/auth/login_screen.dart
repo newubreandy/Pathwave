@@ -54,11 +54,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _emailCtrl.text.trim();
     final pw    = _passwordCtrl.text;
     if (email.isEmpty || pw.isEmpty) {
-      setState(() => _error = '이메일과 비밀번호를 입력해 주세요.');
+      setState(() => _error = context.t('mobile.auth.login.error_empty_fields', defaultValue: '이메일과 비밀번호를 입력해 주세요.'));
       return;
     }
     await _handle(() => context.read<AuthService>().login(email, pw),
-      fallbackErr: '로그인 실패.');
+      fallbackErr: context.t('mobile.auth.login.error_login_failed', defaultValue: '로그인 실패.'));
   }
 
   Future<void> _previewMode() async {
@@ -103,14 +103,14 @@ class _LoginScreenState extends State<LoginScreen> {
               // 공통 가이드 — PwTextField (글래스 톤 InputDecorationTheme 자동 적용)
               PwTextField(
                 controller: _emailCtrl,
-                hint: '이메일',
+                hint: context.t('mobile.auth.login.email_hint', defaultValue: '이메일'),
                 prefixIcon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 12),
               PwTextField(
                 controller: _passwordCtrl,
-                hint: '비밀번호',
+                hint: context.t('mobile.auth.login.password_hint', defaultValue: '비밀번호'),
                 prefixIcon: Icons.lock_outline,
                 obscureText: true,
                 textInputAction: TextInputAction.done,
@@ -207,19 +207,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 busy: _busy,
                 onGoogle: () => _handle(
                   () => auth.signInWithGoogle(),
-                  fallbackErr: 'Google 로그인 실패.'),
+                  fallbackErr: 'Google ${context.t('mobile.auth.login_failed_suffix', defaultValue: '로그인 실패.')}'),
                 onApple: () => _handle(
                   () => auth.signInWithApple(),
-                  fallbackErr: 'Apple 로그인 실패.'),
+                  fallbackErr: 'Apple ${context.t('mobile.auth.login_failed_suffix', defaultValue: '로그인 실패.')}'),
                 onFacebook: () => _handle(
                   () => auth.signInWithFacebook(),
-                  fallbackErr: 'Facebook 로그인 실패.'),
+                  fallbackErr: 'Facebook ${context.t('mobile.auth.login_failed_suffix', defaultValue: '로그인 실패.')}'),
                 onKakao: () => _handle(
                   () => auth.signInWithKakao(),
-                  fallbackErr: '카카오 로그인 실패.'),
+                  fallbackErr: '${context.t('mobile.auth.kakao', defaultValue: '카카오')} ${context.t('mobile.auth.login_failed_suffix', defaultValue: '로그인 실패.')}'),
                 onNaver: () => _handle(
                   () => auth.signInWithNaver(),
-                  fallbackErr: '네이버 로그인 실패.'),
+                  fallbackErr: '${context.t('mobile.auth.naver', defaultValue: '네이버')} ${context.t('mobile.auth.login_failed_suffix', defaultValue: '로그인 실패.')}'),
               ),
 
               const SizedBox(height: 28),
@@ -238,10 +238,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Center(
+              Center(
                 child: Text(
-                  '※ 둘러보기 모드는 실 데이터 호출은 제한됩니다',
-                  style: TextStyle(color: NeuTheme.textHint, fontSize: 11),
+                  context.t('mobile.auth.login.preview_notice', defaultValue: '※ 둘러보기 모드는 실 데이터 호출은 제한됩니다'),
+                  style: const TextStyle(color: NeuTheme.textHint, fontSize: 11),
                 ),
               ),
 
@@ -254,12 +254,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   spacing: 14,
                   runSpacing: 6,
                   children: [
-                    _PolicyLink('개인정보처리방침',
+                    _PolicyLink(context.t('mobile.auth.login.policy_privacy', defaultValue: '개인정보처리방침'),
                       bold: true,
                       onTap: () => context.push('/policy/privacy')),
-                    _PolicyLink('이용약관',
+                    _PolicyLink(context.t('mobile.auth.login.policy_terms', defaultValue: '이용약관'),
                       onTap: () => context.push('/policy/terms')),
-                    _PolicyLink('위치기반서비스 이용약관',
+                    _PolicyLink(context.t('mobile.auth.login.policy_location', defaultValue: '위치기반서비스 이용약관'),
                       onTap: () => context.push('/policy/location')),
                   ],
                 ),

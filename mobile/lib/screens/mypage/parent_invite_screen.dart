@@ -31,7 +31,7 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
 
   Future<void> _create() async {
     if (!_liabilityAccepted) {
-      setState(() => _error = '법적 책임 동의가 필요합니다.');
+      setState(() => _error = context.t('mobile.parent_invite.consent_required', defaultValue: '법적 책임 동의가 필요합니다.'));
       return;
     }
     setState(() { _busy = true; _error = null; });
@@ -83,12 +83,13 @@ class _ParentInviteScreenState extends State<ParentInviteScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              const Text(
-                '본 초대 코드로 가입하는 자녀(만 14~18세)의 PathWave 서비스 이용에 대한 '
-                '법적 책임은 보호자인 본인에게 있음을 확인합니다. '
-                '자녀가 일부 시설(숙박/유흥 등 미성년자 출입 제한 시설)에 접근하는 것은 '
-                '서비스가 자동으로 차단합니다.',
-                style: TextStyle(color: AppTheme.textPrimary, fontSize: 13, height: 1.5),
+              Text(
+                context.t('mobile.parent_invite.responsibility_body', defaultValue:
+                  '본 초대 코드로 가입하는 자녀(만 14~18세)의 PathWave 서비스 이용에 대한 '
+                  '법적 책임은 보호자인 본인에게 있음을 확인합니다. '
+                  '자녀가 일부 시설(숙박/유흥 등 미성년자 출입 제한 시설)에 접근하는 것은 '
+                  '서비스가 자동으로 차단합니다.'),
+                style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13, height: 1.5),
               ),
             ],
           ),

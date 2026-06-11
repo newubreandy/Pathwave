@@ -11,6 +11,7 @@ import '../../services/block_service.dart';
 import '../../services/chat_service.dart';
 import '../../services/i18n_service.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/i18n_context.dart';
 import '../../widgets/pw.dart';
 
 /// 1:1 채팅 상세 — SSE 실시간 메시지 + 입력.
@@ -30,7 +31,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final _inputCtrl = TextEditingController();
 
   int? _roomId;
-  String _roomTitle = '매장 채팅';
+  late String _roomTitle;
   bool _loading = true;
   String? _error;
   List<Map<String, dynamic>> _messages = [];
@@ -44,6 +45,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   @override
   void initState() {
     super.initState();
+    _roomTitle = _t.t('chat.list_title', defaultValue: '매장 채팅');
     _bootstrap();
     WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowGuideline());
   }
@@ -233,8 +235,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     try {
       final room = await ChatService().openRoom(_facilityIdInt);
       _roomId = room['id'] as int?;
-      _roomTitle = room['facility_name']?.toString() ?? '매장 채팅';
-      if (_roomId == null) throw Exception('채팅방을 열 수 없습니다.');
+      _roomTitle = room['facility_name']?.toString() ?? _t.t('chat.list_title', defaultValue: '매장 채팅');
+      if (_roomId == null) throw Exception(_t.t('chat.room_open_failed', defaultValue: '채팅방을 열 수 없습니다.'));
 
       final msgs = await ChatService().messages(_roomId!);
       // 최신순 → 오래된순으로 뒤집어서 ListView 에 자연스럽게 표시
@@ -358,10 +360,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       return PwErrorState(message: _error!, onRetry: _bootstrap);
     }
     if (_messages.isEmpty) {
-      return const PwEmptyState(
+      return PwEmptyState(
         icon: Icons.message_outlined,
-        title: '아직 메시지가 없습니다',
-        subtitle: '첫 메시지를 보내 대화를 시작하세요.',
+        title: context.t('chat.no_messages_title', defaultValue: '아직 메시지가 없습니다'),
+        subtitle: context.t('chat.no_messages_subtitle', defaultValue: '첫 메시지를 보내 대화를 시작하세요.'),
       );
     }
     return ListView.builder(
@@ -387,7 +389,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           Expanded(
             child: PwTextField(
               controller: _inputCtrl,
-              hint: '메시지 입력',
+              hint: _t.t('chat.input_hint', defaultValue: '메시지 입력'),
               textInputAction: TextInputAction.send,
               onSubmitted: (_) => _send(),
             ),
@@ -505,7 +507,9 @@ class _MessageBubble extends StatelessWidget {
                   if (pending || failed) ...[
                     const SizedBox(height: 2),
                     Text(
-                      failed ? '전송 실패' : '전송 중...',
+                      failed
+                          ? I18nService.instance.t('chat.send_failed', defaultValue: '전송 실패')
+                          : I18nService.instance.t('chat.sending', defaultValue: '전송 중...'),
                       style: TextStyle(
                         color: failed ? AppTheme.error : Colors.white70,
                         fontSize: 10,

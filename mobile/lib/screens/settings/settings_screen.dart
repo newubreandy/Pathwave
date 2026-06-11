@@ -31,46 +31,46 @@ class SettingsScreen extends StatelessWidget {
           16 + MediaQuery.of(context).viewPadding.bottom,
         ),
         children: [
-          _section(context, '계정', [
-            _tile(context, Icons.email_outlined, '이메일', email),
-            _linkTile(context, Icons.password_outlined, '비밀번호 변경',
+          _section(context, context.t('mobile.settings.section_account', defaultValue: '계정'), [
+            _tile(context, Icons.email_outlined, context.t('mobile.settings.email_label', defaultValue: '이메일'), email),
+            _linkTile(context, Icons.password_outlined, context.t('mobile.settings.change_password', defaultValue: '비밀번호 변경'),
               () => context.push('/settings/change-password')),
           ]),
-          _section(context, '알림', [
-            _linkTile(context, Icons.notifications_outlined, '알림 보기',
+          _section(context, context.t('mobile.settings.section_notification', defaultValue: '알림'), [
+            _linkTile(context, Icons.notifications_outlined, context.t('mobile.settings.view_notifications', defaultValue: '알림 보기'),
               // push 사용 — 알림 화면에서 백 버튼으로 설정 복귀.
               () => context.push('/notifications')),
             const _MarketingConsentToggleTile(),
           ]),
           const _NotificationPreferencesSection(),
-          _section(context, '고객 지원', [
-            _linkTile(context, Icons.mail_outline, '이메일 문의',
+          _section(context, context.t('mobile.settings.section_support', defaultValue: '고객 지원'), [
+            _linkTile(context, Icons.mail_outline, context.t('mobile.settings.email_support', defaultValue: '이메일 문의'),
               () => _launchSupport(context)),
             // FAQ 는 고객센터 > FAQ 탭으로 통합 노출 (app_router /support 의 디폴트 탭=0=FAQ).
-            _linkTile(context, Icons.help_outline, '자주 묻는 질문',
+            _linkTile(context, Icons.help_outline, context.t('mobile.settings.faq', defaultValue: '자주 묻는 질문'),
               () => context.push('/support')),
-            _linkTile(context, Icons.block, '차단 목록',
+            _linkTile(context, Icons.block, context.t('mobile.settings.blocked_list', defaultValue: '차단 목록'),
               () => context.push('/settings/blocked-facilities')),
           ]),
-          _section(context, '서버', [
+          _section(context, context.t('mobile.settings.section_server', defaultValue: '서버'), [
             _tile(context, Icons.cloud_outlined, 'API Base URL', ApiConfig.baseUrl,
               subtitle: 'flutter run 시 --dart-define=API_BASE=... 로 변경'),
           ]),
-          _section(context, '약관 및 정책', [
+          _section(context, context.t('mobile.settings.section_policy', defaultValue: '약관 및 정책'), [
             _linkTile(context, Icons.description_outlined,
-              '서비스 이용약관', () => _showPolicy(context, 'terms')),
+              context.t('mobile.settings.policy_terms', defaultValue: '서비스 이용약관'), () => _showPolicy(context, 'terms')),
             _linkTile(context, Icons.privacy_tip_outlined,
-              '개인정보 처리방침', () => _showPolicy(context, 'privacy')),
+              context.t('mobile.settings.policy_privacy', defaultValue: '개인정보 처리방침'), () => _showPolicy(context, 'privacy')),
             _linkTile(context, Icons.location_on_outlined,
-              '위치 정보 이용 약관', () => _showPolicy(context, 'location')),
+              context.t('mobile.settings.policy_location', defaultValue: '위치 정보 이용 약관'), () => _showPolicy(context, 'location')),
             _linkTile(context, Icons.share_outlined,
-              '제3자 정보 제공', () => _showPolicy(context, 'third_party')),
+              context.t('mobile.settings.policy_third_party', defaultValue: '제3자 정보 제공'), () => _showPolicy(context, 'third_party')),
             _linkTile(context, Icons.campaign_outlined,
-              '마케팅 정보 수신', () => _showPolicy(context, 'marketing')),
+              context.t('mobile.settings.policy_marketing', defaultValue: '마케팅 정보 수신'), () => _showPolicy(context, 'marketing')),
           ]),
-          _section(context, '앱 정보', [
-            _tile(context, Icons.info_outline, '버전', '1.0.0+1'),
-            _tile(context, Icons.business_outlined, '사업자',
+          _section(context, context.t('mobile.settings.section_app_info', defaultValue: '앱 정보'), [
+            _tile(context, Icons.info_outline, context.t('mobile.settings.version_label', defaultValue: '버전'), '1.0.0+1'),
+            _tile(context, Icons.business_outlined, context.t('mobile.settings.company_label', defaultValue: '사업자'),
               '주식회사 트리거소프트 (triggersoft)'),
           ]),
           const SizedBox(height: 16),
@@ -200,9 +200,9 @@ class _PolicySheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = data['label']?.toString() ?? data['kind']?.toString() ?? '약관';
+    final title = data['label']?.toString() ?? data['kind']?.toString() ?? I18nService.instance.t('policy.fallback_title', defaultValue: '약관');
     final version = data['version']?.toString() ?? '';
-    final body = data['body']?.toString() ?? '본문이 등록되어 있지 않습니다.';
+    final body = data['body']?.toString() ?? I18nService.instance.t('policy.body_empty', defaultValue: '본문이 등록되어 있지 않습니다.');
     final effective = data['effective_at']?.toString();
 
     // 2026-06-10 — DraggableScrollableSheet 제거.
@@ -306,8 +306,8 @@ class _MarketingConsentToggleTileState
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(v
-          ? '마케팅 정보 수신에 동의했습니다.'
-          : '마케팅 정보 수신을 거부했습니다.')),
+          ? context.t('mobile.settings.marketing_agreed', defaultValue: '마케팅 정보 수신에 동의했습니다.')
+          : context.t('mobile.settings.marketing_rejected', defaultValue: '마케팅 정보 수신을 거부했습니다.'))),
     );
   }
 
@@ -315,8 +315,8 @@ class _MarketingConsentToggleTileState
   Widget build(BuildContext context) {
     return PwSwitchTile(
       leading: const Icon(Icons.campaign_outlined),
-      title: '마케팅 정보 수신',
-      subtitle: '이벤트/쿠폰 안내 푸시·이메일 수신 (정보통신망법 §50)',
+      title: context.t('mobile.settings.marketing_title', defaultValue: '마케팅 정보 수신'),
+      subtitle: context.t('mobile.settings.marketing_subtitle', defaultValue: '이벤트/쿠폰 안내 푸시·이메일 수신 (정보통신망법 §50)'),
       value: _value,
       onChanged: _loaded ? _toggle : null,
     );
@@ -357,7 +357,7 @@ class _NotificationPreferencesSectionState
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = '알림 설정을 불러오지 못했습니다.');
+      setState(() => _error = I18nService.instance.t('mobile.settings.notification_load_failed', defaultValue: '알림 설정을 불러오지 못했습니다.'));
     }
   }
 
