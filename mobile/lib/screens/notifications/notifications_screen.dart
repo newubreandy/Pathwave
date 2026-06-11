@@ -66,22 +66,23 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       '${item['__kind']}:${item['id']}';
 
   Future<bool> _confirmDelete(BuildContext context, String title) async {
+    final t = I18nService.instance;
     final ok = await showPwDialog<bool>(
       context: context,
-      title: const Text('알림 삭제'),
-      content: Text('"$title" 을(를) 목록에서 삭제할까요?'),
+      title: Text(t.t('notif.delete_title', defaultValue: '알림 삭제')),
+      content: Text('"$title" ${t.t('notif.delete_body_suffix', defaultValue: '을(를) 목록에서 삭제할까요?')}'),
       actions: [
         PwButton(
           variant: PwButtonVariant.text,
           fullWidth: false,
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('취소'),
+          child: Text(t.t('mobile.common.cancel', defaultValue: '취소')),
         ),
         PwButton(
           variant: PwButtonVariant.danger,
           fullWidth: false,
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('삭제'),
+          child: Text(t.t('mobile.common.delete', defaultValue: '삭제')),
         ),
       ],
     );
@@ -123,12 +124,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 .where((it) => !_hidden.contains(_itemKey(it)))
                 .toList();
             if (all.isEmpty) {
-              return ListView(children: const [
-                SizedBox(height: 100),
+              return ListView(children: [
+                const SizedBox(height: 100),
                 PwEmptyState(
                   icon: Icons.notifications_none,
-                  title: '받은 알림이 없습니다',
-                  subtitle: '매장 방문·스탬프·쿠폰 알림이 도착하면 여기에 표시됩니다.',
+                  title: t.t('notif.empty_title', defaultValue: '받은 알림이 없습니다'),
+                  subtitle: t.t('notif.empty_subtitle', defaultValue: '매장 방문·스탬프·쿠폰 알림이 도착하면 여기에 표시됩니다.'),
                 ),
               ]);
             }
@@ -151,17 +152,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: AppTheme.error.withValues(alpha: 0.45)),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Icon(Icons.delete_outline, color: AppTheme.error),
-                        SizedBox(width: 6),
-                        Text('삭제', style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.w600)),
+                        const Icon(Icons.delete_outline, color: AppTheme.error),
+                        const SizedBox(width: 6),
+                        Text(t.t('mobile.common.delete', defaultValue: '삭제'),
+                            style: const TextStyle(color: AppTheme.error, fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
                   confirmDismiss: (_) async {
-                    final title = (item['title']?.toString() ?? '알림');
+                    final title = (item['title']?.toString() ?? t.t('notif.default_title', defaultValue: '알림'));
                     return await _confirmDelete(context, title);
                   },
                   onDismissed: (_) async {
@@ -213,7 +215,7 @@ class _NotificationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final unread = data['read'] == false || data['read_at'] == null;
     final kind = data['kind']?.toString() ?? data['__kind']?.toString();
-    final title = data['title']?.toString() ?? '알림';
+    final title = data['title']?.toString() ?? I18nService.instance.t('notif.default_title', defaultValue: '알림');
     final body = data['body']?.toString() ?? '';
     final rawAt = data['created_at']?.toString() ?? '';
     final at = rawAt.length >= 16 ? rawAt.substring(0, 16) : rawAt;

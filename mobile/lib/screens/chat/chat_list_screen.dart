@@ -4,7 +4,9 @@ import '../../utils/error_message.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/chat_service.dart';
+import '../../services/i18n_service.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/i18n_context.dart';
 import '../../widgets/pw.dart';
 
 class ChatListScreen extends StatefulWidget {
@@ -30,7 +32,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PwAppBar(title: const Text('매장 채팅')),
+      appBar: PwAppBar(title: Text(context.t('chat.list_title', defaultValue: '매장 채팅'))),
       body: SafeArea(child: RefreshIndicator(
         onRefresh: _reload,
         child: FutureBuilder<List<Map<String, dynamic>>>(
@@ -44,12 +46,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
             }
             final list = snap.data ?? [];
             if (list.isEmpty) {
-              return ListView(children: const [
-                SizedBox(height: 100),
+              return ListView(children: [
+                const SizedBox(height: 100),
                 PwEmptyState(
                   icon: Icons.chat_bubble_outline,
-                  title: '진행 중인 채팅이 없습니다',
-                  subtitle: '시설 상세에서 "매장과 채팅" 을 눌러 시작하세요.',
+                  title: context.t('chat.empty_title', defaultValue: '진행 중인 채팅이 없습니다'),
+                  subtitle: context.t('chat.empty_subtitle', defaultValue: '시설 상세에서 "매장과 채팅" 을 눌러 시작하세요.'),
                 ),
               ]);
             }
@@ -75,7 +77,7 @@ class _RoomTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final facilityId = room['facility_id'] as int?;
-    final facilityName = room['facility_name']?.toString() ?? '매장';
+    final facilityName = room['facility_name']?.toString() ?? I18nService.instance.t('chat.default_facility_name', defaultValue: '매장');
     final lastMessage = room['last_message_text']?.toString() ?? '';
     final lastAt = room['last_message_at']?.toString().substring(0, 16) ?? '';
     final unread = (room['unread_count'] as num?)?.toInt() ?? 0;
@@ -120,7 +122,7 @@ class _RoomTile extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          lastMessage.isEmpty ? '대화를 시작해 보세요' : lastMessage,
+                          lastMessage.isEmpty ? I18nService.instance.t('chat.start_chat_hint', defaultValue: '대화를 시작해 보세요') : lastMessage,
                           style: TextStyle(
                             color: lastMessage.isEmpty ? AppTheme.textHint : AppTheme.textSecondary,
                             fontSize: 13,

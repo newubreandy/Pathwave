@@ -3,6 +3,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:simple_icons/simple_icons.dart';
 
+import '../services/i18n_service.dart';
 import '../utils/neu_theme.dart';
 
 /// PR #68 — Google / Apple / Facebook / Kakao / Naver 5종 소셜 로그인 버튼.
@@ -96,7 +97,7 @@ class SocialLoginRow extends StatelessWidget {
         Semantics(
           button: true,
           enabled: onTap != null,
-          label: '$label 로 로그인',
+          label: '$label ${I18nService.instance.t('mobile.common.login_with_suffix', defaultValue: '로 로그인')}',
           child: Material(
             color: Colors.transparent,
             shape: const CircleBorder(),

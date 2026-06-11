@@ -15,14 +15,8 @@ class StampService {
     return (data['stamps_by_facility'] as List?)?.cast<Map<String, dynamic>>() ?? [];
   }
 
-  /// 시설별 스탬프 카드 정책 + 보유 카운트.
-  Future<Map<String, dynamic>> cardForFacility(int facilityId) async {
-    final data = await _api.get('/api/stamps/cards/$facilityId');
-    return (data['card'] as Map?)?.cast<String, dynamic>() ?? {};
-  }
-
-  /// 사용자 측 스탬프 적립 (BLE 자동 적립과는 별도, 수동 트리거 시).
-  Future<Map<String, dynamic>> issue(int facilityId) async {
-    return _api.post('/api/stamps/issue', {'facility_id': facilityId});
-  }
+  // 2026-06-11 — cardForFacility / issue 제거.
+  // 두 메서드 모두 backend 에 대응 라우트가 없는 dead code 였음 (404 → HTML 파싱 실패).
+  // · 시설별 정책+카운트 = /api/users/me/stamps 의 stamps_by_facility 에 포함
+  // · 적립 = BLE 자동 (provider 측 /api/facilities/<fid>/stamps POST), 사용자 수동 적립 정책 없음
 }

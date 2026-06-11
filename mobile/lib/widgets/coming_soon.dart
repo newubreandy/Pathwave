@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/i18n_service.dart';
 import '../utils/app_theme.dart';
 
 /// 후속 PR 에서 구현 예정인 화면용 공통 placeholder.
@@ -44,8 +45,8 @@ class ComingSoon extends StatelessWidget {
                 style: const TextStyle(color: AppTheme.textSecondary)),
             ],
             const SizedBox(height: 12),
-            const Text('UI 구현 예정',
-              style: TextStyle(color: AppTheme.textHint, fontSize: 13)),
+            Text(I18nService.instance.t('mobile.common.coming_soon', defaultValue: 'UI 구현 예정'),
+              style: const TextStyle(color: AppTheme.textHint, fontSize: 13)),
             if (prNote != null) ...[
               const SizedBox(height: 4),
               Text(prNote!, style: const TextStyle(color: AppTheme.primary, fontSize: 13)),

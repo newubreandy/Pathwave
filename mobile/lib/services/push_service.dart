@@ -33,7 +33,7 @@ class PushService {
 
     final platform = Platform.isIOS ? 'apns' : 'fcm';
     try {
-      await _api.post('/api/push/register-token', {
+      await _api.post('/api/users/me/push-tokens', {
         'token': _token,
         'platform': platform,
       });
@@ -43,7 +43,7 @@ class PushService {
     messaging.onTokenRefresh.listen((newToken) async {
       _token = newToken;
       try {
-        await _api.post('/api/push/register-token', {
+        await _api.post('/api/users/me/push-tokens', {
           'token': newToken, 'platform': platform,
         });
       } catch (_) {}
@@ -53,7 +53,11 @@ class PushService {
   Future<void> unregister() async {
     if (_token == null) return;
     try {
-      await _api.delete('/api/push/register-token?token=$_token');
+      // 2026-06-11 — backend 정합: /api/users/me/push-tokens DELETE + JSON body.
+      await _api.delete('/api/users/me/push-tokens', {
+        'token': _token,
+        'platform': Platform.isIOS ? 'apns' : 'fcm',
+      });
     } catch (_) {}
     _token = null;
   }

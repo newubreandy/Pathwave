@@ -43,11 +43,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       if (!mounted) return;
       if (res['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(res['message']?.toString() ?? '비밀번호가 변경되었습니다.')),
+          SnackBar(content: Text(res['message']?.toString()
+              ?? context.t('mobile.settings.change_password.success', defaultValue: '비밀번호가 변경되었습니다.'))),
         );
         context.pop();
       } else {
-        setState(() => _error = res['message']?.toString() ?? '변경에 실패했습니다.');
+        setState(() => _error = res['message']?.toString()
+            ?? context.t('mobile.settings.change_password.failed', defaultValue: '변경에 실패했습니다.'));
       }
     } catch (e) {
       if (!mounted) return;
@@ -69,7 +71,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              '소셜 로그인으로 가입하셨습니다.\n해당 서비스(Google / Apple)에서 비밀번호를 관리해 주세요.',
+              context.t('mobile.settings.change_password.social_notice',
+                  defaultValue: '소셜 로그인으로 가입하셨습니다.\n해당 서비스(Google / Apple)에서 비밀번호를 관리해 주세요.'),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
@@ -92,33 +95,35 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 const SizedBox(height: 8),
                 PwTextField(
                   controller: _currentCtrl,
-                  label: '현재 비밀번호',
+                  label: context.t('mobile.settings.change_password.current_label', defaultValue: '현재 비밀번호'),
                   prefixIcon: Icons.lock_outline,
                   obscureText: true,
                   validator: (v) => (v == null || v.isEmpty)
-                      ? '현재 비밀번호를 입력해 주세요' : null,
+                      ? context.t('mobile.settings.change_password.current_required', defaultValue: '현재 비밀번호를 입력해 주세요')
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 PwTextField(
                   controller: _newCtrl,
-                  label: '새 비밀번호',
-                  helperText: '8자 이상 + 영문/숫자/특수문자',
+                  label: context.t('mobile.settings.change_password.new_label', defaultValue: '새 비밀번호'),
+                  helperText: context.t('mobile.settings.change_password.new_helper', defaultValue: '8자 이상 + 영문/숫자/특수문자'),
                   prefixIcon: Icons.lock,
                   obscureText: true,
                   validator: (v) {
-                    if (v == null || v.length < 8) return '8자 이상 입력해 주세요';
-                    if (v == _currentCtrl.text) return '현재 비밀번호와 다르게 입력해 주세요';
+                    if (v == null || v.length < 8) return context.t('mobile.settings.change_password.min_length', defaultValue: '8자 이상 입력해 주세요');
+                    if (v == _currentCtrl.text) return context.t('mobile.settings.change_password.same_as_current', defaultValue: '현재 비밀번호와 다르게 입력해 주세요');
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
                 PwTextField(
                   controller: _confirmCtrl,
-                  label: '새 비밀번호 확인',
+                  label: context.t('mobile.settings.change_password.confirm_label', defaultValue: '새 비밀번호 확인'),
                   prefixIcon: Icons.lock,
                   obscureText: true,
-                  validator: (v) =>
-                      (v != _newCtrl.text) ? '새 비밀번호가 일치하지 않습니다' : null,
+                  validator: (v) => (v != _newCtrl.text)
+                      ? context.t('mobile.settings.change_password.mismatch', defaultValue: '새 비밀번호가 일치하지 않습니다')
+                      : null,
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 12),
