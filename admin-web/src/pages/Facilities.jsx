@@ -94,7 +94,7 @@ export default function Facilities() {
               </div>
               {f.adult_only && (
                 <span style={{
-                  padding: '2px 8px', background: '#7C3AED', color: '#fff',
+                  padding: '2px 8px', background: 'var(--accent)', color: '#fff',
                   borderRadius: 4, fontSize: 10, fontWeight: 700,
                 }}>성인전용</span>
               )}

@@ -277,9 +277,10 @@
 }
 
 .role-manager {
-  background: #EFF6FF;
-  color: #2563EB;
-  border: 1px solid #BFDBFE;
+  /* 2026-06-11 — 라이트 배지 잔존 정리: 다크 가이드 (반투명 블루 + 밝은 텍스트) */
+  background: rgba(37, 99, 235, 0.15);
+  color: #60A5FA;
+  border: 1px solid rgba(37, 99, 235, 0.35);
 }
 
 .role-staff {
