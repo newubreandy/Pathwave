@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 
 import '../../utils/error_message.dart';
@@ -156,9 +158,32 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
   /// loading/error 상태용 단순 AppBar — 백 버튼 + 제목만.
+  /// PwAppBar 와 동일한 글래스 헤더 — blur(14) + 흰 12% + 하단 흰 22% 보더.
+  /// (SliverAppBar 는 PwAppBar 를 직접 못 쓰므로 flexibleSpace 로 동일 시각 재현)
+  Widget _glassBarSpace() {
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.12),
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.white.withValues(alpha: 0.22),
+                width: 1,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   SliverAppBar _buildPlainAppBar() {
     return SliverAppBar(
       pinned: true,
+      backgroundColor: Colors.transparent,
+      flexibleSpace: _glassBarSpace(),
       leading: PwIconButton(
         icon: Icons.arrow_back,
         tooltip: context.t('mobile.common.back', defaultValue: '뒤로'),
@@ -169,27 +194,14 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
   SliverAppBar _buildAppBar(Map<String, dynamic> f) {
-    // 2026-06-09 — 이미지를 헤더와 겹치지 않게 분리. AppBar 는 일반 높이만.
     final name = f['name']?.toString() ?? I18nService.instance.t('mobile.common.fallback_store', defaultValue: '매장');
     return SliverAppBar(
       pinned: true,
-      // 2026-06-09 — 상단 영역 글래스 톤 + 매장명 표시 (다른 상세 패턴 통일).
-      backgroundColor: Colors.white.withValues(alpha: 0.12),
-      surfaceTintColor: Colors.transparent,
-      foregroundColor: Colors.white,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      title: Text(name,
-          style: const TextStyle(color: Colors.white,
-              fontWeight: FontWeight.w700, fontSize: 17)),
-      // 하단 1px 흰 보더 — 본문과 명확히 구분 (Border in shape: 가 SliverAppBar 에서 무시되는 케이스).
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1),
-        child: Container(
-          height: 1,
-          color: Colors.white.withValues(alpha: 0.22),
-        ),
-      ),
+      // 2026-06-11 — PwAppBar 와 완전 동일 가이드: blur 글래스 + 테마 title 스타일.
+      // (이전: 블러 없는 반투명 + 커스텀 17px 타이틀 → 다른 화면과 미세 불일치)
+      backgroundColor: Colors.transparent,
+      flexibleSpace: _glassBarSpace(),
+      title: Text(name),
       leading: PwIconButton(
         icon: Icons.arrow_back,
         color: AppTheme.textPrimary,
@@ -226,7 +238,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
           ? CachedNetworkImage(
               imageUrl: imageUrl,
               fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
+              // 2026-06-11 — center: 상단 보케(아웃포커스) 사진이 헤더 아래 흐린 띠로 보이는 문제 회피.
+              alignment: Alignment.center,
               errorWidget: (_, _, _) =>
                   Container(color: Colors.white.withValues(alpha: 0.08)),
             )
