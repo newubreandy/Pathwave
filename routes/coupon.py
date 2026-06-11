@@ -14,7 +14,7 @@
 - used=0 AND expires_at < now()   → 'expired'
 - 그 외                            → 'active'
 """
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import Blueprint, request, jsonify, g
 
@@ -97,7 +97,12 @@ def issue_coupon(fid):
                         'message': 'user_ids는 양의 정수 배열이어야 합니다.'}), 400
     if expires_at:
         try:
-            datetime.fromisoformat(expires_at)
+            # 2026-06-11 — 'Z' 접미/aware 입력은 UTC naive ISO 로 정규화 후 저장.
+            # (만료 비교가 naive utcnow 기준이라 aware 가 저장되면 비교 시 500)
+            _dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+            if _dt.tzinfo is not None:
+                _dt = _dt.astimezone(timezone.utc).replace(tzinfo=None)
+            expires_at = _dt.isoformat()
         except ValueError:
             return jsonify({'success': False,
                             'message': 'expires_at은 ISO 8601 형식이어야 합니다.'}), 400
