@@ -181,11 +181,33 @@ SEED_KEYS: list[tuple[str, str]] = [
     ('policy.effective_at_label',      '시행일'),
 
     # ── 공통 위젯 (mobile.common.*) ──────────────────────────────────────
+    ('mobile.common.load_failed',      '불러오기 실패'),
     ('mobile.common.retry',            '다시 시도'),
     ('mobile.common.coming_soon',      'UI 구현 예정'),
     ('mobile.common.delete',           '삭제'),
     ('mobile.common.login_with_suffix','로 로그인'),
     ('mobile.mypage.logout',           '로그아웃'),
+
+    # ── 매장 상세 (mobile.facility.*) ───────────────────────────────────
+    ('mobile.facility.title',              '매장 정보'),
+    ('mobile.facility.unfavorite',         '즐겨찾기 해제'),
+    ('mobile.facility.add_favorite',       '즐겨찾기 추가'),
+    ('mobile.facility.report',             '신고하기'),
+    ('mobile.facility.menu',               '메뉴'),
+    ('mobile.facility.auto_translate',     '자동 번역'),
+    ('mobile.facility.translate_suspended', '※ 자동 번역 일시 중단 — 원본 표시'),
+    ('mobile.facility.business_hours',     '영업시간'),
+    ('mobile.facility.regular_holiday',    '정기휴무'),
+    ('mobile.facility.active_benefits',    '진행중인 혜택'),
+    ('mobile.facility.chat_with_store',    '매장과 채팅'),
+
+    # ── 문의 상세 (mobile.support.detail 추가분) ─────────────────────────
+    ('mobile.support.detail_title',    '문의 상세'),
+    ('mobile.support.send_failed',     '전송 실패'),
+    ('mobile.support.no_messages',     '아직 메시지가 없습니다.'),
+    ('mobile.support.message_hint',    '추가 문의 내용을 입력하세요'),
+    ('mobile.support.send',            '전송'),
+    ('mobile.support.admin',           '관리자'),
 ]
 
 

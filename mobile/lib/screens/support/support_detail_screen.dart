@@ -158,7 +158,7 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
                       Expanded(
                         child: PwTextField(
                           controller: _msgCtrl,
-                          hint: '추가 문의 내용을 입력하세요',
+                          hint: context.t('mobile.support.message_hint', defaultValue: '추가 문의 내용을 입력하세요'),
                           textInputAction: TextInputAction.send,
                           onSubmitted: (_) => _sendMessage(),
                           enabled: !_sending,
@@ -268,15 +268,15 @@ class _StatusBadge extends StatelessWidget {
     switch (status) {
       case 'open':
         color = AppTheme.warning;
-        label = '접수됨';
+        label = context.t('mobile.support.status_open', defaultValue: '접수됨');
         break;
       case 'in_progress':
         color = AppTheme.secondary;
-        label = '처리중';
+        label = context.t('mobile.support.status_in_progress', defaultValue: '처리중');
         break;
       case 'closed':
         color = AppTheme.success;
-        label = '완료';
+        label = context.t('mobile.support.status_closed', defaultValue: '완료');
         break;
       default:
         color = AppTheme.textHint;
