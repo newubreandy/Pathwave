@@ -9,6 +9,7 @@ import SectionTabs from '../components/common/SectionTabs';
 import Button from '../components/common/Button';
 import PwPageHeader from '../components/common/PwPageHeader';
 import PwInfoBanner from '../components/common/PwInfoBanner';
+import PwModal, { PwField } from '../components/common/PwModal.jsx';
 import './Support.css';
 
 /* ── 상태 뱃지 색상 매핑 ── */
@@ -56,66 +57,62 @@ const CreateTicketModal = ({ categories, onClose, onCreated }) => {
   };
 
   return (
-    <div className="sp-modal-overlay" onClick={onClose}>
-      <div className="sp-modal" onClick={(e) => e.stopPropagation()}>
-        <header className="sp-modal-head">
-          <h3 className="sp-modal-title">{t('support.create_btn', '문의 작성')}</h3>
-          <button className="sp-modal-close" onClick={onClose} aria-label="닫기"><X size={18} /></button>
-        </header>
+    <PwModal
+      open
+      onClose={onClose}
+      title={t('support.create_btn', '문의 작성')}
+      busy={loading}
+      footer={
+        <>
+          <Button variant="outline" type="button" onClick={onClose}>취소</Button>
+          <Button variant="primary" type="submit" form="create-ticket-form" disabled={loading}>
+            {loading ? '등록 중...' : t('support.create_btn', '문의 등록')}
+          </Button>
+        </>
+      }
+    >
+      <form id="create-ticket-form" onSubmit={handleSubmit}>
+        {/* 영업시간 안내 */}
+        <div className="sp-info-box">
+          <p className="sp-info-row"><strong>{t('support.business_hours', '영업시간')}</strong> 평일 09:00–18:00 (주말·공휴일 제외)</p>
+          <p className="sp-info-row"><strong>{t('support.response_eta', '응답 예상시간')}</strong> 1–2 영업일 이내</p>
+        </div>
 
-        <form className="sp-modal-body" onSubmit={handleSubmit}>
-          {/* 영업시간 안내 */}
-          <div className="sp-info-box">
-            <p className="sp-info-row"><strong>{t('support.business_hours', '영업시간')}</strong> 평일 09:00–18:00 (주말·공휴일 제외)</p>
-            <p className="sp-info-row"><strong>{t('support.response_eta', '응답 예상시간')}</strong> 1–2 영업일 이내</p>
-          </div>
+        <PwField label={t('support.category_label', '문의 유형')}>
+          <select className="sp-select" value={category} onChange={(e) => setCategory(e.target.value)}>
+            <option value="">선택 안 함</option>
+            {categories.map((c) => (
+              <option key={c.key} value={c.key}>{c.label}</option>
+            ))}
+          </select>
+        </PwField>
 
-          <div className="sp-field">
-            <label className="sp-label">{t('support.category_label', '문의 유형')}</label>
-            <select className="sp-select" value={category} onChange={(e) => setCategory(e.target.value)}>
-              <option value="">선택 안 함</option>
-              {categories.map((c) => (
-                <option key={c.key} value={c.key}>{c.label}</option>
-              ))}
-            </select>
-          </div>
+        <PwField label={`${t('support.subject_label', '제목')} *`}>
+          <input
+            className="sp-input"
+            type="text"
+            placeholder="문의 제목을 입력하세요"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            maxLength={120}
+          />
+        </PwField>
 
-          <div className="sp-field">
-            <label className="sp-label">{t('support.subject_label', '제목')} *</label>
-            <input
-              className="sp-input"
-              type="text"
-              placeholder="문의 제목을 입력하세요"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              maxLength={120}
-            />
-          </div>
+        <PwField label={`${t('support.body_label', '내용')} *`}>
+          <textarea
+            className="sp-textarea"
+            placeholder="문의 내용을 상세하게 입력해주세요"
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            rows={6}
+          />
+        </PwField>
 
-          <div className="sp-field">
-            <label className="sp-label">{t('support.body_label', '내용')} *</label>
-            <textarea
-              className="sp-textarea"
-              placeholder="문의 내용을 상세하게 입력해주세요"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              rows={6}
-            />
-          </div>
+        <p className="sp-privacy-notice">{t('support.privacy_notice', '※ 입력하신 개인정보는 문의 처리 목적으로만 사용되며, 처리 완료 후 관련 법령에 따라 보관됩니다.')}</p>
 
-          <p className="sp-privacy-notice">{t('support.privacy_notice', '※ 입력하신 개인정보는 문의 처리 목적으로만 사용되며, 처리 완료 후 관련 법령에 따라 보관됩니다.')}</p>
-
-          {error && <p className="sp-error">{error}</p>}
-
-          <div className="sp-modal-actions">
-            <Button variant="outline" type="button" onClick={onClose}>취소</Button>
-            <Button variant="primary" type="submit" disabled={loading}>
-              {loading ? '등록 중...' : t('support.create_btn', '문의 등록')}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {error && <p className="sp-error">{error}</p>}
+      </form>
+    </PwModal>
   );
 };
 

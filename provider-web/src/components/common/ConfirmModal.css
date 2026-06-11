@@ -1,50 +1,7 @@
 /* ═══════════════════════════════════════════════════
    ConfirmModal — PathWave Design System
-   Glassmorphism overlay + smooth enter animation
+   overlay/card shell → PwModal 위임 (2026-06-11)
    ═══════════════════════════════════════════════════ */
-
-.common-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: var(--pw-z-modal);
-  padding: var(--pw-space-4);
-  animation: modalOverlayIn var(--pw-duration-normal) var(--pw-ease-out);
-}
-
-@keyframes modalOverlayIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-.common-custom-modal {
-  background-color: var(--pw-surface);
-  border-radius: var(--pw-radius-lg);
-  width: 100%;
-  max-width: 360px;
-  overflow: hidden;
-  box-shadow: var(--pw-shadow-xl);
-  animation: modalCardIn var(--pw-duration-normal) var(--pw-ease-spring);
-}
-
-@keyframes modalCardIn {
-  from {
-    opacity: 0;
-    transform: scale(0.92) translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
 
 .common-modal-content {
   padding: var(--pw-space-10) var(--pw-space-6) var(--pw-space-8);

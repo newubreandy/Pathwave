@@ -5,6 +5,7 @@ import { Plus, X, ChevronLeft, Upload, Bell, Check, CheckCheck, Star, Info } fro
 import PushService from '../services/push/PushService';
 import NotificationService from '../services/notification/NotificationService';
 import Button from '../components/common/Button';
+import PwModal from '../components/common/PwModal';
 import BottomActionBar from '../components/common/BottomActionBar';
 import CardAvatar from '../components/common/CardAvatar';
 import GroupCard, { GroupCardItem } from '../components/common/GroupCard';
@@ -546,61 +547,55 @@ const Notifications = () => {
 
         {/* Modals */}
 
+        <PwModal
+          open={showAlertModal}
+          onClose={() => setShowAlertModal(false)}
+          title={t('noti.btn_confirm')}
+          footer={
+            <Button variant="primary" fullWidth onClick={() => setShowAlertModal(false)}>{t('noti.btn_confirm')}</Button>
+          }
+        >
+          <p style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{alertMsg}</p>
+        </PwModal>
 
-        {showAlertModal && (
-          <div className="modal-overlay">
-            <div className="modal-content">
-              <div className="modal-body" style={{ whiteSpace: 'pre-line', paddingTop: '1rem', paddingBottom: '1rem' }}>
-                {alertMsg}
-              </div>
-              <div className="modal-actions">
-                <button className="modal-btn confirm" onClick={() => setShowAlertModal(false)}>{t('noti.btn_confirm')}</button>
-              </div>
-            </div>
-          </div>
-        )}
+        <PwModal
+          open={showConfirmModal}
+          onClose={() => setShowConfirmModal(false)}
+          title={t('noti.title_confirm_save')}
+          footer={
+            <>
+              <Button variant="ghost" fullWidth onClick={() => setShowConfirmModal(false)}>{t('noti.btn_cancel')}</Button>
+              <Button variant="primary" fullWidth onClick={confirmSave}>{t('noti.btn_save')}</Button>
+            </>
+          }
+        >
+          <p style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{t('noti.msg_confirm_save')}</p>
+        </PwModal>
 
-        {showConfirmModal && (
-          <div className="modal-overlay">
-            <div className="modal-content">
-              <h2 style={{ fontSize: '1.2rem', margin: '2rem 0 0.5rem', color: '#1E293B' }}>{t('noti.title_confirm_save')}</h2>
-              <div className="modal-body" style={{ paddingTop: '1rem', whiteSpace: 'pre-line' }}>
-                {t('noti.msg_confirm_save')}
-              </div>
-              <div className="modal-actions">
-                <button className="modal-btn cancel" onClick={() => setShowConfirmModal(false)}>{t('noti.btn_cancel')}</button>
-                <button className="modal-btn confirm" onClick={confirmSave}>{t('noti.btn_save')}</button>
-              </div>
-            </div>
-          </div>
-        )}
+        <PwModal
+          open={showPremiumModal}
+          onClose={() => setShowPremiumModal(false)}
+          title={t('noti.premium_alert').split('\n')[0]}
+          footer={
+            <>
+              <Button variant="ghost" fullWidth onClick={() => setShowPremiumModal(false)}>{t('noti.btn_cancel')}</Button>
+              <Button variant="primary" fullWidth onClick={confirmPremium}>{t('noti.btn_apply')}</Button>
+            </>
+          }
+        >
+          <p style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{t('noti.premium_alert')}</p>
+        </PwModal>
 
-        {showPremiumModal && (
-          <div className="modal-overlay">
-            <div className="modal-content">
-              <div className="modal-body" style={{ whiteSpace: 'pre-line' }}>
-                {t('noti.premium_alert')}
-              </div>
-              <div className="modal-actions">
-                <button className="modal-btn cancel" onClick={() => setShowPremiumModal(false)}>{t('noti.btn_cancel')}</button>
-                <button className="modal-btn confirm" onClick={confirmPremium}>{t('noti.btn_apply')}</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {showSuccessModal && (
-          <div className="modal-overlay">
-            <div className="modal-content">
-              <div className="modal-body">
-                {t('noti.save_success')}
-              </div>
-              <div className="modal-actions">
-                <button className="modal-btn confirm" style={{ borderLeft: 'none' }} onClick={closeSuccess}>{t('noti.btn_confirm')}</button>
-              </div>
-            </div>
-          </div>
-        )}
+        <PwModal
+          open={showSuccessModal}
+          onClose={closeSuccess}
+          title={t('noti.save_success')}
+          footer={
+            <Button variant="primary" fullWidth onClick={closeSuccess}>{t('noti.btn_confirm')}</Button>
+          }
+        >
+          <p style={{ textAlign: 'center' }}>{t('noti.save_success')}</p>
+        </PwModal>
       </div>
     );
   }
@@ -696,60 +691,57 @@ const Notifications = () => {
         )}
       </div>
 
-      {showQuantityModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2 style={{ fontSize: '1.2rem', margin: '2rem 0 0.5rem', color: '#1E293B' }}>알림 발송 수량 안내</h2>
-            <div className="modal-body" style={{ paddingTop: '1rem', whiteSpace: 'pre-line', textAlign: 'center' }}>
-              {stats.available < 100 ? (
-                <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
-                  현재 잔여 발송 수량이 100개 미만입니다.<br />
-                  대량 발송 시 서비스가 제한될 수 있습니다.
-                </p>
-              ) : (
-                <p style={{ marginBottom: '1rem', lineHeight: '1.6' }}>
-                  현재 발송 가능한 알림은 <strong style={{ color: 'var(--pw-accent)' }}>{stats.available.toLocaleString()}</strong>개 입니다.
-                </p>
-              )}
-            </div>
-            <div className="modal-actions">
-              <button className="modal-btn cancel" onClick={() => setShowQuantityModal(false)}>닫기</button>
-              {stats.available < 100 ? (
-                <button className="modal-btn confirm" style={{ background: '#F1F5F9', color: '#1E293B' }} onClick={() => { setShowQuantityModal(false); setShowPremiumModal(true); }}>구매하기</button>
-              ) : (
-                <button className="modal-btn confirm" onClick={handleContinueWriting}>작성</button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <PwModal
+        open={showQuantityModal}
+        onClose={() => setShowQuantityModal(false)}
+        title="알림 발송 수량 안내"
+        footer={
+          <>
+            <Button variant="ghost" fullWidth onClick={() => setShowQuantityModal(false)}>닫기</Button>
+            {stats.available < 100 ? (
+              <Button variant="outline" fullWidth onClick={() => { setShowQuantityModal(false); setShowPremiumModal(true); }}>구매하기</Button>
+            ) : (
+              <Button variant="primary" fullWidth onClick={handleContinueWriting}>작성</Button>
+            )}
+          </>
+        }
+      >
+        {stats.available < 100 ? (
+          <p style={{ lineHeight: '1.6', textAlign: 'center' }}>
+            현재 잔여 발송 수량이 100개 미만입니다.<br />
+            대량 발송 시 서비스가 제한될 수 있습니다.
+          </p>
+        ) : (
+          <p style={{ lineHeight: '1.6', textAlign: 'center' }}>
+            현재 발송 가능한 알림은 <strong style={{ color: 'var(--pw-accent)' }}>{stats.available.toLocaleString()}</strong>개 입니다.
+          </p>
+        )}
+      </PwModal>
 
-      {showAlertModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-body" style={{ whiteSpace: 'pre-line', paddingTop: '1rem', paddingBottom: '1rem' }}>
-              {alertMsg}
-            </div>
-            <div className="modal-actions">
-              <button className="modal-btn confirm" onClick={() => setShowAlertModal(false)}>{t('noti.btn_confirm')}</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <PwModal
+        open={showAlertModal}
+        onClose={() => setShowAlertModal(false)}
+        title={t('noti.btn_confirm')}
+        footer={
+          <Button variant="primary" fullWidth onClick={() => setShowAlertModal(false)}>{t('noti.btn_confirm')}</Button>
+        }
+      >
+        <p style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{alertMsg}</p>
+      </PwModal>
 
-      {showPremiumModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-body" style={{ whiteSpace: 'pre-line' }}>
-              {t('noti.premium_alert')}
-            </div>
-            <div className="modal-actions">
-              <button className="modal-btn cancel" onClick={() => setShowPremiumModal(false)}>{t('noti.btn_cancel')}</button>
-              <button className="modal-btn confirm" onClick={confirmPremium}>{t('noti.btn_apply')}</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <PwModal
+        open={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+        title={t('noti.premium_alert').split('\n')[0]}
+        footer={
+          <>
+            <Button variant="ghost" fullWidth onClick={() => setShowPremiumModal(false)}>{t('noti.btn_cancel')}</Button>
+            <Button variant="primary" fullWidth onClick={confirmPremium}>{t('noti.btn_apply')}</Button>
+          </>
+        }
+      >
+        <p style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{t('noti.premium_alert')}</p>
+      </PwModal>
 
       <BottomActionBar>
         <Button variant="primary" fullWidth icon={<Plus size={18} />} onClick={handleNewNotificationClick}>

@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Plus, MapPin, Edit2, Trash2, X, Camera } from 'lucide-react';
+import PwModal, { PwField } from '../components/common/PwModal.jsx';
 import './Facilities.css';
 
 const Facilities = () => {
@@ -107,84 +108,70 @@ const Facilities = () => {
         </button>
       </div>
 
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content card">
-            <div className="modal-header">
-              <h2>{isEditing ? '매장 수정' : '새 매장 등록'}</h2>
-              <button className="close-btn-x" onClick={() => setShowModal(false)}><X size={20} /></button>
+      <PwModal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        title={isEditing ? '매장 수정' : '새 매장 등록'}
+        footer={
+          <>
+            <button type="button" className="btn-ghost" onClick={() => setShowModal(false)}>취소</button>
+            <button type="submit" form="facility-form" className="btn-primary">{isEditing ? '수정 완료' : '등록하기'}</button>
+          </>
+        }
+      >
+        <form id="facility-form" onSubmit={handleSubmit}>
+          <div className="image-upload-section">
+            <div className="image-preview-grid">
+              {previewUrls.map((url, idx) => (
+                <div key={idx} className="preview-thumb" style={{ backgroundImage: `url(${url})` }}>
+                  <button type="button" className="remove-thumb-btn" onClick={(e) => { e.stopPropagation(); removeImage(idx); }}><X size={14} /></button>
+                </div>
+              ))}
+              {previewUrls.length < 5 && (
+                <div className="add-thumb-btn" onClick={() => fileInputRef.current.click()}>
+                  <Camera size={24} />
+                  <span>{previewUrls.length}/5</span>
+                </div>
+              )}
             </div>
-            <form onSubmit={handleSubmit}>
-              <div className="image-upload-section">
-                <div className="image-preview-grid">
-                  {previewUrls.map((url, idx) => (
-                    <div key={idx} className="preview-thumb" style={{ backgroundImage: `url(${url})` }}>
-                      <button type="button" className="remove-thumb-btn" onClick={(e) => { e.stopPropagation(); removeImage(idx); }}><X size={14} /></button>
-                    </div>
-                  ))}
-                  {previewUrls.length < 5 && (
-                    <div className="add-thumb-btn" onClick={() => fileInputRef.current.click()}>
-                      <Camera size={24} />
-                      <span>{previewUrls.length}/5</span>
-                    </div>
-                  )}
-                </div>
-                <input type="file" multiple ref={fileInputRef} onChange={handleImageChange} style={{ display: 'none' }} accept="image/*" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">매장명</label>
-                <div className="form-content">
-                  <input type="text" className="input-field" value={newFacility.name} onChange={e => setNewFacility({ ...newFacility, name: e.target.value })} required />
-                </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">매장 주소</label>
-                <div className="form-content">
-                  <input type="text" className="input-field" value={newFacility.address} onChange={e => setNewFacility({ ...newFacility, address: e.target.value })} required />
-                </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">전화번호</label>
-                <div className="form-content">
-                  <input type="text" className="input-field" value={newFacility.phone} onChange={e => setNewFacility({ ...newFacility, phone: e.target.value })} placeholder="예: 02-1234-5678" />
-                </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">매장 설명</label>
-                <div className="form-content">
-                  <textarea className="input-field" rows="4" value={newFacility.description} onChange={e => setNewFacility({ ...newFacility, description: e.target.value })} />
-                </div>
-              </div>
-
-              {/* PR #54 — 미성년자 출입 제한 시설 토글 (백엔드 facilities.adult_only) */}
-              <div className="form-group">
-                <label className="form-label">시설 분류</label>
-                <div className="form-content">
-                  <label className="adult-only-toggle">
-                    <input
-                      type="checkbox"
-                      checked={!!newFacility.adult_only}
-                      onChange={e => setNewFacility({ ...newFacility, adult_only: e.target.checked })}
-                    />
-                    <span className="toggle-label">
-                      <strong>🔞 미성년자 출입 제한 시설</strong>
-                      <em>
-                        숙박 / 유흥 / 술집 등. 활성화 시 만 14~18세 회원에게는
-                        매장 검색 결과에서 제외되며 비콘 자동 연결도 차단됩니다.
-                      </em>
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="modal-actions">
-                <button type="button" className="btn-ghost" onClick={() => setShowModal(false)}>취소</button>
-                <button type="submit" className="btn-primary">{isEditing ? '수정 완료' : '등록하기'}</button>
-              </div>
-            </form>
+            <input type="file" multiple ref={fileInputRef} onChange={handleImageChange} style={{ display: 'none' }} accept="image/*" />
           </div>
-        </div>
-      )}
+
+          <PwField label="매장명">
+            <input type="text" className="input-field" value={newFacility.name} onChange={e => setNewFacility({ ...newFacility, name: e.target.value })} required />
+          </PwField>
+
+          <PwField label="매장 주소">
+            <input type="text" className="input-field" value={newFacility.address} onChange={e => setNewFacility({ ...newFacility, address: e.target.value })} required />
+          </PwField>
+
+          <PwField label="전화번호">
+            <input type="text" className="input-field" value={newFacility.phone} onChange={e => setNewFacility({ ...newFacility, phone: e.target.value })} placeholder="예: 02-1234-5678" />
+          </PwField>
+
+          <PwField label="매장 설명">
+            <textarea className="input-field" rows="4" value={newFacility.description} onChange={e => setNewFacility({ ...newFacility, description: e.target.value })} />
+          </PwField>
+
+          {/* PR #54 — 미성년자 출입 제한 시설 토글 (백엔드 facilities.adult_only) */}
+          <PwField label="시설 분류">
+            <label className="adult-only-toggle">
+              <input
+                type="checkbox"
+                checked={!!newFacility.adult_only}
+                onChange={e => setNewFacility({ ...newFacility, adult_only: e.target.checked })}
+              />
+              <span className="toggle-label">
+                <strong>🔞 미성년자 출입 제한 시설</strong>
+                <em>
+                  숙박 / 유흥 / 술집 등. 활성화 시 만 14~18세 회원에게는
+                  매장 검색 결과에서 제외되며 비콘 자동 연결도 차단됩니다.
+                </em>
+              </span>
+            </label>
+          </PwField>
+        </form>
+      </PwModal>
 
       <div className="facility-grid">
         {facilities.map(f => (

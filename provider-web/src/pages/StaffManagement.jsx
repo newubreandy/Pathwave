@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, X, Mail, MoreVertical, Shield, UserCheck, Clock, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { Plus, Mail, MoreVertical, Shield, UserCheck, Clock, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import StaffService, { ROLES, ROLE_LABELS, STATUS, STATUS_LABELS, validateEmail } from '../services/staff/StaffService';
 import PwPageHeader from '../components/common/PwPageHeader';
@@ -8,6 +8,7 @@ import { useConfirm } from '../hooks/useConfirm';
 import ConfirmModal from '../components/common/ConfirmModal';
 import PasswordInput from '../components/common/PasswordInput';
 import BusinessInfoModal from '../components/common/BusinessInfoModal';
+import PwModal, { PwField } from '../components/common/PwModal.jsx';
 import './StaffManagement.css';
 
 /* P5 (2026-05-26): 더미 회원/회사 데이터 ('호텔H' / '02-1234-5678' / 'hotel_H'
@@ -87,71 +88,66 @@ const InviteModal = ({ onClose, onInvite }) => {
   };
 
   return (
-    <div className="settings-modal-overlay" onClick={onClose}>
-      <div className="settings-modal staff-invite-modal" onClick={e => e.stopPropagation()}>
-        <div className="settings-modal-header">
-          <h3 className="settings-modal-title">{t('staff_mgmt.invite_btn')}</h3>
-          <button className="settings-modal-close" onClick={onClose} aria-label="닫기"><X size={20} aria-hidden="true" /></button>
-        </div>
-
-        <div className="staff-invite-form">
-          <div className="staff-invite-field">
-            <label>{t('staff_mgmt.invite_email_label')} *</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => { setEmail(e.target.value); setEmailError(''); }}
-              onBlur={handleEmailBlur}
-              placeholder="example@email.com"
-              className={emailError ? 'has-error' : ''}
-            />
-            {emailError && <span className="staff-field-error">{emailError}</span>}
-          </div>
-
-          <div className="staff-invite-field">
-            <label>{t('staff_mgmt.role_label')}</label>
-            <div className="staff-role-select">
-              <button
-                type="button"
-                className={`role-option ${role === ROLES.MANAGER ? 'selected' : ''}`}
-                onClick={() => setRole(ROLES.MANAGER)}
-              >
-                <Shield size={16} />
-                <span>{t('staff_mgmt.role_admin')}</span>
-                <small>매장안내/채팅/스탬프/쿠폰 제어</small>
-              </button>
-              <button
-                type="button"
-                className={`role-option ${role === ROLES.STAFF ? 'selected' : ''}`}
-                onClick={() => setRole(ROLES.STAFF)}
-              >
-                <UserCheck size={16} />
-                <span>{t('staff_mgmt.role_staff')}</span>
-                <small>매장안내/채팅/스탬프/쿠폰 제어</small>
-              </button>
-            </div>
-          </div>
-
-          {submitError && (
-            <div className="staff-submit-error">
-              <AlertTriangle size={14} /> {submitError}
-            </div>
-          )}
-
-          <div className="staff-invite-note">
-            <Mail size={14} />
-            <span>{t('staff_mgmt.invite_expires_hint')}</span>
-          </div>
-        </div>
-
-        <div className="settings-modal-actions">
+    <PwModal
+      open
+      onClose={onClose}
+      title={t('staff_mgmt.invite_btn')}
+      busy={isLoading}
+      footer={
+        <>
           <button className="settings-modal-btn cancel" onClick={onClose}>취소</button>
           <button className="settings-modal-btn confirm" onClick={handleSubmit} disabled={isLoading}>
             {isLoading ? '발송 중...' : t('staff_mgmt.invite_btn')}
           </button>
+        </>
+      }
+    >
+      <div className="staff-invite-form">
+        <PwField label={`${t('staff_mgmt.invite_email_label')} *`} error={emailError || undefined}>
+          <input
+            type="email"
+            value={email}
+            onChange={e => { setEmail(e.target.value); setEmailError(''); }}
+            onBlur={handleEmailBlur}
+            placeholder="example@email.com"
+          />
+        </PwField>
+
+        <PwField label={t('staff_mgmt.role_label')}>
+          <div className="staff-role-select">
+            <button
+              type="button"
+              className={`role-option ${role === ROLES.MANAGER ? 'selected' : ''}`}
+              onClick={() => setRole(ROLES.MANAGER)}
+            >
+              <Shield size={16} />
+              <span>{t('staff_mgmt.role_admin')}</span>
+              <small>매장안내/채팅/스탬프/쿠폰 제어</small>
+            </button>
+            <button
+              type="button"
+              className={`role-option ${role === ROLES.STAFF ? 'selected' : ''}`}
+              onClick={() => setRole(ROLES.STAFF)}
+            >
+              <UserCheck size={16} />
+              <span>{t('staff_mgmt.role_staff')}</span>
+              <small>매장안내/채팅/스탬프/쿠폰 제어</small>
+            </button>
+          </div>
+        </PwField>
+
+        {submitError && (
+          <div className="staff-submit-error">
+            <AlertTriangle size={14} /> {submitError}
+          </div>
+        )}
+
+        <div className="staff-invite-note">
+          <Mail size={14} />
+          <span>{t('staff_mgmt.invite_expires_hint')}</span>
         </div>
       </div>
-    </div>
+    </PwModal>
   );
 };
 
@@ -164,41 +160,39 @@ const StaffActionModal = ({ member, onClose, onRemove, onResend }) => {
   const canRevoke = member.status !== 'accepted';
 
   return (
-    <div className="settings-modal-overlay" onClick={onClose}>
-      <div className="settings-modal staff-action-modal" onClick={e => e.stopPropagation()}>
-        <div className="settings-modal-header">
-          <h3 className="settings-modal-title">{t('staff_mgmt.title')}</h3>
-          <button className="settings-modal-close" onClick={onClose} aria-label="닫기"><X size={20} aria-hidden="true" /></button>
-        </div>
-
-        <div className="staff-action-info">
-          <div className="staff-action-email">{member.email}</div>
-          <div className="staff-action-badges">
-            <RoleBadge role={member.role} />
-            <StatusBadge status={member.status} invitedAt={member.invitedAt} />
-          </div>
-        </div>
-
-        <div className="staff-action-list">
-          {canResend && (
-            <button className="staff-action-btn" onClick={() => onResend(member.id)} aria-label="초대 메일 재발송">
-              <Mail size={16} />
-              {t('staff_mgmt.invite_resend')}
-            </button>
-          )}
-
-          {canRevoke && (
-            <button className="staff-action-btn warn" onClick={() => onRemove(member.id)}>
-              {t('staff_mgmt.invite_revoke')}
-            </button>
-          )}
-
-          {!canResend && !canRevoke && (
-            <div className="staff-action-note">수락된 초대는 취소할 수 없습니다.</div>
-          )}
+    <PwModal
+      open
+      onClose={onClose}
+      title={t('staff_mgmt.title')}
+      size="sm"
+    >
+      <div className="staff-action-info">
+        <div className="staff-action-email">{member.email}</div>
+        <div className="staff-action-badges">
+          <RoleBadge role={member.role} />
+          <StatusBadge status={member.status} invitedAt={member.invitedAt} />
         </div>
       </div>
-    </div>
+
+      <div className="staff-action-list">
+        {canResend && (
+          <button className="staff-action-btn" onClick={() => onResend(member.id)} aria-label="초대 메일 재발송">
+            <Mail size={16} />
+            {t('staff_mgmt.invite_resend')}
+          </button>
+        )}
+
+        {canRevoke && (
+          <button className="staff-action-btn warn" onClick={() => onRemove(member.id)}>
+            {t('staff_mgmt.invite_revoke')}
+          </button>
+        )}
+
+        {!canResend && !canRevoke && (
+          <div className="staff-action-note">수락된 초대는 취소할 수 없습니다.</div>
+        )}
+      </div>
+    </PwModal>
   );
 };
 
@@ -209,40 +203,36 @@ const EditModal = ({ title, fields, onClose, onSave }) => {
   );
 
   return (
-    <div className="settings-modal-overlay" onClick={onClose}>
-      <div className="settings-modal" onClick={e => e.stopPropagation()}>
-        <div className="settings-modal-header">
-          <h3 className="settings-modal-title">{title}</h3>
-          <button className="settings-modal-close" onClick={onClose} aria-label="닫기"><X size={20} aria-hidden="true" /></button>
-        </div>
-        <div className="settings-modal-body">
-          {fields.map(f => (
-            <div key={f.key} className="settings-modal-field">
-              <label className="settings-modal-label">{f.label}</label>
-              {f.type === 'password' ? (
-                <PasswordInput
-                  value={values[f.key]}
-                  onChange={e => setValues(prev => ({ ...prev, [f.key]: e.target.value }))}
-                  disabled={f.disabled}
-                />
-              ) : (
-                <input
-                  className="settings-modal-input"
-                  type={f.type || 'text'}
-                  value={values[f.key]}
-                  onChange={e => setValues(prev => ({ ...prev, [f.key]: e.target.value }))}
-                  disabled={f.disabled}
-                />
-              )}
-            </div>
-          ))}
-          <div className="settings-modal-actions">
-            <button className="settings-modal-btn cancel" onClick={onClose}>취소</button>
-            <button className="settings-modal-btn confirm" onClick={() => onSave(values)}>저장</button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <PwModal
+      open
+      onClose={onClose}
+      title={title}
+      footer={
+        <>
+          <button className="settings-modal-btn cancel" onClick={onClose}>취소</button>
+          <button className="settings-modal-btn confirm" onClick={() => onSave(values)}>저장</button>
+        </>
+      }
+    >
+      {fields.map(f => (
+        <PwField key={f.key} label={f.label}>
+          {f.type === 'password' ? (
+            <PasswordInput
+              value={values[f.key]}
+              onChange={e => setValues(prev => ({ ...prev, [f.key]: e.target.value }))}
+              disabled={f.disabled}
+            />
+          ) : (
+            <input
+              type={f.type || 'text'}
+              value={values[f.key]}
+              onChange={e => setValues(prev => ({ ...prev, [f.key]: e.target.value }))}
+              disabled={f.disabled}
+            />
+          )}
+        </PwField>
+      ))}
+    </PwModal>
   );
 };
 

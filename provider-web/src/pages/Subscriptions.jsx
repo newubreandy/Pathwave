@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Wifi, Gift, Bell, X, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Wifi, Gift, Bell, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Button from '../components/common/Button';
 import SectionTabs from '../components/common/SectionTabs';
+import PwModal from '../components/common/PwModal.jsx';
 import './PaymentManagement.css';
 
 /* ── Mock data — 실서비스에선 GET /api/billing/subscriptions 응답으로 대체 ── */
@@ -58,29 +59,26 @@ const STATUS_CSS = {
 const CancelModal = ({ sub, onClose, onConfirm }) => {
   const { t } = useTranslation();
   return (
-    <div className="settings-modal-overlay" onClick={onClose}>
-      <div className="settings-modal" style={{ maxWidth: 400 }} onClick={e => e.stopPropagation()}>
-        <div className="settings-modal-header">
-          <h3 className="settings-modal-title">{t('subscription.cancel_btn')}</h3>
-          <button className="settings-modal-close" onClick={onClose} aria-label="닫기">
-            <X size={20} />
-          </button>
-        </div>
-        <div className="settings-modal-body">
-          <p style={{ fontSize: 'var(--pw-label-size)', color: 'var(--pw-text-secondary)', whiteSpace: 'pre-line', marginBottom: 'var(--pw-space-4)' }}>
-            {t('subscription.cancel_confirm')}
-          </p>
-          <div className="sub-cancel-warning">
-            <AlertTriangle size={14} aria-hidden="true" />
-            <span>{t('subscription.cancel_warning')}</span>
-          </div>
-          <div className="settings-modal-actions" style={{ marginTop: 'var(--pw-space-5)' }}>
-            <button className="settings-modal-btn cancel" onClick={onClose}>취소</button>
-            <button className="settings-modal-btn confirm" onClick={() => onConfirm(sub.id)}>해지 확인</button>
-          </div>
-        </div>
+    <PwModal
+      open
+      onClose={onClose}
+      title={t('subscription.cancel_btn')}
+      size="sm"
+      footer={
+        <>
+          <button className="settings-modal-btn cancel" onClick={onClose}>취소</button>
+          <button className="settings-modal-btn confirm" onClick={() => onConfirm(sub.id)}>해지 확인</button>
+        </>
+      }
+    >
+      <p style={{ fontSize: 'var(--pw-label-size)', color: 'var(--pw-text-secondary)', whiteSpace: 'pre-line', marginBottom: 'var(--pw-space-4)' }}>
+        {t('subscription.cancel_confirm')}
+      </p>
+      <div className="sub-cancel-warning">
+        <AlertTriangle size={14} aria-hidden="true" />
+        <span>{t('subscription.cancel_warning')}</span>
       </div>
-    </div>
+    </PwModal>
   );
 };
 

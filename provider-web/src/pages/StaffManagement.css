@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════
    Staff Management — PathWave Design System
    공통: common-form-page + common-form-header
-   모달: settings-modal-* 재사용
+   모달: PwModal 공통 컴포넌트 사용
    ═══════════════════════════════════════════════════ */
 
 .staff-sub-title {

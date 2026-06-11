@@ -7,6 +7,7 @@ import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
 import SectionTabs from '../components/common/SectionTabs';
+import PwModal, { PwField } from '../components/common/PwModal.jsx';
 import './PaymentManagement.css';
 // 2026-05-27: useConfirm 적용 — mock 페이지 + 큰 파일. 실연동 시 재작성 예정.
 //             alert 잔존은 P3-b3 별도 PR 에서 처리 (실연동 시).
@@ -470,117 +471,107 @@ function CardChangeModal({ currentCard, onClose }) {
   };
 
   return (
-    <div className="settings-modal-overlay" onClick={onClose}>
-      <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="settings-modal-header">
-          <h2 className="settings-modal-title">카드 교체</h2>
-          <button className="settings-modal-close" onClick={onClose} aria-label="닫기">
-            <X size={20} aria-hidden="true" />
-          </button>
+    <PwModal
+      open
+      onClose={onClose}
+      title="카드 교체"
+      busy={submitted}
+      footer={!submitted && (
+        <>
+          <button className="settings-modal-btn cancel" onClick={onClose}>취소</button>
+          <button className="settings-modal-btn confirm" onClick={submit}>변경하기</button>
+        </>
+      )}
+    >
+      {submitted ? (
+        <div className="biz-modal-success">
+          <div className="biz-modal-success-icon">✓</div>
+          <p className="biz-modal-success-title">카드가 변경되었습니다</p>
+          <p className="biz-modal-success-desc">
+            다음 결제부터 새 카드로 청구됩니다. 변경 이력은 슈퍼어드민에 기록됩니다.
+          </p>
         </div>
+      ) : (
+        <>
+          <div className="biz-modal-notice">
+            <Info size={14} aria-hidden="true" />
+            <span>카드 정보는 PG사 보안 정책에 따라 토큰화되어 저장되며, 변경 이력은 슈퍼어드민에 기록됩니다.</span>
+          </div>
 
-        <div className="settings-modal-body">
-          {submitted ? (
-            <div className="biz-modal-success">
-              <div className="biz-modal-success-icon">✓</div>
-              <p className="biz-modal-success-title">카드가 변경되었습니다</p>
-              <p className="biz-modal-success-desc">
-                다음 결제부터 새 카드로 청구됩니다. 변경 이력은 슈퍼어드민에 기록됩니다.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="biz-modal-notice">
-                <Info size={14} aria-hidden="true" />
-                <span>카드 정보는 PG사 보안 정책에 따라 토큰화되어 저장되며, 변경 이력은 슈퍼어드민에 기록됩니다.</span>
-              </div>
+          <PwField label="카드사">
+            <input
+              type="text"
+              className="settings-modal-input"
+              value={form.issuer}
+              onChange={onChange('issuer')}
+              placeholder="예: 나라카드"
+            />
+          </PwField>
 
-              <div className="settings-modal-field">
-                <label className="settings-modal-label">카드사</label>
-                <input
-                  type="text"
-                  className="settings-modal-input"
-                  value={form.issuer}
-                  onChange={onChange('issuer')}
-                  placeholder="예: 나라카드"
-                />
-              </div>
+          <PwField label="카드 번호">
+            <input
+              type="text"
+              inputMode="numeric"
+              className="settings-modal-input"
+              value={form.number}
+              onChange={onChange('number')}
+              placeholder="0000000000000000"
+              maxLength={16}
+            />
+          </PwField>
 
-              <div className="settings-modal-field">
-                <label className="settings-modal-label">카드 번호</label>
+          <div className="card-change-grid">
+            <PwField label="유효기간">
+              <div className="card-change-expiry-row">
                 <input
                   type="text"
                   inputMode="numeric"
                   className="settings-modal-input"
-                  value={form.number}
-                  onChange={onChange('number')}
-                  placeholder="0000000000000000"
-                  maxLength={16}
+                  value={form.expMonth}
+                  onChange={onChange('expMonth')}
+                  placeholder="MM"
+                  maxLength={2}
                 />
-              </div>
-
-              <div className="card-change-grid">
-                <div className="settings-modal-field">
-                  <label className="settings-modal-label">유효기간</label>
-                  <div className="card-change-expiry-row">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      className="settings-modal-input"
-                      value={form.expMonth}
-                      onChange={onChange('expMonth')}
-                      placeholder="MM"
-                      maxLength={2}
-                    />
-                    <span className="card-change-slash">/</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      className="settings-modal-input"
-                      value={form.expYear}
-                      onChange={onChange('expYear')}
-                      placeholder="YY"
-                      maxLength={2}
-                    />
-                  </div>
-                </div>
-
-                <div className="settings-modal-field">
-                  <label className="settings-modal-label">CVC</label>
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    className="settings-modal-input"
-                    value={form.cvc}
-                    onChange={onChange('cvc')}
-                    placeholder="3자리"
-                    maxLength={3}
-                  />
-                </div>
-              </div>
-
-              <div className="settings-modal-field">
-                <label className="settings-modal-label">카드 소유자</label>
+                <span className="card-change-slash">/</span>
                 <input
                   type="text"
+                  inputMode="numeric"
                   className="settings-modal-input"
-                  value={form.holder}
-                  onChange={onChange('holder')}
-                  placeholder="카드에 표시된 이름"
+                  value={form.expYear}
+                  onChange={onChange('expYear')}
+                  placeholder="YY"
+                  maxLength={2}
                 />
               </div>
+            </PwField>
 
-              {error && <p className="settings-modal-error">{error}</p>}
+            <PwField label="CVC">
+              <input
+                type="password"
+                inputMode="numeric"
+                className="settings-modal-input"
+                value={form.cvc}
+                onChange={onChange('cvc')}
+                placeholder="3자리"
+                maxLength={3}
+              />
+            </PwField>
+          </div>
 
-              <div className="settings-modal-actions">
-                <button className="settings-modal-btn cancel" onClick={onClose}>취소</button>
-                <button className="settings-modal-btn confirm" onClick={submit}>변경하기</button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
+          <PwField label="카드 소유자">
+            <input
+              type="text"
+              className="settings-modal-input"
+              value={form.holder}
+              onChange={onChange('holder')}
+              placeholder="카드에 표시된 이름"
+            />
+          </PwField>
+
+          {error && <p className="settings-modal-error">{error}</p>}
+        </>
+      )}
+    </PwModal>
   );
 }
 
