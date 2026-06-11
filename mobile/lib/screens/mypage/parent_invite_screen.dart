@@ -165,7 +165,7 @@ class _SuccessView extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppTheme.surface,
+              color: Colors.white.withValues(alpha: 0.10),
               border: Border.all(color: AppTheme.primary.withValues(alpha: 0.5)),
               borderRadius: BorderRadius.circular(12),
             ),

@@ -145,14 +145,14 @@ class _FavoriteCard extends StatelessWidget {
                 ? CachedNetworkImage(
                     imageUrl: imageUrl,
                     fit: BoxFit.cover,
-                    placeholder: (_, _) => Container(color: AppTheme.surfaceLight),
+                    placeholder: (_, _) => Container(color: Colors.white.withValues(alpha: 0.08)),
                     errorWidget: (_, _, _) => Container(
-                      color: AppTheme.surfaceLight,
+                      color: Colors.white.withValues(alpha: 0.08),
                       child: const Icon(Icons.store, color: AppTheme.textHint),
                     ),
                   )
                 : Container(
-                    color: AppTheme.surfaceLight,
+                    color: Colors.white.withValues(alpha: 0.08),
                     child: const Icon(Icons.store, color: AppTheme.textHint),
                   ),
             ),

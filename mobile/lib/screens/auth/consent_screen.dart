@@ -129,7 +129,7 @@ class _AllAgreeRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
-          color: AppTheme.surface,
+          color: Colors.white.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: AppTheme.border),
         ),
@@ -164,11 +164,10 @@ class _ConsentItem extends StatelessWidget {
 
   void _showPolicy(BuildContext context) async {
     final kind = item['kind']?.toString() ?? '';
-    showDialog(
+    showPwDialogWidget(
       context: context,
-      barrierColor: const Color(0x99000000),
       barrierDismissible: true,
-      builder: (_) => _PolicyDialog(kind: kind, label: item['label']?.toString() ?? kind),
+      child: _PolicyDialog(kind: kind, label: item['label']?.toString() ?? kind),
     );
   }
 
@@ -255,108 +254,106 @@ class _PolicyDialogState extends State<_PolicyDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: AppTheme.surface,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: SizedBox(
-          width: 480, height: 540,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(widget.label,
-                      style: Theme.of(context).textTheme.headlineSmall),
-                  ),
-                  PwIconButton(
-                    icon: Icons.close,
-                    tooltip: context.t('mobile.common.close', defaultValue: '닫기'),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-              const Divider(color: AppTheme.border),
-              FutureBuilder<List<Map<String, dynamic>>>(
-                future: _versionsFuture,
-                builder: (context, snap) {
-                  final versions = snap.data ?? [];
-                  if (versions.isEmpty) return const SizedBox.shrink();
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.history, size: 16, color: AppTheme.textSecondary),
-                        const SizedBox(width: 6),
-                        Text('${context.t('mobile.common.version', defaultValue: '버전')}:', style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: DropdownButton<int?>(
-                            value: _selectedVersionId,
-                            isDense: true,
-                            isExpanded: true,
-                            items: [
-                              DropdownMenuItem<int?>(
-                                value: null,
-                                child: Text(context.t('mobile.auth.consent.in_effect', defaultValue: '현재 시행 중'), style: const TextStyle(fontSize: 13)),
+    return PwDialog(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(widget.label,
+              style: Theme.of(context).textTheme.headlineSmall),
+          ),
+          PwIconButton(
+            icon: Icons.close,
+            tooltip: context.t('mobile.common.close', defaultValue: '닫기'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: 480,
+        height: 480,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Divider(color: AppTheme.border),
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: _versionsFuture,
+              builder: (context, snap) {
+                final versions = snap.data ?? [];
+                if (versions.isEmpty) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.history, size: 16, color: AppTheme.textSecondary),
+                      const SizedBox(width: 6),
+                      Text('${context.t('mobile.common.version', defaultValue: '버전')}:', style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: DropdownButton<int?>(
+                          value: _selectedVersionId,
+                          isDense: true,
+                          isExpanded: true,
+                          items: [
+                            DropdownMenuItem<int?>(
+                              value: null,
+                              child: Text(context.t('mobile.auth.consent.in_effect', defaultValue: '현재 시행 중'), style: const TextStyle(fontSize: 13)),
+                            ),
+                            ...versions.map((v) => DropdownMenuItem<int?>(
+                              value: v['id'] as int?,
+                              child: Text(
+                                '${v['version']} (${(v['effective_at']?.toString() ?? '').substring(0, 10)})',
+                                style: const TextStyle(fontSize: 13),
                               ),
-                              ...versions.map((v) => DropdownMenuItem<int?>(
-                                value: v['id'] as int?,
-                                child: Text(
-                                  '${v['version']} (${(v['effective_at']?.toString() ?? '').substring(0, 10)})',
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                              )),
-                            ],
-                            onChanged: (v) => setState(() => _selectedVersionId = v),
-                          ),
+                            )),
+                          ],
+                          onChanged: (v) => setState(() => _selectedVersionId = v),
                         ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            const Divider(color: AppTheme.border, height: 8),
+            Expanded(
+              child: FutureBuilder<Map<String, dynamic>>(
+                // ignore: discarded_futures
+                future: _loadBody(),
+                builder: (context, snap) {
+                  if (snap.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snap.hasError) {
+                    return Text('${context.t('mobile.auth.consent.policy_load_failed', defaultValue: '정책을 불러오지 못했습니다.')}\n${snap.error}');
+                  }
+                  final body = snap.data?['body']?.toString() ?? '';
+                  final needsContent = snap.data?['needs_content'] == true;
+                  return SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (needsContent)
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: AppTheme.warning.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              context.t('mobile.auth.policy_placeholder', defaultValue: '⚠️ 정책 본문이 아직 등록되지 않았습니다 (placeholder).'),
+                              style: const TextStyle(color: AppTheme.warning, fontSize: 12),
+                            ),
+                          ),
+                        Text(body, style: const TextStyle(height: 1.5)),
                       ],
                     ),
                   );
                 },
               ),
-              const Divider(color: AppTheme.border, height: 8),
-              Expanded(
-                child: FutureBuilder<Map<String, dynamic>>(
-                  // ignore: discarded_futures
-                  future: _loadBody(),
-                  builder: (context, snap) {
-                    if (snap.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (snap.hasError) {
-                      return Text('${context.t('mobile.auth.consent.policy_load_failed', defaultValue: '정책을 불러오지 못했습니다.')}\n${snap.error}');
-                    }
-                    final body = snap.data?['body']?.toString() ?? '';
-                    final needsContent = snap.data?['needs_content'] == true;
-                    return SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (needsContent)
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              margin: const EdgeInsets.only(bottom: 12),
-                              decoration: BoxDecoration(
-                                color: AppTheme.warning.withValues(alpha: 0.18),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                context.t('mobile.auth.policy_placeholder', defaultValue: '⚠️ 정책 본문이 아직 등록되지 않았습니다 (placeholder).'),
-                                style: const TextStyle(color: AppTheme.warning, fontSize: 12),
-                              ),
-                            ),
-                          Text(body, style: const TextStyle(height: 1.5)),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

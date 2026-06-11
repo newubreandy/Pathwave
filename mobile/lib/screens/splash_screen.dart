@@ -9,6 +9,7 @@ import '../services/i18n_service.dart';
 import '../services/version_service.dart';
 import '../utils/i18n_context.dart';
 import '../utils/neu_theme.dart';
+import '../widgets/pw.dart';
 
 /// 스플래시 — AuthService 초기 토큰 로딩 + 앱 버전 강제/권장 업데이트 체크 후
 /// 로그인 상태에 따라 라우팅.
@@ -61,13 +62,12 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _showForceUpdateDialog(VersionCheckResult v) async {
     if (!mounted) return;
     final i18n = I18nService.instance;
-    await showDialog<void>(
+    await showPwDialogWidget<void>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => PopScope(
+      child: PopScope(
         canPop: false,
-        child: AlertDialog(
-          backgroundColor: NeuTheme.surface,
+        child: PwDialog(
           title: Text(i18n.t('mobile.splash.force_update.title',
               defaultValue: '업데이트가 필요합니다')),
           content: Text(
@@ -78,7 +78,8 @@ class _SplashScreenState extends State<SplashScreen> {
                   '${i18n.t('mobile.splash.min_supported', defaultValue: '최소 지원')}: ${v.minSupported ?? '-'}',
           ),
           actions: [
-            FilledButton(
+            PwButton(
+              fullWidth: false,
               onPressed: () => _openStore(v.storeUrl),
               child: Text(i18n.t('mobile.splash.go_store',
                   defaultValue: '스토어로 이동')),
@@ -92,34 +93,34 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _showRecommendDialog(VersionCheckResult v) async {
     if (!mounted) return;
     final i18n = I18nService.instance;
-    await showDialog<void>(
+    await showPwDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: NeuTheme.surface,
-        title: Text(i18n.t('mobile.splash.recommend_update.title',
-            defaultValue: '새로운 버전이 있어요')),
-        content: Text(
-          '${i18n.t('mobile.splash.recommend_update.body', defaultValue: '최신 버전이 출시되었습니다.')}\n'
-          '${i18n.t('mobile.splash.current_version', defaultValue: '현재')} ${v.current ?? '-'} → '
-          '${i18n.t('mobile.splash.latest', defaultValue: '최신')} ${v.latest ?? '-'}',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(i18n.t('common.later', defaultValue: '나중에')),
-          ),
-          FilledButton(
-            onPressed: () {
-              // 다이얼로그 먼저 닫고 → 스토어 진입 (async gap 회피).
-              Navigator.of(ctx).pop();
-              _openStore(v.storeUrl);
-            },
-            child: Text(i18n.t('mobile.splash.update_now',
-                defaultValue: '지금 업데이트')),
-          ),
-        ],
+      title: Text(i18n.t('mobile.splash.recommend_update.title',
+          defaultValue: '새로운 버전이 있어요')),
+      content: Text(
+        '${i18n.t('mobile.splash.recommend_update.body', defaultValue: '최신 버전이 출시되었습니다.')}\n'
+        '${i18n.t('mobile.splash.current_version', defaultValue: '현재')} ${v.current ?? '-'} → '
+        '${i18n.t('mobile.splash.latest', defaultValue: '최신')} ${v.latest ?? '-'}',
       ),
+      actions: [
+        PwButton(
+          variant: PwButtonVariant.text,
+          fullWidth: false,
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(i18n.t('common.later', defaultValue: '나중에')),
+        ),
+        PwButton(
+          fullWidth: false,
+          onPressed: () {
+            // 다이얼로그 먼저 닫고 → 스토어 진입 (async gap 회피).
+            Navigator.of(context).pop();
+            _openStore(v.storeUrl);
+          },
+          child: Text(i18n.t('mobile.splash.update_now',
+              defaultValue: '지금 업데이트')),
+        ),
+      ],
     );
   }
 

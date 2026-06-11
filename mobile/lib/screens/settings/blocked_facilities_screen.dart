@@ -95,7 +95,7 @@ class _BlockedFacilitiesScreenState extends State<BlockedFacilitiesScreen> {
               final busy = _busy.contains(fid);
               return Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.surface,
+                  color: Colors.white.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppTheme.border),
                 ),
