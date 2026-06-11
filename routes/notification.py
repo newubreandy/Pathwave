@@ -18,7 +18,7 @@
 - ``scheduled_at`` 이 NULL이거나 과거면 즉시 발송 (status='sent', sent_at=now)
 - 미래면 'pending' — ``/dispatch``로 수동 발송 가능
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, request, jsonify, g
 
@@ -210,7 +210,11 @@ def create_notification(fid):
         return jsonify({'success': False,
                         'message': f'scheduled_at은 필수입니다 (최소 {_MIN_LEAD_HOURS}시간 이후).'}), 400
     try:
-        scheduled_dt = datetime.fromisoformat(scheduled_at_raw)
+        # 2026-06-11 — JS toISOString() 의 'Z' 접미 대응 (theme.py 와 동일 패턴).
+        # aware datetime 은 UTC naive 로 변환 — naive utcnow() 비교 시 TypeError(500) 방지.
+        scheduled_dt = datetime.fromisoformat(scheduled_at_raw.replace('Z', '+00:00'))
+        if scheduled_dt.tzinfo is not None:
+            scheduled_dt = scheduled_dt.astimezone(timezone.utc).replace(tzinfo=None)
     except ValueError:
         return jsonify({'success': False,
                         'message': 'scheduled_at은 ISO 8601 형식이어야 합니다.'}), 400
