@@ -147,9 +147,9 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
               // ── 추가 메시지 입력 ────────────────────────────────────
               Container(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
-                decoration: const BoxDecoration(
-                  border: Border(top: BorderSide(color: AppTheme.border)),
-                  color: AppTheme.surface,
+                decoration: BoxDecoration(
+                  border: const Border(top: BorderSide(color: AppTheme.border)),
+                  color: Colors.white.withValues(alpha: 0.10),
                 ),
                 child: SafeArea(
                   top: false,
@@ -209,7 +209,7 @@ class _MessageBubble extends StatelessWidget {
         decoration: BoxDecoration(
           color: isUser
               ? AppTheme.primary.withValues(alpha: 0.85)
-              : AppTheme.surfaceLight,
+              : Colors.white.withValues(alpha: 0.10),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(14),
             topRight: const Radius.circular(14),

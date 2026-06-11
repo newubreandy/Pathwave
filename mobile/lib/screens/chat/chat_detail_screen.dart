@@ -65,69 +65,64 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   /// [asAgreement] true (첫 진입) — "동의하고 시작" 버튼 + 동의 간주 안내.
   ///               false (info 버튼 재열람) — 단순 "확인".
   Future<void> _showGuidelineModal({bool asAgreement = false}) {
-    return showDialog<void>(
+    return showPwDialog<void>(
       context: context,
-      barrierColor: const Color(0x99000000),
       barrierDismissible: !asAgreement,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          _t.t('chat.guideline_title', defaultValue: '채팅 이용 안내'),
-          style: const TextStyle(fontWeight: FontWeight.w700),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _GuidelineBullet(_t.t(
-                'chat.guideline_business_hours',
-                defaultValue: '운영자 응대 시간: 평일 09:00~18:00 (주말·공휴일 제외). 그 외 시간에는 응답이 지연될 수 있습니다.',
-              )),
-              _GuidelineBullet(_t.t(
-                'chat.guideline_ugc',
-                defaultValue: '욕설·차별·혐오 표현, 불법 정보, 음란물, 스팸·광고·도배 등 부적절한 콘텐츠 작성은 금지됩니다. 위반 메시지는 신고·차단 대상이며 반복 시 채팅 이용이 제한될 수 있습니다.',
-              )),
-              _GuidelineBullet(_t.t(
-                'chat.guideline_report_block',
-                defaultValue: '불쾌한 매장은 우측 상단 메뉴에서 신고하거나 차단할 수 있습니다.',
-              )),
-              _GuidelineBullet(_t.t(
-                'chat.guideline_privacy',
-                defaultValue: '채팅 내용은 서비스 개선 및 분쟁 해결 목적으로 보관됩니다(개인정보처리방침 적용).',
-              )),
-              _GuidelineBullet(_t.t(
-                'chat.guideline_dispute',
-                defaultValue: '채팅을 통한 결제·환불 요청은 매장 사업자가 처리하며, PathWave 는 중개 플랫폼으로 분쟁에 직접 개입하지 않습니다.',
-              )),
-              if (asAgreement) ...[
-                const SizedBox(height: 4),
-                Text(
-                  _t.t(
-                    'chat.guideline_consent_note',
-                    defaultValue: '"동의하고 시작"을 누르면 위 채팅 이용규칙에 동의한 것으로 간주됩니다.',
-                  ),
-                  style: const TextStyle(
-                    color: AppTheme.textHint,
-                    fontSize: 12,
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-        actions: [
-          PwButton(
-            fullWidth: false,
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(asAgreement
-                ? _t.t('chat.guideline_agree_btn', defaultValue: '동의하고 시작')
-                : _t.t('chat.guideline_confirm_btn', defaultValue: '확인')),
-          ),
-        ],
+      title: Text(
+        _t.t('chat.guideline_title', defaultValue: '채팅 이용 안내'),
+        style: const TextStyle(fontWeight: FontWeight.w700),
       ),
+      content: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _GuidelineBullet(_t.t(
+              'chat.guideline_business_hours',
+              defaultValue: '운영자 응대 시간: 평일 09:00~18:00 (주말·공휴일 제외). 그 외 시간에는 응답이 지연될 수 있습니다.',
+            )),
+            _GuidelineBullet(_t.t(
+              'chat.guideline_ugc',
+              defaultValue: '욕설·차별·혐오 표현, 불법 정보, 음란물, 스팸·광고·도배 등 부적절한 콘텐츠 작성은 금지됩니다. 위반 메시지는 신고·차단 대상이며 반복 시 채팅 이용이 제한될 수 있습니다.',
+            )),
+            _GuidelineBullet(_t.t(
+              'chat.guideline_report_block',
+              defaultValue: '불쾌한 매장은 우측 상단 메뉴에서 신고하거나 차단할 수 있습니다.',
+            )),
+            _GuidelineBullet(_t.t(
+              'chat.guideline_privacy',
+              defaultValue: '채팅 내용은 서비스 개선 및 분쟁 해결 목적으로 보관됩니다(개인정보처리방침 적용).',
+            )),
+            _GuidelineBullet(_t.t(
+              'chat.guideline_dispute',
+              defaultValue: '채팅을 통한 결제·환불 요청은 매장 사업자가 처리하며, PathWave 는 중개 플랫폼으로 분쟁에 직접 개입하지 않습니다.',
+            )),
+            if (asAgreement) ...[
+              const SizedBox(height: 4),
+              Text(
+                _t.t(
+                  'chat.guideline_consent_note',
+                  defaultValue: '"동의하고 시작"을 누르면 위 채팅 이용규칙에 동의한 것으로 간주됩니다.',
+                ),
+                style: const TextStyle(
+                  color: AppTheme.textHint,
+                  fontSize: 12,
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        PwButton(
+          fullWidth: false,
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(asAgreement
+              ? _t.t('chat.guideline_agree_btn', defaultValue: '동의하고 시작')
+              : _t.t('chat.guideline_confirm_btn', defaultValue: '확인')),
+        ),
+      ],
     );
   }
 
@@ -478,7 +473,7 @@ class _MessageBubble extends StatelessWidget {
               decoration: BoxDecoration(
                 color: failed
                   ? AppTheme.error.withValues(alpha: 0.18)
-                  : (isMe ? AppTheme.primary : AppTheme.surface),
+                  : (isMe ? AppTheme.primary : Colors.white.withValues(alpha: 0.10)),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(14),
                   topRight: const Radius.circular(14),

@@ -28,7 +28,7 @@ class ComingSoon extends StatelessWidget {
             Container(
               width: 88, height: 88,
               decoration: BoxDecoration(
-                color: AppTheme.surface,
+                color: Colors.white.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(color: AppTheme.border),
               ),

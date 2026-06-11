@@ -87,7 +87,7 @@ class _WifiConnectScreenState extends State<WifiConnectScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.surface,
+                color: Colors.white.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: AppTheme.border),
               ),

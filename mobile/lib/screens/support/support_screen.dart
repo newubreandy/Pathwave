@@ -589,7 +589,7 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
                 decoration: InputDecoration(
                   labelText: context.t('mobile.support.category_label', defaultValue: '카테고리 (선택)'),
                   filled: true,
-                  fillColor: AppTheme.surface,
+                  fillColor: Colors.white.withValues(alpha: 0.10),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: AppTheme.border),
@@ -639,7 +639,7 @@ class _CreateTicketSheetState extends State<_CreateTicketSheet> {
               // 개인정보 안내
               PwCard(
                 padding: const EdgeInsets.all(10),
-                color: AppTheme.surfaceLight,
+                color: Colors.white.withValues(alpha: 0.10),
                 child: Text(
                   context.t('mobile.support.privacy_notice',
                       defaultValue: '개인정보 처리방침에 따라 문의 내용은 상담 처리 목적으로만 사용되며 1년 후 자동 삭제됩니다.'),
