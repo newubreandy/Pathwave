@@ -130,6 +130,8 @@ const StoreInfo = () => {
           StoreService.get(fid)
             .then((r) => { if (alive && r?.facility) hydrateFromApi(r.facility); })
             .catch(() => { /* 신규 매장 등 — 빈 폼 유지 */ });
+          // 2026-06-11 — 갤러리 실연동 (facility_images)
+          refreshImages(fid);
         }
         fetchRequests();
       })
@@ -207,40 +209,56 @@ const StoreInfo = () => {
     setDbBenefits(Array.isArray(f.benefits) ? f.benefits : []);
   };
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
-    
-    const newUrls = [];
-    let loadedCount = 0;
+  // 2026-06-11 — 이미지 실연동: 파일 선택 즉시 서버 업로드.
+  // (이전: FileReader dataURL 로컬 미리보기만 → DB 미저장, 사용자앱 미반영)
+  const [galleryImages, setGalleryImages] = useState([]);   // [{id, image_url, is_primary}]
+  const [uploadingImg, setUploadingImg] = useState(false);
 
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        newUrls.push(reader.result);
-        loadedCount++;
-        if (loadedCount === files.length) {
-          setEditData(prev => ({ ...prev, images: [...prev.images, ...newUrls].slice(0, 5) }));
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-    
-    if (fileInputRef.current) fileInputRef.current.value = '';
+  const refreshImages = async (fid) => {
+    try {
+      const res = await StoreService.listImages(fid);
+      const imgs = res?.images || [];
+      const urls = imgs.map((im) => im.image_url);
+      setGalleryImages(imgs);
+      setStore((prev) => ({ ...prev, images: urls }));
+      setEditData((prev) => ({ ...prev, images: urls }));
+    } catch { /* 목록 실패는 조용히 — 빈 갤러리 유지 */ }
   };
 
-  const removeImage = (index) => {
-    setEditData(prev => {
-      const newImages = prev.images.filter((_, i) => i !== index);
-      let newActiveIndex = activeImageIndex;
-      if (activeImageIndex === index) {
-        newActiveIndex = 0;
-      } else if (activeImageIndex > index) {
-        newActiveIndex = activeImageIndex - 1;
+  const handleImageChange = async (e) => {
+    const files = Array.from(e.target.files);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (!files.length || !facilityId) return;
+    const remain = 5 - (editData.images?.length || 0);
+    if (remain <= 0) {
+      showError('이미지는 최대 5장까지 등록할 수 있습니다.');
+      return;
+    }
+    setUploadingImg(true);
+    try {
+      for (const file of files.slice(0, remain)) {
+        await StoreService.uploadImage(facilityId, file);
       }
-      setActiveImageIndex(newActiveIndex);
-      return { ...prev, images: newImages };
-    });
+      await refreshImages(facilityId);
+    } catch (err) {
+      showError(err?.message || '이미지 업로드에 실패했습니다.');
+    } finally {
+      setUploadingImg(false);
+    }
+  };
+
+  const removeImage = async (index) => {
+    const target = galleryImages[index];
+    if (!target?.id || !facilityId) return;
+    try {
+      await StoreService.deleteImage(facilityId, target.id);
+      if (activeImageIndex >= index) {
+        setActiveImageIndex(Math.max(0, activeImageIndex - 1));
+      }
+      await refreshImages(facilityId);
+    } catch (err) {
+      showError(err?.message || '이미지 삭제에 실패했습니다.');
+    }
   };
 
   const handleEditStart = () => {
@@ -376,7 +394,8 @@ const StoreInfo = () => {
       business_hours: `${finalData.hours.start}-${finalData.hours.end}`,
       latitude: newLat,
       longitude: newLng,
-      image_url: finalData.images[0] || null,
+      // image_url 미전송 (2026-06-11) — 대표 이미지는 업로드 라우트가 자동 동기화.
+      // (절대 URL 이 DB 에 저장되는 것 방지 — DB 는 상대 경로 유지)
       // UI {days, publicHolidays} → JSON 배열 (mobile 매장 상세 표기 형식과 동일)
       holidays: [
         ...finalData.holidays.days.map((d) => `매주 ${d}`),

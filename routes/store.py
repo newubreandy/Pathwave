@@ -18,6 +18,7 @@ facility_accounts(사장님 계정) 1 : N facilities(매장) 관계.
 """
 import json
 import os
+import uuid
 
 from flask import Blueprint, request, jsonify, g
 
@@ -123,7 +124,7 @@ def _row_to_facility(row, *, translation: dict | None = None) -> dict:
         'latitude':       row['latitude'],
         'longitude':      row['longitude'],
         'description':    row['description'],
-        'image_url':      row['image_url'],
+        'image_url':      absolutize_image_url(row['image_url']),
         'welcome_coupon_title':         row['welcome_coupon_title'],
         'welcome_coupon_benefit':       row['welcome_coupon_benefit'],
         'welcome_coupon_validity_days': row['welcome_coupon_validity_days'],
@@ -405,10 +406,55 @@ def _sync_primary_to_facility(db, fid: int) -> None:
                (row['image_url'] if row else None, fid))
 
 
+# ── 매장 이미지 파일 업로드 (2026-06-11) ─────────────────────────────────────
+# provider file picker ↔ backend URL 기반 갭 해소. theme.py 검증 패턴 동일.
+_IMG_ALLOWED_EXT  = {'png', 'jpg', 'jpeg', 'webp'}
+_IMG_ALLOWED_MIME = {'image/png', 'image/jpeg', 'image/webp'}
+_IMG_MAX_BYTES    = 5 * 1024 * 1024   # 5MB
+
+
+def _facility_upload_dir() -> str:
+    d = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                     'static', 'uploads', 'facilities')
+    os.makedirs(d, exist_ok=True)
+    return d
+
+
+def _save_facility_image(file_storage) -> str:
+    """검증 후 디스크 저장 → 상대 public URL (/static/uploads/facilities/..)."""
+    filename = file_storage.filename or ''
+    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+    if ext not in _IMG_ALLOWED_EXT:
+        raise ValueError(
+            f'허용되지 않는 확장자: .{ext} (허용: {sorted(_IMG_ALLOWED_EXT)})')
+    mime = (file_storage.mimetype or '').lower()
+    if mime and mime not in _IMG_ALLOWED_MIME:
+        raise ValueError(f'허용되지 않는 MIME 타입: {mime}')
+    file_storage.stream.seek(0, os.SEEK_END)
+    size = file_storage.stream.tell()
+    file_storage.stream.seek(0)
+    if size > _IMG_MAX_BYTES:
+        raise ValueError(
+            f'파일이 너무 큽니다 (최대 {_IMG_MAX_BYTES // 1024 // 1024}MB)')
+    new_name = f'{uuid.uuid4().hex}.{ext}'
+    file_storage.save(os.path.join(_facility_upload_dir(), new_name))
+    return f'/static/uploads/facilities/{new_name}'
+
+
+def absolutize_image_url(url):
+    """상대(/static/..) 저장 URL → 요청 host 절대 URL. 외부 URL 은 그대로.
+
+    DB 에는 상대 경로 저장 (도메인 변경 안전) — 응답 시 절대화로
+    mobile/provider 클라이언트 무수정 호환."""
+    if url and url.startswith('/'):
+        return request.host_url.rstrip('/') + url
+    return url
+
+
 def _row_to_image(row) -> dict:
     return {
         'id':         row['id'],
-        'image_url':  row['image_url'],
+        'image_url':  absolutize_image_url(row['image_url']),
         'is_primary': bool(row['is_primary']),
         'sort_order': row['sort_order'],
         'created_at': row['created_at'],
@@ -416,6 +462,48 @@ def _row_to_image(row) -> dict:
 
 
 # ── 매장 이미지 CRUD ──────────────────────────────────────────────────────────
+
+@store_bp.route('/<int:fid>/images/upload', methods=['POST'])
+@require_facility_actor(roles=['owner', 'admin'])
+def upload_image(fid):
+    """매장 이미지 파일 업로드 (multipart 'image') → 갤러리 자동 등록.
+
+    첫 이미지는 자동 대표 + facilities.image_url 동기화 (사용자앱 히어로 연동).
+    """
+    account_id = g.auth['owner_account_id']
+    f = request.files.get('image')
+    if f is None or not f.filename:
+        return jsonify({'success': False, 'message': 'image 파일이 필요합니다.'}), 400
+    try:
+        public_url = _save_facility_image(f)
+    except ValueError as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
+
+    db = get_db()
+    if not _owned_facility(db, fid, account_id):
+        db.close()
+        return jsonify({'success': False,
+                        'message': '매장을 찾을 수 없거나 권한이 없습니다.'}), 404
+    has_any = db.execute(
+        "SELECT 1 FROM facility_images WHERE facility_id=? LIMIT 1", (fid,)
+    ).fetchone()
+    cur = db.execute(
+        """INSERT INTO facility_images (facility_id, image_url, is_primary, sort_order)
+           VALUES (?, ?, ?,
+                   (SELECT COALESCE(MAX(sort_order), -1) + 1
+                      FROM facility_images WHERE facility_id=?))""",
+        (fid, public_url, 0 if has_any else 1, fid)
+    )
+    if not has_any:
+        db.execute("UPDATE facilities SET image_url=? WHERE id=?",
+                   (public_url, fid))
+    row = db.execute(
+        "SELECT * FROM facility_images WHERE id=?", (cur.lastrowid,)
+    ).fetchone()
+    db.commit()
+    db.close()
+    return jsonify({'success': True, 'image': _row_to_image(row)}), 201
+
 
 @store_bp.route('/<int:fid>/images', methods=['POST'])
 @require_facility_actor(roles=['owner', 'admin'])

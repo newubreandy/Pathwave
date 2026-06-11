@@ -18,6 +18,7 @@ from flask import Blueprint, request, jsonify
 
 from models.database import get_db
 from routes.auth import decode_access_token
+from routes.store import absolutize_image_url
 
 search_bp = Blueprint('search', __name__, url_prefix='/api/search')
 
@@ -64,7 +65,7 @@ def _row_to_search_result(row) -> dict:
         'address':     row['address'],
         'phone':       row['phone'],
         'description': row['description'],
-        'image_url':   row['image_url'],
+        'image_url':   absolutize_image_url(row['image_url']),
         'latitude':    row['latitude'],
         'longitude':   row['longitude'],
         'adult_only':  bool(row['adult_only']) if 'adult_only' in row.keys() else False,
@@ -193,5 +194,6 @@ def search_facility_images(fid):
     db.close()
     return jsonify({
         'success': True,
-        'images': [dict(r) for r in rows],
+        'images': [{**dict(r), 'image_url': absolutize_image_url(r['image_url'])}
+                   for r in rows],
     })
