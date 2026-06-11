@@ -2,13 +2,30 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Bell, Check, X, Send, RefreshCw, Shield, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { notificationApi } from '../services/notification.js';
+import Modal from '../components/Modal.jsx';
 import './Beacons.css';
 
-// P11 — main 머지 과정에서 DialogProvider 가 빠진 상태라 window 표준 dialog 로 fallback.
-const useDialog = () => ({
-  alert:   (msg) => window.alert(msg),
-  confirm: (msg) => Promise.resolve(window.confirm(msg)),
-});
+const useDialog = () => {
+  const [dlg, setDlg] = useState(null); // {type:'alert'|'confirm', msg, resolve}
+  const alert   = (msg) => new Promise((res) => setDlg({ type: 'alert', msg, resolve: res }));
+  const confirm = (msg) => new Promise((res) => setDlg({ type: 'confirm', msg, resolve: res }));
+  const close = (val) => { dlg?.resolve(val); setDlg(null); };
+  const dialogElement = (
+    <Modal open={!!dlg} size="sm"
+      onClose={() => close(dlg?.type === 'confirm' ? false : undefined)}
+      title={dlg?.type === 'confirm' ? '확인' : '안내'}
+      footer={<>
+        {dlg?.type === 'confirm' && (
+          <button className="btn btn-ghost" onClick={() => close(false)}>취소</button>
+        )}
+        <button className="btn btn-primary"
+          onClick={() => close(dlg?.type === 'confirm' ? true : undefined)}>확인</button>
+      </>}>
+      <p style={{ whiteSpace: 'pre-line', margin: 0 }}>{dlg?.msg}</p>
+    </Modal>
+  );
+  return { alert, confirm, dialogElement };
+};
 
 /**
  * P11 — 알림 부가서비스 어드민 인박스.
@@ -39,7 +56,7 @@ function aiStyle(s) {
 
 export default function Notifications() {
   const { t } = useTranslation();
-  const { alert, confirm } = useDialog();
+  const { alert, confirm, dialogElement } = useDialog();
 
   const [statusFilter, setStatusFilter] = useState('review');   // 기본: 검토 대기 우선
   const [aiFilter,     setAiFilter]     = useState('');
@@ -315,6 +332,7 @@ export default function Notifications() {
       </div>
 
       {showBlock && <BlocklistModal onClose={() => setShowBlock(false)} />}
+      {dialogElement}
     </div>
   );
 }
@@ -322,7 +340,7 @@ export default function Notifications() {
 
 // ── 금칙어 관리 모달 ──────────────────────────────────────────────────
 function BlocklistModal({ onClose }) {
-  const { alert, confirm } = useDialog();
+  const { alert, confirm, dialogElement } = useDialog();
   const [rows, setRows]     = useState([]);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy]     = useState(false);
@@ -429,6 +447,7 @@ function BlocklistModal({ onClose }) {
           </div>
         ))}
       </div>
+      {dialogElement}
     </div>
   );
 }
