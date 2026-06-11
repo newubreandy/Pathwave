@@ -202,7 +202,9 @@ class _ConsentItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
-              required ? '필수' : '선택',
+              required
+                ? context.t('mobile.auth.consent.required', defaultValue: '필수')
+                : context.t('mobile.auth.consent.optional', defaultValue: '선택'),
               style: TextStyle(
                 color: required ? AppTheme.error : AppTheme.textSecondary,
                 fontSize: 11,
@@ -270,7 +272,7 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                   ),
                   PwIconButton(
                     icon: Icons.close,
-                    tooltip: '닫기',
+                    tooltip: context.t('mobile.common.close', defaultValue: '닫기'),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
