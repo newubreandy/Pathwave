@@ -1236,63 +1236,7 @@
   }
 }
 
-/* ── 차단 관리 모달 (다크) ── */
-.block-modal-overlay {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  z-index: 1000;
-  animation: fadeIn 0.2s ease;
-}
-
-.block-modal {
-  background: var(--pw-bg-3);
-  border: 1px solid var(--pw-border);
-  border-radius: 16px;
-  width: 100%;
-  max-width: 400px;
-  padding: 1.5rem;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  color: var(--pw-text);
-  animation: slideUp 0.2s ease-out;
-}
-
-.block-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.block-modal-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--pw-text);
-}
-
-.block-modal-close {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--pw-text-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem;
-  border-radius: 6px;
-  transition: background 0.15s, color 0.15s;
-}
-
-.block-modal-close:hover {
-  background: var(--pw-bg-hover);
-  color: var(--pw-text);
-}
+/* ── 차단 관리 모달 콘텐츠 ── */
 
 .block-list-container {
   max-height: 300px;
@@ -1438,59 +1382,7 @@
   }
 }
 
-/* ── 손님 신고 모달 (출시 심사 HIGH#1 — UGC 모더레이션) ── */
-.report-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  z-index: var(--pw-z-modal);
-}
-
-.report-modal {
-  background: var(--pw-surface);
-  border: 1px solid var(--pw-border);
-  border-radius: var(--pw-radius-lg);
-  width: 100%;
-  max-width: 400px;
-  max-height: 88vh;
-  overflow-y: auto;
-  padding: 1.25rem 1.5rem 1.5rem;
-  box-shadow: var(--pw-shadow-xl);
-  color: var(--pw-text);
-}
-
-.report-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-}
-
-.report-modal-header h2 {
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-
-.report-modal-close {
-  display: flex;
-  padding: 0.25rem;
-  background: none;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  color: var(--pw-text-secondary);
-}
-
-.report-modal-close:hover { color: var(--pw-text); }
-.report-modal-close:disabled { opacity: 0.4; cursor: not-allowed; }
-
+/* ── 손님 신고 모달 콘텐츠 (출시 심사 HIGH#1 — UGC 모더레이션) ── */
 .report-modal-intro {
   margin: 0 0 1rem;
   font-size: 0.8rem;

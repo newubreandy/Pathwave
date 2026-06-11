@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, X } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import ConfirmModal from '../components/common/ConfirmModal';
+import PwModal, { PwField } from '../components/common/PwModal.jsx';
 import './MemberProfile.css';
 
 /* ── 더미 회원 데이터 ── */
@@ -38,30 +39,30 @@ const EditModal = ({ title, fields, onClose, onSave }) => {
   };
 
   return (
-    <div className="settings-modal-overlay" onClick={onClose}>
-      <div className="settings-modal" onClick={e => e.stopPropagation()}>
-        <div className="settings-modal-header">
-          <h3 className="settings-modal-title">{title}</h3>
-          <button className="settings-modal-close" onClick={onClose}><X size={20} /></button>
-        </div>
-        {fields.map(f => (
-          <div key={f.key} className="settings-modal-field">
-            <label className="settings-modal-label">{f.label}</label>
-            <input
-              className="settings-modal-input"
-              type={f.type || 'text'}
-              value={values[f.key]}
-              onChange={e => handleChange(f.key, e.target.value)}
-              disabled={f.disabled}
-            />
-          </div>
-        ))}
-        <div className="settings-modal-actions">
+    <PwModal
+      open
+      onClose={onClose}
+      title={title}
+      size="sm"
+      footer={
+        <>
           <button className="settings-modal-btn cancel" onClick={onClose}>취소</button>
           <button className="settings-modal-btn confirm" onClick={() => onSave(values)}>저장</button>
-        </div>
-      </div>
-    </div>
+        </>
+      }
+    >
+      {fields.map(f => (
+        <PwField key={f.key} label={f.label}>
+          <input
+            className="settings-modal-input"
+            type={f.type || 'text'}
+            value={values[f.key]}
+            onChange={e => handleChange(f.key, e.target.value)}
+            disabled={f.disabled}
+          />
+        </PwField>
+      ))}
+    </PwModal>
   );
 };
 

@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, Minus, HelpCir
 import Button from '../components/common/Button';
 import BottomActionBar from '../components/common/BottomActionBar';
 import ConfirmModal from '../components/common/ConfirmModal';
+import PwModal from '../components/common/PwModal.jsx';
 import ServiceRequestService from '../services/ServiceRequestService';
 import './ServiceRequest.css';
 
@@ -717,66 +718,63 @@ const ServiceRequest = () => {
         />
 
         {/* 신청내역 팝업 */}
-        {showApplicationModal && (
-          <div className="common-modal-overlay" onClick={() => setShowApplicationModal(false)}>
-            <div className="sr-app-modal" onClick={(e) => e.stopPropagation()}>
-              <header className="sr-app-modal-head">
-                <h3>와이파이 서비스 신청내역 확인</h3>
-                <button className="sr-app-modal-close" onClick={() => setShowApplicationModal(false)} aria-label="닫기">
-                  <X size={18} />
-                </button>
-              </header>
-              <div className="sr-app-modal-body">
-                <div className="sr-app-summary">
-                  <div className="sr-app-summary-row">
-                    <span className="sr-app-summary-label">신청 시설</span>
-                    {/* TODO: 실 매장 정보 연동 — 현재는 mock 표시 */}
-                    <span className="sr-app-summary-value">호텔H 본점</span>
-                  </div>
-                  <div className="sr-app-summary-row">
-                    <span className="sr-app-summary-label">총 신청 수량</span>
-                    <span className="sr-app-summary-value"><strong>{quantity}개</strong></span>
-                  </div>
-                  <div className="sr-app-summary-row">
-                    <span className="sr-app-summary-label">약정기간</span>
-                    <span className="sr-app-summary-value">2년</span>
-                  </div>
-                  <div className="sr-app-summary-row">
-                    <span className="sr-app-summary-label">예상 결제금액</span>
-                    <span className="sr-app-summary-value sr-app-amount">월 {(quantity * 12100).toLocaleString()}원 <span className="sr-app-vat">(VAT 포함)</span></span>
-                  </div>
-                </div>
-
-                <h4 className="sr-app-list-title">와이파이 목록</h4>
-                <div className="sr-app-list">
-                  {wifiItems.map((item, idx) => (
-                    <div key={item.id} className="sr-app-list-row">
-                      <div className="sr-app-list-num">Wi-Fi {idx + 1}</div>
-                      <div className="sr-app-list-fields">
-                        <div className="sr-app-list-line">
-                          <span className="sr-app-list-label">위치</span>
-                          <span className="sr-app-list-value">{item.location}</span>
-                        </div>
-                        <div className="sr-app-list-line">
-                          <span className="sr-app-list-label">SSID</span>
-                          <span className="sr-app-list-value">{item.ssid}</span>
-                        </div>
-                        <div className="sr-app-list-line">
-                          <span className="sr-app-list-label">기간</span>
-                          <span className="sr-app-list-value">{item.startDate} ~ {item.endDate}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+        <PwModal
+          open={showApplicationModal}
+          onClose={() => setShowApplicationModal(false)}
+          title="와이파이 서비스 신청내역 확인"
+          size="md"
+          footer={
+            <>
+              <button className="sr-app-modal-btn" onClick={() => setShowApplicationModal(false)}>닫기</button>
+              <button className="sr-app-modal-btn primary" onClick={handleGoPayment}>결제하기</button>
+            </>
+          }
+        >
+          <div className="sr-app-modal-body">
+            <div className="sr-app-summary">
+              <div className="sr-app-summary-row">
+                <span className="sr-app-summary-label">신청 시설</span>
+                {/* TODO: 실 매장 정보 연동 — 현재는 mock 표시 */}
+                <span className="sr-app-summary-value">호텔H 본점</span>
               </div>
-              <footer className="sr-app-modal-actions">
-                <button className="sr-app-modal-btn" onClick={() => setShowApplicationModal(false)}>닫기</button>
-                <button className="sr-app-modal-btn primary" onClick={handleGoPayment}>결제하기</button>
-              </footer>
+              <div className="sr-app-summary-row">
+                <span className="sr-app-summary-label">총 신청 수량</span>
+                <span className="sr-app-summary-value"><strong>{quantity}개</strong></span>
+              </div>
+              <div className="sr-app-summary-row">
+                <span className="sr-app-summary-label">약정기간</span>
+                <span className="sr-app-summary-value">2년</span>
+              </div>
+              <div className="sr-app-summary-row">
+                <span className="sr-app-summary-label">예상 결제금액</span>
+                <span className="sr-app-summary-value sr-app-amount">월 {(quantity * 12100).toLocaleString()}원 <span className="sr-app-vat">(VAT 포함)</span></span>
+              </div>
+            </div>
+
+            <h4 className="sr-app-list-title">와이파이 목록</h4>
+            <div className="sr-app-list">
+              {wifiItems.map((item, idx) => (
+                <div key={item.id} className="sr-app-list-row">
+                  <div className="sr-app-list-num">Wi-Fi {idx + 1}</div>
+                  <div className="sr-app-list-fields">
+                    <div className="sr-app-list-line">
+                      <span className="sr-app-list-label">위치</span>
+                      <span className="sr-app-list-value">{item.location}</span>
+                    </div>
+                    <div className="sr-app-list-line">
+                      <span className="sr-app-list-label">SSID</span>
+                      <span className="sr-app-list-value">{item.ssid}</span>
+                    </div>
+                    <div className="sr-app-list-line">
+                      <span className="sr-app-list-label">기간</span>
+                      <span className="sr-app-list-value">{item.startDate} ~ {item.endDate}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        )}
+        </PwModal>
       </div>
     );
   }

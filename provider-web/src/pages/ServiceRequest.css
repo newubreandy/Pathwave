@@ -791,52 +791,7 @@
   border-top: 1px solid var(--pw-border);
 }
 
-/* ═══ 신청내역 확인 팝업 ═══ */
-.sr-app-modal {
-  width: min(560px, calc(100vw - 2rem));
-  max-height: calc(100vh - 4rem);
-  background: var(--pw-bg-2);
-  border: 1px solid var(--pw-border);
-  border-radius: var(--pw-radius-lg);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  color: var(--pw-text);
-}
-
-.sr-app-modal-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--pw-space-4) var(--pw-space-5);
-  border-bottom: 1px solid var(--pw-border);
-}
-
-.sr-app-modal-head h3 {
-  margin: 0;
-  font-size: var(--pw-title-size);
-  font-weight: 800;
-}
-
-.sr-app-modal-close {
-  background: transparent;
-  border: none;
-  color: var(--pw-text-hint);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--pw-radius-xs);
-  transition: background var(--pw-duration-fast);
-}
-
-.sr-app-modal-close:hover {
-  background: var(--pw-bg-hover);
-  color: var(--pw-text);
-}
-
+/* ═══ 신청내역 확인 팝업 콘텐츠 ═══ */
 .sr-app-modal-body {
   padding: var(--pw-space-4) var(--pw-space-5);
   overflow-y: auto;
@@ -1081,9 +1036,6 @@
   .sr-qty-btn { width: 32px; height: 32px; }
 
   /* 신청내역 모달 */
-  .sr-app-modal-head h3 {
-    font-size: var(--pw-headline-size); /* 18 → 20 */
-  }
   .sr-app-summary-row {
     font-size: var(--pw-body-size);    /* 14 → 16 */
   }
