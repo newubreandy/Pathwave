@@ -16,6 +16,7 @@ facility_accounts(사장님 계정) 1 : N facilities(매장) 관계.
 - ``PATCH  /api/facilities/<id>``   매장 정보 부분 수정
 - ``DELETE /api/facilities/<id>``   매장 비활성화 (soft delete)
 """
+import json
 import os
 
 from flask import Blueprint, request, jsonify, g
@@ -33,6 +34,8 @@ _UPDATABLE_FIELDS = {
     'welcome_coupon_title', 'welcome_coupon_benefit',
     'welcome_coupon_validity_days',
     'adult_only',   # PR #47 — 미성년자 출입 제한 (숙박/유흥 등)
+    'holidays',     # 2026-06-11 — 정기휴무 JSON 배열 (["매주 월요일", "공휴일"])
+    'benefits',     # 2026-06-11 — 진행중 혜택 JSON 배열 ([{title, kind}])
 }
 
 # SRS FR-I18N-001: ko/en/ja/zh + 추가 가능
@@ -128,6 +131,12 @@ def _row_to_facility(row, *, translation: dict | None = None) -> dict:
         'active':         bool(row['active']),
         'created_at':     row['created_at'],
     }
+    # 2026-06-11 — 정기휴무/혜택 (JSON 컬럼 파싱, mobile 매장 상세와 동일 형식)
+    for jkey in ('holidays', 'benefits'):
+        try:
+            data[jkey] = json.loads(row[jkey]) if jkey in row.keys() and row[jkey] else []
+        except Exception:
+            data[jkey] = []
     if translation:
         for k in _TRANSLATABLE_FIELDS:
             v = translation.get(k)
@@ -302,6 +311,14 @@ def update_facility(fid):
             vals.append(raw)
         elif key == 'adult_only':
             vals.append(1 if raw else 0)
+        elif key in ('holidays', 'benefits'):
+            # list/dict → JSON 문자열 저장. None/빈값은 NULL.
+            if raw is None or raw == [] or raw == '':
+                vals.append(None)
+            elif isinstance(raw, (list, dict)):
+                vals.append(json.dumps(raw, ensure_ascii=False))
+            else:
+                vals.append(str(raw))
         else:  # latitude, longitude
             vals.append(raw)
         sets.append(f'{key}=?')

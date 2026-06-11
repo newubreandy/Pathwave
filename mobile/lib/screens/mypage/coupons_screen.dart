@@ -492,16 +492,19 @@ class _CouponCard extends StatelessWidget {
                 ctx.pop();
                 _showUseConfirm(context, data);
               },
-              child: Text(t.t('coupon.use_btn', defaultValue: '쿠폰 사용')),
+              child: Text(t.t('coupon.present_btn', defaultValue: '매장에 제시')),
             ),
         ],
       ),
     );
   }
 
+  /// 2026-06-11 — 쿠폰 사용 처리는 매장 직원 전용 (backend /use = facility actor).
+  /// 사용자는 이 화면을 직원에게 제시 → 직원이 provider 콘솔에서 쿠폰 번호로 처리.
   void _showUseConfirm(BuildContext context, Map<String, dynamic> data) {
     final t = I18nService.instance;
     final title = data['title']?.toString() ?? I18nService.instance.t('coupon.fallback_title', defaultValue: '쿠폰');
+    final id = data['id'];
     showDialog<void>(
       context: context,
       barrierColor: const Color(0x99000000),
@@ -509,47 +512,41 @@ class _CouponCard extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(t.t('coupon.use_confirm_title', defaultValue: '쿠폰 사용 확인')),
-        content: Text(
-          t.t(
-            'coupon.use_confirm',
-            defaultValue: '"$title" 쿠폰을 지금 사용하시겠습니까?\n사용 후에는 취소할 수 없습니다.',
-          ).replaceFirst('\$title', title),
-          style: const TextStyle(height: 1.5),
+        title: Text(t.t('coupon.present_title', defaultValue: '매장에 제시')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // 직원 확인용 쿠폰 번호 — 크게 표시
+            Text(
+              '#$id',
+              style: const TextStyle(
+                color: AppTheme.primary,
+                fontSize: 44,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 12),
+            Text(
+              t.t('coupon.present_body',
+                  defaultValue:
+                      '매장 직원에게 이 화면을 보여주세요.\n직원 확인 후 사용 처리되며, 처리 후에는 취소할 수 없습니다.'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  color: AppTheme.textSecondary, fontSize: 13, height: 1.5),
+            ),
+          ],
         ),
         actions: [
           PwButton(
-            variant: PwButtonVariant.text,
             fullWidth: false,
             onPressed: () => ctx.pop(),
-            child: Text(t.t('mobile.common.cancel', defaultValue: '취소')),
-          ),
-          PwButton(
-            fullWidth: false,
-            onPressed: () async {
-              ctx.pop();
-              final id = data['id'] as int?;
-              if (id == null) return;
-              // P9 (2026-05-26): silent error 수정 — 사용 후 피드백.
-              // _CouponCard 는 StatelessWidget — 부모 새로고침 콜백 도입은 후속 PR.
-              // 사용자는 SnackBar 후 화면 재진입 시 최신 상태 확인.
-              final messenger = ScaffoldMessenger.of(context);
-              try {
-                await CouponService().useCoupon(id);
-                if (!context.mounted) return;
-                messenger.showSnackBar(SnackBar(
-                  content: Text(t.t('coupon.use_success',
-                      defaultValue: '쿠폰을 사용했습니다.')),
-                ));
-              } catch (e) {
-                if (!context.mounted) return;
-                messenger.showSnackBar(SnackBar(
-                  content: Text('${t.t('coupon.use_failed',
-                      defaultValue: '쿠폰 사용 실패')}: $e'),
-                ));
-              }
-            },
-            child: Text(t.t('coupon.use_btn', defaultValue: '사용하기')),
+            child: Text(t.t('mobile.common.close', defaultValue: '닫기')),
           ),
         ],
       ),
