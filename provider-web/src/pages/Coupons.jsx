@@ -1,61 +1,79 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Ticket, Plus, ChevronRight, Info } from 'lucide-react';
 import BottomActionBar from '../components/common/BottomActionBar';
 import Button from '../components/common/Button';
-import '../pages/Stamps.css'; // 쿠폰/스탬프 리스트는 동일 카드 스타일 공유
-import './Notifications.css'; // modal-overlay / modal-content / modal-btn 공통 스타일
+import AuthService from '../services/auth/AuthService';
+import CouponService from '../services/coupon/CouponService';
+import '../pages/Stamps.css';
+import './Notifications.css';
 
 const Coupons = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const [coupons, setCoupons] = useState([
-    {
-      id: 1,
-      name: '호텔H 썬베드 선착순 50명 무료 이용권 증정쿠폰',
-      period: '2022.05.01 ~ 2022.05.31',
-      status: 'active'
-    },
-    {
-      id: 2,
-      name: '아메리카노 무료 증정 쿠폰',
-      period: '2022.04.01 ~ 2022.04.30',
-      status: 'ended'
-    },
-    {
-      id: 3,
-      name: '썬베드 무료이용권 (사용완료)',
-      period: '2022.03.01 ~ 2022.03.31',
-      status: 'used'
-    }
-  ]);
+  const [facilityId, setFacilityId] = useState(null);
+  const [coupons, setCoupons] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // 사용 처리 모달 상태
   const [useModalCouponId, setUseModalCouponId] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [doneModalOpen, setDoneModalOpen] = useState(false);
 
+  // facility_id 로드 → 쿠폰 목록 로드
+  const loadCoupons = useCallback(async (fid) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await CouponService.list(fid);
+      setCoupons(res.data?.coupons ?? []);
+    } catch (err) {
+      setError('쿠폰 목록을 불러오지 못했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    AuthService.me()
+      .then((res) => {
+        const fid = res?.facility_account?.facility_id ?? null;
+        setFacilityId(fid);
+        if (fid) loadCoupons(fid);
+        else {
+          setError('매장 정보를 찾을 수 없습니다.');
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        setError('인증 정보를 불러오지 못했습니다.');
+        setLoading(false);
+      });
+  }, [loadCoupons]);
+
   const openUseModal = (e, id) => {
-    e.preventDefault(); // Link 탐색 방지
+    e.preventDefault();
     e.stopPropagation();
     setUseModalCouponId(id);
   };
 
   const confirmUse = async () => {
-    if (!useModalCouponId) return;
+    if (!useModalCouponId || isProcessing) return;
     setIsProcessing(true);
     try {
-      // POST /api/coupons/<cid>/use — 실 연동 시 fetch 교체
-      await fetch(`/api/coupons/${useModalCouponId}/use`, { method: 'POST' }).catch(() => {});
-    } finally {
-      setCoupons(prev =>
-        prev.map(c => c.id === useModalCouponId ? { ...c, status: 'used' } : c)
-      );
-      setIsProcessing(false);
+      await CouponService.use(useModalCouponId);
       setUseModalCouponId(null);
       setDoneModalOpen(true);
+      if (facilityId) loadCoupons(facilityId);
+    } catch (err) {
+      const msg = err?.response?.data?.message ?? '사용 처리에 실패했습니다.';
+      alert(msg);
+      setUseModalCouponId(null);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -65,6 +83,14 @@ const Coupons = () => {
     return t('coupon.status_ended', '쿠폰 진행 종료');
   };
 
+  const expiresLabel = (coupon) => {
+    if (coupon.expires_at) {
+      const d = coupon.expires_at.slice(0, 10);
+      return `사용기간 : ~ ${d}`;
+    }
+    return '사용기간 : 무기한';
+  };
+
   return (
     <div className="stamps-page">
       <div className="page-header-section">
@@ -72,60 +98,81 @@ const Coupons = () => {
         <p className="sub-title">설치장소의 쿠폰을 관리합니다.</p>
       </div>
 
-      <div className="stamp-list">
-        {coupons.map((coupon) => (
-          <Link to={`/dashboard/coupons/view/${coupon.id}`} key={coupon.id} className="stamp-card">
-            <div className={`stamp-icon ${coupon.status}`}>
-              <Ticket size={24} />
-            </div>
-            <div className="stamp-info">
-              <div className="stamp-info-head">
-                <h3 className="stamp-name" style={coupon.status === 'used' ? { color: 'var(--pw-text-hint)' } : {}}>
-                  {coupon.name}
-                </h3>
-                <span className={`stamp-status ${coupon.status}`}>
-                  {statusLabel(coupon.status)}
-                </span>
+      {loading && (
+        <div style={{ padding: 'var(--pw-space-8)', textAlign: 'center', color: 'var(--pw-text-hint)' }}>
+          불러오는 중...
+        </div>
+      )}
+
+      {!loading && error && (
+        <div style={{ padding: 'var(--pw-space-8)', textAlign: 'center', color: 'var(--danger, #dc2626)' }}>
+          {error}
+        </div>
+      )}
+
+      {!loading && !error && coupons.length === 0 && (
+        <div style={{ padding: 'var(--pw-space-8)', textAlign: 'center', color: 'var(--pw-text-hint)' }}>
+          발급된 쿠폰이 없습니다.
+        </div>
+      )}
+
+      {!loading && !error && coupons.length > 0 && (
+        <div className="stamp-list">
+          {coupons.map((coupon) => (
+            <Link to={`/dashboard/coupons/view/${coupon.id}`} key={coupon.id} className="stamp-card">
+              <div className={`stamp-icon ${coupon.status}`}>
+                <Ticket size={24} />
               </div>
-              <div className="stamp-details">
-                <div>사용기간 : {coupon.period}</div>
+              <div className="stamp-info">
+                <div className="stamp-info-head">
+                  <h3 className="stamp-name" style={coupon.status !== 'active' ? { color: 'var(--pw-text-hint)' } : {}}>
+                    {coupon.title}
+                  </h3>
+                  <span className={`stamp-status ${coupon.status}`}>
+                    {statusLabel(coupon.status)}
+                  </span>
+                </div>
+                <div className="stamp-details">
+                  <div>{expiresLabel(coupon)}</div>
+                  {coupon.benefit && <div style={{ marginTop: '2px', color: 'var(--pw-text-hint)' }}>{coupon.benefit}</div>}
+                </div>
+                {/* 사용 처리 액션 — active 쿠폰만 노출 */}
+                {coupon.status === 'active' && (
+                  <button
+                    className="coupon-use-btn"
+                    onClick={(e) => openUseModal(e, coupon.id)}
+                    style={{
+                      marginTop: 'var(--pw-space-3)',
+                      padding: 'var(--pw-space-2) var(--pw-space-4)',
+                      background: 'var(--pw-accent-soft)',
+                      border: '1px solid var(--pw-accent)',
+                      borderRadius: 'var(--pw-radius-sm)',
+                      color: 'var(--pw-accent-text)',
+                      fontSize: 'var(--pw-caption-size)',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      width: 'fit-content',
+                      transition: 'background var(--pw-duration-fast) var(--pw-ease)'
+                    }}
+                  >
+                    {t('coupon.staff_use_btn', '사용 처리')}
+                  </button>
+                )}
               </div>
-              {/* 사용 처리 액션 — active 쿠폰만 노출 */}
-              {coupon.status === 'active' && (
-                <button
-                  className="coupon-use-btn"
-                  onClick={(e) => openUseModal(e, coupon.id)}
-                  style={{
-                    marginTop: 'var(--pw-space-3)',
-                    padding: 'var(--pw-space-2) var(--pw-space-4)',
-                    background: 'var(--pw-accent-soft)',
-                    border: '1px solid var(--pw-accent)',
-                    borderRadius: 'var(--pw-radius-sm)',
-                    color: 'var(--pw-accent-text)',
-                    fontSize: 'var(--pw-caption-size)',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    width: 'fit-content',
-                    transition: 'background var(--pw-duration-fast) var(--pw-ease)'
-                  }}
-                >
-                  {t('coupon.staff_use_btn', '사용 처리')}
-                </button>
-              )}
-            </div>
-            <ChevronRight className="stamp-arrow" size={20} />
-          </Link>
-        ))}
-      </div>
+              <ChevronRight className="stamp-arrow" size={20} />
+            </Link>
+          ))}
+        </div>
+      )}
 
       <BottomActionBar>
         <Button
           variant="primary"
           fullWidth
           icon={<Plus size={18} />}
-          onClick={() => navigate('/dashboard/service-request?type=event')}
+          onClick={() => navigate('/dashboard/coupons/add')}
         >
-          쿠폰 등록
+          쿠폰 발급
         </Button>
       </BottomActionBar>
 
@@ -152,7 +199,10 @@ const Coupons = () => {
                 marginBottom: '0.5rem'
               }}>
                 <Info size={14} style={{ flexShrink: 0, marginTop: '2px' }} />
-                <span>{t('coupon.staff_use_warning', '실제 매장에서 혜택을 제공한 후에만 처리하세요. 사용 처리는 되돌릴 수 없습니다.')}</span>
+                <span>
+                  쿠폰 #{useModalCouponId}을 사용 처리하시겠습니까?{'\n'}
+                  {t('coupon.staff_use_warning', '실제 매장에서 혜택을 제공한 후에만 처리하세요. 사용 처리는 되돌릴 수 없습니다.')}
+                </span>
               </div>
             </div>
             <div className="modal-actions">

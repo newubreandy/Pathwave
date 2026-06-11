@@ -22,8 +22,6 @@ class CouponService {
     return (data['coupon'] as Map?)?.cast<String, dynamic>() ?? {};
   }
 
-  /// 쿠폰 사용 처리 (전자상거래법: 소비자 확인 후 사용 확정).
-  Future<void> useCoupon(int couponId) async {
-    await _api.post('/api/coupons/$couponId/use', {});
-  }
+  // 2026-06-11 — useCoupon 제거. backend /use 는 매장 직원 전용 (facility actor)
+  // 정책: 사용자는 쿠폰 번호를 제시, 직원이 provider 콘솔에서 사용 처리.
 }

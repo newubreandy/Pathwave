@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Plus, X, Mail, MoreVertical, Shield, UserCheck, Clock, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Plus, X, Mail, MoreVertical, Shield, UserCheck, Clock, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import StaffService, { ROLES, ROLE_LABELS, STATUS, STATUS_LABELS, validateEmail } from '../services/staff/StaffService';
 import PwPageHeader from '../components/common/PwPageHeader';
 import { useConfirm } from '../hooks/useConfirm';
-import { MOCK_STAFF } from '../services/staff/mockStaff';
 import ConfirmModal from '../components/common/ConfirmModal';
 import PasswordInput from '../components/common/PasswordInput';
 import BusinessInfoModal from '../components/common/BusinessInfoModal';
@@ -56,8 +55,6 @@ const StatusBadge = ({ status, invitedAt }) => {
 const InviteModal = ({ onClose, onInvite }) => {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
   const [role, setRole] = useState(ROLES.STAFF);
   const [emailError, setEmailError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -66,32 +63,24 @@ const InviteModal = ({ onClose, onInvite }) => {
   const handleEmailBlur = () => {
     if (email.trim()) {
       const result = validateEmail(email);
-      setEmailError(result.valid ? '' : result.error);
+      setEmailError(result.ok ? '' : result.message);
     }
   };
 
   const handleSubmit = async () => {
     const emailResult = validateEmail(email);
-    if (!emailResult.valid) {
-      setEmailError(emailResult.error);
-      return;
-    }
-    if (!name.trim()) {
-      setSubmitError('이름을 입력해 주세요.');
-      return;
-    }
-    if (!phone.trim()) {
-      setSubmitError('전화번호를 입력해 주세요.');
+    if (!emailResult.ok) {
+      setEmailError(emailResult.message);
       return;
     }
 
     setIsLoading(true);
     setSubmitError('');
     try {
-      await onInvite({ email, name, phone, role });
+      await onInvite({ email: email.trim().toLowerCase(), role });
       onClose();
     } catch (err) {
-      setSubmitError(err.message);
+      setSubmitError(err.message || '초대 발송에 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -117,26 +106,6 @@ const InviteModal = ({ onClose, onInvite }) => {
               className={emailError ? 'has-error' : ''}
             />
             {emailError && <span className="staff-field-error">{emailError}</span>}
-          </div>
-
-          <div className="staff-invite-field">
-            <label>이름 *</label>
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="직원 이름"
-            />
-          </div>
-
-          <div className="staff-invite-field">
-            <label>전화번호 *</label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={e => setPhone(e.target.value)}
-              placeholder="010-0000-0000"
-            />
           </div>
 
           <div className="staff-invite-field">
@@ -187,11 +156,12 @@ const InviteModal = ({ onClose, onInvite }) => {
 };
 
 /* ── 직원 상세/액션 모달 ── */
-const StaffActionModal = ({ member, onClose, onRoleChange, onDisable, onRemove, onResend }) => {
+const StaffActionModal = ({ member, onClose, onRemove, onResend }) => {
   const { t } = useTranslation();
-  const isOwner = member.role === ROLES.OWNER;
   const isInvited = member.status === STATUS.INVITED;
   const isExpired = isInvited && StaffService.isInviteExpired(member.invitedAt);
+  const canResend = isExpired || member.status === 'expired';
+  const canRevoke = member.status !== 'accepted';
 
   return (
     <div className="settings-modal-overlay" onClick={onClose}>
@@ -202,7 +172,6 @@ const StaffActionModal = ({ member, onClose, onRoleChange, onDisable, onRemove, 
         </div>
 
         <div className="staff-action-info">
-          <div className="staff-action-name">{member.name}</div>
           <div className="staff-action-email">{member.email}</div>
           <div className="staff-action-badges">
             <RoleBadge role={member.role} />
@@ -211,55 +180,21 @@ const StaffActionModal = ({ member, onClose, onRoleChange, onDisable, onRemove, 
         </div>
 
         <div className="staff-action-list">
-          {!isOwner && member.status === STATUS.ACTIVE && (
-            <>
-              <div className="staff-action-label">{t('staff_mgmt.role_label')} 변경</div>
-              <div className="staff-role-change">
-                <button
-                  className={`role-change-btn ${member.role === ROLES.MANAGER ? 'active' : ''}`}
-                  onClick={() => onRoleChange(member.id, ROLES.MANAGER)}
-                >
-                  {t('staff_mgmt.role_admin')}
-                </button>
-                <button
-                  className={`role-change-btn ${member.role === ROLES.STAFF ? 'active' : ''}`}
-                  onClick={() => onRoleChange(member.id, ROLES.STAFF)}
-                >
-                  {t('staff_mgmt.role_staff')}
-                </button>
-              </div>
-            </>
-          )}
-
-          {isInvited && (
+          {canResend && (
             <button className="staff-action-btn" onClick={() => onResend(member.id)} aria-label="초대 메일 재발송">
               <Mail size={16} />
-              {isExpired
-                ? `${t('staff_mgmt.invite_resend')} (${t('staff_mgmt.status_expired')})`
-                : t('staff_mgmt.invite_resend')}
+              {t('staff_mgmt.invite_resend')}
             </button>
           )}
 
-          {isInvited && (
+          {canRevoke && (
             <button className="staff-action-btn warn" onClick={() => onRemove(member.id)}>
               {t('staff_mgmt.invite_revoke')}
             </button>
           )}
 
-          {!isOwner && member.status === STATUS.ACTIVE && (
-            <button className="staff-action-btn warn" onClick={() => onDisable(member.id)}>
-              비활성화
-            </button>
-          )}
-
-          {!isOwner && member.status !== STATUS.INVITED && (
-            <button className="staff-action-btn danger" onClick={() => onRemove(member.id)}>
-              삭제
-            </button>
-          )}
-
-          {isOwner && (
-            <div className="staff-action-note">대표는 역할 변경/삭제가 불가합니다.</div>
+          {!canResend && !canRevoke && (
+            <div className="staff-action-note">수락된 초대는 취소할 수 없습니다.</div>
           )}
         </div>
       </div>
@@ -400,7 +335,6 @@ const ProfileTab = () => {
    ══════════════════════════════════════════════ */
 const StaffManagement = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { alert: alertModal, modal: confirmModalEl } = useConfirm();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'staff';
@@ -419,19 +353,38 @@ const StaffManagement = () => {
   const [showInvite, setShowInvite] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [confirmModal, setConfirmModal] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // backend _row_to_invite 필드 → 화면 모델 매핑
+  // status: pending→INVITED, expired→INVITED(만료), accepted→ACTIVE, revoked→DISABLED
+  const mapInvite = (inv) => {
+    let status;
+    if (inv.status === 'accepted') {
+      status = STATUS.ACTIVE;
+    } else if (inv.status === 'revoked') {
+      status = STATUS.DISABLED;
+    } else {
+      status = STATUS.INVITED; // pending / expired 모두 INVITED (만료 판정은 expires_at 기준)
+    }
+    return {
+      id: inv.id,
+      email: inv.email,
+      role: inv.role,
+      status,
+      invitedAt: inv.created_at,
+      expiresAt: inv.expires_at,
+      acceptedAt: inv.accepted_at,
+      _backendStatus: inv.status, // resend 가능 여부 판정용
+    };
+  };
 
   const loadStaff = useCallback(async () => {
-    // P5 후속 (2026-05-27): MOCK_STAFF 제거 — 실 백엔드 호출.
-    // 백엔드 미연동 환경에서는 빈 배열 (직원 초대 화면으로 안내).
     setIsLoading(true);
     try {
-      // TODO: StaffService.list() 실연동 — 백엔드 enpoint 확정 후
-      // const res = await StaffService.list();
-      // const items = res?.staffs || res?.data || res || [];
-      // setStaffList(Array.isArray(items) ? items : []);
-      setStaffList([]);
+      const res = await StaffService.list();
+      const invitations = res?.invitations || [];
+      setStaffList(invitations.map(mapInvite));
     } catch (err) {
-      console.error('Failed to load staff', err);
       setStaffList([]);
     } finally {
       setIsLoading(false);
@@ -443,48 +396,29 @@ const StaffManagement = () => {
   }, [loadStaff]);
 
   const handleInvite = async (formData) => {
-    await StaffService.inviteStaff('store_1', formData);
+    // backend POST /api/staff/invite: { email, role } — 토큰에서 매장 식별
+    const res = await StaffService.invite({ email: formData.email, role: formData.role });
+    if (res && res.success === false) {
+      throw new Error(res.message || '초대 발송에 실패했습니다.');
+    }
     await loadStaff();
   };
 
-  const handleRoleChange = async (id, newRole) => {
-    try {
-      await StaffService.updateRole(id, newRole);
-      await loadStaff();
-      setSelectedMember(null);
-    } catch (err) {
-      await alertModal({ title: '오류', desc: err.message });
-    }
-  };
-
-  const handleDisable = (id) => {
-    setConfirmModal({
-      title: '직원 비활성화',
-      message: '해당 직원을 비활성화하시겠습니까?\n비활성화된 직원은 서비스에 접근할 수 없습니다.',
-      onConfirm: async () => {
-        try {
-          await StaffService.disableStaff(id);
-          await loadStaff();
-          setSelectedMember(null);
-        } catch (err) {
-          await alertModal({ title: '오류', desc: err.message });
-        }
-        setConfirmModal(null);
-      },
-    });
-  };
-
   const handleRemove = (id) => {
+    if (actionLoading) return;
     setConfirmModal({
-      title: '직원 삭제',
-      message: '해당 직원을 삭제하시겠습니까?\n삭제된 직원은 복구할 수 없습니다.',
+      title: '초대 취소',
+      message: '해당 초대를 취소하시겠습니까?',
       onConfirm: async () => {
+        setActionLoading(true);
         try {
-          await StaffService.removeStaff(id);
+          await StaffService.remove(id);
           await loadStaff();
           setSelectedMember(null);
         } catch (err) {
-          await alertModal({ title: '오류', desc: err.message });
+          await alertModal({ title: '오류', desc: err.message || '요청에 실패했습니다.' });
+        } finally {
+          setActionLoading(false);
         }
         setConfirmModal(null);
       },
@@ -492,13 +426,17 @@ const StaffManagement = () => {
   };
 
   const handleResend = async (id) => {
+    if (actionLoading) return;
+    setActionLoading(true);
     try {
-      await StaffService.resendInvite(id);
+      await StaffService.resend(id);
       await loadStaff();
       setSelectedMember(null);
       await alertModal({ title: '재발송 완료', desc: '초대 메일이 재발송되었습니다.' });
     } catch (err) {
-      await alertModal({ title: '오류', desc: err.message });
+      await alertModal({ title: '오류', desc: err.message || '요청에 실패했습니다.' });
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -575,14 +513,13 @@ const StaffManagement = () => {
                   >
                     <div className="staff-card-left">
                       <div className="staff-avatar">
-                        {member.name.charAt(0)}
+                        {member.email.charAt(0).toUpperCase()}
                       </div>
                       <div className="staff-card-info">
                         <div className="staff-card-name">
-                          {member.name}
+                          {member.email}
                           <RoleBadge role={member.role} />
                         </div>
-                        <div className="staff-card-email">{member.email}</div>
                         {member.status === STATUS.INVITED && (
                           <div className={`staff-card-invited ${isExpired ? 'expired' : ''}`}>
                             <Clock size={12} />
@@ -659,8 +596,6 @@ const StaffManagement = () => {
         <StaffActionModal
           member={selectedMember}
           onClose={() => setSelectedMember(null)}
-          onRoleChange={handleRoleChange}
-          onDisable={handleDisable}
           onRemove={handleRemove}
           onResend={handleResend}
         />

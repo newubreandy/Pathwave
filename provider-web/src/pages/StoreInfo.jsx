@@ -46,6 +46,7 @@ const StoreInfo = () => {
 
   // 검증 메시지 표시 (모달)
   const showError = (msg) => {
+    setIsSuccessMsg(false);
     setErrorMessage(msg);
   };
   // P5 (2026-05-26): mock 매장 정보 ('패스트파이브 강남점' / '02-1234-5678' /
@@ -122,7 +123,13 @@ const StoreInfo = () => {
         const fid = res?.facility_account?.facility_id ?? null;
         if (!alive) return;
         setFacilityId(fid);
-        if (fid) fetchBeacons(fid);
+        if (fid) {
+          fetchBeacons(fid);
+          // 2026-06-11 — 매장 정보 실연동: 백엔드 값으로 화면 채움 (저장된 휴무/혜택 포함).
+          StoreService.get(fid)
+            .then((r) => { if (alive && r?.facility) hydrateFromApi(r.facility); })
+            .catch(() => { /* 신규 매장 등 — 빈 폼 유지 */ });
+        }
         fetchRequests();
       })
       .catch(() => { /* 미가입/오류 시 비콘 섹션 비활성 */ });
@@ -166,9 +173,38 @@ const StoreInfo = () => {
     setIsAddressSearchOpen(false);
   };
 
-  // P5 (2026-05-26): mock dbBenefits ('호텔H' 등) 제거. 실 데이터는 매장 캠페인
-  // (stamp_policies / coupons) 에서 가져와야 함 — Phase 2+ 실연동 시 fetch.
-  const dbBenefits = [];
+  // 2026-06-11 — 진행중 혜택: facilities.benefits JSON 컬럼 실연동 (mobile 매장 상세와 동일 소스).
+  const [dbBenefits, setDbBenefits] = useState([]);
+  // 저장 진행 가드 (연타 방지) + 성공 피드백 모달 분기.
+  const [saving, setSaving] = useState(false);
+  const [isSuccessMsg, setIsSuccessMsg] = useState(false);
+
+  /// backend facility 응답 → 화면 state 매핑.
+  /// holidays JSON ["매주 월요일", "공휴일"] ↔ UI {days:['월요일'], publicHolidays}
+  const hydrateFromApi = (f) => {
+    const [hs, he] = (f.business_hours || '09:00-22:00').split('-');
+    const rawHol = Array.isArray(f.holidays) ? f.holidays : [];
+    const days = rawHol
+      .filter((s) => typeof s === 'string' && s.startsWith('매주 '))
+      .map((s) => s.replace('매주 ', ''));
+    const publicHolidays = rawHol.includes('공휴일');
+    const next = {
+      name: f.name || '',
+      address: f.address || '',
+      detailAddress: '',
+      phone: f.phone || '',
+      description: f.description || '',
+      images: f.image_url ? [f.image_url] : [],
+      hours: { start: (hs || '09:00').trim(), end: (he || '22:00').trim() },
+      holidays: { days, publicHolidays },
+      categories: [],
+      lat: f.latitude ?? LocationService.getDefaultCoordinates().lat,
+      lng: f.longitude ?? LocationService.getDefaultCoordinates().lng,
+    };
+    setStore(next);
+    setEditData(next);
+    setDbBenefits(Array.isArray(f.benefits) ? f.benefits : []);
+  };
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
@@ -325,11 +361,42 @@ const StoreInfo = () => {
     }
 
     const finalData = { ...editData, lat: newLat, lng: newLng };
-    setStore(finalData);
-    setEditData(finalData);
-    setIsEditing(false);
-    setActiveImageIndex(0);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // 2026-06-11 — 실저장: 로컬 state 만 갱신하던 버그 수정 (DB 미반영 → 사용자앱 미반영이던 문제).
+    if (!facilityId) {
+      showError('매장 정보가 아직 등록되지 않았습니다. 가입 승인 후 다시 시도해 주세요.');
+      return;
+    }
+    const payload = {
+      name: finalData.name,
+      address: [finalData.address, finalData.detailAddress].filter(Boolean).join(' ').trim(),
+      phone: finalData.phone,
+      description: finalData.description,
+      business_hours: `${finalData.hours.start}-${finalData.hours.end}`,
+      latitude: newLat,
+      longitude: newLng,
+      image_url: finalData.images[0] || null,
+      // UI {days, publicHolidays} → JSON 배열 (mobile 매장 상세 표기 형식과 동일)
+      holidays: [
+        ...finalData.holidays.days.map((d) => `매주 ${d}`),
+        ...(finalData.holidays.publicHolidays ? ['공휴일'] : []),
+      ],
+    };
+    setSaving(true);
+    try {
+      await StoreService.update(facilityId, payload);
+      setStore(finalData);
+      setEditData(finalData);
+      setIsEditing(false);
+      setActiveImageIndex(0);
+      setIsSuccessMsg(true);
+      setErrorMessage('매장 정보가 저장되었습니다. 사용자 앱에 바로 반영됩니다.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e) {
+      showError(e?.message || '저장에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const displayHours = `${store.hours.start} ~ ${store.hours.end}`;
@@ -348,7 +415,7 @@ const StoreInfo = () => {
       {errorMessage && (
         <div className="validation-modal-overlay" role="alertdialog" onClick={() => setErrorMessage('')}>
           <div className="validation-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="validation-modal-icon">⚠️</div>
+            <div className="validation-modal-icon">{isSuccessMsg ? '✅' : '⚠️'}</div>
             <p className="validation-modal-text">{errorMessage}</p>
             <button className="validation-modal-confirm" onClick={() => setErrorMessage('')} autoFocus>
               확인
@@ -645,12 +712,12 @@ const StoreInfo = () => {
             <label>{t('store.label_benefits')}</label>
             <div className="benefits-list">
               {dbBenefits.length > 0 ? (
-                dbBenefits.map((benefit, idx) => (
-                  <div key={idx} className="benefit-card clickable" onClick={() => navigate(benefit.includes('스탬프') ? '/dashboard/stamps' : '/dashboard/coupons')}>
+                dbBenefits.map((b, idx) => (
+                  <div key={idx} className="benefit-card clickable" onClick={() => navigate(b.kind === 'stamp' ? '/dashboard/stamps' : '/dashboard/coupons')}>
                     <CardAvatar variant="accent" size="sm">
                       <Gift strokeWidth={2} />
                     </CardAvatar>
-                    <span className="benefit-text">{benefit}</span>
+                    <span className="benefit-text">{b.title || String(b)}</span>
                     <ChevronRight size={16} className="benefit-arrow" />
                   </div>
                 ))
@@ -669,7 +736,7 @@ const StoreInfo = () => {
         ) : (
           <>
             <Button variant="outline" fullWidth onClick={() => { setIsEditing(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>{t('store.btn_cancel')}</Button>
-            <Button variant="primary" fullWidth onClick={handleSave}>{t('store.btn_save')}</Button>
+            <Button variant="primary" fullWidth onClick={handleSave} disabled={saving}>{saving ? '저장 중…' : t('store.btn_save')}</Button>
           </>
         )}
       </BottomActionBar>
