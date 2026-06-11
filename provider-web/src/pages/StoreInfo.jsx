@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Camera, Save, X, Plus, Gift, ChevronRight, Utensils } from 'lucide-react';
+import PwModal from '../components/common/PwModal.jsx';
 import CardAvatar from '../components/common/CardAvatar';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -411,18 +412,23 @@ const StoreInfo = () => {
         <p className="sub-title">{t('store.subtitle')}</p>
       </header>
 
-      {/* 검증 오류 모달 — 확인 버튼으로 닫기 */}
-      {errorMessage && (
-        <div className="validation-modal-overlay" role="alertdialog" onClick={() => setErrorMessage('')}>
-          <div className="validation-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="validation-modal-icon">{isSuccessMsg ? '✅' : '⚠️'}</div>
-            <p className="validation-modal-text">{errorMessage}</p>
-            <button className="validation-modal-confirm" onClick={() => setErrorMessage('')} autoFocus>
-              확인
-            </button>
-          </div>
+      {/* 검증 오류/성공 모달 — PwModal 공통 컴포넌트 */}
+      <PwModal
+        open={!!errorMessage}
+        onClose={() => setErrorMessage('')}
+        title="안내"
+        size="sm"
+        footer={
+          <button className="settings-modal-btn confirm" onClick={() => setErrorMessage('')} autoFocus>
+            확인
+          </button>
+        }
+      >
+        <div style={{ textAlign: 'center', padding: '8px 0' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '12px' }}>{isSuccessMsg ? '✅' : '⚠️'}</div>
+          <p style={{ margin: 0, fontSize: 'var(--pw-label-size)', color: 'var(--pw-text)' }}>{errorMessage}</p>
         </div>
-      )}
+      </PwModal>
 
       <section className="modern-gallery">
         <div className="gallery-main" style={{ backgroundImage: `url(${isEditing ? editData.images[activeImageIndex] || editData.images[0] : store.images[activeImageIndex] || store.images[0]})` }}>
@@ -741,22 +747,19 @@ const StoreInfo = () => {
         )}
       </BottomActionBar>
 
-      {/* Address Search Modal */}
-      {isAddressSearchOpen && (
-        <div className="address-modal-overlay" onClick={() => setIsAddressSearchOpen(false)}>
-          <div className="address-modal-content" onClick={e => e.stopPropagation()}>
-            <div className="address-modal-header">
-              <h3>주소 검색</h3>
-              <button type="button" className="close-btn" onClick={() => setIsAddressSearchOpen(false)}><X size={24} /></button>
-            </div>
-            <DaumPostcodeEmbed 
-              defaultQuery={editData.address.includes('서울특별시') ? '' : editData.address} 
-              onComplete={handleAddressComplete} 
-              style={{ height: '450px' }} 
-            />
-          </div>
-        </div>
-      )}
+      {/* 주소 검색 모달 — PwModal 공통 컴포넌트 */}
+      <PwModal
+        open={isAddressSearchOpen}
+        onClose={() => setIsAddressSearchOpen(false)}
+        title="주소 검색"
+        size="md"
+      >
+        <DaumPostcodeEmbed
+          defaultQuery={editData.address.includes('서울특별시') ? '' : editData.address}
+          onComplete={handleAddressComplete}
+          style={{ height: '450px' }}
+        />
+      </PwModal>
     </div>
   );
 };

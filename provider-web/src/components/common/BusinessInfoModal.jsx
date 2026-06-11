@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, Info } from 'lucide-react';
+import { Info } from 'lucide-react';
 import AuthService from '../../services/auth/AuthService';
+import PwModal, { PwField } from './PwModal.jsx';
 import '../../pages/Settings.css';
 
 /**
@@ -39,83 +40,74 @@ export default function BusinessInfoModal({ onClose, context = 'settings' }) {
     : '회사 정보 변경은 슈퍼어드민 승인 후 반영됩니다. 변경 요청 → 검토 → 승인 단계를 거치며, 진행 상태는 알림으로 안내됩니다.';
 
   return (
-    <div className="settings-modal-overlay" onClick={onClose}>
-      <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="settings-modal-header">
-          <h2 className="settings-modal-title">사업자 정보 변경</h2>
-          <button className="settings-modal-close" onClick={onClose} aria-label="닫기">
-            <X size={20} />
-          </button>
+    <PwModal
+      open
+      onClose={onClose}
+      title="사업자 정보 변경"
+      size="md"
+      footer={!submitted && (
+        <>
+          <button className="settings-modal-btn cancel" onClick={onClose}>취소</button>
+          <button className="settings-modal-btn confirm" onClick={handleSubmit}>변경 요청</button>
+        </>
+      )}
+    >
+      {submitted ? (
+        <div className="biz-modal-success">
+          <div className="biz-modal-success-icon">✓</div>
+          <p className="biz-modal-success-title">변경 요청이 접수되었습니다</p>
+          <p className="biz-modal-success-desc">
+            슈퍼어드민 검토 후 반영됩니다. 진행 상태는 설정 &gt; 계정 관리에서 확인하거나 알림으로 안내됩니다.
+          </p>
         </div>
+      ) : (
+        <>
+          <div className="biz-modal-notice">
+            <Info size={14} aria-hidden="true" />
+            <span>{noticeText}</span>
+          </div>
 
-        <div className="settings-modal-body">
-          {submitted ? (
-            <div className="biz-modal-success">
-              <div className="biz-modal-success-icon">✓</div>
-              <p className="biz-modal-success-title">변경 요청이 접수되었습니다</p>
-              <p className="biz-modal-success-desc">
-                슈퍼어드민 검토 후 반영됩니다. 진행 상태는 설정 &gt; 계정 관리에서 확인하거나 알림으로 안내됩니다.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="biz-modal-notice">
-                <Info size={14} aria-hidden="true" />
-                <span>{noticeText}</span>
-              </div>
+          <PwField label="대표자명">
+            <input
+              type="text"
+              className="settings-modal-input"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="대표자명"
+            />
+          </PwField>
 
-              <div className="settings-modal-field">
-                <label className="settings-modal-label">대표자명</label>
-                <input
-                  type="text"
-                  className="settings-modal-input"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="대표자명"
-                />
-              </div>
+          <PwField label="사업자번호">
+            <input
+              type="text"
+              className="settings-modal-input"
+              value={formData.bizNumber}
+              onChange={(e) => setFormData({ ...formData, bizNumber: e.target.value })}
+              placeholder="000-00-00000"
+            />
+          </PwField>
 
-              <div className="settings-modal-field">
-                <label className="settings-modal-label">사업자번호</label>
-                <input
-                  type="text"
-                  className="settings-modal-input"
-                  value={formData.bizNumber}
-                  onChange={(e) => setFormData({ ...formData, bizNumber: e.target.value })}
-                  placeholder="000-00-00000"
-                />
-              </div>
+          <PwField label="연락처">
+            <input
+              type="tel"
+              className="settings-modal-input"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="02-0000-0000"
+            />
+          </PwField>
 
-              <div className="settings-modal-field">
-                <label className="settings-modal-label">연락처</label>
-                <input
-                  type="tel"
-                  className="settings-modal-input"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="02-0000-0000"
-                />
-              </div>
-
-              <div className="settings-modal-field">
-                <label className="settings-modal-label">이메일</label>
-                <input
-                  type="email"
-                  className="settings-modal-input"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="email@example.com"
-                />
-              </div>
-
-              <div className="settings-modal-actions">
-                <button className="settings-modal-btn cancel" onClick={onClose}>취소</button>
-                <button className="settings-modal-btn confirm" onClick={handleSubmit}>변경 요청</button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
+          <PwField label="이메일">
+            <input
+              type="email"
+              className="settings-modal-input"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="email@example.com"
+            />
+          </PwField>
+        </>
+      )}
+    </PwModal>
   );
 }

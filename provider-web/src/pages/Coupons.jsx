@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Ticket, Plus, ChevronRight, Info } from 'lucide-react';
 import BottomActionBar from '../components/common/BottomActionBar';
 import Button from '../components/common/Button';
+import PwModal from '../components/common/PwModal.jsx';
 import AuthService from '../services/auth/AuthService';
 import CouponService from '../services/coupon/CouponService';
 import '../pages/Stamps.css';
@@ -177,73 +178,68 @@ const Coupons = () => {
       </BottomActionBar>
 
       {/* 사용 처리 확인 모달 */}
-      {useModalCouponId && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2 style={{ fontSize: '1.1rem', margin: '1.5rem 0 0.5rem', color: 'var(--pw-text)', padding: '0 1.5rem' }}>
-              {t('coupon.staff_use_title', '쿠폰 사용 처리')}
-            </h2>
-            <div className="modal-body" style={{ paddingTop: '0.75rem' }}>
-              <div style={{
-                display: 'flex',
-                gap: '0.5rem',
-                alignItems: 'flex-start',
-                background: 'rgba(245, 158, 11, 0.10)',
-                border: '1px solid rgba(245, 158, 11, 0.35)',
-                borderRadius: 'var(--pw-radius-sm)',
-                padding: '0.75rem 1rem',
-                color: '#F59E0B',
-                fontSize: 'var(--pw-caption-size)',
-                lineHeight: '1.6',
-                textAlign: 'left',
-                marginBottom: '0.5rem'
-              }}>
-                <Info size={14} style={{ flexShrink: 0, marginTop: '2px' }} />
-                <span>
-                  쿠폰 #{useModalCouponId}을 사용 처리하시겠습니까?{'\n'}
-                  {t('coupon.staff_use_warning', '실제 매장에서 혜택을 제공한 후에만 처리하세요. 사용 처리는 되돌릴 수 없습니다.')}
-                </span>
-              </div>
-            </div>
-            <div className="modal-actions">
-              <button
-                className="modal-btn cancel"
-                onClick={() => setUseModalCouponId(null)}
-                disabled={isProcessing}
-              >
-                {t('noti.btn_cancel', '취소')}
-              </button>
-              <button
-                className="modal-btn confirm"
-                onClick={confirmUse}
-                disabled={isProcessing}
-              >
-                {isProcessing ? '처리 중...' : t('coupon.staff_use_btn', '사용 처리')}
-              </button>
-            </div>
-          </div>
+      <PwModal
+        open={!!useModalCouponId}
+        onClose={() => !isProcessing && setUseModalCouponId(null)}
+        title={t('coupon.staff_use_title', '쿠폰 사용 처리')}
+        busy={isProcessing}
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="ghost"
+              onClick={() => setUseModalCouponId(null)}
+              disabled={isProcessing}
+            >
+              {t('noti.btn_cancel', '취소')}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={confirmUse}
+              disabled={isProcessing}
+            >
+              {isProcessing ? '처리 중...' : t('coupon.staff_use_btn', '사용 처리')}
+            </Button>
+          </>
+        }
+      >
+        <div style={{
+          display: 'flex',
+          gap: '0.5rem',
+          alignItems: 'flex-start',
+          background: 'rgba(245, 158, 11, 0.10)',
+          border: '1px solid rgba(245, 158, 11, 0.35)',
+          borderRadius: 'var(--pw-radius-sm)',
+          padding: '0.75rem 1rem',
+          color: '#F59E0B',
+          fontSize: 'var(--pw-caption-size)',
+          lineHeight: '1.6',
+          textAlign: 'left',
+        }}>
+          <Info size={14} style={{ flexShrink: 0, marginTop: '2px' }} />
+          <span>
+            쿠폰 #{useModalCouponId}을 사용 처리하시겠습니까?{'\n'}
+            {t('coupon.staff_use_warning', '실제 매장에서 혜택을 제공한 후에만 처리하세요. 사용 처리는 되돌릴 수 없습니다.')}
+          </span>
         </div>
-      )}
+      </PwModal>
 
       {/* 사용 처리 완료 모달 */}
-      {doneModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-body">
-              {t('coupon.staff_use_done', '쿠폰 사용 처리가 완료되었습니다.')}
-            </div>
-            <div className="modal-actions">
-              <button
-                className="modal-btn confirm"
-                style={{ borderLeft: 'none' }}
-                onClick={() => setDoneModalOpen(false)}
-              >
-                {t('noti.btn_confirm', '확인')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <PwModal
+        open={doneModalOpen}
+        onClose={() => setDoneModalOpen(false)}
+        title={t('coupon.staff_use_title', '쿠폰 사용 처리')}
+        size="sm"
+        footer={
+          <Button variant="primary" fullWidth onClick={() => setDoneModalOpen(false)}>
+            {t('noti.btn_confirm', '확인')}
+          </Button>
+        }
+      >
+        <p style={{ textAlign: 'center', color: 'var(--pw-text-secondary)', margin: 0 }}>
+          {t('coupon.staff_use_done', '쿠폰 사용 처리가 완료되었습니다.')}
+        </p>
+      </PwModal>
     </div>
   );
 };

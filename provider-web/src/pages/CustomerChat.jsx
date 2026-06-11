@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, ChevronLeft, Send, Paperclip, MoreVertical, Loader2, Trash2, CheckCheck, X, Info, CheckCircle2 } from 'lucide-react';
 import GroupCard, { GroupCardItem } from '../components/common/GroupCard';
+import PwModal, { PwField } from '../components/common/PwModal.jsx';
 import ReportService, { REPORT_REASONS } from '../services/ReportService';
 import ChatService from '../services/chat/ChatService';
 import './CustomerChat.css';
@@ -236,146 +237,125 @@ const ChatRoom = ({ chat, onBack, onSend, onDeleteMessage, translatingId, onLeav
       </div>
 
       {/* 운영 안내 가이드라인 모달 */}
-      {showGuideline && (
-        <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 'var(--pw-z-modal)' }}
-          onClick={() => setShowGuideline(false)}
-        >
-          <div
-            style={{ background: 'var(--pw-surface)', borderRadius: 'var(--pw-radius-lg)', width: '90%', maxWidth: '380px', overflow: 'hidden', boxShadow: 'var(--pw-shadow-xl)' }}
-            onClick={(e) => e.stopPropagation()}
+      <PwModal
+        open={showGuideline}
+        onClose={() => setShowGuideline(false)}
+        title={t('chat.guideline_title', '채팅 운영 안내')}
+        size="sm"
+        footer={
+          <button
+            type="button"
+            className="report-btn-submit"
+            onClick={() => setShowGuideline(false)}
           >
-            <div style={{ padding: '1.25rem 1.5rem 0.75rem', borderBottom: '1px solid var(--pw-border)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Info size={16} color="var(--pw-accent)" />
-              <h2 style={{ margin: 0, fontSize: 'var(--pw-label-size)', fontWeight: 700, color: 'var(--pw-text)' }}>
-                {t('chat.guideline_title', '채팅 운영 안내')}
-              </h2>
-            </div>
-            <ul style={{ margin: 0, padding: '1rem 1.5rem', listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {[
-                t('chat.guideline_business_hours', '운영 시간 내 최대한 빠르게 답변 드리겠습니다. 야간·공휴일은 응답이 지연될 수 있습니다.'),
-                t('chat.guideline_no_spam', '욕설, 광고성 메시지, 도배 등은 정보통신망법에 따라 제재될 수 있습니다.'),
-                t('chat.guideline_privacy', '개인정보(전화번호, 주민번호 등)는 채팅에 입력하지 마세요.'),
-                t('chat.guideline_dispute', '분쟁 발생 시 채팅 기록이 증거로 활용될 수 있습니다.'),
-              ].map((text, i) => (
-                <li key={i} style={{ display: 'flex', gap: '0.5rem', fontSize: 'var(--pw-caption-size)', color: 'var(--pw-text-secondary)', lineHeight: '1.6' }}>
-                  <span style={{ color: 'var(--pw-accent)', fontWeight: 700, flexShrink: 0 }}>·</span>
-                  <span>{text}</span>
-                </li>
-              ))}
-            </ul>
-            <div style={{ borderTop: '1px solid var(--pw-border)', display: 'flex' }}>
-              <button
-                onClick={() => setShowGuideline(false)}
-                style={{ flex: 1, padding: 'var(--pw-space-4)', background: 'none', border: 'none', color: 'var(--pw-primary)', fontWeight: 600, fontSize: 'var(--pw-body-size)', cursor: 'pointer', minHeight: 'var(--pw-touch-comfortable)' }}
-              >
-                {t('noti.btn_confirm', '확인')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            {t('noti.btn_confirm', '확인')}
+          </button>
+        }
+      >
+        <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {[
+            t('chat.guideline_business_hours', '운영 시간 내 최대한 빠르게 답변 드리겠습니다. 야간·공휴일은 응답이 지연될 수 있습니다.'),
+            t('chat.guideline_no_spam', '욕설, 광고성 메시지, 도배 등은 정보통신망법에 따라 제재될 수 있습니다.'),
+            t('chat.guideline_privacy', '개인정보(전화번호, 주민번호 등)는 채팅에 입력하지 마세요.'),
+            t('chat.guideline_dispute', '분쟁 발생 시 채팅 기록이 증거로 활용될 수 있습니다.'),
+          ].map((text, i) => (
+            <li key={i} style={{ display: 'flex', gap: '0.5rem', fontSize: 'var(--pw-caption-size)', color: 'var(--pw-text-secondary)', lineHeight: '1.6' }}>
+              <span style={{ color: 'var(--pw-accent)', fontWeight: 700, flexShrink: 0 }}>·</span>
+              <span>{text}</span>
+            </li>
+          ))}
+        </ul>
+      </PwModal>
 
       {/* 손님 신고 모달 (출시 심사 HIGH#1 — Apple Guideline 1.2 UGC 모더레이션) */}
-      {showReportModal && (
-        <div
-          className="report-modal-overlay"
-          onClick={() => { if (!reportBusy) closeReportModal(); }}
-        >
-          <div className="report-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="report-modal-header">
-              <h2>{t('chat.report_title', '손님 신고')}</h2>
-              <button
-                className="report-modal-close"
-                onClick={closeReportModal}
-                disabled={reportBusy}
-                aria-label={t('noti.btn_close', '닫기')}
-              >
-                <X size={18} />
-              </button>
+      <PwModal
+        open={showReportModal}
+        onClose={() => { if (!reportBusy) closeReportModal(); }}
+        title={t('chat.report_title', '손님 신고')}
+        size="md"
+        busy={reportBusy}
+        footer={reportDone ? (
+          <button className="report-btn-submit" onClick={closeReportModal}>
+            {t('noti.btn_confirm', '확인')}
+          </button>
+        ) : (
+          <>
+            <button
+              className="report-btn-cancel"
+              onClick={closeReportModal}
+              disabled={reportBusy}
+            >
+              {t('noti.btn_cancel', '취소')}
+            </button>
+            <button
+              className="report-btn-submit"
+              onClick={handleSubmitReport}
+              disabled={!reportReason || reportBusy}
+            >
+              {reportBusy
+                ? t('chat.report_submitting', '제출 중…')
+                : t('chat.report_submit', '신고 제출')}
+            </button>
+          </>
+        )}
+      >
+        {reportDone ? (
+          <div className="report-done">
+            <CheckCircle2 size={40} className="report-done-icon" />
+            <p className="report-done-text">
+              {t('chat.report_done', '신고가 접수되었습니다. 운영팀이 검토 후 조치합니다.')}
+            </p>
+          </div>
+        ) : (
+          <>
+            <p className="report-modal-intro">
+              {t('chat.report_intro', '욕설·불법·스팸 등 채팅 이용규칙 위반을 신고합니다. 접수된 신고는 운영팀이 검토하며, 신고는 제출 후 취소할 수 없습니다.')}
+            </p>
+
+            <div className="report-field">
+              <span className="report-label">{t('chat.report_reason', '신고 사유')}</span>
+              <div className="report-reason-list">
+                {REPORT_REASONS.map(({ code, labelKey, labelDefault }) => (
+                  <button
+                    key={code}
+                    type="button"
+                    className={`report-reason-item ${reportReason === code ? 'selected' : ''}`}
+                    onClick={() => setReportReason(code)}
+                    disabled={reportBusy}
+                  >
+                    <span className="report-reason-dot" />
+                    {t(labelKey, labelDefault)}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {reportDone ? (
-              <div className="report-done">
-                <CheckCircle2 size={40} className="report-done-icon" />
-                <p className="report-done-text">
-                  {t('chat.report_done', '신고가 접수되었습니다. 운영팀이 검토 후 조치합니다.')}
-                </p>
-                <button className="report-btn-submit" onClick={closeReportModal}>
-                  {t('noti.btn_confirm', '확인')}
-                </button>
-              </div>
-            ) : (
-              <>
-                <p className="report-modal-intro">
-                  {t('chat.report_intro', '욕설·불법·스팸 등 채팅 이용규칙 위반을 신고합니다. 접수된 신고는 운영팀이 검토하며, 신고는 제출 후 취소할 수 없습니다.')}
-                </p>
+            <div className="report-field">
+              <span className="report-label">{t('chat.report_detail', '상세 내용 (선택)')}</span>
+              <textarea
+                className="report-textarea"
+                rows={3}
+                maxLength={500}
+                value={reportDetail}
+                onChange={(e) => setReportDetail(e.target.value)}
+                placeholder={t('chat.report_detail_ph', '신고 사유를 자세히 적어주세요.')}
+                disabled={reportBusy}
+              />
+            </div>
 
-                <div className="report-field">
-                  <span className="report-label">{t('chat.report_reason', '신고 사유')}</span>
-                  <div className="report-reason-list">
-                    {REPORT_REASONS.map(({ code, labelKey, labelDefault }) => (
-                      <button
-                        key={code}
-                        type="button"
-                        className={`report-reason-item ${reportReason === code ? 'selected' : ''}`}
-                        onClick={() => setReportReason(code)}
-                        disabled={reportBusy}
-                      >
-                        <span className="report-reason-dot" />
-                        {t(labelKey, labelDefault)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+            <div className="report-ugc-notice">
+              <strong>{t('chat.ugc_title', '채팅 이용규칙')}</strong>
+              <ul>
+                <li>{t('chat.ugc_rule_1', '욕설·차별·혐오 표현 금지')}</li>
+                <li>{t('chat.ugc_rule_2', '불법 정보·음란물·사기 행위 금지')}</li>
+                <li>{t('chat.ugc_rule_3', '스팸·광고·도배 금지')}</li>
+              </ul>
+            </div>
 
-                <div className="report-field">
-                  <span className="report-label">{t('chat.report_detail', '상세 내용 (선택)')}</span>
-                  <textarea
-                    className="report-textarea"
-                    rows={3}
-                    maxLength={500}
-                    value={reportDetail}
-                    onChange={(e) => setReportDetail(e.target.value)}
-                    placeholder={t('chat.report_detail_ph', '신고 사유를 자세히 적어주세요.')}
-                    disabled={reportBusy}
-                  />
-                </div>
-
-                <div className="report-ugc-notice">
-                  <strong>{t('chat.ugc_title', '채팅 이용규칙')}</strong>
-                  <ul>
-                    <li>{t('chat.ugc_rule_1', '욕설·차별·혐오 표현 금지')}</li>
-                    <li>{t('chat.ugc_rule_2', '불법 정보·음란물·사기 행위 금지')}</li>
-                    <li>{t('chat.ugc_rule_3', '스팸·광고·도배 금지')}</li>
-                  </ul>
-                </div>
-
-                {reportError && <p className="report-modal-error">{reportError}</p>}
-
-                <div className="report-modal-actions">
-                  <button
-                    className="report-btn-cancel"
-                    onClick={closeReportModal}
-                    disabled={reportBusy}
-                  >
-                    {t('noti.btn_cancel', '취소')}
-                  </button>
-                  <button
-                    className="report-btn-submit"
-                    onClick={handleSubmitReport}
-                    disabled={!reportReason || reportBusy}
-                  >
-                    {reportBusy
-                      ? t('chat.report_submitting', '제출 중…')
-                      : t('chat.report_submit', '신고 제출')}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+            {reportError && <p className="report-modal-error">{reportError}</p>}
+          </>
+        )}
+      </PwModal>
 
       <div className="message-list" ref={listRef} onScroll={handleScroll}>
         {showScrollBtn && (
@@ -1064,29 +1044,30 @@ const CustomerChat = () => {
       </div>
 
       {/* 차단 관리 모달 */}
-      {showBlockList && (
-        <div className="block-modal-overlay" onClick={() => setShowBlockList(false)}>
-          <div className="block-modal" onClick={e => e.stopPropagation()}>
-            <div className="block-modal-header">
-              <h2 className="block-modal-title">차단된 고객 관리</h2>
-              <button className="block-modal-close" onClick={() => setShowBlockList(false)}><X size={20} /></button>
-            </div>
-
-            <div className="block-list-container">
-              {blockedUsers.length === 0 ? (
-                <p className="block-empty">차단된 고객이 없습니다.</p>
-              ) : (
-                blockedUsers.map(u => (
-                  <div key={u.id} className="block-row">
-                    <span className="block-name">{u.name}</span>
-                    <button className="block-unblock-btn" onClick={() => handleUnblockUser(u.id)}>차단 해제</button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+      <PwModal
+        open={showBlockList}
+        onClose={() => setShowBlockList(false)}
+        title="차단된 고객 관리"
+        size="sm"
+        footer={
+          <button type="button" className="report-btn-cancel" onClick={() => setShowBlockList(false)}>
+            닫기
+          </button>
+        }
+      >
+        <div className="block-list-container">
+          {blockedUsers.length === 0 ? (
+            <p className="block-empty">차단된 고객이 없습니다.</p>
+          ) : (
+            blockedUsers.map(u => (
+              <div key={u.id} className="block-row">
+                <span className="block-name">{u.name}</span>
+                <button className="block-unblock-btn" onClick={() => handleUnblockUser(u.id)}>차단 해제</button>
+              </div>
+            ))
+          )}
         </div>
-      )}
+      </PwModal>
     </div>
   );
 };

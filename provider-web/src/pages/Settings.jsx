@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, X, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Info } from 'lucide-react';
 import AuthService from '../services/auth/AuthService';
 import PwPageHeader from '../components/common/PwPageHeader';
+import PwModal, { PwField } from '../components/common/PwModal.jsx';
 import { useConfirm } from '../hooks/useConfirm';
 import NotificationPreferencesService from '../services/notification/NotificationPreferencesService';
 import ConfirmModal from '../components/common/ConfirmModal';
@@ -105,61 +106,53 @@ const PasswordModal = ({ onClose }) => {
   };
 
   return (
-    <div className="settings-modal-overlay" onClick={onClose}>
-      <div className="settings-modal" onClick={e => e.stopPropagation()}>
-        <div className="settings-modal-header">
-          <h2 className="settings-modal-title">비밀번호 변경</h2>
-          <button className="settings-modal-close" onClick={onClose}><X size={20} /></button>
+    <PwModal
+      open
+      onClose={onClose}
+      title="비밀번호 변경"
+      size="md"
+      footer={!success && (
+        <>
+          <button className="settings-modal-btn cancel" onClick={onClose}>취소</button>
+          <button className="settings-modal-btn confirm" onClick={handleSubmit}>변경</button>
+        </>
+      )}
+    >
+      {success ? (
+        <div style={{ textAlign: 'center', padding: 'var(--pw-space-8) 0', color: 'var(--pw-primary)', fontWeight: 600 }}>
+          ✓ 비밀번호가 변경되었습니다.
         </div>
+      ) : (
+        <>
+          <PwField label="현재 비밀번호">
+            <PasswordInput
+              placeholder="현재 비밀번호 입력"
+              value={currentPw}
+              onChange={e => setCurrentPw(e.target.value)}
+              autoComplete="current-password"
+            />
+          </PwField>
 
-        <div className="settings-modal-body">
-        {success ? (
-          <div style={{ textAlign: 'center', padding: 'var(--pw-space-8) 0', color: 'var(--pw-primary)', fontWeight: 600 }}>
-            ✓ 비밀번호가 변경되었습니다.
-          </div>
-        ) : (
-          <>
-            <div className="settings-modal-field">
-              <label className="settings-modal-label">현재 비밀번호</label>
-              <PasswordInput
-                placeholder="현재 비밀번호 입력"
-                value={currentPw}
-                onChange={e => setCurrentPw(e.target.value)}
-                autoComplete="current-password"
-              />
-            </div>
+          <PwField label="새 비밀번호">
+            <PasswordInput
+              placeholder="8자 이상 입력"
+              value={newPw}
+              onChange={e => setNewPw(e.target.value)}
+              autoComplete="new-password"
+            />
+          </PwField>
 
-            <div className="settings-modal-field">
-              <label className="settings-modal-label">새 비밀번호</label>
-              <PasswordInput
-                placeholder="8자 이상 입력"
-                value={newPw}
-                onChange={e => setNewPw(e.target.value)}
-                autoComplete="new-password"
-              />
-            </div>
-
-            <div className="settings-modal-field">
-              <label className="settings-modal-label">새 비밀번호 확인</label>
-              <PasswordInput
-                placeholder="새 비밀번호 재입력"
-                value={confirmPw}
-                onChange={e => setConfirmPw(e.target.value)}
-                autoComplete="new-password"
-              />
-            </div>
-
-            {error && <p className="settings-modal-error">{error}</p>}
-
-            <div className="settings-modal-actions">
-              <button className="settings-modal-btn cancel" onClick={onClose}>취소</button>
-              <button className="settings-modal-btn confirm" onClick={handleSubmit}>변경</button>
-            </div>
-          </>
-        )}
-        </div>
-      </div>
-    </div>
+          <PwField label="새 비밀번호 확인" error={error || undefined}>
+            <PasswordInput
+              placeholder="새 비밀번호 재입력"
+              value={confirmPw}
+              onChange={e => setConfirmPw(e.target.value)}
+              autoComplete="new-password"
+            />
+          </PwField>
+        </>
+      )}
+    </PwModal>
   );
 };
 
