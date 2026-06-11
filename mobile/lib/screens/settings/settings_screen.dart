@@ -200,9 +200,9 @@ class _PolicySheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = data['label']?.toString() ?? data['kind']?.toString() ?? '약관';
+    final title = data['label']?.toString() ?? data['kind']?.toString() ?? I18nService.instance.t('policy.fallback_title', defaultValue: '약관');
     final version = data['version']?.toString() ?? '';
-    final body = data['body']?.toString() ?? '본문이 등록되어 있지 않습니다.';
+    final body = data['body']?.toString() ?? I18nService.instance.t('policy.body_empty', defaultValue: '본문이 등록되어 있지 않습니다.');
     final effective = data['effective_at']?.toString();
 
     // 2026-06-10 — DraggableScrollableSheet 제거.

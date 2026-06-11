@@ -207,19 +207,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 busy: _busy,
                 onGoogle: () => _handle(
                   () => auth.signInWithGoogle(),
-                  fallbackErr: 'Google 로그인 실패.'),
+                  fallbackErr: 'Google ${context.t('mobile.auth.login_failed_suffix', defaultValue: '로그인 실패.')}'),
                 onApple: () => _handle(
                   () => auth.signInWithApple(),
-                  fallbackErr: 'Apple 로그인 실패.'),
+                  fallbackErr: 'Apple ${context.t('mobile.auth.login_failed_suffix', defaultValue: '로그인 실패.')}'),
                 onFacebook: () => _handle(
                   () => auth.signInWithFacebook(),
-                  fallbackErr: 'Facebook 로그인 실패.'),
+                  fallbackErr: 'Facebook ${context.t('mobile.auth.login_failed_suffix', defaultValue: '로그인 실패.')}'),
                 onKakao: () => _handle(
                   () => auth.signInWithKakao(),
-                  fallbackErr: '카카오 로그인 실패.'),
+                  fallbackErr: '${context.t('mobile.auth.kakao', defaultValue: '카카오')} ${context.t('mobile.auth.login_failed_suffix', defaultValue: '로그인 실패.')}'),
                 onNaver: () => _handle(
                   () => auth.signInWithNaver(),
-                  fallbackErr: '네이버 로그인 실패.'),
+                  fallbackErr: '${context.t('mobile.auth.naver', defaultValue: '네이버')} ${context.t('mobile.auth.login_failed_suffix', defaultValue: '로그인 실패.')}'),
               ),
 
               const SizedBox(height: 28),

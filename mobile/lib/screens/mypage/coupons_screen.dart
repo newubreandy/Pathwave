@@ -297,10 +297,12 @@ class _CouponCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = data['title']?.toString() ?? '쿠폰';
-    final facilityName = data['facility_name']?.toString() ?? '매장';
+    final title = data['title']?.toString() ?? I18nService.instance.t('coupon.fallback_title', defaultValue: '쿠폰');
+    final facilityName = data['facility_name']?.toString() ?? I18nService.instance.t('mobile.common.fallback_store', defaultValue: '매장');
     final discount = data['discount_amount'] ?? data['discount_pct'];
-    final discountSuffix = data['discount_amount'] != null ? '원 할인' : '% 할인';
+    final discountSuffix = data['discount_amount'] != null
+        ? I18nService.instance.t('coupon.discount_won_suffix', defaultValue: '원 할인')
+        : I18nService.instance.t('coupon.discount_pct_suffix', defaultValue: '% 할인');
     final expiresAt = data['expires_at']?.toString();
 
     final isUsable = status == 'active';
@@ -403,8 +405,8 @@ class _CouponCard extends StatelessWidget {
 
   void _showDetailDialog(BuildContext context, Map<String, dynamic> data, bool isUsable) {
     final t = I18nService.instance;
-    final title = data['title']?.toString() ?? '쿠폰';
-    final facilityName = data['facility_name']?.toString() ?? '매장';
+    final title = data['title']?.toString() ?? I18nService.instance.t('coupon.fallback_title', defaultValue: '쿠폰');
+    final facilityName = data['facility_name']?.toString() ?? I18nService.instance.t('mobile.common.fallback_store', defaultValue: '매장');
     final expiresAt = data['expires_at']?.toString();
 
     showDialog<void>(
@@ -499,7 +501,7 @@ class _CouponCard extends StatelessWidget {
 
   void _showUseConfirm(BuildContext context, Map<String, dynamic> data) {
     final t = I18nService.instance;
-    final title = data['title']?.toString() ?? '쿠폰';
+    final title = data['title']?.toString() ?? I18nService.instance.t('coupon.fallback_title', defaultValue: '쿠폰');
     showDialog<void>(
       context: context,
       barrierColor: const Color(0x99000000),

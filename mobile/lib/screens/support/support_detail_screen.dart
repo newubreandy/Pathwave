@@ -86,7 +86,7 @@ class _SupportDetailScreenState extends State<SupportDetailScreen> {
           final messages = (ticket['messages'] as List?)
                   ?.cast<Map<String, dynamic>>() ??
               [];
-          final subject = ticket['subject']?.toString() ?? '문의';
+          final subject = ticket['subject']?.toString() ?? I18nService.instance.t('mobile.support.fallback_subject', defaultValue: '문의');
           final status = ticket['status']?.toString() ?? '';
           final category = ticket['category']?.toString() ?? '';
 

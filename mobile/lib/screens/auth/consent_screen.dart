@@ -343,9 +343,9 @@ class _PolicyDialogState extends State<_PolicyDialog> {
                                 color: AppTheme.warning.withValues(alpha: 0.18),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Text(
-                                '⚠️ 정책 본문이 아직 등록되지 않았습니다 (placeholder).',
-                                style: TextStyle(color: AppTheme.warning, fontSize: 12),
+                              child: Text(
+                                context.t('mobile.auth.policy_placeholder', defaultValue: '⚠️ 정책 본문이 아직 등록되지 않았습니다 (placeholder).'),
+                                style: const TextStyle(color: AppTheme.warning, fontSize: 12),
                               ),
                             ),
                           Text(body, style: const TextStyle(height: 1.5)),

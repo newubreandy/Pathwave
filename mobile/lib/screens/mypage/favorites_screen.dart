@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/favorite_service.dart';
+import '../../services/i18n_service.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/i18n_context.dart';
 import '../../widgets/pw.dart';
@@ -45,7 +46,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   Future<void> _confirmRemove(Map<String, dynamic> data) async {
     final id = data['id'] as int?;
     if (id == null) return;
-    final name = data['name']?.toString() ?? '매장';
+    final name = data['name']?.toString() ?? I18nService.instance.t('mobile.common.fallback_store', defaultValue: '매장');
     final ok = await showPwDialog<bool>(
       context: context,
       title: Text(context.t('favorite.remove_title', defaultValue: '즐겨찾기 해제')),
@@ -125,7 +126,7 @@ class _FavoriteCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final id = data['id'] as int?;
-    final name = data['name']?.toString() ?? '매장';
+    final name = data['name']?.toString() ?? I18nService.instance.t('mobile.common.fallback_store', defaultValue: '매장');
     final address = data['address']?.toString() ?? '';
     final description = data['description']?.toString() ?? '';
     final imageUrl = data['image_url']?.toString();

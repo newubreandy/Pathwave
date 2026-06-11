@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../services/favorite_service.dart';
 import '../../services/permission_service.dart';
 import '../../services/store_service.dart';
+import '../../services/i18n_service.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/i18n_context.dart';
 import '../../widgets/pw.dart';
@@ -212,7 +213,7 @@ class _ResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final id = data['id'] as int?;
-    final name = data['name']?.toString() ?? '매장';
+    final name = data['name']?.toString() ?? I18nService.instance.t('mobile.common.fallback_store', defaultValue: '매장');
     final address = data['address']?.toString() ?? '';
     final imageUrl = data['image_url']?.toString();
     final dist = data['distance_km'];

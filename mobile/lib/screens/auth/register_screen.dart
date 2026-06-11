@@ -129,7 +129,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (res['success'] == true) {
           context.go('/home');
         } else {
-          setState(() => _error = res['message']?.toString() ?? '동의 기록 실패.');
+          setState(() => _error = res['message']?.toString() ?? context.t('mobile.auth.consent_record_failed', defaultValue: '동의 기록 실패.'));
         }
         return;
       }
@@ -146,7 +146,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (res['success'] == true) {
         context.go('/home');
       } else {
-        setState(() => _error = res['message']?.toString() ?? '가입 실패.');
+        setState(() => _error = res['message']?.toString() ?? context.t('mobile.auth.register_failed', defaultValue: '가입 실패.'));
       }
     } catch (e) {
       if (!mounted) return;
@@ -269,11 +269,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       SocialLoginRow(
         busy: _busy,
         onGoogle: () => _socialRegister(
-          () => auth.signInWithGoogle(), 'Google 가입 실패.'),
+          () => auth.signInWithGoogle(), 'Google ${context.t('mobile.auth.signup_failed_suffix', defaultValue: '가입 실패.')}'),
         onApple: () => _socialRegister(
-          () => auth.signInWithApple(), 'Apple 가입 실패.'),
+          () => auth.signInWithApple(), 'Apple ${context.t('mobile.auth.signup_failed_suffix', defaultValue: '가입 실패.')}'),
         onFacebook: () => _socialRegister(
-          () => auth.signInWithFacebook(), 'Facebook 가입 실패.'),
+          () => auth.signInWithFacebook(), 'Facebook ${context.t('mobile.auth.signup_failed_suffix', defaultValue: '가입 실패.')}'),
         onKakao: () => _socialRegister(
           () => auth.signInWithKakao(), context.t('mobile.auth.register.error_kakao', defaultValue: '카카오 가입 실패.')),
         onNaver: () => _socialRegister(
@@ -348,7 +348,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       const SizedBox(height: 24),
       PwTextField(
         controller: _birthYearCtrl,
-        hint: '예: 1995',
+        hint: context.t('mobile.auth.birth_year_hint', defaultValue: '예: 1995'),
         prefixIcon: Icons.cake_outlined,
         keyboardType: TextInputType.number,
         maxLength: 4,

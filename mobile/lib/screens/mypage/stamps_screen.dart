@@ -85,7 +85,7 @@ class _StampCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // 2026-06-09 — 쿠폰 카드와 동일 디자인 가이드 + 도장 아이콘.
     // 응답 키 정합: facility_name / total_stamps / reward_threshold / reward_description / reward_available
-    final facilityName = data['facility_name']?.toString() ?? '매장';
+    final facilityName = data['facility_name']?.toString() ?? I18nService.instance.t('mobile.common.fallback_store', defaultValue: '매장');
     final count    = (data['total_stamps']    as num?)?.toInt() ?? 0;
     final required = (data['reward_threshold'] as num?)?.toInt() ?? 10;
     final progress = required > 0 ? (count / required).clamp(0.0, 1.0) : 0.0;
@@ -172,7 +172,7 @@ class _StampCard extends StatelessWidget {
   }
 
   Future<void> _showStampDetail(BuildContext context, Map<String, dynamic> data, dynamic facilityId) async {
-    final facilityName = data['facility_name']?.toString() ?? '매장';
+    final facilityName = data['facility_name']?.toString() ?? I18nService.instance.t('mobile.common.fallback_store', defaultValue: '매장');
     final count    = (data['total_stamps']    as num?)?.toInt() ?? 0;
     final required = (data['reward_threshold'] as num?)?.toInt() ?? 10;
     final progress = required > 0 ? (count / required).clamp(0.0, 1.0) : 0.0;

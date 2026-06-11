@@ -53,7 +53,7 @@ class _FriendInviteQrScreenState extends State<FriendInviteQrScreen> {
       // 2026-06-09 — 백엔드 응답: { success, invitation: { code, share_url, ... } }
       final inv = res['invitation'] as Map?;
       final code = inv?['code']?.toString();
-      if (code == null) throw Exception('초대 코드 발급 실패');
+      if (code == null) throw Exception(I18nService.instance.t('mobile.invite.code_issue_failed', defaultValue: '초대 코드 발급 실패'));
       setState(() {
         _code = code;
         _signupUrl = '$_signupBaseUrl?invited=$code';

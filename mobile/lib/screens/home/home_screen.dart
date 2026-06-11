@@ -330,7 +330,7 @@ class _WifiBanner extends StatelessWidget {
               ),
               PwIconButton(
                 icon: Icons.close,
-                tooltip: '닫기',
+                tooltip: I18nService.instance.t('mobile.common.close', defaultValue: '닫기'),
                 size: 18,
                 color: Colors.white70,
                 onPressed: onDismiss,

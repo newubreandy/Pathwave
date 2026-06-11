@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../services/favorite_service.dart';
 import '../../services/store_service.dart';
+import '../../services/i18n_service.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/i18n_context.dart';
 import '../../widgets/pw.dart';
@@ -169,7 +170,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   SliverAppBar _buildAppBar(Map<String, dynamic> f) {
     // 2026-06-09 — 이미지를 헤더와 겹치지 않게 분리. AppBar 는 일반 높이만.
-    final name = f['name']?.toString() ?? '매장';
+    final name = f['name']?.toString() ?? I18nService.instance.t('mobile.common.fallback_store', defaultValue: '매장');
     return SliverAppBar(
       pinned: true,
       // 2026-06-09 — 상단 영역 글래스 톤 + 매장명 표시 (다른 상세 패턴 통일).

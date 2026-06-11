@@ -41,7 +41,7 @@ class _WifiConnectScreenState extends State<WifiConnectScreen> {
         ssid: widget.ssid,
         password: '',
       );
-      setState(() => _success = '연결 요청 완료 (method=${res['method'] ?? 'unknown'})');
+      setState(() => _success = '${context.t('mobile.wifi.request_done', defaultValue: '연결 요청 완료')} (method=${res['method'] ?? 'unknown'})');
     } on PlatformException catch (e) {
       setState(() => _error = friendlyError(e));
     } catch (e) {
@@ -99,9 +99,7 @@ class _WifiConnectScreenState extends State<WifiConnectScreen> {
                   Expanded(
                     child: Text(
                       context.t('mobile.wifi.os_notice', defaultValue:
-                        'iOS: 가입 직전 시스템 팝업으로 동의를 묻습니다.\n'
-                        'Android 10+: 알림 영역에 WifiNetworkSuggestion 동의 링크가 표시됩니다.\n'
-                        'Android 9 이하는 OS 제한으로 자동 가입 불가.'),
+                        context.t('mobile.wifi.os_guide', defaultValue: 'iOS: 가입 직전 시스템 팝업으로 동의를 묻습니다.\nAndroid 10+: 알림 영역에 WifiNetworkSuggestion 동의 링크가 표시됩니다.\nAndroid 9 이하는 OS 제한으로 자동 가입 불가.')),
                       style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12, height: 1.5),
                     ),
                   ),
