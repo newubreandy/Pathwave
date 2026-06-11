@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import 'i18n_service.dart';
 import '../utils/api_config.dart';
 
 /// 공통 HTTP 클라이언트 — JWT 자동 주입 + JSON 직렬화 + 에러 매핑.
@@ -60,18 +61,22 @@ class ApiClient {
     } catch (_) {
       body = {};
     }
+    final t = I18nService.instance;
     if (r.statusCode == 401) {
       await _storage.delete(key: _kToken);
       await _storage.delete(key: _kRefreshToken);
       await _storage.delete(key: _kUser);
       onUnauthorized?.call();
-      throw ApiException(401, body['message']?.toString() ?? '인증이 만료되었습니다.');
+      throw ApiException(401, body['message']?.toString() ??
+          t.t('mobile.api.auth_expired', defaultValue: '인증이 만료되었습니다.'));
     }
     if (r.statusCode == 429) {
-      throw ApiException(429, body['message']?.toString() ?? '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.');
+      throw ApiException(429, body['message']?.toString() ??
+          t.t('mobile.api.too_many_requests', defaultValue: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.'));
     }
     if (r.statusCode >= 400 || body['success'] == false) {
-      throw ApiException(r.statusCode, body['message']?.toString() ?? '요청 실패 (${r.statusCode})', body);
+      throw ApiException(r.statusCode, body['message']?.toString() ??
+          '${t.t('mobile.api.request_failed', defaultValue: '요청 실패')} (${r.statusCode})', body);
     }
     return body;
   }
@@ -131,8 +136,14 @@ class ApiClient {
     return _decode(r);
   }
 
-  Future<Map<String, dynamic>> delete(String path) async {
-    final r = await http.delete(_uri(path), headers: await _headers());
+  Future<Map<String, dynamic>> delete(String path,
+      [Map<String, dynamic>? body]) async {
+    // 2026-06-11 — 일부 라우트(푸시 토큰 해제 등)는 DELETE 에 JSON body 요구.
+    final r = await http.delete(
+      _uri(path),
+      headers: await _headers(),
+      body: body != null ? jsonEncode(body) : null,
+    );
     return _decode(r);
   }
 }
