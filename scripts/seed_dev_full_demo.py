@@ -365,6 +365,27 @@ if not has:
 print('  푸시 토큰')
 
 
+# ── 방문(WiFi 연결) 로그 — 알림 발송 대상(all_visited) 검증용 (2026-06-11) ──
+# target_type='all_visited' 는 user_wifi_logs 의 distinct user 기준.
+# 데모 회원 × 데모 매장 3곳 방문 기록 → 사장 알림 신청~사용자 수신 풀 루프 데모 가능.
+_demo_users = [r[0] for r in cur.execute(
+    "SELECT id FROM users WHERE email LIKE 'demo-%' OR email='preview@dev.local'").fetchall()]
+_demo_facs = [r[0] for r in cur.execute(
+    "SELECT id FROM facilities WHERE name LIKE '%(데모)%'").fetchall()][:3]
+_n_logs = 0
+for _u in _demo_users:
+    for _f in _demo_facs:
+        _exists = cur.execute(
+            "SELECT 1 FROM user_wifi_logs WHERE user_id=? AND facility_id=? LIMIT 1",
+            (_u, _f)).fetchone()
+        if not _exists:
+            cur.execute(
+                "INSERT INTO user_wifi_logs (user_id, facility_id) VALUES (?,?)",
+                (_u, _f))
+            _n_logs += 1
+print(f'  방문 로그 {_n_logs}건 (알림 all_visited 대상)')
+
+
 con.commit()
 con.close()
 
