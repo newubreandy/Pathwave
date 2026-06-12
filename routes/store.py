@@ -187,14 +187,22 @@ def create_facility():
     if not name:
         return jsonify({'success': False, 'message': '매장명은 필수입니다.'}), 400
 
+    # 2026-06-12 (페르소나 T3 발견) — 생성 시 JSON 3종도 수용 (PATCH 와 정합).
+    # 이전: PATCH 만 처리 → 신규 매장 첫 생성에서 업종/휴무/혜택이 조용히 유실.
+    def _json_or_none(v):
+        if v is None or v == [] or v == '':
+            return None
+        return json.dumps(v, ensure_ascii=False) if isinstance(v, (list, dict)) else v
+
     db = get_db()
     cur = db.execute(
         """INSERT INTO facilities
            (name, address, phone, business_hours, latitude, longitude,
             description, image_url,
             welcome_coupon_title, welcome_coupon_benefit, welcome_coupon_validity_days,
+            holidays, benefits, categories,
             owner_id, active, adult_only)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1,?)""",
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?)""",
         (name,
          _normalize_text(data.get('address')),
          _normalize_text(data.get('phone')),
@@ -206,6 +214,9 @@ def create_facility():
          _normalize_text(data.get('welcome_coupon_title')),
          _normalize_text(data.get('welcome_coupon_benefit')),
          data.get('welcome_coupon_validity_days'),
+         _json_or_none(data.get('holidays')),
+         _json_or_none(data.get('benefits')),
+         _json_or_none(data.get('categories')),
          account_id,
          1 if data.get('adult_only') else 0),
     )
