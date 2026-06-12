@@ -1487,7 +1487,30 @@ def beacons_battery_status():
          ORDER BY b.battery_pct ASC LIMIT 200""",
         (low,)
     ).fetchall()
+    # 2026-06-12 — 전체 비콘 배터리 목록 (사용자 지적: 저전력만 보이면 관리 불편).
+    # 배터리 낮은 순, 미보고(NULL)는 마지막.
+    all_rows = db.execute(
+        """SELECT b.id, b.serial_no, b.facility_id, b.status,
+                  b.battery_pct, b.battery_updated_at, b.last_seen_at,
+                  f.name AS facility_name
+             FROM beacons b
+        LEFT JOIN facilities f ON f.id=b.facility_id
+         ORDER BY (b.battery_pct IS NULL) ASC, b.battery_pct ASC, b.id ASC
+            LIMIT 500"""
+    ).fetchall()
     db.close()
+
+    def _beacon_dict(r):
+        return {
+            'id':                 r['id'],
+            'serial_no':          r['serial_no'],
+            'status':             r['status'],
+            'facility_id':        r['facility_id'],
+            'facility_name':      r['facility_name'],
+            'battery_pct':        r['battery_pct'],
+            'battery_updated_at': r['battery_updated_at'],
+            'last_seen_at':       r['last_seen_at'],
+        }
 
     return jsonify({
         'success': True,
@@ -1500,19 +1523,8 @@ def beacons_battery_status():
             'low_battery':   summary['low_cnt'] or 0,
             'avg_pct':       round(summary['avg_pct'], 1) if summary['avg_pct'] is not None else None,
         },
-        'low_battery_beacons': [
-            {
-                'id':                 r['id'],
-                'serial_no':          r['serial_no'],
-                'status':             r['status'],
-                'facility_id':        r['facility_id'],
-                'facility_name':      r['facility_name'],
-                'battery_pct':        r['battery_pct'],
-                'battery_updated_at': r['battery_updated_at'],
-                'last_seen_at':       r['last_seen_at'],
-            }
-            for r in low_rows
-        ],
+        'low_battery_beacons': [_beacon_dict(r) for r in low_rows],
+        'beacons':             [_beacon_dict(r) for r in all_rows],
     })
 
 
