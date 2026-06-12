@@ -128,7 +128,7 @@ export default function Faq() {
               <tr><td colSpan={6} className="row-empty">{t('faq.empty')}</td></tr>
             )}
             {!loading && faqs.map((faq) => (
-              <tr key={faq.id}>
+              <tr key={faq.id} className="row-clickable" onClick={() => setEditTarget(faq)}>
                 <td className="cell-mono" style={{ color: 'var(--text-muted)' }}>{faq.id}</td>
                 <td>
                   <div style={{ fontWeight: 500, fontSize: 'var(--fs-sm)', color: 'var(--text)' }}>
@@ -149,7 +149,7 @@ export default function Faq() {
                 <td>
                   <button
                     className="icon-btn"
-                    onClick={() => handleToggleActive(faq)}
+                    onClick={(e) => { e.stopPropagation(); handleToggleActive(faq); }}
                     disabled={toggling === faq.id}
                     title={faq.active ? '노출 중 (클릭하여 숨김)' : '숨김 (클릭하여 노출)'}
                     style={{ color: faq.active ? 'var(--accent)' : 'var(--text-muted)' }}
@@ -161,14 +161,14 @@ export default function Faq() {
                   <button
                     className="icon-btn"
                     title={t('common.edit')}
-                    onClick={() => setEditTarget(faq)}
+                    onClick={(e) => { e.stopPropagation(); setEditTarget(faq); }}
                   >
                     <Pencil size={15} />
                   </button>
                   <button
                     className="icon-btn danger"
                     title={t('common.delete')}
-                    onClick={() => handleDelete(faq)}
+                    onClick={(e) => { e.stopPropagation(); handleDelete(faq); }}
                   >
                     <Trash2 size={15} />
                   </button>

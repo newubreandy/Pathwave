@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { RefreshCw, Search, Trash2, AlertTriangle } from 'lucide-react';
 import { adminApi } from '../services/admin.js';
 import Modal from '../components/Modal.jsx';
+import './Beacons.css';
 
 const STATUS_OPTIONS = [
   { value: 'active',  label: '활성' },
@@ -35,6 +36,7 @@ export default function Users() {
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [detailTarget, setDetailTarget] = useState(null);
 
   const reload = useCallback(async () => {
     setLoading(true); setError('');
@@ -129,7 +131,10 @@ export default function Users() {
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u.id} style={{ borderTop: '1px solid var(--border)' }}>
+              <tr key={u.id}
+                  className="row-clickable"
+                  style={{ borderTop: '1px solid var(--border)' }}
+                  onClick={() => setDetailTarget(u)}>
                 <Td>{u.id}</Td>
                 <Td><code>{u.email}</code></Td>
                 <Td>{u.provider}</Td>
@@ -152,7 +157,7 @@ export default function Users() {
                 <Td>
                   {!u.deleted_at && (
                     <button className="btn btn-ghost"
-                            onClick={() => setDeleteTarget(u)}
+                            onClick={(e) => { e.stopPropagation(); setDeleteTarget(u); }}
                             aria-label="강제 탈퇴"
                             style={{ padding: '4px 8px', color: 'var(--danger)' }}>
                       <Trash2 size={14} aria-hidden="true" />
@@ -188,6 +193,15 @@ export default function Users() {
         </div>
       )}
 
+      {/* 회원 상세 모달 */}
+      {detailTarget && (
+        <UserDetailModal
+          user={detailTarget}
+          onClose={() => setDetailTarget(null)}
+          onDelete={(u) => { setDetailTarget(null); setDeleteTarget(u); }}
+        />
+      )}
+
       {/* 강제 탈퇴 확인 모달 */}
       {deleteTarget && (
         <DeleteUserModal
@@ -213,6 +227,55 @@ function Badge({ color, children }) {
                         border: `1px solid ${color}`, color }}>
     {children}
   </span>;
+}
+
+function UserDetailModal({ user, onClose, onDelete }) {
+  const rows = [
+    ['ID',     user.id],
+    ['이메일',  <code key="email">{user.email}</code>],
+    ['채널',    user.provider || '—'],
+    ['언어',    user.language || '—'],
+    ['연령',    user.age_group === 'adult' ? '성인' : user.age_group === 'minor' ? '미성년' : '—'],
+    ['가입일',  user.created_at?.slice(0, 10) || '—'],
+    ['채팅방',  user.chat_rooms_count ?? '—'],
+    ['신고 수', user.reported_count ?? '—'],
+    ['상태',    user.deleted_at ? '탈퇴' : '활성'],
+    ['탈퇴일',  user.deleted_at?.slice(0, 10) || '—'],
+  ];
+  return (
+    <Modal
+      open={true}
+      onClose={onClose}
+      size="md"
+      title={`회원 상세 — #${user.id}`}
+      footer={
+        <>
+          {!user.deleted_at && (
+            <button
+              className="btn btn-ghost"
+              style={{ color: 'var(--danger)' }}
+              onClick={() => onDelete(user)}
+            >
+              강제 탈퇴
+            </button>
+          )}
+          <button className="btn btn-primary" onClick={onClose}>닫기</button>
+        </>
+      }
+    >
+      <dl style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr',
+                   gap: '0.5rem 1.5rem', margin: 0 }}>
+        {rows.map(([label, value]) => (
+          <React.Fragment key={label}>
+            <dt style={{ color: 'var(--text-muted)', fontWeight: 500,
+                         fontSize: 'var(--fs-sm)', margin: 0 }}>{label}</dt>
+            <dd style={{ margin: 0, fontSize: 'var(--fs-sm)',
+                         wordBreak: 'break-all' }}>{value}</dd>
+          </React.Fragment>
+        ))}
+      </dl>
+    </Modal>
+  );
 }
 
 function DeleteUserModal({ user, onClose, onDeleted }) {

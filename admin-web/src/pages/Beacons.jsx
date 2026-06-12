@@ -172,7 +172,7 @@ export default function Beacons() {
               </td></tr>
             )}
             {!loading && filteredBeacons.map((b) => (
-              <tr key={b.id}>
+              <tr key={b.id} className="row-clickable" onClick={() => setEditTarget(b)}>
                 <td className="cell-mono">{b.id}</td>
                 <td className="cell-mono">{b.serial_no}</td>
                 <td className="cell-mono cell-uuid" title={b.uuid}>{b.uuid}</td>
@@ -215,14 +215,14 @@ export default function Beacons() {
                   <button
                     className="icon-btn"
                     title="할당/해제"
-                    onClick={() => setAssignTarget(b)}
+                    onClick={(e) => { e.stopPropagation(); setAssignTarget(b); }}
                   >
                     <MapPin size={15} />
                   </button>
                   <button
                     className="icon-btn"
                     title="수정"
-                    onClick={() => setEditTarget(b)}
+                    onClick={(e) => { e.stopPropagation(); setEditTarget(b); }}
                   >
                     <Pencil size={15} />
                   </button>

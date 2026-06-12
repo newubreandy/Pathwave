@@ -11,6 +11,7 @@ import { RefreshCw, Plus, Edit2, Trash2, EyeOff, Eye } from 'lucide-react';
 import { adminApi } from '../services/admin.js';
 import Modal from '../components/Modal.jsx';
 import { useConfirm } from '../hooks/useConfirm.jsx';
+import './Beacons.css';
 
 const EMPTY = { name: '', group: '기타', sort_order: 0, active: true };
 
@@ -186,8 +187,9 @@ export default function Categories() {
           </thead>
           <tbody>
             {filtered.map((c) => (
-              <tr key={c.id} style={{ borderTop: '1px solid var(--border)',
-                                       opacity: c.active ? 1 : 0.55 }}>
+              <tr key={c.id} className="row-clickable"
+                  style={{ borderTop: '1px solid var(--border)', opacity: c.active ? 1 : 0.55 }}
+                  onClick={() => setDraft({ ...c })}>
                 <Td><Badge color="var(--text-muted)">{c.group || '기타'}</Badge></Td>
                 <Td style={{ width: 60 }}>{c.sort_order}</Td>
                 <Td><strong>{c.name}</strong></Td>
@@ -197,17 +199,17 @@ export default function Categories() {
                     : <Badge color="var(--text-muted)">비활성</Badge>}
                 </Td>
                 <Td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                  <button className="btn btn-ghost" onClick={() => setDraft({ ...c })}
+                  <button className="btn btn-ghost" onClick={(e) => { e.stopPropagation(); setDraft({ ...c }); }}
                           disabled={busy} style={{ padding: '4px 8px' }}
                           aria-label="수정">
                     <Edit2 size={14} aria-hidden="true" />
                   </button>
-                  <button className="btn btn-ghost" onClick={() => toggleActive(c)}
+                  <button className="btn btn-ghost" onClick={(e) => { e.stopPropagation(); toggleActive(c); }}
                           disabled={busy} style={{ padding: '4px 8px' }}
                           aria-label={c.active ? '비활성화' : '활성화'}>
                     {c.active ? <EyeOff size={14} aria-hidden="true" /> : <Eye size={14} aria-hidden="true" />}
                   </button>
-                  <button className="btn btn-ghost" onClick={() => hardDelete(c)}
+                  <button className="btn btn-ghost" onClick={(e) => { e.stopPropagation(); hardDelete(c); }}
                           disabled={busy}
                           style={{ padding: '4px 8px', color: 'var(--danger)' }}
                           aria-label="완전 삭제">
