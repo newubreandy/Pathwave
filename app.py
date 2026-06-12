@@ -214,4 +214,11 @@ def serve(path):
 if __name__ == '__main__':
     debug = os.environ.get('FLASK_DEBUG', '0') == '1'
     port  = int(os.environ.get('PORT', '8080'))
+
+    # 알림 예약 발송 스케줄러 (2026-06-12) — debug reloader 는 프로세스를
+    # 2개 띄우므로 실제 서빙 프로세스(WERKZEUG_RUN_MAIN)에서만 기동.
+    if not debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        from services.notification_scheduler import start as start_notif_scheduler
+        start_notif_scheduler()
+
     app.run(debug=debug, host='0.0.0.0', port=port)

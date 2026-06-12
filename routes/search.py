@@ -167,6 +167,11 @@ def search_facility_detail(fid):
         item['benefits'] = _json.loads(row['benefits']) if row['benefits'] else []
     except Exception:
         item['benefits'] = []
+    try:
+        item['categories'] = (_json.loads(row['categories'])
+                              if 'categories' in row.keys() and row['categories'] else [])
+    except Exception:
+        item['categories'] = []
     if lang:
         t = db.execute(
             """SELECT name, address, description FROM facility_translations
