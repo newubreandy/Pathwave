@@ -2,18 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Building2, UserCheck, Radio, RadioReceiver, CreditCard, Users, Wifi,
-  TrendingUp, Battery, Megaphone,
+  TrendingUp, Megaphone, Inbox, ClipboardList, Flag, BellRing, RadioTower,
 } from 'lucide-react';
 import { adminApi } from '../services/admin.js';
 import KpiCard, { Sparkline } from '../components/KpiCard.jsx';
+import './Dashboard.css';   // 2026-06-12 — 액션 보드 스타일 (이전엔 미참조 dead css)
 
 const DEMO_SPARK = (seed) => Array.from({ length: 18 },
   (_, i) => 30 + Math.sin((i + seed) * 0.6) * 14 + Math.random() * 6);
 
 // 2026-05-27: 카드 클릭 시 해당 상세 화면으로 이동 (to 추가)
+// 2026-06-12: 승인 대기 카드는 액션 보드로 승격 (중복 제거) + 죽은 /owners 링크 정리.
 const STAT_CARDS = [
-  { key: 'total_facility_accounts',   label: '전체 사장 계정', icon: Building2,    to: '/dashboard/owners' },
-  { key: 'pending_facility_accounts', label: '승인 대기',     icon: UserCheck,    to: '/dashboard/owners?status=pending' },
+  { key: 'total_facility_accounts',   label: '전체 사장 계정', icon: Building2,    to: '/dashboard/approvals' },
   { key: 'total_facilities',          label: '활성 매장',     icon: Wifi,         to: '/dashboard/facilities' },
   { key: 'total_users',               label: '앱 사용자',     icon: Users,        to: '/dashboard/users' },
   { key: 'total_beacons',             label: '비콘 입고',     icon: Radio,        to: '/dashboard/beacons?status=inventory' },
@@ -23,10 +24,24 @@ const STAT_CARDS = [
   { key: 'mtd_payment_count',         label: '결제 건수',     icon: TrendingUp,   to: '/dashboard/payments' },
 ];
 
+// 2026-06-12 — 처리 필요(액션) 보드. 운영관리자가 대응해야 하는 건수 + 클릭 이동.
+// 키는 GET /api/admin/stats/pending 응답(counts)과 1:1.
+const ACTION_CARDS = [
+  { key: 'owners_pending',           label: '계정 승인 대기',   icon: UserCheck,     to: '/dashboard/approvals' },
+  { key: 'support_open',             label: '문의 미답변',     icon: Inbox,         to: '/dashboard/support' },
+  { key: 'service_requests_pending', label: '서비스 신청 대기', icon: ClipboardList, to: '/dashboard/service-requests' },
+  { key: 'abuse_open',               label: '신고 미처리',     icon: Flag,          to: '/dashboard/abuse-reports' },
+  { key: 'notifications_pending',    label: '알림 처리 대기',   icon: BellRing,      to: '/dashboard/notifications' },
+  { key: 'beacons_lost',             label: '비콘 분실',       icon: RadioTower,    to: '/dashboard/beacons?status=lost' },
+];
+
+const PENDING_POLL_MS = 30_000;   // 액션 현황 자동 갱신 주기
+
 const TIME_RANGES = ['1W', '1M', '6M', '1Y', 'All Time'];
 
 export default function Dashboard() {
   const [cards, setCards] = useState(null);
+  const [pending, setPending] = useState(null);   // 처리 필요 counts
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [range, setRange] = useState('1M');
@@ -40,7 +55,16 @@ export default function Dashboard() {
         if (alive && !err.previewMode) setError(err.message || '통계를 불러오지 못했습니다.');
       })
       .finally(() => alive && setLoading(false));
-    return () => { alive = false; };
+
+    // 처리 필요 현황 — 최초 + 주기 폴링 (운영 모니터링 특성상 자동 갱신)
+    const loadPending = () => {
+      adminApi.statsPending()
+        .then((data) => { if (alive) setPending(data.counts || {}); })
+        .catch(() => { /* 폴링 실패는 조용히 — 다음 주기 재시도 */ });
+    };
+    loadPending();
+    const timer = setInterval(loadPending, PENDING_POLL_MS);
+    return () => { alive = false; clearInterval(timer); };
   }, []);
 
   function v(key, formatter) {
@@ -77,6 +101,27 @@ export default function Dashboard() {
           {error}
         </div>
       )}
+
+      {/* 처리 필요 — 액션 보드 (2026-06-12). 카운트 > 0 강조 + 클릭 시 해당 관리 화면. */}
+      <section style={{ marginBottom: 28 }}>
+        <div className="action-board-title">처리 필요</div>
+        <div className="action-grid">
+          {ACTION_CARDS.map(({ key, label, icon: Icon, to }) => {
+            const n = pending?.[key];
+            const active = (n ?? 0) > 0;
+            return (
+              <Link key={key} to={to}
+                className={'action-card' + (active ? ' has-pending' : '')}
+                aria-label={`${label} ${n ?? 0}건 — 바로가기`}>
+                <div className="action-icon"><Icon size={18} strokeWidth={1.75} /></div>
+                <div className="action-count">{pending == null ? '—' : (n ?? 0).toLocaleString()}</div>
+                <div className="action-label">{label}</div>
+                {active && <span className="action-dot" aria-hidden="true" />}
+              </Link>
+            );
+          })}
+        </div>
+      </section>
 
       {/* 1행: 메인 차트 + KPI 2개 */}
       <div style={{
@@ -122,55 +167,17 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div style={{
-        display: 'grid', gap: 24,
-        gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
-        marginTop: 24,
-      }}>
-        <div className="card" style={{ padding: 32 }}>
-          <div className="card-title" style={{ marginBottom: 24 }}>최근 시스템 활동</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            <ActivityRow icon={UserCheck}
-              title="신규 사장 가입 승인 대기" subtitle="3건" time="방금" />
-            <ActivityRow icon={Radio}
-              title="비콘 50개 신규 입고" subtitle="VPS-2 / Frankfurt" time="2h ago" />
-            <ActivityRow icon={Battery}
-              title="배터리 20% 미만 비콘" subtitle="7개 — 점검 필요" time="Yesterday" />
-            <ActivityRow icon={Megaphone}
-              title="시스템 공지 발행됨" subtitle="이용약관 v2.1" time="2d ago" />
-          </div>
-        </div>
-
-        <div className="card" style={{ padding: 32 }}>
-          <div className="card-title" style={{ marginBottom: 24 }}>빠른 작업</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <QuickAction icon={UserCheck} label="가입 승인" to="/dashboard/approvals" />
-            <QuickAction icon={Radio} label="비콘 등록" to="/dashboard/beacons" />
-            <QuickAction icon={Megaphone} label="공지 발행" to="/dashboard/announcements" />
-            <QuickAction icon={CreditCard} label="결제 환불" to="/dashboard/payments" />
-          </div>
+      {/* 2026-06-12 — "최근 시스템 활동" 하드코딩 더미 카드 제거.
+          실데이터 액션 보드(처리 필요)가 그 역할을 대체. 빠른 작업은 풀폭 유지. */}
+      <div className="card" style={{ padding: 32, marginTop: 24 }}>
+        <div className="card-title" style={{ marginBottom: 24 }}>빠른 작업</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          <QuickAction icon={UserCheck} label="가입 승인" to="/dashboard/approvals" />
+          <QuickAction icon={Radio} label="비콘 등록" to="/dashboard/beacons" />
+          <QuickAction icon={Megaphone} label="공지 발행" to="/dashboard/announcements" />
+          <QuickAction icon={CreditCard} label="결제 환불" to="/dashboard/payments" />
         </div>
       </div>
-    </div>
-  );
-}
-
-function ActivityRow({ icon: Icon, title, subtitle, time }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-      <div style={{
-        width: 52, height: 52, borderRadius: 14,
-        background: 'var(--bg-4)',
-        border: '1px solid var(--border)',
-        display: 'grid', placeItems: 'center', flexShrink: 0,
-      }}>
-        <Icon size={24} color="var(--text-muted)" strokeWidth={1.75} />
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 'var(--fs-lg)', color: 'var(--text)', fontWeight: 500 }}>{title}</div>
-        <div style={{ fontSize: 'var(--fs-md)', color: 'var(--text-muted)', marginTop: 4 }}>{subtitle}</div>
-      </div>
-      <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-hint)' }}>{time}</div>
     </div>
   );
 }

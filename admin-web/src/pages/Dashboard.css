@@ -66,3 +66,83 @@
   color: var(--text-muted);
   line-height: 1.8;
 }
+
+/* ── 처리 필요 액션 보드 (2026-06-12) ─────────────────────────────────────
+   운영관리자 대응 건수. 대기 > 0 = 앰버 강조 + 점, 0 = 차분한 기본 톤. */
+.action-board-title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  margin-bottom: 12px;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
+}
+@media (max-width: 1280px) { .action-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 720px)  { .action-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.action-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  text-decoration: none;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+.action-card:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  transform: translateY(-1px);
+}
+
+.action-icon { color: var(--text-muted); }
+.action-count {
+  font-size: var(--fs-3xl, 28px);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.1;
+}
+.action-label {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 대기 건 존재 — 앰버 강조 */
+.action-card.has-pending {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.08);
+}
+.action-card.has-pending .action-count { color: #FBBF24; }
+.action-card.has-pending .action-icon  { color: #FBBF24; }
+.action-card.has-pending:hover {
+  border-color: #F59E0B;
+  background: rgba(245, 158, 11, 0.14);
+}
+
+.action-dot {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #F59E0B;
+  box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.6);
+  animation: actionPulse 2s ease-out infinite;
+}
+@keyframes actionPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.55); }
+  70%  { box-shadow: 0 0 0 7px rgba(245, 158, 11, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}

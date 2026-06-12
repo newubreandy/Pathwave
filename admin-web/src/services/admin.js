@@ -40,6 +40,8 @@ export const adminApi = {
 
   // 통계
   statsOverview: () => apiClient.get('/api/admin/stats/overview'),
+  // 2026-06-12 — 처리 필요(액션) 현황. 대시보드 액션 보드용.
+  statsPending: () => apiClient.get('/api/admin/stats/pending'),
   statsPayments: (params = {}) => {
     const q = new URLSearchParams(params).toString();
     return apiClient.get(`/api/admin/stats/payments${q ? '?' + q : ''}`);
