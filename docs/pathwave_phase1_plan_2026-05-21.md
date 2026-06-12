@@ -146,14 +146,14 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 
 ⬜ 대기 · 🔄 진행중 · ◑ 부분 머지 · 🔎 검토 · ✅ 완료
 
-**최종 갱신**: 2026-05-29 (P22 시리즈 + 제로페이 A/B 머지·로컬 검증 기반)
+**최종 갱신**: 2026-06-12 (P4 완료 확정 + 1단계 잔여 3건 + 6/11~12 정비 시리즈 반영)
 
 | PR | 상태 | PR | 상태 | PR | 상태 |
 |---|---|---|---|---|---|
 | P1 | ✅ | P8 | ✅ | P15 | ✅ |
 | P2 | ✅ | P9 | ✅ | P16 | ◑ |
 | P3 | ✅ | P10 | ✅ | P17 | ✅ |
-| P4 | ◑ | P11 | ✅ | P18 | ⬜ |
+| P4 | ✅ | P11 | ✅ | P18 | ⬜ |
 | P5 | ✅ | P12 | ✅ | P19 | ⬜ |
 | P6 | ✅ | P13 | ✅ | P20 | ✅ |
 | P7 | ✅ | P14 | ✅ | P21 | ✅ |
@@ -165,8 +165,8 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 |---|---|---|---|
 | P1 | ✅ | #114 (auth-unify-3-consoles), #115 (design-unify-3-consoles) | 인증 + 디자인 통일 |
 | P2 | ✅ | #205 (P2-a i18n 인프라 l10n.yaml+ARB ko/en), #208 (P2-b mobile 13화면 t()), #218 (const 빌드 fix) | mobile i18n 적용 완료 |
-| P3 | ✅ | #214 (P3-b1 useConfirm hook), #219~#224 (P3-b2 alert/confirm→useConfirm 일괄), P3-a (admin ConfirmModal) | ⚠️ P3-b2-7 admin Notifications.jsx 만 skip (helper 기반, 향후) |
-| P4 | ◑ | #70 (provider-web-remove-preview-bar) | DevPreviewBar 만 처리. DEV_AUTO_LOGIN / 게스트 / forgot-password 잔여 |
+| P3 | ✅ | #214 (P3-b1 useConfirm hook), #219~#224 (P3-b2 alert/confirm→useConfirm 일괄), P3-a (admin ConfirmModal) | ~~admin Notifications.jsx skip~~ → **#277 (2026-06-11) 에서 Modal 기반 useDialog 로 해소 — 네이티브 팝업 전멸** |
+| P4 | ✅ | #70 (provider-web-remove-preview-bar) + 5/27 P4 fix | **2026-06-12 완료 확정 (코드 검증)**: DEV_AUTO_LOGIN 자동 세션 제거(RequireAuth) · 게스트/미리보기 = `VITE_PREVIEW_MODE && MODE!=='production'` 이중 env 게이트 (provider Signup + admin DevPreviewBar 동일, 운영 빌드 미렌더+함수 무효화) · forgot-password BE 2종(user/facility)+페이지+라우트 연결 완료 |
 | P5 | ✅ | #209 (p5-real-data) | 매장·회사정보 하드코딩 mock 제거 + company_info 시드 |
 | P6 | ✅ | #206 (p6-ocr-removal) | OCR 허위 제거 — 정직한 수동 입력 UI |
 | P7 | ✅ | #122 (phase-g-billing-subscription-staff), #39 (admin-web-payments) | 결제·구독·직원 |
@@ -192,23 +192,26 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 - **P9 → P22 ✅**: 순서대로 머지 완료. + 제로페이 A/B (#225~#227).
 - **P14 → P18/P19**: P14 머지됨, P18/P19 는 feature flag 로 v1 비공개 OK (미착수).
 
-### 6.3 잔여 작업 (2026-05-29 갱신)
+### 6.3 잔여 작업 (2026-06-12 갱신)
 
-P1~P3·P5~P15·P17·P20~P22 ✅ 머지 완료. 아래만 잔여:
+**P1~P15·P17·P20~P22 + 제로페이 A/B ✅ 전부 머지.** P4 도 코드 검증으로 완료 확정(6/12).
 
-**P1~P15·P17·P20~P22 + 제로페이 A/B ✅ 머지 완료.** P8(채팅 도메인+자동번역)도 ✅ 검증 완료(2026-05-29).
+**6/9~12 추가 정비 (plan 외 시리즈, 전부 머지):**
+- #269~#270 디자인 v2 + 앱아이콘/하단잘림 · #271~#274 3콘솔 오류 점검(푸시 API 단절·provider mock 단절·timezone 500)
+- #275~#278 디자인 가이드 통일 + provider 모달 25개 PwModal 단일화(−423줄)
+- #279~#281 **출시 1단계 잔여 3건**: 이미지 파일 업로드 실연동 / 알림 예약 스케줄러 / 카테고리 저장 실연동
+- #282~#285 매장정보 hydrate 회귀 + 어드민 운영성 3종(액션 보드·리스트 행클릭 상세 전수·배터리 전체 목록)
 
-**즉시 가능 (코드 작업, 소규모):**
-1. ~~**점주 비밀번호 재설정** + **pg_key AES-GCM 암호화**~~ ✅ #230
-2. **잔여 갭(소)** — 약관 동의 마이크로항목 7종 en 번역 / P3-b2-7 admin Notifications.jsx / (P4 Signup 게스트 = 명확한 갭 없음)
-3. **C-3** — 페르소나 통합 테스트 시나리오 (OPEN PR #168, 충돌 → 리베이스 필요)
+**즉시 가능 (코드, 소규모):**
+1. 약관 동의 마이크로항목 7종 en 번역
+2. **C-3 페르소나 통합 테스트** — 시나리오 PR #168 OPEN(충돌) → 착수 시 리베이스 또는 신규 작성
 
 **외부/하드웨어 대기 (코드 아님):**
-4. **운영 번역 키** — `TRANSLATION_PROVIDER=google` + API 키 (출시 외부서비스 단계)
-5. **P16-b** — mobile BLE 무중단 핸드오프 (물리 비콘 도착 후)
-6. **(Phase 2 검토) P18, P19** — feature flag v1 비공개 OK
+3. **운영 번역 키** — `TRANSLATION_PROVIDER=google` + API 키 (출시 외부서비스 단계)
+4. **P16-b** — mobile BLE 무중단 핸드오프 (물리 비콘 도착 후)
+5. **(Phase 2 검토) P18, P19** — feature flag v1 비공개 OK
 
-**정리 필요:** OPEN PR #167(P8b stale superset), #168(C-3 충돌) — 닫기/리베이스 결정
+**정리:** ~~#167 stale superset~~ → 2026-06-12 닫음 ✅. #168 은 페르소나 착수 시 결정.
 
 ---
 
