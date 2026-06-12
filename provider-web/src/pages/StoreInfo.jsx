@@ -200,6 +200,8 @@ const StoreInfo = () => {
       images: f.image_url ? [f.image_url] : [],
       hours: { start: (hs || '09:00').trim(), end: (he || '22:00').trim() },
       holidays: { days, publicHolidays },
+      // 2026-06-12 — 업종 실연동 (facilities.categories JSON)
+      categories: Array.isArray(f.categories) ? f.categories : [],
       categories: [],
       lat: f.latitude ?? LocationService.getDefaultCoordinates().lat,
       lng: f.longitude ?? LocationService.getDefaultCoordinates().lng,
@@ -401,6 +403,8 @@ const StoreInfo = () => {
         ...finalData.holidays.days.map((d) => `매주 ${d}`),
         ...(finalData.holidays.publicHolidays ? ['공휴일'] : []),
       ],
+      // 2026-06-12 — 업종 실연동 (이전: 로컬 state 만, 저장 안 됨)
+      categories: finalData.categories || [],
     };
     setSaving(true);
     try {

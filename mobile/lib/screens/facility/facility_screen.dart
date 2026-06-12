@@ -268,12 +268,39 @@ class _FacilityScreenState extends State<FacilityScreen> {
   Widget _buildHeader(Map<String, dynamic> f) {
     // 2026-06-09 — 매장명은 상단 AppBar 에 표시. 설명은 _buildDescription 으로 분리.
     final address = f['address']?.toString() ?? '';
-    if (address.isEmpty) return const SizedBox.shrink();
+    // 2026-06-12 — 업종 칩 (facilities.categories, provider 업종 실연동과 한 묶음)
+    final categories = (f['categories'] as List?) ?? const [];
+    if (address.isEmpty && categories.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (categories.isNotEmpty) ...[
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final c in categories)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                          color: AppTheme.primary.withValues(alpha: 0.45)),
+                    ),
+                    child: Text(c.toString(),
+                        style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600)),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+          ],
           if (address.isNotEmpty) ...[
             Row(
               children: [
