@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { RefreshCw, Users, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { adminApi } from '../services/admin.js';
+import Modal from '../components/Modal.jsx';
 import './Beacons.css';
 
 // D 번들2 — /api/admin/staff/reports 백엔드 신설 후 실제 데이터 연동.
@@ -12,9 +13,10 @@ async function fetchStaffReports() {
 
 export default function StaffMonitor() {
   const { t } = useTranslation();
-  const [reports, setReports] = useState(null); // null = API 미구현
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState('');
+  const [reports, setReports]           = useState(null); // null = API 미구현
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState('');
+  const [detailTarget, setDetailTarget] = useState(null);
 
   const reload = useCallback(() => {
     setLoading(true); setError('');
@@ -96,7 +98,9 @@ export default function StaffMonitor() {
               <tr><td colSpan={5} className="row-empty">{t('common.empty')}</td></tr>
             )}
             {!loading && reports !== null && reports.map((r) => (
-              <tr key={r.id || r.staff_id}>
+              <tr key={r.id || r.staff_id}
+                  className="row-clickable"
+                  onClick={() => setDetailTarget(r)}>
                 <td className="cell-mono">{r.staff_id || r.id || '—'}</td>
                 <td className="cell-mono">{r.facility_id || r.facility_name || '—'}</td>
                 <td>{r.reason || '—'}</td>
@@ -111,6 +115,42 @@ export default function StaffMonitor() {
           </tbody>
         </table>
       </div>
+
+      <StaffReportDetailModal report={detailTarget} onClose={() => setDetailTarget(null)} />
     </div>
+  );
+}
+
+function StaffReportDetailModal({ report, onClose }) {
+  if (!report) return null;
+  const rows = [
+    ['직원 ID',    report.staff_id || report.id || '—'],
+    ['매장 ID',    report.facility_id || '—'],
+    ['매장 이름',  report.facility_name || '—'],
+    ['신고 사유',  report.reason || '—'],
+    ['상세 내용',  report.detail || '—'],
+    ['신고 일시',  report.reported_at || '—'],
+    ['처리 상태',  report.status || '—'],
+  ];
+  return (
+    <Modal
+      open={true}
+      onClose={onClose}
+      size="md"
+      title={`직원 신고 상세 — 직원 #${report.staff_id || report.id}`}
+      footer={<button className="btn btn-primary" onClick={onClose}>닫기</button>}
+    >
+      <dl style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr',
+                   gap: '0.5rem 1.5rem', margin: 0 }}>
+        {rows.map(([label, value]) => (
+          <React.Fragment key={label}>
+            <dt style={{ color: 'var(--text-muted)', fontWeight: 500,
+                         fontSize: 'var(--fs-sm)', margin: 0 }}>{label}</dt>
+            <dd style={{ margin: 0, fontSize: 'var(--fs-sm)',
+                         wordBreak: 'break-all' }}>{value}</dd>
+          </React.Fragment>
+        ))}
+      </dl>
+    </Modal>
   );
 }

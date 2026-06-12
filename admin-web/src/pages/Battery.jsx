@@ -120,7 +120,7 @@ export default function Battery() {
               </td></tr>
             )}
             {!loading && lowList.map((b) => (
-              <tr key={b.id}>
+              <tr key={b.id} className="row-clickable" onClick={() => setHistoryTarget(b)}>
                 <td className="cell-mono">{b.id}</td>
                 <td className="cell-mono">{b.serial_no}</td>
                 <td>{b.facility_name || (b.facility_id ? `#${b.facility_id}` : '—')}</td>
@@ -132,7 +132,7 @@ export default function Battery() {
                 <td className="cell-actions">
                   <button
                     className="btn btn-ghost btn-sm"
-                    onClick={() => setHistoryTarget(b)}
+                    onClick={(e) => { e.stopPropagation(); setHistoryTarget(b); }}
                   >
                     시계열
                   </button>

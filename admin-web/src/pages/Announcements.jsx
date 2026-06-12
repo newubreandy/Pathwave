@@ -106,7 +106,7 @@ export default function Announcements() {
               <tr><td colSpan={7} className="row-empty">{t('notif.empty_msg')}</td></tr>
             )}
             {!loading && list.map((a) => (
-              <tr key={a.id}>
+              <tr key={a.id} className="row-clickable" onClick={() => setPreviewTarget(a)}>
                 <td>
                   {a.pinned ? <Pin size={16} style={{ color: 'var(--text-muted)' }} /> : null}
                 </td>
@@ -141,24 +141,24 @@ export default function Announcements() {
                 </td>
                 <td className="cell-mono">{a.created_at?.slice(0, 10)}</td>
                 <td className="cell-actions">
-                  <button className="icon-btn" title={t('common.edit')} onClick={() => setPreviewTarget(a)}>
+                  <button className="icon-btn" title={t('common.edit')} onClick={(e) => { e.stopPropagation(); setPreviewTarget(a); }}>
                     <Eye size={15} />
                   </button>
                   <button
                     className={`icon-btn${a.pinned ? ' accent' : ''}`}
                     title={a.pinned ? t('notif.pinned_label') : t('notif.pinned_label')}
-                    onClick={() => handleTogglePin(a)}
+                    onClick={(e) => { e.stopPropagation(); handleTogglePin(a); }}
                     style={a.pinned ? { color: 'var(--accent)' } : undefined}
                   >
                     <Pin size={15} />
                   </button>
-                  <button className="icon-btn" title={t('common.edit')} onClick={() => setEditTarget(a)}>
+                  <button className="icon-btn" title={t('common.edit')} onClick={(e) => { e.stopPropagation(); setEditTarget(a); }}>
                     <Pencil size={15} />
                   </button>
                   <button
                     className="icon-btn danger"
                     title={t('common.delete')}
-                    onClick={() => handleDelete(a)}
+                    onClick={(e) => { e.stopPropagation(); handleDelete(a); }}
                   >
                     <Trash2 size={15} />
                   </button>

@@ -70,6 +70,7 @@ function PaymentsTab() {
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState('');
   const [refundTarget, setRefundTarget] = useState(null);
+  const [detailTarget, setDetailTarget] = useState(null);
 
   const reload = useCallback(() => {
     setLoading(true); setError('');
@@ -194,7 +195,7 @@ function PaymentsTab() {
               const tone = statusTone[p.status] || 'neutral';
               const label = statusLabel[p.status] || p.status;
               return (
-                <tr key={p.id}>
+                <tr key={p.id} className="row-clickable" onClick={() => setDetailTarget(p)}>
                   <td className="cell-mono">{p.id}</td>
                   <td className="cell-mono">{p.order_no || '—'}</td>
                   <td className="cell-mono">{p.facility_account_id ?? '—'}</td>
@@ -211,7 +212,7 @@ function PaymentsTab() {
                       <button
                         className="icon-btn"
                         title={t('billing.refund_btn_confirm')}
-                        onClick={() => setRefundTarget(p)}
+                        onClick={(e) => { e.stopPropagation(); setRefundTarget(p); }}
                       >
                         <RotateCcw size={15} />
                       </button>
@@ -229,6 +230,13 @@ function PaymentsTab() {
         onClose={() => setRefundTarget(null)}
         onRefunded={() => { setRefundTarget(null); reload(); }}
       />
+      <PaymentDetailModal
+        payment={detailTarget}
+        statusLabel={statusLabel}
+        statusTone={statusTone}
+        onClose={() => setDetailTarget(null)}
+        onRefund={(p) => { setDetailTarget(null); setRefundTarget(p); }}
+      />
     </>
   );
 }
@@ -245,10 +253,11 @@ function SubscriptionsTab() {
   };
   const statusTone = { active: 'active', expired: 'neutral', cancelled: 'inactive' };
 
-  const [filter, setFilter]   = useState({ status: 'all' });
-  const [list, setList]       = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState('');
+  const [filter, setFilter]      = useState({ status: 'all' });
+  const [list, setList]          = useState([]);
+  const [loading, setLoading]    = useState(true);
+  const [error, setError]        = useState('');
+  const [detailTarget, setDetailTarget] = useState(null);
 
   const reload = useCallback(() => {
     setLoading(true); setError('');
@@ -287,6 +296,13 @@ function SubscriptionsTab() {
         <div className="card" style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}>{error}</div>
       )}
 
+      <SubDetailModal
+        sub={detailTarget}
+        statusLabel={statusLabel}
+        statusTone={statusTone}
+        onClose={() => setDetailTarget(null)}
+      />
+
       <div className="card table-card">
         <table className="data-table">
           <thead>
@@ -312,7 +328,7 @@ function SubscriptionsTab() {
               const tone  = statusTone[s.status]  || 'neutral';
               const label = statusLabel[s.status] || s.status;
               return (
-                <tr key={s.id}>
+                <tr key={s.id} className="row-clickable" onClick={() => setDetailTarget(s)}>
                   <td className="cell-mono">{s.id}</td>
                   <td className="cell-mono">{s.facility_account_id ?? '—'}</td>
                   <td>{s.service_type || '—'}</td>
@@ -399,6 +415,85 @@ function RefundModal({ payment, onClose, onRefunded }) {
           {error && <div className="error-box">{error}</div>}
         </>
       )}
+    </Modal>
+  );
+}
+
+
+// ── 결제 상세 모달 (읽기 전용) ────────────────────────────────────────────────
+function PaymentDetailModal({ payment: p, statusLabel, statusTone, onClose, onRefund }) {
+  const { t } = useTranslation();
+  if (!p) return null;
+  const tone  = statusTone[p.status]  || 'neutral';
+  const label = statusLabel[p.status] || p.status;
+  return (
+    <Modal
+      open={!!p}
+      onClose={onClose}
+      title={`결제 상세 — #${p.id}`}
+      size="md"
+      footer={
+        <>
+          <button className="btn btn-ghost" onClick={onClose}>{t('common.close') || '닫기'}</button>
+          {p.status === 'paid' && (
+            <button className="btn btn-danger" onClick={() => onRefund(p)}>
+              <RotateCcw size={15} style={{ marginRight: 6 }} />
+              {t('billing.refund_btn_confirm')}
+            </button>
+          )}
+        </>
+      }
+    >
+      <div className="kv">
+        <div><span className="kv-key">{t('billing.col_id')}</span> <span className="cell-mono">{p.id}</span></div>
+        <div><span className="kv-key">{t('billing.col_order_no')}</span> <span className="cell-mono">{p.order_no || '—'}</span></div>
+        <div><span className="kv-key">{t('billing.col_facility')}</span> {p.facility_account_id ?? '—'}</div>
+        <div><span className="kv-key">{t('billing.col_amount')}</span> {p.amount?.toLocaleString() ?? '—'} 원</div>
+        <div><span className="kv-key">{t('billing.col_vat')}</span> {p.vat?.toLocaleString() ?? '—'} 원</div>
+        <div><span className="kv-key">{t('billing.col_total')}</span> <strong>{p.total?.toLocaleString() ?? '—'} 원</strong></div>
+        <div><span className="kv-key">{t('billing.col_pg_tid')}</span> <span className="cell-mono">{p.pg_tid || '—'}</span></div>
+        <div>
+          <span className="kv-key">{t('billing.col_status')}</span>
+          {' '}<span className={`status-badge ${tone}`}>{label}</span>
+        </div>
+        <div><span className="kv-key">{t('billing.col_paid_at')}</span> {(p.paid_at || p.created_at) || '—'}</div>
+      </div>
+    </Modal>
+  );
+}
+
+
+// ── 구독 상세 모달 (읽기 전용) ────────────────────────────────────────────────
+function SubDetailModal({ sub: s, statusLabel, statusTone, onClose }) {
+  const { t } = useTranslation();
+  if (!s) return null;
+  const tone  = statusTone[s.status]  || 'neutral';
+  const label = statusLabel[s.status] || s.status;
+  return (
+    <Modal
+      open={!!s}
+      onClose={onClose}
+      title={`구독 상세 — #${s.id}`}
+      size="md"
+      footer={
+        <button className="btn btn-ghost" onClick={onClose}>{t('common.close') || '닫기'}</button>
+      }
+    >
+      <div className="kv">
+        <div><span className="kv-key">{t('subscription.col_id')}</span> <span className="cell-mono">{s.id}</span></div>
+        <div><span className="kv-key">{t('subscription.col_facility')}</span> {s.facility_account_id ?? '—'}</div>
+        <div><span className="kv-key">{t('subscription.col_service')}</span> {s.service_type || '—'}</div>
+        <div><span className="kv-key">{t('subscription.col_qty')}</span> {s.quantity ?? '—'}</div>
+        <div><span className="kv-key">{t('subscription.col_period')}</span> {s.period_months ?? '—'} 개월</div>
+        <div><span className="kv-key">{t('subscription.col_unit_price')}</span> {s.unit_price?.toLocaleString() ?? '—'} 원</div>
+        <div><span className="kv-key">{t('subscription.col_total')}</span> <strong>{s.total_price?.toLocaleString() ?? '—'} 원</strong></div>
+        <div><span className="kv-key">{t('subscription.col_started_at')}</span> {s.started_at?.slice(0, 10) || '—'}</div>
+        <div><span className="kv-key">{t('subscription.col_ends_at')}</span> {s.ends_at?.slice(0, 10) || '—'}</div>
+        <div>
+          <span className="kv-key">{t('subscription.col_status')}</span>
+          {' '}<span className={`status-badge ${tone}`}>{label}</span>
+        </div>
+      </div>
     </Modal>
   );
 }

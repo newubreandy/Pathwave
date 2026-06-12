@@ -120,7 +120,7 @@ export default function AbuseReports() {
               </td></tr>
             )}
             {!loading && reports.map((r) => (
-              <tr key={r.id}>
+              <tr key={r.id} className="row-clickable" onClick={() => setDetailTarget(r)}>
                 <td className="cell-mono">{r.id}</td>
                 <td>{kindRef(r.target_kind, r.target_id)}</td>
                 <td>{kindRef(r.reporter_kind, r.reporter_id)}</td>
@@ -135,14 +135,14 @@ export default function AbuseReports() {
                   <button
                     className="icon-btn"
                     title="상세"
-                    onClick={() => setDetailTarget(r)}
+                    onClick={(e) => { e.stopPropagation(); setDetailTarget(r); }}
                   >
                     <Eye size={15} />
                   </button>
                   <button
                     className="icon-btn accent"
                     title="검토 / 조치"
-                    onClick={() => setActionTarget(r)}
+                    onClick={(e) => { e.stopPropagation(); setActionTarget(r); }}
                   >
                     <Gavel size={15} />
                   </button>

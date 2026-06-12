@@ -144,7 +144,7 @@ export default function Approvals() {
               </td></tr>
             )}
             {!loading && accounts.map((a) => (
-              <tr key={a.id}>
+              <tr key={a.id} className="row-clickable" onClick={() => setDetailTarget(a)}>
                 <td className="cell-mono">{a.id}</td>
                 <td>{a.company_name || '—'}</td>
                 <td className="cell-mono">{a.business_no || '—'}</td>
@@ -160,7 +160,7 @@ export default function Approvals() {
                   <button
                     className="icon-btn"
                     title="상세"
-                    onClick={() => setDetailTarget(a)}
+                    onClick={(e) => { e.stopPropagation(); setDetailTarget(a); }}
                   >
                     <Eye size={15} />
                   </button>
@@ -168,7 +168,7 @@ export default function Approvals() {
                     <button
                       className="icon-btn accent"
                       title="승인"
-                      onClick={() => handleVerify(a)}
+                      onClick={(e) => { e.stopPropagation(); handleVerify(a); }}
                     >
                       <CheckCircle2 size={15} />
                     </button>
@@ -177,7 +177,7 @@ export default function Approvals() {
                     <button
                       className="icon-btn danger"
                       title="정지"
-                      onClick={() => setSuspendTarget(a)}
+                      onClick={(e) => { e.stopPropagation(); setSuspendTarget(a); }}
                     >
                       <XCircle size={15} />
                     </button>
@@ -186,7 +186,7 @@ export default function Approvals() {
                     <button
                       className="icon-btn"
                       title="정지 해제"
-                      onClick={() => handleReactivate(a)}
+                      onClick={(e) => { e.stopPropagation(); handleReactivate(a); }}
                     >
                       <RotateCcw size={15} />
                     </button>

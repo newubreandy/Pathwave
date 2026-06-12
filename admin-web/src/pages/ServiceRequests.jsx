@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { RefreshCw, MapPin, Wifi, CheckCircle2, Printer, Truck } from 'lucide-react';
+import { RefreshCw, MapPin, Wifi, CheckCircle2, Printer, Truck, X } from 'lucide-react';
 import { adminApi } from '../services/admin.js';
 
 // HTML 이스케이프 (라벨 텍스트는 점주 입력값 — 인쇄 창에 안전하게 삽입)
@@ -105,6 +105,8 @@ export default function ServiceRequests() {
     win.document.close();
   };
 
+  const [detailReq, setDetailReq] = useState(null);
+
   return (
     <div className="modern-page">
       <div className="page-header-section">
@@ -145,8 +147,20 @@ export default function ServiceRequests() {
         <div className="card"><p className="sub-title" style={{ margin: 0 }}>신청 내역이 없습니다.</p></div>
       )}
 
+      {detailReq && (
+        <ServiceRequestDetailModal
+          req={detailReq}
+          onClose={() => setDetailReq(null)}
+        />
+      )}
+
       {requests.map((req) => (
-        <div className="card" key={req.id} style={{ marginBottom: '1rem' }}>
+        <div
+          className="card"
+          key={req.id}
+          style={{ marginBottom: '1rem', cursor: 'pointer' }}
+          onClick={() => setDetailReq(req)}
+        >
           <div className="page-header-row" style={{ marginBottom: '0.75rem' }}>
             <div>
               <strong style={{ fontSize: '1.05rem' }}>
@@ -158,12 +172,12 @@ export default function ServiceRequests() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {(req.units || []).some((u) => u.beacon_id) && (
-                <button className="btn btn-ghost" onClick={() => printLabels(req)} aria-label="라벨 인쇄">
+                <button className="btn btn-ghost" onClick={(e) => { e.stopPropagation(); printLabels(req); }} aria-label="라벨 인쇄">
                   <Printer size={15} /> <span>라벨 인쇄</span>
                 </button>
               )}
               {req.status === 'matched' && (
-                <button className="btn btn-primary" onClick={() => handleShip(req)} aria-label="발송 처리">
+                <button className="btn btn-primary" onClick={(e) => { e.stopPropagation(); handleShip(req); }} aria-label="발송 처리">
                   <Truck size={15} /> <span>발송 처리</span>
                 </button>
               )}
@@ -189,7 +203,7 @@ export default function ServiceRequests() {
                 <tr key={u.id} style={{ borderBottom: '1px solid var(--surface-line, rgba(255,255,255,0.06))' }}>
                   <td style={{ padding: '0.5rem 0.6rem' }}>{u.location_label || '-'}</td>
                   <td style={{ padding: '0.5rem 0.6rem', fontFamily: 'monospace' }}>{u.ssid || '-'}</td>
-                  <td style={{ padding: '0.5rem 0.6rem' }}>
+                  <td style={{ padding: '0.5rem 0.6rem' }} onClick={(e) => e.stopPropagation()}>
                     {u.beacon_id ? (
                       <span style={{ color: '#22C55E', fontWeight: 600 }}>
                         <CheckCircle2 size={14} style={{ verticalAlign: 'middle' }} /> {u.beacon_serial || `#${u.beacon_id}`}
@@ -223,6 +237,91 @@ export default function ServiceRequests() {
           </table>
         </div>
       ))}
+    </div>
+  );
+}
+
+// ── 서비스 신청 상세 모달 ─────────────────────────────────────────────
+function ServiceRequestDetailModal({ req, onClose }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+        zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 20, backdropFilter: 'blur(6px)',
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: 'var(--bg-2, rgba(30,30,46,0.98))',
+          border: '1px solid var(--border, rgba(255,255,255,0.15))',
+          borderRadius: 16, padding: 24,
+          width: '100%', maxWidth: 640,
+          maxHeight: '90vh', overflow: 'auto',
+          color: 'var(--text, white)',
+        }}
+      >
+        {/* 헤더 */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>
+              {req.facility_name || `매장 #${req.facility_id ?? '-'}`}
+            </div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary, rgba(255,255,255,0.55))', marginTop: 4 }}>
+              신청 #{req.id} · {req.owner_email || '-'} · {req.created_at}
+              <span style={{
+                marginLeft: 10, padding: '2px 8px', borderRadius: 5,
+                background: req.status === 'matched' ? 'rgba(34,197,94,0.15)' : 'var(--surface-1, rgba(255,255,255,0.06))',
+                color: req.status === 'matched' ? '#22C55E' : 'var(--text-secondary)',
+                border: '1px solid var(--border, rgba(255,255,255,0.1))',
+                fontSize: '0.78rem', fontWeight: 600,
+              }}>{STATUS_KO[req.status] || req.status}</span>
+            </div>
+          </div>
+          <button
+            className="btn btn-ghost"
+            onClick={onClose}
+            aria-label="닫기"
+            style={{ padding: '4px 8px' }}
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* 유닛 테이블 */}
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--border, rgba(255,255,255,0.1))', textAlign: 'left' }}>
+              <th style={{ padding: '0.5rem 0.6rem' }}><MapPin size={13} style={{ verticalAlign: 'middle' }} /> 설치위치</th>
+              <th style={{ padding: '0.5rem 0.6rem' }}><Wifi size={13} style={{ verticalAlign: 'middle' }} /> SSID</th>
+              <th style={{ padding: '0.5rem 0.6rem' }}>비콘</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(req.units || []).map((u) => (
+              <tr key={u.id} style={{ borderBottom: '1px solid var(--surface-line, rgba(255,255,255,0.06))' }}>
+                <td style={{ padding: '0.5rem 0.6rem' }}>{u.location_label || '-'}</td>
+                <td style={{ padding: '0.5rem 0.6rem', fontFamily: 'monospace' }}>{u.ssid || '-'}</td>
+                <td style={{ padding: '0.5rem 0.6rem' }}>
+                  {u.beacon_id ? (
+                    <span style={{ color: '#22C55E', fontWeight: 600 }}>
+                      <CheckCircle2 size={14} style={{ verticalAlign: 'middle' }} /> {u.beacon_serial || `#${u.beacon_id}`}
+                    </span>
+                  ) : (
+                    <span style={{ color: 'var(--text-secondary, rgba(255,255,255,0.45))' }}>미매칭</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div style={{ marginTop: 20, textAlign: 'right' }}>
+          <button className="btn btn-ghost" onClick={onClose}>닫기</button>
+        </div>
+      </div>
     </div>
   );
 }

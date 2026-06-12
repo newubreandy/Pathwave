@@ -37,6 +37,7 @@ export default function BannedWords() {
   const [newKind, setNewKind] = useState('general');
   const [newSeverity, setNewSeverity] = useState('block');
   const [newNote, setNewNote] = useState('');
+  const [editItem, setEditItem] = useState(null);
 
   async function load() {
     setLoading(true);
@@ -169,14 +170,22 @@ export default function BannedWords() {
               </h3>
               <div style={{ display: 'grid', gap: 6 }}>
                 {list.map(it => (
-                  <div key={it.id} style={{
-                    display: 'grid',
-                    gridTemplateColumns: '120px 80px 1fr auto',
-                    gap: 12, alignItems: 'center',
-                    padding: '10px 14px',
-                    background: 'rgba(255,255,255,0.04)',
-                    borderRadius: 8,
-                  }}>
+                  <div
+                    key={it.id}
+                    onClick={() => setEditItem(it)}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '120px 80px 1fr auto',
+                      gap: 12, alignItems: 'center',
+                      padding: '10px 14px',
+                      background: 'rgba(255,255,255,0.04)',
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      transition: 'background 0.15s',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.09)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                  >
                     <code style={{ color: '#fff', fontWeight: 600 }}>{it.word}</code>
                     <span style={{
                       padding: '2px 8px',
@@ -190,7 +199,7 @@ export default function BannedWords() {
                       {it.note || '—'}
                     </span>
                     <button
-                      onClick={() => delWord(it.id)}
+                      onClick={(e) => { e.stopPropagation(); delWord(it.id); }}
                       style={{
                         background: 'none', border: '1px solid rgba(239,68,68,0.4)',
                         color: '#FCA5A5', padding: '4px 10px',
@@ -209,9 +218,119 @@ export default function BannedWords() {
           </div>
         )}
       </div>
+
+      {editItem && (
+        <BannedWordEditModal
+          item={editItem}
+          onClose={() => setEditItem(null)}
+          onSaved={() => { setEditItem(null); load(); }}
+        />
+      )}
     </div>
   );
 }
+
+// ── 금지어 수정 모달 ──────────────────────────────────────────────────
+function BannedWordEditModal({ item, onClose, onSaved }) {
+  const [word, setWord] = useState(item.word);
+  const [kind, setKind] = useState(item.kind || 'general');
+  const [severity, setSeverity] = useState(item.severity || 'block');
+  const [note, setNote] = useState(item.note || '');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function save() {
+    if (!word.trim() || busy) return;
+    setBusy(true); setErr('');
+    try {
+      await admin.updateBannedWord(item.id, { word: word.trim(), kind, severity, note: note.trim() || null });
+      onSaved();
+    } catch (e) {
+      setErr(e.message || '저장 실패');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+        zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 20, backdropFilter: 'blur(6px)',
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: 'rgba(30,30,46,0.98)',
+          border: '1px solid rgba(255,255,255,0.15)',
+          borderRadius: 14, padding: 24,
+          width: '100%', maxWidth: 440,
+          color: 'white',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h3 style={{ margin: 0, fontSize: 15 }}>금지어 수정</h3>
+          <button onClick={onClose}
+            style={{ background: 'none', border: 'none', color: 'white', fontSize: 20, cursor: 'pointer', padding: 4 }}
+            aria-label="닫기">×</button>
+        </div>
+
+        {err && <div style={{ color: '#FCA5A5', marginBottom: 12, fontSize: 13 }}>{err}</div>}
+
+        <div style={{ display: 'grid', gap: 10 }}>
+          <div>
+            <label style={{ fontSize: 12, opacity: 0.7, display: 'block', marginBottom: 4 }}>금지어</label>
+            <input value={word} onChange={e => setWord(e.target.value)} style={{ ...editInputStyle, width: '100%', boxSizing: 'border-box' }} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>
+              <label style={{ fontSize: 12, opacity: 0.7, display: 'block', marginBottom: 4 }}>카테고리</label>
+              <select value={kind} onChange={e => setKind(e.target.value)} style={{ ...editInputStyle, width: '100%', boxSizing: 'border-box' }}>
+                {Object.entries(KIND_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 12, opacity: 0.7, display: 'block', marginBottom: 4 }}>심각도</label>
+              <select value={severity} onChange={e => setSeverity(e.target.value)} style={{ ...editInputStyle, width: '100%', boxSizing: 'border-box' }}>
+                {Object.entries(SEVERITY_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label style={{ fontSize: 12, opacity: 0.7, display: 'block', marginBottom: 4 }}>비고</label>
+            <input value={note} onChange={e => setNote(e.target.value)} placeholder="(선택)" style={{ ...editInputStyle, width: '100%', boxSizing: 'border-box' }} />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 20 }}>
+          <button onClick={onClose} style={{ ...editInputStyle, cursor: 'pointer', padding: '8px 16px' }}>취소</button>
+          <button
+            onClick={save}
+            disabled={busy || !word.trim()}
+            style={{
+              padding: '8px 20px', borderRadius: 6, border: 'none',
+              background: '#2563EB', color: 'white',
+              fontWeight: 600, cursor: busy ? 'not-allowed' : 'pointer', fontSize: 13,
+              opacity: busy || !word.trim() ? 0.6 : 1,
+            }}
+          >{busy ? '저장 중…' : '저장'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const editInputStyle = {
+  padding: '8px 12px',
+  background: 'rgba(255,255,255,0.05)',
+  border: '1px solid rgba(255,255,255,0.20)',
+  borderRadius: 6,
+  color: 'white',
+  fontSize: 13,
+};
 
 const inputStyle = {
   padding: '8px 12px',

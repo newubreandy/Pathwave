@@ -377,3 +377,8 @@
 }
 .battery-bar-pct.low { color: var(--danger); }
 .battery-bar-pct.mid { color: var(--text-muted); }
+
+/* ── 리스트 행 클릭 → 상세 (2026-06-12 전수 적용) ─────────────────────────
+   행 전체가 클릭 대상임을 시각화. 행 안 액션 버튼은 stopPropagation. */
+.table-card tbody tr.row-clickable { cursor: pointer; transition: background 0.12s ease; }
+.table-card tbody tr.row-clickable:hover { background: var(--accent-soft, rgba(37,99,235,0.10)); }
