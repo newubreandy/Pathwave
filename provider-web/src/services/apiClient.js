@@ -15,12 +15,17 @@ function _getToken() {
 }
 
 async function request(path, { method = 'GET', body, headers = {}, raw = false } = {}) {
-  const finalHeaders = { 'Content-Type': 'application/json', ...headers };
+  // 2026-06-11 — FormData(파일 업로드)는 JSON 직렬화/Content-Type 미적용
+  // (브라우저가 multipart boundary 자동 설정).
+  const isForm = (typeof FormData !== 'undefined') && body instanceof FormData;
+  const finalHeaders = isForm
+    ? { ...headers }
+    : { 'Content-Type': 'application/json', ...headers };
   const token = _getToken();
   if (token) finalHeaders['Authorization'] = `Bearer ${token}`;
 
   const opts = { method, headers: finalHeaders };
-  if (body !== undefined) opts.body = JSON.stringify(body);
+  if (body !== undefined) opts.body = isForm ? body : JSON.stringify(body);
 
   const resp = await fetch(path, opts);
 

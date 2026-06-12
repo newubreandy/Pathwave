@@ -44,6 +44,24 @@ const StoreService = {
     return apiClient.delete(`/api/facilities/${fid}`);
   },
 
+  // ── 매장 이미지 (2026-06-11 — 파일 업로드 실연동) ──────────────────────
+  /** 이미지 목록 → {success, images:[{id, image_url(절대), is_primary, ...}]} */
+  listImages(fid) {
+    return apiClient.get(`/api/facilities/${fid}/images`);
+  },
+
+  /** 파일 업로드 (multipart). 첫 장은 자동 대표 + 사용자앱 히어로 연동. */
+  uploadImage(fid, file) {
+    const form = new FormData();
+    form.append('image', file);
+    return apiClient.post(`/api/facilities/${fid}/images/upload`, form);
+  },
+
+  /** 이미지 삭제 */
+  deleteImage(fid, imageId) {
+    return apiClient.delete(`/api/facilities/${fid}/images/${imageId}`);
+  },
+
   /**
    * 비콘 SN 클레임 (Phase C) — 운영자가 발급한 비콘 시리얼을 본인 매장에 연결.
    * @param {string} fid        — 매장(시설) ID

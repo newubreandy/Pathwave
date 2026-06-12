@@ -42,3 +42,6 @@ Thumbs.db
 # 도구 부산물
 .omc/
 *.bak
+
+# 사용자 업로드 파일 (런타임 생성 — git 제외)
+static/uploads/
