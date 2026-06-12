@@ -203,8 +203,14 @@ P9 → P22(쿠폰·스탬프 실연동 후) · P14 → P15~P19 · P13 BE → mob
 - #282~#285 매장정보 hydrate 회귀 + 어드민 운영성 3종(액션 보드·리스트 행클릭 상세 전수·배터리 전체 목록)
 
 **즉시 가능 (코드, 소규모):**
-1. 약관 동의 마이크로항목 7종 en 번역
+1. ~~약관 동의 마이크로항목 7종 en 번역~~ → **검증 결과 이미 완료** (policies 테이블에
+   7종 ko/en 쌍 존재 — seed_consent_micro_en.py 실행돼 있었음, 2026-06-12 확인)
 2. **C-3 페르소나 통합 테스트** — 시나리오 PR #168 OPEN(충돌) → 착수 시 리베이스 또는 신규 작성
+
+**ℹ️ translations(UI 문구) 다국어 현황 (2026-06-12 실측):** ko 925 / en 20 / 그 외 21개 언어 각 1.
+mobile 은 `t(key, defaultValue)` 폴백이라 **기능 안 깨짐** (en 사용자에게 한국어 노출만).
+→ DeepL 키 도착 시 `scripts/translate_i18n_deepl.py` 1회 실행으로 일괄 채움
+  (멱등 / {placeholder} 보호 / 배치 / dry-run / Phase2 10언어 지원, tl·ms 는 DeepL 미지원 — 별도 공급자).
 
 **외부/하드웨어 대기 (코드 아님):**
 3. **운영 번역 키** — `TRANSLATION_PROVIDER=google` + API 키 (출시 외부서비스 단계)
