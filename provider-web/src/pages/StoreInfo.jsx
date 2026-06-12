@@ -129,9 +129,10 @@ const StoreInfo = () => {
           // 2026-06-11 — 매장 정보 실연동: 백엔드 값으로 화면 채움 (저장된 휴무/혜택 포함).
           StoreService.get(fid)
             .then((r) => { if (alive && r?.facility) hydrateFromApi(r.facility); })
-            .catch(() => { /* 신규 매장 등 — 빈 폼 유지 */ });
-          // 2026-06-11 — 갤러리 실연동 (facility_images)
-          refreshImages(fid);
+            .catch(() => { /* 신규 매장 등 — 빈 폼 유지 */ })
+            // 2026-06-11 — 갤러리 실연동. hydrate 뒤 직렬 실행 (race 방지:
+            // 병렬이면 hydrate 의 setStore(next) 가 갤러리 반영을 덮을 수 있음).
+            .finally(() => { if (alive) refreshImages(fid, { keepFallbackIfEmpty: true }); });
         }
         fetchRequests();
       })
@@ -202,7 +203,6 @@ const StoreInfo = () => {
       holidays: { days, publicHolidays },
       // 2026-06-12 — 업종 실연동 (facilities.categories JSON)
       categories: Array.isArray(f.categories) ? f.categories : [],
-      categories: [],
       lat: f.latitude ?? LocationService.getDefaultCoordinates().lat,
       lng: f.longitude ?? LocationService.getDefaultCoordinates().lng,
     };
@@ -216,12 +216,15 @@ const StoreInfo = () => {
   const [galleryImages, setGalleryImages] = useState([]);   // [{id, image_url, is_primary}]
   const [uploadingImg, setUploadingImg] = useState(false);
 
-  const refreshImages = async (fid) => {
+  const refreshImages = async (fid, { keepFallbackIfEmpty = false } = {}) => {
     try {
       const res = await StoreService.listImages(fid);
       const imgs = res?.images || [];
-      const urls = imgs.map((im) => im.image_url);
       setGalleryImages(imgs);
+      // 초기 로드: facility_images 가 비어도 hydrate 의 facilities.image_url
+      // fallback 1장을 덮지 않음 (구 데이터 매장 — 갤러리 빈 박스 회귀 방지).
+      if (imgs.length === 0 && keepFallbackIfEmpty) return;
+      const urls = imgs.map((im) => im.image_url);
       setStore((prev) => ({ ...prev, images: urls }));
       setEditData((prev) => ({ ...prev, images: urls }));
     } catch { /* 목록 실패는 조용히 — 빈 갤러리 유지 */ }
@@ -454,7 +457,22 @@ const StoreInfo = () => {
       </PwModal>
 
       <section className="modern-gallery">
-        <div className="gallery-main" style={{ backgroundImage: `url(${isEditing ? editData.images[activeImageIndex] || editData.images[0] : store.images[activeImageIndex] || store.images[0]})` }}>
+        {(() => {
+          const imgs = isEditing ? editData.images : store.images;
+          const mainUrl = imgs[activeImageIndex] || imgs[0];
+          return (
+        <div className="gallery-main" style={mainUrl ? { backgroundImage: `url(${mainUrl})` } : undefined}>
+          {/* 2026-06-12 — 사진 0장 placeholder (url(undefined) 빈 검정 박스 방지) */}
+          {!mainUrl && !isEditing && (
+            <div className="gallery-empty-hint" style={{
+              height: '100%', display: 'flex', flexDirection: 'column', gap: 8,
+              alignItems: 'center', justifyContent: 'center',
+              color: 'var(--pw-text-muted, #94A3B8)', fontSize: 14,
+            }}>
+              <Camera size={32} />
+              <span>등록된 매장 사진이 없습니다. 정보 수정에서 추가해 주세요.</span>
+            </div>
+          )}
           {isEditing && (
             <>
               {editData.images.length > 0 && (
@@ -467,6 +485,8 @@ const StoreInfo = () => {
             </>
           )}
         </div>
+          );
+        })()}
         <div className="gallery-thumbs-wrapper">
           <div className="gallery-thumbs">
           {(isEditing ? editData.images : store.images).map((img, i) => {
