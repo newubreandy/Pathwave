@@ -411,7 +411,18 @@ const StoreInfo = () => {
     };
     setSaving(true);
     try {
-      await StoreService.update(facilityId, payload);
+      // 2026-06-12 (페르소나 T3 발견) — 신규 사장(승인 직후, 매장 없음)은
+      // create 분기. 이전: update(null) 로 저장 자체가 불가능하던 갭.
+      if (facilityId) {
+        await StoreService.update(facilityId, payload);
+      } else {
+        const r = await StoreService.create(payload);
+        const newFid = r?.facility?.id;
+        if (newFid) {
+          setFacilityId(newFid);
+          fetchBeacons(newFid);
+        }
+      }
       setStore(finalData);
       setEditData(finalData);
       setIsEditing(false);
