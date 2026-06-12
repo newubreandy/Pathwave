@@ -1080,6 +1080,45 @@ def stats_overview():
     return jsonify({'success': True, 'cards': cards})
 
 
+@admin_bp.route('/stats/pending', methods=['GET'])
+@require_super_admin()
+def stats_pending():
+    """처리 필요(액션) 현황 — 대시보드 액션 보드용 (2026-06-12).
+
+    운영관리자가 대응해야 하는 건수만 모음. 각 키는 admin-web 의
+    해당 관리 화면과 1:1 (클릭 이동).
+    """
+    db = get_db()
+    counts = {
+        # 계정 승인 대기 → /dashboard/approvals
+        'owners_pending': db.execute(
+            "SELECT COUNT(*) AS n FROM facility_accounts WHERE status='pending'"
+        ).fetchone()['n'],
+        # 고객 문의 미답변 → /dashboard/support
+        'support_open': db.execute(
+            "SELECT COUNT(*) AS n FROM support_tickets WHERE status='open'"
+        ).fetchone()['n'],
+        # 서비스 신청 대기 → /dashboard/service-requests
+        'service_requests_pending': db.execute(
+            "SELECT COUNT(*) AS n FROM service_requests WHERE status='pending'"
+        ).fetchone()['n'],
+        # 신고 미처리 → /dashboard/abuse-reports
+        'abuse_open': db.execute(
+            "SELECT COUNT(*) AS n FROM abuse_reports WHERE status='open'"
+        ).fetchone()['n'],
+        # 알림 처리 대기 (수동 승인 review + 결제 대기 unpaid) → /dashboard/notifications
+        'notifications_pending': db.execute(
+            "SELECT COUNT(*) AS n FROM notifications WHERE status IN ('review','unpaid')"
+        ).fetchone()['n'],
+        # 비콘 분실/이상 → /dashboard/beacons?status=lost
+        'beacons_lost': db.execute(
+            "SELECT COUNT(*) AS n FROM beacons WHERE status='lost'"
+        ).fetchone()['n'],
+    }
+    db.close()
+    return jsonify({'success': True, 'counts': counts})
+
+
 @admin_bp.route('/stats/payments', methods=['GET'])
 @require_super_admin()
 def stats_payments():
