@@ -30,6 +30,10 @@ export default function Battery() {
 
   const summary = data?.summary || {};
   const lowList = data?.low_battery_beacons || [];
+  // 2026-06-12 — 전체 비콘 목록 (정상 포함, 배터리 낮은 순). 기본 뷰 = 전체.
+  const allList = data?.beacons || [];
+  const [view, setView] = useState('all');   // 'all' | 'low'
+  const rows = view === 'all' ? allList : lowList;
 
   return (
     <div className="modern-page">
@@ -92,14 +96,18 @@ export default function Battery() {
       </div>
 
       <div>
-        <h3 style={{
-          margin: '0 0 12px',
-          fontSize: 'var(--fs-md)',
-          fontWeight: 500,
-          color: 'var(--text-muted)',
-        }}>
-          저전력 비콘 ({lowList.length}대)
-        </h3>
+        <div style={{ display: 'flex', gap: 8, margin: '0 0 12px' }}>
+          <button
+            className={'btn btn-sm ' + (view === 'all' ? 'btn-primary' : 'btn-ghost')}
+            onClick={() => setView('all')}>
+            전체 ({allList.length})
+          </button>
+          <button
+            className={'btn btn-sm ' + (view === 'low' ? 'btn-primary' : 'btn-ghost')}
+            onClick={() => setView('low')}>
+            저전력 ≤{threshold}% ({lowList.length})
+          </button>
+        </div>
         <table className="data-table">
           <thead>
             <tr>
@@ -114,12 +122,14 @@ export default function Battery() {
           </thead>
           <tbody>
             {loading && <tr><td colSpan={7} className="row-empty">로딩 중...</td></tr>}
-            {!loading && lowList.length === 0 && (
+            {!loading && rows.length === 0 && (
               <tr><td colSpan={7} className="row-empty">
-                현재 임계치 이하 비콘이 없습니다. 👍
+                {view === 'low'
+                  ? '현재 임계치 이하 비콘이 없습니다. 👍'
+                  : '등록된 비콘이 없습니다.'}
               </td></tr>
             )}
-            {!loading && lowList.map((b) => (
+            {!loading && rows.map((b) => (
               <tr key={b.id} className="row-clickable" onClick={() => setHistoryTarget(b)}>
                 <td className="cell-mono">{b.id}</td>
                 <td className="cell-mono">{b.serial_no}</td>
