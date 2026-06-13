@@ -1,5 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -14,6 +12,7 @@ import '../../services/permission_service.dart';
 import '../../services/theme_service.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/i18n_context.dart';
+import '../../widgets/pw_bubble_nav.dart';
 import '../../widgets/notification_permission_dialog.dart';
 import '../../widgets/pw.dart';
 import '../search/search_screen.dart';
@@ -69,7 +68,8 @@ class _HomeScreenState extends State<HomeScreen> {
       const _HomeTab(),
       const SearchScreen(),
       const _MyPageTab(),
-      const NotificationsScreen(),
+      // 탭 임베드 — AppBar 대신 본문 큰 타이틀 (다른 탭과 상단 통일, 2026-06-12).
+      const NotificationsScreen(embedded: true),
     ];
 
     return Scaffold(
@@ -78,72 +78,42 @@ class _HomeScreenState extends State<HomeScreen> {
       // 네비는 블러라 뒤의 시즌 배경은 그대로 비친다.
       extendBody: false,
       body: SafeArea(child: tabs[_tab]),
-      // 하단 풀폭 글래스 바 — 화면 하단에 고정(타원형/floating 아님). 시즌 배경을 흐리게 비춤.
-      // 색/아이콘크기/라벨(흰 라인↔채움·선택만 라벨)은 NeuTheme.navigationBarTheme 글로벌.
-      bottomNavigationBar: ClipRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              // 블러 위주 — 배경 이미지가 그대로 비치게. 아주 옅은 틴트로 흰 아이콘 가독성만 확보.
-              // 구분선 없음(네비 바 자체가 콘텐츠와의 구분 역할).
-              color: Colors.black.withValues(alpha: 0.18),
-            ),
-            child: SafeArea(
-              top: false,
-              child: NavigationBar(
-                selectedIndex: _tab,
-                onDestinationSelected: (i) {
-                  setState(() => _tab = i);
-                  // 알림 탭(index 3) 진입 시 미읽음 카운트 갱신.
-                  if (i == 3) _refreshUnreadCount();
-                },
-                // 선택된 탭만 라벨 표시 (미선택은 아이콘만).
-                labelBehavior:
-                    NavigationDestinationLabelBehavior.onlyShowSelected,
-                backgroundColor: Colors.transparent,
-                destinations: [
-                  NavigationDestination(
-                    icon: const Icon(Icons.home_outlined),
-                    selectedIcon: const Icon(Icons.home),
-                    label: I18nService.instance.t(
-                      'nav.home',
-                      defaultValue: '홈',
-                    ),
-                  ),
-                  NavigationDestination(
-                    icon: const Icon(Icons.search),
-                    selectedIcon: const Icon(Icons.search),
-                    label: I18nService.instance.t(
-                      'nav.search',
-                      defaultValue: '검색',
-                    ),
-                  ),
-                  NavigationDestination(
-                    icon: const Icon(Icons.person_outline),
-                    selectedIcon: const Icon(Icons.person),
-                    label: I18nService.instance.t('nav.my', defaultValue: '마이'),
-                  ),
-                  NavigationDestination(
-                    // 미읽음 알림 수 뱃지 (2026-06-08). 0 또는 로드 실패 시 미노출.
-                    icon: _NotifBadge(
-                      count: _unreadNotifCount,
-                      child: const Icon(Icons.notifications_outlined),
-                    ),
-                    selectedIcon: _NotifBadge(
-                      count: _unreadNotifCount,
-                      child: const Icon(Icons.notifications),
-                    ),
-                    label: I18nService.instance.t(
-                      'nav.notifications',
-                      defaultValue: '알림',
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      // 2026-06-12 — 버블 네비 (사용자 레퍼런스: 선택 탭 원형 돌출 + 곡선 노치
+      // + 슬라이드 마이크로 인터랙션). 글래스 톤(blur+검정18%)은 기존과 동일.
+      bottomNavigationBar: PwBubbleNav(
+        selectedIndex: _tab,
+        onSelected: (i) {
+          setState(() => _tab = i);
+          // 알림 탭(index 3) 진입 시 미읽음 카운트 갱신.
+          if (i == 3) _refreshUnreadCount();
+        },
+        items: [
+          PwBubbleNavItem(
+            icon: Icons.home_outlined,
+            selectedIcon: Icons.home,
+            label: I18nService.instance.t('nav.home', defaultValue: '홈'),
           ),
-        ),
+          PwBubbleNavItem(
+            icon: Icons.search,
+            selectedIcon: Icons.search,
+            label: I18nService.instance.t('nav.search', defaultValue: '검색'),
+          ),
+          PwBubbleNavItem(
+            icon: Icons.person_outline,
+            selectedIcon: Icons.person,
+            label: I18nService.instance.t('nav.my', defaultValue: '마이'),
+          ),
+          PwBubbleNavItem(
+            icon: Icons.notifications_outlined,
+            selectedIcon: Icons.notifications,
+            label: I18nService.instance.t(
+              'nav.notifications',
+              defaultValue: '알림',
+            ),
+            // 미읽음 알림 수 뱃지 (0/실패 시 미노출 — 위젯 내부 처리).
+            badgeCount: _unreadNotifCount,
+          ),
+        ],
       ),
     );
   }
@@ -544,36 +514,3 @@ class _MenuDivider extends StatelessWidget {
 
 /// 알림 탭 미읽음 뱃지 (2026-06-08).
 /// count > 0 일 때만 빨간 점/숫자 노출. 99+ 는 ``99+``.
-class _NotifBadge extends StatelessWidget {
-  final int count;
-  final Widget child;
-  const _NotifBadge({required this.count, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    if (count <= 0) return child;
-    final label = count > 99 ? '99+' : count.toString();
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        child,
-        Positioned(
-          right: -6, top: -4,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-            constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-            decoration: BoxDecoration(
-              color: AppTheme.primary,             // 보라 (브랜드 가이드 통일 2026-06-09)
-              borderRadius: BorderRadius.circular(9),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 0.5),
-            ),
-            alignment: Alignment.center,
-            child: Text(label, style: const TextStyle(
-              color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700,
-            )),
-          ),
-        ),
-      ],
-    );
-  }
-}

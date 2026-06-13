@@ -18,7 +18,11 @@ import '../../utils/app_theme.dart';
 import '../../widgets/pw.dart';
 
 class NotificationsScreen extends StatefulWidget {
-  const NotificationsScreen({super.key});
+  /// 홈 탭 임베드 여부 (2026-06-12) — true 면 AppBar 대신 본문 큰 타이틀
+  /// (홈/검색/마이 탭과 상단 레이아웃 통일). push 진입(/notifications)은 false.
+  final bool embedded;
+
+  const NotificationsScreen({super.key, this.embedded = false});
 
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();
@@ -105,8 +109,31 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget build(BuildContext context) {
     final t = I18nService.instance;
     return Scaffold(
-      appBar: PwAppBar(title: Text(t.t('notif.title', defaultValue: '알림'))),
-      body: SafeArea(child: RefreshIndicator(
+      // 탭 임베드 시 AppBar 제거 — 홈/검색/마이 탭과 동일하게 본문 큰 타이틀.
+      appBar: widget.embedded
+          ? null
+          : PwAppBar(title: Text(t.t('notif.title', defaultValue: '알림'))),
+      body: SafeArea(child: Column(children: [
+        if (widget.embedded)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                t.t('notif.title', defaultValue: '알림'),
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: Colors.white,
+                  shadows: const [
+                    Shadow(
+                        color: Colors.black54,
+                        blurRadius: 8,
+                        offset: Offset(0, 2)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        Expanded(child: RefreshIndicator(
         onRefresh: _refresh,
         child: FutureBuilder<List<Map<String, dynamic>>>(
           future: _future,
@@ -180,6 +207,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           },
         ),
       )),
+      ])),
     );
   }
 
