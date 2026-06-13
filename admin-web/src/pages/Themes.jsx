@@ -35,6 +35,23 @@ const PREVIEW_RATIOS = [
   { label: '21:9 (롱폼)',          ratio: '9 / 21' },
 ];
 
+// 글래스 카드 미리보기 스타일 — 텍스처가 있으면 "유리 안에 패턴이 비치는" 모습을 재현.
+// 모바일 GlassCard 와 동일: 텍스처 위 상단 하이라이트 림(광택) + backdrop blur 최소화.
+function glassPreviewStyle(textureUrl, textOnDark) {
+  const base = { color: textOnDark ? '#fff' : '#111' };
+  if (!textureUrl) return base;
+  return {
+    ...base,
+    backgroundImage:
+      'linear-gradient(to bottom, rgba(255,255,255,0.28), rgba(255,255,255,0) 25%, ' +
+      'rgba(255,255,255,0) 85%, rgba(255,255,255,0.10)), url(' + textureUrl + ')',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backdropFilter: 'none',
+    WebkitBackdropFilter: 'none',
+  };
+}
+
 // 업로드 한도 (백엔드와 일치)
 // 권장 사이즈 1440×3200 (QHD+) — 모든 현존 디바이스(iPhone 15 Pro Max 1290×2796,
 // Galaxy S24 Ultra 1440×3120)에 1:1 또는 약간 다운스케일 = 항상 선명.
@@ -206,6 +223,7 @@ function SeasonGroup({ meta, rows, onEdit, onPreview, onActivate, onDelete }) {
                   {row.accent_color && (
                     <> · accent <span className="theme-color-dot" style={{ background: row.accent_color }} /></>
                   )}
+                  {row.texture_url && <> · 🫧 텍스처</>}
                 </div>
               </div>
               <div className="theme-actions">
@@ -248,6 +266,11 @@ function ThemeEditor({ target, onClose, onSaved, onError }) {
   const [file, setFile]                     = useState(null);
   const [filePreview, setFilePreview]       = useState(target.image_url || '');
   const [fileMeta, setFileMeta]             = useState('');
+  // 글래스 텍스처 (선택) — 유리 카드 안에 비치는 패턴
+  const [textureFile, setTextureFile]       = useState(null);
+  const [texturePreview, setTexturePreview] = useState(target.texture_url || '');
+  const [textureMeta, setTextureMeta]       = useState('');
+  const [removeTexture, setRemoveTexture]   = useState(false);
   const [saving, setSaving]                 = useState(false);
   const [localError, setLocalError]         = useState('');
 
@@ -269,6 +292,29 @@ function ThemeEditor({ target, onClose, onSaved, onError }) {
     setFileMeta(`${(f.size / 1024).toFixed(0)} KB · ${f.type || ext.toUpperCase()}`);
   }
 
+  function pickTexture(f) {
+    setLocalError('');
+    if (!f) {
+      setTextureFile(null);
+      setTexturePreview(target.texture_url || '');
+      setTextureMeta('');
+      return;
+    }
+    const ext = (f.name.split('.').pop() || '').toLowerCase();
+    if (!ALLOWED_EXT.includes(ext)) {
+      setLocalError(`텍스처: 허용되지 않는 확장자 .${ext} (허용: ${ALLOWED_EXT.join(', ')})`);
+      return;
+    }
+    if (f.size > MAX_UPLOAD_MB * 1024 * 1024) {
+      setLocalError(`텍스처 파일이 너무 큽니다: ${(f.size / 1024 / 1024).toFixed(1)}MB (최대 ${MAX_UPLOAD_MB}MB)`);
+      return;
+    }
+    setTextureFile(f);
+    setRemoveTexture(false);
+    setTexturePreview(URL.createObjectURL(f));
+    setTextureMeta(`${(f.size / 1024).toFixed(0)} KB · ${f.type || ext.toUpperCase()}`);
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setLocalError('');
@@ -288,6 +334,8 @@ function ThemeEditor({ target, onClose, onSaved, onError }) {
         if (eventEndsAt)   fd.append('event_ends_at', eventEndsAt);
       }
       if (file) fd.append('image', file);
+      if (textureFile) fd.append('texture', textureFile);
+      else if (isEdit && removeTexture) fd.append('remove_texture', '1');
       if (!isEdit && activate) fd.append('activate', '1');
 
       if (isEdit) {
@@ -304,6 +352,9 @@ function ThemeEditor({ target, onClose, onSaved, onError }) {
       setSaving(false);
     }
   }
+
+  // 제거 체크 시 미리보기는 텍스처 없는 기본 유리로
+  const effTexture = removeTexture ? '' : texturePreview;
 
   return (
     <Modal open={true} onClose={onClose} title={isEdit ? '테마 수정' : '새 테마 등록'} size="lg">
@@ -369,6 +420,27 @@ function ThemeEditor({ target, onClose, onSaved, onError }) {
               </div>
             </label>
 
+            <label className="form-label">
+              글래스 텍스처 (선택, {ALLOWED_EXT.join('/')}, 최대 {MAX_UPLOAD_MB}MB)
+              <input className="form-input" type="file"
+                     accept={ALLOWED_EXT.map((e) => '.' + e).join(',')}
+                     onChange={(e) => pickTexture(e.target.files?.[0] || null)} />
+              <span className="form-hint">
+                🫧 유리 카드(GlassCard) <strong>안에 비치는 패턴</strong>입니다. 비우면 기본 반투명 유리.
+                작은 타일·패브릭·은은한 그라데이션을 권장 (전면 배경 이미지 X). 교체하면 앱 재배포 없이
+                전 글래스 카드 무드가 바뀝니다.
+              </span>
+              {textureMeta && <span className="form-hint">선택됨: {textureMeta}</span>}
+            </label>
+
+            {isEdit && (target.texture_url || texturePreview) && !textureFile && (
+              <label className="form-checkbox-row">
+                <input type="checkbox" checked={removeTexture}
+                       onChange={(e) => setRemoveTexture(e.target.checked)} />
+                <span>현재 텍스처 <strong>제거</strong> (기본 반투명 유리로 복귀)</span>
+              </label>
+            )}
+
             {season === 'event' && (
               <div className="theme-event-window">
                 <label className="form-label">
@@ -409,7 +481,7 @@ function ThemeEditor({ target, onClose, onSaved, onError }) {
                     <div className="theme-preview-dim"
                          style={{ background: `rgba(15,15,26,${overlayAlpha})` }} />
                     <div className="theme-preview-card"
-                         style={{ color: textOnDark ? '#fff' : '#111' }}>
+                         style={glassPreviewStyle(effTexture, textOnDark)}>
                       <div className="theme-preview-pill"
                            style={{ background: accentColor || 'rgba(255,255,255,0.18)' }}>
                         NEW FEATURE
@@ -457,7 +529,7 @@ function ThemePreview({ theme, onClose }) {
               <div className="theme-preview-dim"
                    style={{ background: `rgba(15,15,26,${theme.overlay_alpha ?? 0.45})` }} />
               <div className="theme-preview-card"
-                   style={{ color: theme.text_on_dark ? '#fff' : '#111' }}>
+                   style={glassPreviewStyle(theme.texture_url, theme.text_on_dark)}>
                 <div className="theme-preview-pill"
                      style={{ background: theme.accent_color || 'rgba(255,255,255,0.18)' }}>
                   NEW FEATURE

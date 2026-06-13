@@ -882,6 +882,8 @@ def init_db():
             overlay_alpha        REAL    DEFAULT 0.45,-- 가독성 보정 딤 (0~1, 클수록 어두움)
             text_on_dark         INTEGER DEFAULT 1,   -- 1=흰 텍스트 / 0=검은 텍스트
             accent_color         TEXT,                -- 카드/포인트 hex (선택, 미지정시 #7C3AED)
+            texture_url          TEXT,                -- 글래스 텍스처 '/static/themes/{uuid}.{ext}' (선택, 2026-06-13)
+            texture_filename     TEXT,                -- 텍스처 디스크 파일명 (교체/삭제 시 제거용)
             active               INTEGER DEFAULT 0,   -- 1=해당 season 에서 현재 활성
             event_starts_at      TEXT,                -- season='event' 일 때 노출 시작
             event_ends_at        TEXT,                -- season='event' 일 때 노출 종료
@@ -986,6 +988,11 @@ def init_db():
     # beacons.role — wifi / cashier (계산대 비콘 - cashier 는 결제·스탬프 트리거)
     _add_column_if_missing(db, 'beacons', 'role',
                            "role TEXT DEFAULT 'wifi'")
+
+    # 글래스 텍스처 (2026-06-13) — 유리 컴포넌트(GlassCard) 안에 비치는 패턴 이미지.
+    # 어드민이 교체하면 앱 재배포 없이 전 글래스 카드 무드 변경. 기존 DB 마이그레이션.
+    _add_column_if_missing(db, 'theme_configs', 'texture_url',      'texture_url TEXT')
+    _add_column_if_missing(db, 'theme_configs', 'texture_filename', 'texture_filename TEXT')
 
     # P22 후속 (#236/#237) — 비콘 프로비저닝 워크플로우 필수 컬럼.
     # P-B 매칭 endpoint(routes/admin.py match_request_unit)가 UPDATE 하므로 신규 DB에도 필수.

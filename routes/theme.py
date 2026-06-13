@@ -92,6 +92,9 @@ def _row_to_dict(row) -> dict:
         'overlay_alpha':   row['overlay_alpha'],
         'text_on_dark':    bool(row['text_on_dark']),
         'accent_color':    row['accent_color'],
+        # 2026-06-13 — 글래스 텍스처 (유리 컴포넌트 안에 비치는 패턴 이미지).
+        # 어드민이 교체하면 앱 재배포 없이 전 글래스 카드 무드 변경.
+        'texture_url':     row['texture_url'] if 'texture_url' in row.keys() else None,
         'active':          bool(row['active']),
         'event_starts_at': row['event_starts_at'],
         'event_ends_at':   row['event_ends_at'],
@@ -275,6 +278,16 @@ def create_theme():
     except ValueError as e:
         return jsonify({'success': False, 'message': str(e)}), 400
 
+    # 글래스 텍스처 (선택, 2026-06-13)
+    texture_filename, texture_url = None, None
+    tex_file = request.files.get('texture')
+    if tex_file and tex_file.filename:
+        try:
+            texture_filename, texture_url = _save_image(tex_file)
+        except ValueError as e:
+            return jsonify({'success': False,
+                            'message': f'texture: {e}'}), 400
+
     overlay = _parse_overlay_alpha(request.form.get('overlay_alpha', 0.45))
     text_on_dark = 1 if request.form.get('text_on_dark', '1') == '1' else 0
     accent = (request.form.get('accent_color') or '').strip() or None
@@ -286,11 +299,12 @@ def create_theme():
     cur = db.execute(
         """INSERT INTO theme_configs
            (season, name, image_url, image_filename, overlay_alpha,
-            text_on_dark, accent_color, active,
+            text_on_dark, accent_color, texture_url, texture_filename, active,
             event_starts_at, event_ends_at, created_by_admin_id)
-           VALUES (?,?,?,?,?,?,?,0,?,?,?)""",
+           VALUES (?,?,?,?,?,?,?,?,?,0,?,?,?)""",
         (season, name, public_url, filename, overlay,
-         text_on_dark, accent, event_starts, event_ends,
+         text_on_dark, accent, texture_url, texture_filename,
+         event_starts, event_ends,
          g.auth.get('user_id')),
     )
     new_id = cur.lastrowid
@@ -352,6 +366,24 @@ def update_theme(theme_id: int):
         updates['image_url']      = public_url
         old_filename = row['image_filename']
 
+    # 글래스 텍스처 교체/제거 (2026-06-13). 파일 'texture' = 교체,
+    # 폼 'remove_texture'='1' = 제거 (글래스가 기본 blur 동작으로 복귀).
+    old_texture_filename = None
+    cur_texture = row['texture_filename'] if 'texture_filename' in row.keys() else None
+    tex_file = request.files.get('texture') if request.files else None
+    if tex_file and tex_file.filename:
+        try:
+            tfn, turl = _save_image(tex_file)
+        except ValueError as e:
+            return jsonify({'success': False, 'message': f'texture: {e}'}), 400
+        updates['texture_filename'] = tfn
+        updates['texture_url']      = turl
+        old_texture_filename = cur_texture
+    elif form.get('remove_texture') == '1':
+        updates['texture_filename'] = None
+        updates['texture_url']      = None
+        old_texture_filename = cur_texture
+
     if not updates:
         return jsonify({'success': False, 'message': '변경할 내용이 없습니다.'}), 400
 
@@ -363,6 +395,8 @@ def update_theme(theme_id: int):
 
     if old_filename:
         _remove_image_file(old_filename)
+    if old_texture_filename:
+        _remove_image_file(old_texture_filename)
 
     row = db.execute('SELECT * FROM theme_configs WHERE id=?', (theme_id,)).fetchone()
     logger.info('[theme] 수정 id=%s fields=%s by admin=%s',
@@ -404,6 +438,8 @@ def delete_theme(theme_id: int):
     db.execute('DELETE FROM theme_configs WHERE id=?', (theme_id,))
     db.commit()
     _remove_image_file(row['image_filename'])
+    if 'texture_filename' in row.keys():
+        _remove_image_file(row['texture_filename'])
     logger.info('[theme] 삭제 id=%s by admin=%s',
                 theme_id, g.auth.get('user_id'))
     return jsonify({'success': True})

@@ -28,6 +28,10 @@ class ThemeConfig {
   final bool textOnDark;
   final String? accentColor;
 
+  /// 글래스 텍스처 (2026-06-13) — 유리 컴포넌트(GlassCard 등) 안에 비치는
+  /// 패턴 이미지. 어드민이 교체하면 앱 재배포 없이 전 글래스 무드 변경.
+  final String? textureUrl;
+
   ThemeConfig({
     required this.id,
     required this.season,
@@ -36,6 +40,7 @@ class ThemeConfig {
     required this.overlayAlpha,
     required this.textOnDark,
     this.accentColor,
+    this.textureUrl,
   });
 
   factory ThemeConfig.fromJson(Map<String, dynamic> j) => ThemeConfig(
@@ -46,6 +51,7 @@ class ThemeConfig {
         overlayAlpha: (j['overlay_alpha'] as num?)?.toDouble() ?? 0.45,
         textOnDark:   j['text_on_dark'] == true || j['text_on_dark'] == 1,
         accentColor:  j['accent_color']?.toString(),
+        textureUrl:   j['texture_url']?.toString(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -56,6 +62,7 @@ class ThemeConfig {
         'overlay_alpha': overlayAlpha,
         'text_on_dark':  textOnDark,
         'accent_color':  accentColor,
+        'texture_url':   textureUrl,
       };
 }
 
