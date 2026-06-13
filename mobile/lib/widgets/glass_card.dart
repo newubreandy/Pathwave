@@ -18,7 +18,9 @@ library;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../services/theme_service.dart';
 import '../utils/app_theme.dart';
 
 class GlassCard extends StatelessWidget {
@@ -34,6 +36,11 @@ class GlassCard extends StatelessWidget {
   /// 카드 자체에 그림자(soft) 표시. 글래스 위에 살짝 떠 보이게.
   final bool elevated;
 
+  /// 서버 지정 글래스 텍스처 적용 여부 (2026-06-13).
+  /// true(기본) — 테마에 texture_url 이 있으면 유리 안에 텍스처가 비침
+  /// (어드민 교체 = 재배포 없이 전 카드 무드 변경). false = 항상 기본 blur.
+  final bool useTexture;
+
   const GlassCard({
     super.key,
     required this.child,
@@ -43,6 +50,7 @@ class GlassCard extends StatelessWidget {
     this.onDarkBackground = true,
     this.borderHighlight,
     this.elevated = false,
+    this.useTexture = true,
   });
 
   @override
@@ -55,6 +63,13 @@ class GlassCard extends StatelessWidget {
             ? Colors.white.withValues(alpha: 0.18)
             : Colors.black.withValues(alpha: 0.12));
 
+    // 서버 지정 텍스처 — ThemeService(ChangeNotifier) 구독으로
+    // 어드민 교체 시 즉시 리빌드.
+    final textureUrl = useTexture
+        ? context.watch<ThemeService>().activeTheme?.textureUrl
+        : null;
+    final hasTexture = textureUrl != null && textureUrl.isNotEmpty;
+
     final rect = BorderRadius.circular(radius);
     return Container(
       decoration: elevated
@@ -66,15 +81,55 @@ class GlassCard extends StatelessWidget {
       child: ClipRRect(
         borderRadius: rect,
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
-          child: Container(
-            padding: padding,
-            decoration: BoxDecoration(
-              color: fill,
-              borderRadius: rect,
-              border: Border.all(color: border, width: 1),
-            ),
-            child: child,
+          // 텍스처가 깔리면 backdrop 이 가려지므로 blur 최소화 (성능 절약).
+          filter: hasTexture
+              ? ImageFilter.blur(sigmaX: 0.001, sigmaY: 0.001)
+              : ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+          child: Stack(
+            children: [
+              // ── 유리 안 텍스처 (레퍼런스: 유리 케이스 속 패브릭) ──
+              if (hasTexture)
+                Positioned.fill(
+                  child: Image.network(
+                    textureUrl,
+                    fit: BoxFit.cover,
+                    // 로드 실패 시 조용히 기본 글래스로 (빈 위젯).
+                    errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  ),
+                ),
+              // ── 유리 케이스 — fill + 상단 하이라이트 림 (광택) ──
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: hasTexture
+                        ? Colors.white.withValues(alpha: 0.06)
+                        : fill,
+                    borderRadius: rect,
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white.withValues(
+                            alpha: hasTexture ? 0.28 : 0.10),
+                        Colors.white.withValues(alpha: 0.0),
+                        Colors.white.withValues(alpha: 0.0),
+                        Colors.white.withValues(
+                            alpha: hasTexture ? 0.10 : 0.04),
+                      ],
+                      stops: const [0.0, 0.25, 0.85, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+              Container(
+                padding: padding,
+                decoration: BoxDecoration(
+                  borderRadius: rect,
+                  border: Border.all(color: border, width: 1),
+                ),
+                child: child,
+              ),
+            ],
           ),
         ),
       ),
