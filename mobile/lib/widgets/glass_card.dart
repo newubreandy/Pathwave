@@ -21,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../services/theme_service.dart';
+import '../utils/api_config.dart';
 import '../utils/app_theme.dart';
 
 class GlassCard extends StatelessWidget {
@@ -69,6 +70,13 @@ class GlassCard extends StatelessWidget {
         ? context.watch<ThemeService>().activeTheme?.textureUrl
         : null;
     final hasTexture = textureUrl != null && textureUrl.isNotEmpty;
+    // 서버 texture_url 은 '/static/themes/...' 상대 경로 → 절대 URL 로 변환
+    // (SeasonalBackground 와 동일 규칙). Image.network 는 절대 URL 이 필요하다.
+    final textureSrc = hasTexture
+        ? (textureUrl.startsWith('http')
+            ? textureUrl
+            : '${ApiConfig.baseUrl}$textureUrl')
+        : null;
 
     final rect = BorderRadius.circular(radius);
     return Container(
@@ -91,7 +99,7 @@ class GlassCard extends StatelessWidget {
               if (hasTexture)
                 Positioned.fill(
                   child: Image.network(
-                    textureUrl,
+                    textureSrc!,
                     fit: BoxFit.cover,
                     // 로드 실패 시 조용히 기본 글래스로 (빈 위젯).
                     errorBuilder: (_, _, _) => const SizedBox.shrink(),
